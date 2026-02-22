@@ -1,3 +1,8 @@
+import { cn } from "@/lib/utils";
+
+type ContainerVariant = "default" | "institutional" | "elevated";
+type ContainerAccent = "none" | "left" | "top" | "bracket";
+
 interface Props {
   base?: boolean;
   children: React.ReactNode;
@@ -6,43 +11,82 @@ interface Props {
   lessRadius?: boolean;
   fullHeight?: boolean;
   divProps?: React.HTMLAttributes<HTMLDivElement>;
+  variant?: ContainerVariant;
+  accent?: ContainerAccent;
+  hover?: boolean;
 }
 
-const StackableContainer = (props: Props) => (
-  <div className={`container ${props.base ? "base" : ""}`} {...props.divProps}>
-    {props.children}
+const StackableContainer = ({
+  base,
+  children,
+  lessPadding,
+  lessMargin,
+  lessRadius,
+  fullHeight,
+  divProps,
+  variant = "default",
+  accent = "none",
+  hover = false,
+}: Props) => {
+  const { className: divClassName, ...restDivProps } = divProps || {};
 
-    <style jsx>{`
-      .container {
-        background: rgba(255, 255, 255, 0.05);
-        padding: ${props.lessPadding ? "15px" : "30px"};
-        margin-top: ${props.lessMargin || props.base ? "25px" : "50px"};
-        border-radius: ${props.lessRadius ? "10px" : "20px"};
+  const variantClasses = {
+    default: base 
+      ? "bg-card border border-border shadow-lg" 
+      : "bg-muted/30 border border-border/50",
+    institutional: "bg-card border-2 border-border shadow-card",
+    elevated: "bg-card border border-border shadow-lg hover:shadow-xl",
+  };
 
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        position: relative;
-        height: ${props.fullHeight ? "100%" : "auto"};
-      }
+  const accentClasses = {
+    none: "",
+    left: "card-accent-left",
+    top: "card-accent-top",
+    bracket: "card-bracket-corner",
+  };
 
-      .container:first-child {
-        margin-top: 0;
-      }
+  return (
+    <div
+      className={cn(
+        // Base styles
+        "relative flex flex-col justify-between",
+        "transition-all duration-200",
+        
+        // Variant styles
+        variantClasses[variant],
+        
+        // Accent styles
+        accentClasses[accent],
+        
+        // Padding
+        lessPadding ? "p-4" : "p-6",
+        
+        // Margin
+        lessMargin || base ? "mt-4" : "mt-6",
+        "first:mt-0",
+        
+        // Border radius - institutional variant uses rounded corners
+        variant === "institutional" 
+          ? "rounded-xl" 
+          : lessRadius ? "rounded-lg" : "rounded-xl",
+        
+        // Height
+        fullHeight && "h-full",
+        
+        // Max width for base containers
+        base && "w-full",
+        
+        // Hover effect
+        hover && "hover:-translate-y-[3px] hover:shadow-card-hover cursor-pointer",
+        
+        // Custom className from divProps
+        divClassName
+      )}
+      {...restDivProps}
+    >
+      {children}
+    </div>
+  );
+};
 
-      .base {
-        max-width: 750px;
-        background: #62145f;
-        box-shadow:
-          0px 28px 80px rgba(0, 0, 0, 0.07),
-          0px 12.7134px 39.2617px rgba(0, 0, 0, 0.0519173),
-          0px 7.26461px 23.349px rgba(0, 0, 0, 0.0438747),
-          0px 4.44678px 14.5028px rgba(0, 0, 0, 0.0377964),
-          0px 2.71437px 8.88638px rgba(0, 0, 0, 0.0322036),
-          0px 1.53495px 5.02137px rgba(0, 0, 0, 0.0261253),
-          0px 0.671179px 2.19114px rgba(0, 0, 0, 0.0180827);
-      }
-    `}</style>
-  </div>
-);
 export default StackableContainer;

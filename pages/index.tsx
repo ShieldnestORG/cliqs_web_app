@@ -1,44 +1,30 @@
-import Page from "@/components/layout/Page";
-import StackableContainer from "@/components/layout/StackableContainer";
-import { Skeleton } from "@/components/ui/skeleton";
-import { isChainInfoFilled } from "@/context/ChainsContext/helpers";
-import { useRouter } from "next/router";
-import { useEffect } from "react";
-import { useChains } from "../context/ChainsContext";
+import { useEffect } from 'react';
+import { useRouter } from 'next/router';
+import { useChains } from '@/context/ChainsContext';
 
-export default function MultiPage() {
+export default function Home() {
   const router = useRouter();
   const { chain } = useChains();
 
   useEffect(() => {
-    if (isChainInfoFilled(chain)) {
-      router.replace(`/${chain.registryName}`);
+    // If we have a chain in context, redirect to its dashboard
+    if (chain?.registryName) {
+      router.replace(`/${chain.registryName}/dashboard`);
+    } else {
+      // Fallback to cosmoshub dashboard as the default entry point
+      router.replace('/cosmoshub/dashboard');
     }
   }, [chain, router]);
 
   return (
-    <Page>
-      <StackableContainer base>
-        <div className="space-y-10">
-          <StackableContainer>
-            <Skeleton className="h-4 w-[250px]" />
-          </StackableContainer>
-          <div className="space-y-8">
-            <StackableContainer>
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-[350px]" />
-                <Skeleton className="h-4 w-[300px]" />
-              </div>
-            </StackableContainer>
-            <StackableContainer>
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-[250px]" />
-                <Skeleton className="h-4 w-[280px]" />
-              </div>
-            </StackableContainer>
-          </div>
-        </div>
-      </StackableContainer>
-    </Page>
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+    </div>
   );
 }
+
+export const getStaticProps = async () => {
+  return {
+    props: {},
+  };
+};

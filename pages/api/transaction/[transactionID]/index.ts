@@ -1,10 +1,11 @@
-import { updateTxHash } from "@/graphql/transaction";
+import { cancelTransaction, updateTxHash } from "@/graphql/transaction";
 import { UpdateDbTxHashBody } from "@/lib/api";
+import { withByodbMiddleware } from "@/lib/byodb/middleware";
 import type { NextApiRequest, NextApiResponse } from "next";
 
-const endpointErrMsg = "Failed to update txHash";
+const endpointErrMsg = "Failed to update transaction";
 
-export default async function apiUpdateTxHash(req: NextApiRequest, res: NextApiResponse) {
+async function apiTransactionActions(req: NextApiRequest, res: NextApiResponse) {
   const txId = req.query.transactionID;
 
   if (req.method !== "POST" || typeof txId !== "string" || !txId) {
@@ -12,10 +13,20 @@ export default async function apiUpdateTxHash(req: NextApiRequest, res: NextApiR
     return;
   }
 
-  const body: UpdateDbTxHashBody = req.body;
+  const body = req.body;
 
   try {
-    const dbTxHash = await updateTxHash(txId, body.txHash);
+    // Handle cancel action
+    if ("action" in body && body.action === "cancel") {
+      await cancelTransaction(txId);
+      res.status(200).send({ cancelled: true, txId });
+      console.log("Cancel transaction success", JSON.stringify({ txId }, null, 2));
+      return;
+    }
+
+    // Handle update txHash (default action)
+    const updateBody: UpdateDbTxHashBody = body;
+    const dbTxHash = await updateTxHash(txId, updateBody.txHash);
     res.status(200).send({ dbTxHash });
     console.log("Update txHash success", JSON.stringify({ dbTxHash }, null, 2));
   } catch (err: unknown) {
@@ -25,3 +36,5 @@ export default async function apiUpdateTxHash(req: NextApiRequest, res: NextApiR
       .send(err instanceof Error ? `${endpointErrMsg}: ${err.message}` : endpointErrMsg);
   }
 }
+
+export default withByodbMiddleware(apiTransactionActions);

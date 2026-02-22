@@ -1,3 +1,4 @@
+import { isTestnetsEnabled } from "@/lib/chainRegistry";
 import { RegistryAsset } from "@/types/chainRegistry";
 import { emptyChain } from "./helpers";
 import { ChainInfo, ChainItems, ExplorerLinks } from "./types";
@@ -16,10 +17,12 @@ export const getChainsFromStorage = () => {
   }
 
   const { mainnets, testnets, localnets } = JSON.parse(storedChains);
+  const testnetsEnabled = isTestnetsEnabled();
 
   const chains: ChainItems = {
     mainnets: new Map(mainnets),
-    testnets: new Map(testnets),
+    // Return empty testnets map when testnets are disabled
+    testnets: testnetsEnabled ? new Map(testnets) : new Map(),
     localnets: new Map(localnets),
   };
 
@@ -74,11 +77,16 @@ export const addRecentChainNameInStorage = (chainName: string) => {
 
 export const getRecentChainsFromStorage = (chains: ChainItems) => {
   const recentChainNames = getRecentChainNamesFromStorage();
+  const testnetsEnabled = isTestnetsEnabled();
 
   const recentChains = recentChainNames.map((chainName) => {
+    // Skip testnet chains when testnets are disabled
+    if (!testnetsEnabled && chains.testnets.has(chainName)) {
+      return null;
+    }
     const chain =
       chains.localnets.get(chainName) ??
-      chains.testnets.get(chainName) ??
+      (testnetsEnabled ? chains.testnets.get(chainName) : undefined) ??
       chains.mainnets.get(chainName);
     return chain ?? null;
   });
@@ -92,6 +100,7 @@ export const getRecentChainsFromStorage = (chains: ChainItems) => {
 
 export const getRecentChainFromStorage = (chains: ChainItems): Partial<ChainInfo> => {
   const recentChains = getRecentChainsFromStorage(chains);
+  // getRecentChainsFromStorage already filters out testnets when disabled
   const recentChain = recentChains?.[0] ?? {};
 
   return recentChain;
@@ -193,8 +202,13 @@ export const getChainFromStorage = (
     return emptyChain;
   }
 
+  const testnetsEnabled = isTestnetsEnabled();
+
   return (
-    localnets.get(chainName) ?? testnets.get(chainName) ?? mainnets.get(chainName) ?? emptyChain
+    localnets.get(chainName) ??
+    (testnetsEnabled ? testnets.get(chainName) : undefined) ??
+    mainnets.get(chainName) ??
+    emptyChain
   );
 };
 

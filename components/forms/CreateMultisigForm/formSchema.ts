@@ -22,26 +22,23 @@ export const getCreateMultisigSchema = (chain: ChainInfo) =>
               if (addressOrPubkeyError) {
                 ctx.addIssue({ code: z.ZodIssueCode.custom, message: addressOrPubkeyError });
               } else {
-                try {
-                  const address = member.startsWith(chain.addressPrefix)
-                    ? member
-                    : pubkeyToAddress(
-                        { type: "tendermint/PubKeySecp256k1", value: member },
-                        chain.addressPrefix,
-                      );
+                // Only check on-chain existence for addresses, not for public keys
+                if (member.startsWith(chain.addressPrefix)) {
+                  try {
+                    const client = await StargateClient.connect(chain.nodeAddress);
+                    const accountOnChain = await client.getAccount(member);
 
-                  const client = await StargateClient.connect(chain.nodeAddress);
-                  const accountOnChain = await client.getAccount(address);
-
-                  if (!accountOnChain || !accountOnChain.pubkey) {
-                    ctx.addIssue({
-                      code: z.ZodIssueCode.custom,
-                      message: "This account needs to send a transaction to appear on chain",
-                    });
+                    if (!accountOnChain || !accountOnChain.pubkey) {
+                      ctx.addIssue({
+                        code: z.ZodIssueCode.custom,
+                        message: "This account needs to send a transaction to appear on chain",
+                      });
+                    }
+                  } catch {
+                    return z.NEVER;
                   }
-                } catch {
-                  return z.NEVER;
                 }
+                // Public keys don't need on-chain validation - they're used directly
               }
             }),
         }),
@@ -52,20 +49,19 @@ export const getCreateMultisigSchema = (chain: ChainInfo) =>
         .min(1, "Threshold must be at least 1"),
     })
     .superRefine(({ members }, ctx) => {
-      if (members.length !== 2) {
-        return;
-      }
-
-      const firstEmptyMemberIndex = members.findIndex(({ member }) => member.trim() === "");
-
-      if (firstEmptyMemberIndex !== -1) {
-        const issue = {
+      // Count filled members
+      const filledMembers = members.filter(({ member }) => member.trim() !== "");
+      
+      if (filledMembers.length < 2) {
+        // Find the first empty slot to show the error, or use the last member
+        const emptyIndex = members.findIndex(({ member }) => member.trim() === "");
+        const errorIndex = emptyIndex !== -1 ? emptyIndex : members.length - 1;
+        
+        ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "At least 2 members needed",
-          path: [`members.${firstEmptyMemberIndex}.member`],
-        };
-
-        ctx.addIssue(issue);
+          path: [`members.${errorIndex}.member`],
+        });
       }
     })
     .superRefine(({ members }, ctx) => {

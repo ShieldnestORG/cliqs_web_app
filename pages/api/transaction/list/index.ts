@@ -2,6 +2,8 @@ import { getMultisig } from "@/graphql/multisig";
 import { getNonce, incrementNonce } from "@/graphql/nonce";
 import { getTransactions } from "@/graphql/transaction";
 import { GetDbMultisigTxsBody } from "@/lib/api";
+import { withByodbMiddleware } from "@/lib/byodb/middleware";
+import { ensureDbReady } from "@/lib/dbInit";
 import { verifyKeplrSignature } from "@/lib/keplr";
 import { decodeSignature, pubkeyToAddress } from "@cosmjs/amino";
 import { toBase64 } from "@cosmjs/encoding";
@@ -10,7 +12,8 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 const endpointErrMsg = "Failed to list transactions";
 
-export default async function apiListTransactions(req: NextApiRequest, res: NextApiResponse) {
+async function apiListTransactions(req: NextApiRequest, res: NextApiResponse) {
+  await ensureDbReady();
   if (req.method !== "POST") {
     res.status(405).end();
     return;
@@ -48,7 +51,7 @@ export default async function apiListTransactions(req: NextApiRequest, res: Next
       throw new Error("nonce increment failed");
     }
 
-    const verified = verifyKeplrSignature(body.signature, body.chain, dbNonce);
+    const verified = await verifyKeplrSignature(body.signature, body.chain, dbNonce);
 
     if (verified) {
       const transactions = await getTransactions(multisig.id);
@@ -64,3 +67,5 @@ export default async function apiListTransactions(req: NextApiRequest, res: Next
       .send(err instanceof Error ? `${endpointErrMsg}: ${err.message}` : endpointErrMsg);
   }
 }
+
+export default withByodbMiddleware(apiListTransactions);

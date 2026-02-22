@@ -16,6 +16,76 @@ export const emptyChain: ChainInfo = {
   explorerLinks: { tx: "", account: "" },
 };
 
+/**
+ * Ensures any Coreum-based chain is rebranded to TX/tx
+ */
+export const rebrandChain = (chain: ChainInfo): ChainInfo => {
+  const isCoreum =
+    chain.registryName.toLowerCase().includes("coreum") ||
+    chain.chainDisplayName.toLowerCase().includes("coreum") ||
+    chain.chainId.toLowerCase().includes("coreum");
+
+  if (!isCoreum) {
+    return chain;
+  }
+
+  return {
+    ...chain,
+    registryName: "tx",
+    logo: "/tx.png",
+    chainDisplayName: "TX",
+    displayDenom: "TX",
+    assets: chain.assets.map((asset) => {
+      const isCoreAsset =
+        asset.symbol.toUpperCase().includes("CORE") ||
+        asset.display.toLowerCase().includes("core") ||
+        asset.base.toLowerCase().includes("core");
+      return {
+        ...asset,
+        symbol: isCoreAsset ? "TX" : asset.symbol,
+        display: isCoreAsset ? "TX" : asset.display,
+        logo_URIs: isCoreAsset ? { png: "/tx.png", svg: "/tx.png" } : asset.logo_URIs,
+        denom_units: isCoreAsset
+          ? asset.denom_units.map((unit) => ({
+              ...unit,
+              denom:
+                unit.denom.toLowerCase().includes("core") && unit.exponent > 0 ? "TX" : unit.denom,
+            }))
+          : asset.denom_units,
+      };
+    }),
+  };
+};
+
+/**
+ * Ensures all chains in the registry are rebranded
+ */
+export const rebrandChains = (chains: ChainItems): ChainItems => {
+  const rebrandedMainnets = new Map<string, ChainInfo>();
+  chains.mainnets.forEach((chain, key) => {
+    const rebranded = rebrandChain(chain);
+    rebrandedMainnets.set(rebranded.registryName, rebranded);
+  });
+
+  const rebrandedTestnets = new Map<string, ChainInfo>();
+  chains.testnets.forEach((chain, key) => {
+    const rebranded = rebrandChain(chain);
+    rebrandedTestnets.set(rebranded.registryName, rebranded);
+  });
+
+  const rebrandedLocalnets = new Map<string, ChainInfo>();
+  chains.localnets.forEach((chain, key) => {
+    const rebranded = rebrandChain(chain);
+    rebrandedLocalnets.set(rebranded.registryName, rebranded);
+  });
+
+  return {
+    mainnets: rebrandedMainnets,
+    testnets: rebrandedTestnets,
+    localnets: rebrandedLocalnets,
+  };
+};
+
 export const isChainInfoFilled = (chain: Partial<ChainInfo>): chain is ChainInfo =>
   Boolean(
     chain.registryName &&
@@ -35,11 +105,11 @@ export const isChainInfoFilled = (chain: Partial<ChainInfo>): chain is ChainInfo
   );
 
 export const setChains = (dispatch: Dispatch, chains: ChainItems) => {
-  dispatch({ type: "setChains", payload: chains });
+  dispatch({ type: "setChains", payload: rebrandChains(chains) });
 };
 
 export const setChain = (dispatch: Dispatch, chain: ChainInfo) => {
-  dispatch({ type: "setChain", payload: chain });
+  dispatch({ type: "setChain", payload: rebrandChain(chain) });
 };
 
 export const loadValidators = (dispatch: Dispatch) => {

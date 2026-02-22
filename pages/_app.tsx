@@ -1,42 +1,41 @@
 import Header from "@/components/Header";
+import Sidebar from "@/components/Sidebar";
 import GeneralNews from "@/components/GeneralNews";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import ThemeProvider from "@/context/ThemesContext";
+import { WalletProvider } from "@/context/WalletContext";
 import type { AppProps } from "next/app";
+import { useRouter } from "next/router";
 import { ChainsProvider } from "../context/ChainsContext";
 import "@/styles/globals.css";
 
 export default function MultisigApp({ Component, pageProps }: AppProps) {
+  const router = useRouter();
+  const isLandingPage = router.asPath === "/";
+
   return (
     <ChainsProvider>
-      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <WalletProvider>
         <TooltipProvider>
-          <div className="flex min-h-screen flex-col items-center gap-4">
-            <Header />
-            <GeneralNews active={true} />
-            <Component {...pageProps} />
+          <div className="flex min-h-screen bg-background text-foreground">
+            {!isLandingPage && <Sidebar />}
+            
+            <div className="flex flex-1 flex-col min-w-0">
+              {!isLandingPage && (
+                <div className="lg:hidden">
+                  <Header />
+                </div>
+              )}
+              {!isLandingPage && <GeneralNews active={false} />}
+              
+              <main className="flex-1 flex flex-col relative">
+                <Component {...pageProps} />
+              </main>
+            </div>
           </div>
-          <Toaster
-            richColors
-            closeButton
-            duration={999999}
-            /* This need to be overriden or else it doesn't apply the custom styles. A bug from shadcn probably https://github.com/shadcn-ui/ui/issues/2254 */
-            toastOptions={{
-              classNames: {
-                toast:
-                  "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
-                error:
-                  "group-[.toaster]:!bg-destructive group-[.toaster]:!text-destructive-foreground",
-                success: "group-[.toaster]:!bg-green-500 group-[.toaster]:!text-white",
-                description: "group-[.toast]:text-foreground",
-                actionButton: "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
-                cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
-              },
-            }}
-          />
+          <Toaster closeButton />
         </TooltipProvider>
-      </ThemeProvider>
+      </WalletProvider>
     </ChainsProvider>
   );
 }

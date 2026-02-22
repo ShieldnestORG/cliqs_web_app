@@ -15,22 +15,26 @@ export default function AccountPage() {
   const { chain } = useChains();
 
   return (
-    <div className="m-4 mt-8 flex max-w-xl flex-1 flex-col justify-center gap-4">
-      <Head title={`${chain.chainDisplayName || "Cosmos Hub"} Multisig Manager`} />
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              {chain.registryName ? <Link href={`/${chain.registryName}`}>Home</Link> : null}
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Account</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-      <AccountView />
+    <div className="container mx-auto px-[0.75in] py-8 max-w-[1600px]">
+      <Head title={`Account - ${chain.chainDisplayName || "Cosmos Hub"}`} />
+      
+      <div className="space-y-6">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                {chain.registryName ? <Link href={`/${chain.registryName}`}>Home</Link> : null}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Account</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+        
+        <AccountView />
+      </div>
     </div>
   );
 }

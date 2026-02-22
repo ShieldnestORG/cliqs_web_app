@@ -1,6 +1,10 @@
+import { useCallback } from "react";
 import { MsgGetter } from "..";
 import { MsgTypeUrl, MsgTypeUrls } from "../../../../types/txMsg";
+import { gasOfMsg } from "../../../../lib/txMsgHelpers";
 import MsgBeginRedelegateForm from "./MsgBeginRedelegateForm";
+import MsgCreateValidatorForm from "./MsgCreateValidatorForm";
+import MsgEditValidatorForm from "./MsgEditValidatorForm";
 import MsgCreateVestingAccountForm from "./MsgCreateVestingAccountForm";
 import MsgDelegateForm from "./MsgDelegateForm";
 import MsgExecuteContractForm from "./MsgExecuteContractForm";
@@ -15,53 +19,74 @@ import MsgUndelegateForm from "./MsgUndelegateForm";
 import MsgUpdateAdminForm from "./MsgUpdateAdminForm";
 import MsgVoteForm from "./MsgVoteForm";
 import MsgWithdrawDelegatorRewardForm from "./MsgWithdrawDelegatorRewardForm";
+import MsgWithdrawValidatorCommissionForm from "./MsgWithdrawValidatorCommissionForm";
 
 interface MsgFormProps {
   readonly msgType: MsgTypeUrl;
   readonly senderAddress: string;
-  readonly setMsgGetter: (msgGetter: MsgGetter) => void;
+  readonly msgIndex: number;
+  readonly setMsgGetter: (index: number, msgGetter: MsgGetter) => void;
   readonly deleteMsg: () => void;
+  readonly gasLimit?: number; // Optional gas limit for balance calculations
 }
 
-const MsgForm = ({ msgType, ...restProps }: MsgFormProps) => {
+const MsgForm = ({ msgType, gasLimit, msgIndex, setMsgGetter, ...restProps }: MsgFormProps) => {
+  // If gasLimit not provided, estimate it from message type
+  const estimatedGasLimit = gasLimit || gasOfMsg(msgType);
+
+  // Create a stable wrapper that binds the index to the setMsgGetter call
+  // This prevents infinite render loops in child components
+  const stableSetMsgGetter = useCallback(
+    (msgGetter: MsgGetter) => setMsgGetter(msgIndex, msgGetter),
+    [msgIndex, setMsgGetter]
+  );
+
+  const propsWithGas = { ...restProps, setMsgGetter: stableSetMsgGetter, gasLimit: estimatedGasLimit };
+
   switch (msgType) {
     // Bank
     case MsgTypeUrls.Send:
-      return <MsgSendForm {...restProps} />;
+      return <MsgSendForm {...propsWithGas} />;
     // Staking
     case MsgTypeUrls.Delegate:
-      return <MsgDelegateForm {...restProps} />;
+      return <MsgDelegateForm {...propsWithGas} />;
     case MsgTypeUrls.Undelegate:
-      return <MsgUndelegateForm {...restProps} />;
+      return <MsgUndelegateForm {...propsWithGas} />;
     case MsgTypeUrls.BeginRedelegate:
-      return <MsgBeginRedelegateForm {...restProps} />;
+      return <MsgBeginRedelegateForm {...propsWithGas} />;
+    case MsgTypeUrls.CreateValidator:
+      return <MsgCreateValidatorForm {...propsWithGas} />;
+    case MsgTypeUrls.EditValidator:
+      return <MsgEditValidatorForm {...propsWithGas} />;
     // Distribution
     case MsgTypeUrls.FundCommunityPool:
-      return <MsgFundCommunityPoolForm {...restProps} />;
+      return <MsgFundCommunityPoolForm {...propsWithGas} />;
     case MsgTypeUrls.SetWithdrawAddress:
-      return <MsgSetWithdrawAddressForm {...restProps} />;
+      return <MsgSetWithdrawAddressForm {...propsWithGas} />;
     case MsgTypeUrls.WithdrawDelegatorReward:
-      return <MsgWithdrawDelegatorRewardForm {...restProps} />;
+      return <MsgWithdrawDelegatorRewardForm {...propsWithGas} />;
+    case MsgTypeUrls.WithdrawValidatorCommission:
+      return <MsgWithdrawValidatorCommissionForm {...propsWithGas} />;
     // Vesting
     case MsgTypeUrls.CreateVestingAccount:
-      return <MsgCreateVestingAccountForm {...restProps} />;
+      return <MsgCreateVestingAccountForm {...propsWithGas} />;
     // Governance
     case MsgTypeUrls.Vote:
-      return <MsgVoteForm {...restProps} />;
+      return <MsgVoteForm {...propsWithGas} />;
     // IBC
     case MsgTypeUrls.Transfer:
-      return <MsgTransferForm {...restProps} />;
+      return <MsgTransferForm {...propsWithGas} />;
     // CosmWasm
     case MsgTypeUrls.InstantiateContract:
-      return <MsgInstantiateContractForm {...restProps} />;
+      return <MsgInstantiateContractForm {...propsWithGas} />;
     case MsgTypeUrls.InstantiateContract2:
-      return <MsgInstantiateContract2Form {...restProps} />;
+      return <MsgInstantiateContract2Form {...propsWithGas} />;
     case MsgTypeUrls.UpdateAdmin:
-      return <MsgUpdateAdminForm {...restProps} />;
+      return <MsgUpdateAdminForm {...propsWithGas} />;
     case MsgTypeUrls.ExecuteContract:
-      return <MsgExecuteContractForm {...restProps} />;
+      return <MsgExecuteContractForm {...propsWithGas} />;
     case MsgTypeUrls.MigrateContract:
-      return <MsgMigrateContractForm {...restProps} />;
+      return <MsgMigrateContractForm {...propsWithGas} />;
     default:
       return null;
   }

@@ -22,13 +22,18 @@ export default function ChainsGroup({ chains, heading, emptyMsg }: ChainsGroupPr
     }, 0);
   }, [chains.length, numChainsToRender]);
 
+  // Don't render empty groups without chains
+  if (chains.length === 0) {
+    return null;
+  }
+
   return (
     <CommandGroup
       heading={heading}
-      className="[&_[cmdk-group-heading]]:my-3 [&_[cmdk-group-heading]]:text-base [&_[cmdk-group-heading]]:leading-[0] [&_[cmdk-group-heading]]:text-white [&_[cmdk-group-heading]]:underline"
+      className="[&_[cmdk-group-heading]]:mb-3 [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:before:content-['//\_'] [&_[cmdk-group-heading]]:before:opacity-60"
     >
       {chains.length ? (
-        <div ref={containerRef} className="flex flex-wrap gap-2">
+        <div ref={containerRef} className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {chains.slice(0, numChainsToRender).map((chain) => (
             <ChainItem
               key={chain.registryName}
@@ -38,7 +43,7 @@ export default function ChainsGroup({ chains, heading, emptyMsg }: ChainsGroupPr
           ))}
         </div>
       ) : (
-        <p className="ml-3 max-w-none">{emptyMsg}</p>
+        <p className="py-4 text-center text-sm text-muted-foreground">{emptyMsg}</p>
       )}
     </CommandGroup>
   );

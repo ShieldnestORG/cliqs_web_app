@@ -49,14 +49,22 @@ const printableCoin = (coin: Coin, chainInfo: ChainInfo) => {
   const foundAsset = chainInfo.assets?.find(
     (asset) => coin.denom === asset.symbol || coin.denom === asset.base,
   );
-  const foundExponent = foundAsset?.denom_units.find(
-    (unit) => unit.denom === foundAsset.symbol.toLowerCase(),
-  )?.exponent;
 
-  if (foundExponent) {
-    const value = Decimal.fromAtomics(coin.amount, foundExponent).toString();
+  // Find the display unit (e.g., "TX" for TX, "junox" for Juno)
+  const displayUnit = foundAsset?.denom_units.find(
+    (unit) => unit.denom === foundAsset.display || unit.exponent > 0,
+  );
+
+  if (foundAsset && displayUnit && displayUnit.exponent !== undefined) {
+    const value = Decimal.fromAtomics(coin.amount, displayUnit.exponent).toString();
     const ticker = foundAsset.symbol;
     return value + thinSpace + ticker;
+  }
+
+  // Fallback for the chain's native denom if not found in assets
+  if (coin.denom === chainInfo.denom) {
+    const value = Decimal.fromAtomics(coin.amount, chainInfo.displayDenomExponent).toString();
+    return value + thinSpace + chainInfo.displayDenom;
   }
 
   // Fallback to plain coin display

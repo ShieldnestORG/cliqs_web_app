@@ -1,0 +1,126 @@
+name: Build Optimized WASM
+
+# Builds CW3/CW4 contract binaries using cosmwasm/optimizer.
+# Produces binaries WITHOUT bulk-memory opcodes (safe for ALL chains including Coreum).
+# Commits updated binaries + manifest back to the repo via PR.
+
+on:
+  # Manual trigger with optional version override
+  workflow_dispatch:
+    inputs:
+      cw_plus_version:
+        description: "cw-plus version tag (e.g. v0.16.0)"
+        required: false
+        default: "v0.16.0"
+
+  # Run when the check-cw-plus-release workflow detects a new version
+  repository_dispatch:
+    types: [new-cw-plus-release]
+
+jobs:
+  build:
+    name: Build with cosmwasm/optimizer
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Determine cw-plus version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            VERSION="${{ github.event.client_payload.version }}"
+          elif [ "${{ github.event.inputs.cw_plus_version }}" != "" ]; then
+            VERSION="${{ github.event.inputs.cw_plus_version }}"
+          else
+            VERSION="v0.16.0"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Building cw-plus $VERSION"
+
+      - name: Clone cw-plus
+        run: |
+          git clone --depth 1 --branch ${{ steps.version.outputs.version }} \
+            https://github.com/CosmWasm/cw-plus.git /tmp/cw-plus
+
+      - name: Build with cosmwasm/optimizer
+        run: |
+          cd /tmp/cw-plus
+          docker run --rm \
+            -v "$(pwd)":/code \
+            --mount type=volume,source=cw_plus_cache,target=/target \
+            --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+            cosmwasm/optimizer:0.16.1
+
+      - name: Validate and copy binaries
+        run: |
+          mkdir -p public/wasm
+
+          for contract in cw3_fixed_multisig cw3_flex_multisig cw4_group; do
+            src="/tmp/cw-plus/artifacts/${contract}.wasm"
+            dest="public/wasm/${contract}.wasm"
+
+            if [ ! -f "$src" ]; then
+              echo "::error::${contract}.wasm not found in build artifacts"
+              exit 1
+            fi
+
+            cp "$src" "$dest"
+            SIZE=$(wc -c < "$dest" | tr -d ' ')
+            echo "${contract}: ${SIZE} bytes ($((SIZE / 1024)) KB)"
+
+            # Verify no bulk-memory opcodes
+            python3 -c "
+          data = open('${dest}', 'rb').read()
+          ops = [(0x08,'memory.init'),(0x09,'data.drop'),(0x0a,'memory.copy'),(0x0b,'memory.fill')]
+          found = []
+          for b2, name in ops:
+              c = sum(1 for i in range(len(data)-1) if data[i]==0xfc and data[i+1]==b2)
+              if c: found.append(f'{name} x{c}')
+          if found:
+              print(f'WARNING: {\"${contract}\"} has bulk-memory: {\", \".join(found)}')
+              exit(1)
+          else:
+              print(f'OK: {\"${contract}\"} has no bulk-memory opcodes')
+          "
+          done
+
+      - name: Generate manifest
+        run: |
+          python3 scripts/generate-wasm-manifest.py \
+            --cw-plus-version "${{ steps.version.outputs.version }}" \
+            --optimizer-image "cosmwasm/optimizer:0.16.1" \
+            --build-method "github-actions-optimizer"
+
+      - name: Check for changes
+        id: diff
+        run: |
+          git add public/wasm/
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes to WASM binaries"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "WASM binaries updated"
+          fi
+
+      - name: Create Pull Request
+        if: steps.diff.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update optimized WASM binaries (cw-plus ${{ steps.version.outputs.version }})"
+          title: "Update WASM binaries — cw-plus ${{ steps.version.outputs.version }}"
+          body: |
+            Automated update of optimized WASM contract binaries.
+
+            - **cw-plus version:** ${{ steps.version.outputs.version }}
+            - **Optimizer:** cosmwasm/optimizer:0.16.1
+            - **Bulk-memory:** Stripped (safe for Coreum and all chains)
+
+            Built by the `build-wasm.yml` GitHub Actions workflow.
+          branch: chore/update-wasm-binaries
+          delete-branch: true
+          labels: dependencies, automated

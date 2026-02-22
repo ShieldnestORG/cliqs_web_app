@@ -1,80 +1,27 @@
-import { gql } from "graphql-request";
 import { z } from "zod";
-import { gqlClient } from ".";
+import * as db from "@/lib/db";
 
 const DbNonceObjNonce = z.object({ nonce: z.number() });
 type DbNonceObjNonce = Readonly<z.infer<typeof DbNonceObjNonce>>;
 
 export const getNonce = async (chainId: string, address: string) => {
-  type QueryResponse = { readonly queryNonce: readonly DbNonceObjNonce[] };
-  type QueryVariables = { readonly chainId: string; readonly address: string };
-
-  const { queryNonce } = await gqlClient.request<QueryResponse, QueryVariables>(
-    gql`
-      query GetNonce($chainId: String!, $address: String!) {
-        queryNonce(filter: { chainId: { eq: $chainId }, address: { eq: $address } }) {
-          nonce
-        }
-      }
-    `,
-    { chainId, address },
-  );
-
-  const dbNonceObj = queryNonce.length ? queryNonce[0] : null;
+  const dbNonceObj = await db.getNonce(chainId, address);
 
   if (dbNonceObj) {
-    DbNonceObjNonce.parse(dbNonceObj);
+    DbNonceObjNonce.parse({ nonce: dbNonceObj.nonce });
     return dbNonceObj.nonce;
   }
 
-  type AddResponse = { readonly addNonce: { readonly nonce: readonly DbNonceObjNonce[] } };
-  type AddVariables = { readonly chainId: string; readonly address: string };
-
-  const { addNonce } = await gqlClient.request<AddResponse, AddVariables>(
-    gql`
-      mutation CreateNonce($chainId: String!, $address: String!) {
-        addNonce(input: { chainId: $chainId, address: $address, nonce: 1 }) {
-          nonce {
-            nonce
-          }
-        }
-      }
-    `,
-    { chainId, address },
-  );
-
-  const createdNonceObj = addNonce.nonce[0];
-  DbNonceObjNonce.parse(createdNonceObj);
-
-  return createdNonceObj.nonce;
+  // Create with initial nonce of 1
+  await db.createOrUpdateNonce(chainId, address, 1);
+  return 1;
 };
 
 export const incrementNonce = async (chainId: string, address: string) => {
   const dbNonce = await getNonce(chainId, address);
+  const newNonce = dbNonce + 1;
 
-  type Response = { readonly updateNonce: { readonly nonce: readonly DbNonceObjNonce[] } };
-  type Variables = { readonly chainId: string; readonly address: string; readonly nonce: number };
+  await db.createOrUpdateNonce(chainId, address, newNonce);
 
-  const { updateNonce } = await gqlClient.request<Response, Variables>(
-    gql`
-      mutation IncrementNonce($chainId: String!, $address: String!, $nonce: Int!) {
-        updateNonce(
-          input: {
-            filter: { chainId: { eq: $chainId }, address: { eq: $address } }
-            set: { nonce: $nonce }
-          }
-        ) {
-          nonce {
-            nonce
-          }
-        }
-      }
-    `,
-    { chainId, address, nonce: dbNonce + 1 },
-  );
-
-  const updatedNonceObj = updateNonce.nonce[0];
-  DbNonceObjNonce.parse(updatedNonceObj);
-
-  return updatedNonceObj.nonce;
+  return newNonce;
 };

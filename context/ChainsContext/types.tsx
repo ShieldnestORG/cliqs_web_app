@@ -46,6 +46,7 @@ export interface ValidatorState {
 export type ExplorerLinks = {
   readonly tx: string;
   readonly account: string;
+  readonly proposal?: string;
 };
 
 export type NewConnection =

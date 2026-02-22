@@ -18,15 +18,25 @@ export const getDbMultisig = async (multisigAddress: string, chainId: string) =>
 };
 
 export type GetDbUserMultisigsBody = {
-  readonly signature: StdSignature;
+  readonly signature?: StdSignature;
+  readonly address?: string;
+  readonly pubkey?: string;
   readonly chain: ChainInfo;
 };
 export type FetchedMultisigs = {
   readonly created: readonly DbMultisig[];
   readonly belonged: readonly DbMultisig[];
 };
-export const getDbUserMultisigs = async (signature: StdSignature, chain: ChainInfo) => {
-  const body: GetDbUserMultisigsBody = { signature, chain };
+export const getDbUserMultisigs = async (
+  chain: ChainInfo,
+  options?: { signature?: StdSignature; address?: string; pubkey?: string },
+) => {
+  const body: GetDbUserMultisigsBody = {
+    ...(options?.signature && { signature: options.signature }),
+    ...(options?.address && { address: options.address }),
+    ...(options?.pubkey && { pubkey: options.pubkey }),
+    chain,
+  };
 
   const multisigs: FetchedMultisigs = await requestJson(
     `/api/chain/${chain.chainId}/multisig/list`,
@@ -93,6 +103,31 @@ export const updateDbTxHash = async (txId: string, txHash: string) => {
   return dbTxHash;
 };
 
+export type CancelDbTxBody = {
+  readonly action: "cancel";
+};
+export const cancelDbTx = async (txId: string) => {
+  const body: CancelDbTxBody = { action: "cancel" };
+
+  const { cancelled }: { cancelled: boolean; txId: string } = await requestJson(
+    `/api/transaction/${txId}`,
+    { body },
+  );
+
+  return cancelled;
+};
+
+export type GetPendingTxsBody = {
+  readonly multisigAddress: string;
+  readonly chainId: string;
+};
+export const getPendingDbTxs = async (multisigAddress: string, chainId: string) => {
+  const body: GetPendingTxsBody = { multisigAddress, chainId };
+  const txs: readonly DbTransaction[] = await requestJson(`/api/transaction/pending`, { body });
+
+  return txs;
+};
+
 export type CreateDbSignatureBody = Omit<DbSignatureObjDraft, "transaction">;
 export const createDbSignature = async (
   txId: string,
@@ -111,4 +146,62 @@ export const createDbSignature = async (
 export const getDbNonce = async (address: string, chainId: string) => {
   const { nonce }: { nonce: number } = await requestJson(`/api/chain/${chainId}/nonce/${address}`);
   return nonce;
+};
+
+// ============================================================================
+// Transaction Privacy / Wipe Operations
+// ============================================================================
+
+export type WipeMode = "completed" | "all";
+
+export type WipeResult = {
+  readonly success: boolean;
+  readonly mode: WipeMode;
+  readonly deletedTransactions: number;
+  readonly deletedSignatures: number;
+};
+
+export const wipeTransactions = async (
+  multisigAddress: string,
+  chainId: string,
+  mode: WipeMode,
+): Promise<WipeResult> => {
+  const body = { multisigAddress, chainId, mode };
+  const result: WipeResult = await requestJson("/api/transaction/wipe", { body });
+  return result;
+};
+
+export type ExportResult = {
+  readonly multisigAddress: string;
+  readonly chainId: string;
+  readonly exportedAt: string;
+  readonly transactionCount: number;
+  readonly transactions: readonly object[];
+};
+
+export const exportTransactions = async (
+  multisigAddress: string,
+  chainId: string,
+): Promise<ExportResult> => {
+  const body = { multisigAddress, chainId };
+  const result: ExportResult = await requestJson("/api/transaction/export", { body });
+  return result;
+};
+
+export type DbStorageStats = {
+  readonly backend: string;
+  readonly multisigCount?: number;
+  readonly transactionCount?: number;
+  readonly signatureCount?: number;
+  readonly estimatedSizeMB?: number;
+  readonly limitMB?: number;
+  readonly usagePercent?: string;
+  readonly healthy?: boolean;
+  readonly message?: string;
+};
+
+export const getDbStats = async (): Promise<DbStorageStats> => {
+  const response = await fetch("/api/db/stats");
+  if (!response.ok) throw new Error("Failed to fetch DB stats");
+  return response.json();
 };

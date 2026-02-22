@@ -11,16 +11,15 @@ import {
 import { toastError } from "@/lib/utils";
 import { isMultisigThresholdPubkey, isSecp256k1Pubkey, pubkeyToAddress } from "@cosmjs/amino";
 import { assert } from "@cosmjs/utils";
-import copy from "copy-to-clipboard";
-import { AlertCircle, ArrowUpRightSquare, Copy, Info, Loader2 } from "lucide-react";
+import { AlertCircle, ArrowUpRightSquare, Info, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import { useChains } from "../../../context/ChainsContext";
 import { Button } from "../../ui/button";
 import BalancesTable from "../BalancesTable";
 import ListMultisigTxs from "../ListMultisigTxs";
+import { CopyButton } from "@/components/ui/copy-button";
 
 export default function MultisigView() {
   const router = useRouter();
@@ -67,7 +66,10 @@ export default function MultisigView() {
         });
       }
     })();
-  }, [chain, multisigAddress, router]);
+    // Note: router is intentionally excluded from deps - it changes on every render
+    // and we only use router.reload() which doesn't depend on router state
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chain.chainId, chain.nodeAddress, chain.addressPrefix, multisigAddress]);
 
   const explorerLink =
     hostedMultisig?.hosted === "chain" || hostedMultisig?.hosted === "db+chain"
@@ -88,13 +90,9 @@ export default function MultisigView() {
         <CardContent className="flex flex-col gap-5">
           {multisigAddress ? (
             <div
-              onClick={async () => {
-                copy(multisigAddress);
-                toast(`Copied address to clipboard`, { description: multisigAddress });
-              }}
-              className="flex items-center space-x-4 rounded-md border p-4 transition-colors hover:cursor-pointer hover:bg-muted/50"
+              className="flex items-center space-x-4 rounded-md border p-4 transition-colors bg-muted/30"
             >
-              <Copy className="w-5" />
+              <CopyButton value={multisigAddress} copyLabel="multisig address" />
               <div className="flex-1 space-y-1">
                 <p className="text-sm font-medium leading-none">Multisig address</p>
                 <p className="text-sm text-muted-foreground">{multisigAddress}</p>
@@ -128,13 +126,9 @@ export default function MultisigView() {
                   return (
                     <div
                       key={memberAddress}
-                      onClick={async () => {
-                        copy(memberAddress);
-                        toast(`Copied address to clipboard`, { description: memberAddress });
-                      }}
-                      className="flex items-center space-x-2 rounded-md border p-2 transition-colors hover:cursor-pointer hover:bg-muted/50"
+                      className="flex items-center space-x-2 rounded-md border p-2 transition-colors bg-muted/30"
                     >
-                      <Copy className="w-5" />
+                      <CopyButton value={memberAddress} copyLabel="member address" />
                       <div className="flex-1 space-y-1">
                         <p className="text-sm font-medium leading-none">{memberAddress}</p>
                         <p className="text-sm text-muted-foreground">{simplePubkey}</p>
@@ -169,12 +163,14 @@ export default function MultisigView() {
                     database. You need to create it using this tool.
                   </p>
                 )}
-                <Button
-                  asChild
-                  className="mt-2 border border-black/50 bg-white text-amber-600 hover:bg-white"
-                >
-                  <Link href={`/${chain.registryName}/create`}>Create new multisig</Link>
-                </Button>
+                {chain.registryName && (
+                  <Button
+                    asChild
+                    className="mt-2 border border-black/50 bg-white text-amber-600 hover:bg-white"
+                  >
+                    <Link href={`/${chain.registryName}/create`}>Create new multisig</Link>
+                  </Button>
+                )}
               </AlertDescription>
             </Alert>
           ) : null}

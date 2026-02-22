@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "generatedAt": "2026-02-22T01:31:22.286969+00:00",
+  "cwPlusVersion": "v0.16.0",
+  "optimizerImage": "cosmwasm/optimizer:0.16.1",
+  "buildMethod": "github-release-download",
+  "allCoreumSafe": false,
+  "contracts": {
+    "cw3_fixed_multisig": {
+      "file": "cw3_fixed_multisig.wasm",
+      "sizeBytes": 286228,
+      "sha256": "826ef08096193f125a76765559b02eff87dee46d3831307e412db620a7b33baa",
+      "hasBulkMemory": true,
+      "coreumSafe": false,
+      "bulkMemoryOpcodes": [
+        {
+          "name": "memory.fill",
+          "count": 2
+        }
+      ]
+    },
+    "cw3_flex_multisig": {
+      "file": "cw3_flex_multisig.wasm",
+      "sizeBytes": 320464,
+      "sha256": "f6f07af19d33e54c480afff8f1f375829a024b63551cba76fcf2181260072d24",
+      "hasBulkMemory": false,
+      "coreumSafe": true
+    },
+    "cw4_group": {
+      "file": "cw4_group.wasm",
+      "sizeBytes": 208791,
+      "sha256": "121aa4b84fb68d7b0bff511f7df18cbf1e0dbf54c6ad9cf5e0d9e4c5ade9895a",
+      "hasBulkMemory": false,
+      "coreumSafe": true
+    }
+  }
+}

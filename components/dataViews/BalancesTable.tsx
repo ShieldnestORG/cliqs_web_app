@@ -40,7 +40,10 @@ export default function BalancesTable({ walletAddress }: BalancesTableProps) {
       <TableBody>
         {balances.map((coin) => {
           const foundAsset = chain.assets.find((asset) => asset.base === coin.denom);
-          const logo = foundAsset?.logo_URIs?.svg || foundAsset?.logo_URIs?.png || "";
+          const isNativeDenom = coin.denom === chain.denom;
+          const logo = isNativeDenom
+            ? "/tx.png"
+            : foundAsset?.logo_URIs?.svg || foundAsset?.logo_URIs?.png || "";
           const [macroAmount, macroDenom] = printableCoin(coin, chain).split(thinSpace);
 
           return (

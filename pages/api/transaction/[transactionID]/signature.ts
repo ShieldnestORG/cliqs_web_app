@@ -1,10 +1,11 @@
 import { DbSignatureObjDraft, createSignature } from "@/graphql/signature";
 import { CreateDbSignatureBody } from "@/lib/api";
+import { withByodbMiddleware } from "@/lib/byodb/middleware";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 const endpointErrMsg = "Failed to create signature";
 
-export default async function apiCreateSignature(req: NextApiRequest, res: NextApiResponse) {
+async function apiCreateSignature(req: NextApiRequest, res: NextApiResponse) {
   const txId = req.query.transactionID;
 
   if (req.method !== "POST" || typeof txId !== "string" || !txId) {
@@ -26,3 +27,5 @@ export default async function apiCreateSignature(req: NextApiRequest, res: NextA
       .send(err instanceof Error ? `${endpointErrMsg}: ${err.message}` : endpointErrMsg);
   }
 }
+
+export default withByodbMiddleware(apiCreateSignature);

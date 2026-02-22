@@ -9,8 +9,10 @@ import {
 } from "../../../../lib/dateHelpers";
 import { checkAddress, exampleAddress, trimStringsObj } from "../../../../lib/displayHelpers";
 import { MsgCodecs, MsgTypeUrls } from "../../../../types/txMsg";
-import Input from "../../../inputs/Input";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import StackableContainer from "../../../layout/StackableContainer";
+import { X } from "lucide-react";
 
 interface MsgCreateVestingAccountFormProps {
   readonly senderAddress: string;
@@ -97,6 +99,7 @@ const MsgCreateVestingAccountForm = ({
     const msg: EncodeObject = { typeUrl: MsgTypeUrls.CreateVestingAccount, value: msgValue };
 
     setMsgGetter({ isMsgValid, msg });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     chain.addressPrefix,
     chain.assets,
@@ -104,18 +107,24 @@ const MsgCreateVestingAccountForm = ({
     chain.displayDenom,
     delayed,
     senderAddress,
-    setMsgGetter,
+    // Note: setMsgGetter intentionally excluded - it's a stable setter that shouldn't trigger re-runs
     trimmedInputs,
   ]);
 
   return (
-    <StackableContainer lessPadding lessMargin>
-      <button className="remove" onClick={() => deleteMsg()}>
-        ✕
-      </button>
-      <h2>MsgCreateVestingAccount</h2>
-      <div className="form-item">
+    <StackableContainer variant="institutional" lessPadding lessMargin>
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        onClick={() => deleteMsg()}
+        className="absolute right-4 top-4 h-8 w-8 text-muted-foreground hover:text-foreground"
+      >
+        <X className="h-4 w-4" />
+      </Button>
+      <h2 className="text-xl font-heading font-semibold mb-4">MsgCreateVestingAccount</h2>
+      <div className="space-y-4">
         <Input
+          variant="institutional"
           label="Recipient Address"
           name="recipient-address"
           value={toAddress}
@@ -126,9 +135,8 @@ const MsgCreateVestingAccountForm = ({
           error={toAddressError}
           placeholder={`E.g. ${exampleAddress(0, chain.addressPrefix)}`}
         />
-      </div>
-      <div className="form-item">
         <Input
+          variant="institutional"
           type="number"
           label={`Amount (${chain.displayDenom})`}
           name="amount"
@@ -139,9 +147,8 @@ const MsgCreateVestingAccountForm = ({
           }}
           error={amountError}
         />
-      </div>
-      <div className="form-item">
         <Input
+          variant="institutional"
           type="datetime-local"
           label="End time"
           name="end-time"
@@ -152,33 +159,18 @@ const MsgCreateVestingAccountForm = ({
           }}
           error={endTimeError}
         />
+        <div className="flex items-center gap-2">
+          <Input
+            variant="institutional"
+            type="checkbox"
+            label="Delayed"
+            name="delayed"
+            checked={delayed}
+            value={String(delayed)}
+            onChange={({ target }) => setDelayed(target.checked)}
+          />
+        </div>
       </div>
-      <div className="form-item">
-        <Input
-          type="checkbox"
-          label="Delayed"
-          name="delayed"
-          checked={delayed}
-          value={String(delayed)}
-          onChange={({ target }) => setDelayed(target.checked)}
-        />
-      </div>
-      <style jsx>{`
-        .form-item {
-          margin-top: 1.5em;
-        }
-        button.remove {
-          background: rgba(255, 255, 255, 0.2);
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          border: none;
-          color: white;
-          position: absolute;
-          right: 10px;
-          top: 10px;
-        }
-      `}</style>
     </StackableContainer>
   );
 };

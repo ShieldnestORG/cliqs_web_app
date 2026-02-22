@@ -5,6 +5,7 @@ import { useChains } from "@/context/ChainsContext";
 import { getField, getMsgSchema } from "@/lib/form";
 import { getMsgRegistry } from "@/lib/msg";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/router";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -15,6 +16,7 @@ type MsgType = Readonly<{
 }>;
 
 export default function CreateTxForm() {
+  const router = useRouter();
   const { chain } = useChains();
   const [msgTypes, setMsgTypes] = useState<readonly MsgType[]>([]);
 

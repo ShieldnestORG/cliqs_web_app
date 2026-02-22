@@ -18,6 +18,7 @@
 # misc
 .DS_Store
 .vscode
+.cursor/
 *.pem
 
 # debug
@@ -28,8 +29,17 @@ yarn-error.log*
 # local env files
 .env*.local
 
+# local database
+/data
+
 # vercel
 .vercel
+
+# WASM build cache (Docker optimizer)
+.wasm-build
+
+# State dumps (large)
+/states
 
 # typescript
 *.tsbuildinfo

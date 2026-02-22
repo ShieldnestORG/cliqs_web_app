@@ -1,11 +1,5 @@
-import { GraphQLClient } from "graphql-request";
-
-export const gqlClient = new GraphQLClient(
-  process.env.DGRAPH_URL || "",
-  process.env.DGRAPH_SECRET
-    ? { headers: { authorization: process.env.DGRAPH_SECRET || "" } }
-    : undefined,
-);
+// No longer using GraphQL client - using local database instead
+// The gqlClient is kept for backward compatibility but not used
 
 export * from "./multisig";
 export * from "./nonce";

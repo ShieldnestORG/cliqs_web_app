@@ -8,16 +8,20 @@ import {
 import { Account, StargateClient } from "@cosmjs/stargate";
 import { createDbMultisig, getDbMultisig } from "./api";
 import { checkAddress, explorerLinkAccount } from "./displayHelpers";
+import { ensureProtocol } from "./utils";
 
 /**
  * Turns array of compressed Secp256k1 pubkeys
- * into a multisig using comsjs
+ * into a multisig (Cliq) using comsjs
  *
  * @param {array} compressedPubkeys Must be an array of compressed Secp256k1 pubkeys (e.g 'A8B5KVhRz1oQuV1dguzFdGBhHrIU/I+R/QfBZcbZFWVG').
  * @param {number} threshold the number of signers required to sign messages from this multisig
  * @param {string} addressPrefix chain based prefix for the address (e.g. 'cosmos')
  * @param {string} chainId chain-id for the multisig (e.g. 'cosmoshub-4')
- * @return {string} The multisig address.
+ * @param {string} creator address of the wallet creating this cliq
+ * @param {string} name optional human-readable name for the cliq
+ * @param {string} description optional description of the cliq's purpose
+ * @return {string} The multisig (cliq) address.
  */
 export const createMultisigFromCompressedSecp256k1Pubkeys = async (
   compressedPubkeys: string[],
@@ -25,6 +29,8 @@ export const createMultisigFromCompressedSecp256k1Pubkeys = async (
   addressPrefix: string,
   chainId: string,
   creator: string,
+  name?: string,
+  description?: string,
 ): Promise<string> => {
   const pubkeys = compressedPubkeys.map((compressedPubkey) => {
     return {
@@ -35,12 +41,14 @@ export const createMultisigFromCompressedSecp256k1Pubkeys = async (
   const multisigPubkey = createMultisigThresholdPubkey(pubkeys, threshold);
   const multisigAddress = pubkeyToAddress(multisigPubkey, addressPrefix);
 
-  // save multisig to relational offchain database
+  // save multisig (cliq) to relational offchain database
   const multisig: DbMultisigDraft = {
     address: multisigAddress,
     pubkeyJSON: JSON.stringify(multisigPubkey),
     creator,
     chainId,
+    name: name || null,
+    description: description || null,
   };
 
   const dbMultisigAddress = await createDbMultisig(multisig, chainId);
@@ -93,7 +101,7 @@ export const getHostedMultisig = async (
 
   hostedMultisig = await (async () => {
     try {
-      const client = providedClient ?? (await StargateClient.connect(nodeAddress));
+      const client = providedClient ?? (await StargateClient.connect(ensureProtocol(nodeAddress)));
       const accountOnChain = await client.getAccount(multisigAddress);
 
       if (!accountOnChain) {

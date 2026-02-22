@@ -4,43 +4,52 @@ import { MsgGetter } from "..";
 import { useChains } from "../../../../context/ChainsContext";
 import { displayCoinToBaseCoin } from "../../../../lib/coinHelpers";
 import { trimStringsObj } from "../../../../lib/displayHelpers";
-import { RegistryAsset } from "../../../../types/chainRegistry";
 import { MsgCodecs, MsgTypeUrls } from "../../../../types/txMsg";
-import Input from "../../../inputs/Input";
-import Select from "../../../inputs/Select";
+import { getMessageCategory } from "../../../../lib/msgCategoryHelpers";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { CardLabel } from "@/components/ui/card";
+import { DenomSelect, CUSTOM_DENOM_VALUE } from "./DenomSelect";
 import StackableContainer from "../../../layout/StackableContainer";
-
-const customDenomOption = { label: "Custom (enter denom below)", value: "custom" } as const;
-
-const getDenomOptions = (assets: readonly RegistryAsset[]) => {
-  if (!assets?.length) {
-    return [customDenomOption];
-  }
-
-  return [...assets.map((asset) => ({ label: asset.symbol, value: asset })), customDenomOption];
-};
+import { X } from "lucide-react";
+import BalanceDisplay from "../BalanceDisplay";
+import { useBalance } from "@/lib/hooks/useBalance";
+import { Decimal } from "@cosmjs/math";
 
 interface MsgFundCommunityPoolFormProps {
   readonly senderAddress: string;
   readonly setMsgGetter: (msgGetter: MsgGetter) => void;
   readonly deleteMsg: () => void;
+  readonly gasLimit?: number;
 }
 
 const MsgFundCommunityPoolForm = ({
   senderAddress,
   setMsgGetter,
   deleteMsg,
+  gasLimit,
 }: MsgFundCommunityPoolFormProps) => {
   const { chain } = useChains();
+  const categoryInfo = getMessageCategory(MsgTypeUrls.FundCommunityPool);
 
-  const denomOptions = getDenomOptions(chain.assets);
-
-  const [selectedDenom, setSelectedDenom] = useState(denomOptions[0]);
+  const [selectedDenomBase, setSelectedDenomBase] = useState(
+    chain.assets?.length ? chain.assets[0].base : CUSTOM_DENOM_VALUE,
+  );
   const [customDenom, setCustomDenom] = useState("");
   const [amount, setAmount] = useState("0");
 
   const [customDenomError, setCustomDenomError] = useState("");
   const [amountError, setAmountError] = useState("");
+
+  const selectedAsset = chain.assets?.find((a) => a.base === selectedDenomBase);
+
+  // Get the denom for balance checking
+  const balanceDenom = selectedDenomBase === CUSTOM_DENOM_VALUE ? customDenom : (selectedAsset?.symbol ?? "");
+  const { availableBalance } = useBalance({
+    address: senderAddress,
+    denom: balanceDenom || chain.displayDenom,
+    gasLimit,
+  });
 
   const trimmedInputs = trimStringsObj({ customDenom, amount });
 
@@ -53,7 +62,7 @@ const MsgFundCommunityPoolForm = ({
       setAmountError("");
 
       if (
-        selectedDenom.value === customDenomOption.value &&
+        selectedDenomBase === CUSTOM_DENOM_VALUE &&
         !customDenom &&
         amount &&
         amount !== "0"
@@ -67,9 +76,26 @@ const MsgFundCommunityPoolForm = ({
         return false;
       }
 
-      if (selectedDenom.value === customDenomOption.value && !Number.isInteger(Number(amount))) {
+      if (selectedDenomBase === CUSTOM_DENOM_VALUE && !Number.isInteger(Number(amount))) {
         setAmountError("Amount cannot be decimal for custom denom");
         return false;
+      }
+
+      // Validate against available balance
+      if (availableBalance && availableBalance.amount !== "0" && denom === balanceDenom) {
+        try {
+          const userAmountCoin = displayCoinToBaseCoin({ denom, amount }, chain.assets);
+          const userAmountDecimal = Decimal.fromAtomics(userAmountCoin.amount, 0);
+          const availableAmountDecimal = Decimal.fromAtomics(availableBalance.amount, 0);
+          
+          if (userAmountDecimal.isGreaterThan(availableAmountDecimal)) {
+            setAmountError(`Amount exceeds available balance`);
+            return false;
+          }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (_: unknown) {
+          // If conversion fails, continue with other validation
+        }
       }
 
       try {
@@ -83,7 +109,7 @@ const MsgFundCommunityPoolForm = ({
     };
 
     const denom =
-      selectedDenom.value === customDenomOption.value ? customDenom : selectedDenom.value.symbol;
+      selectedDenomBase === CUSTOM_DENOM_VALUE ? customDenom : (selectedAsset?.symbol ?? "");
 
     const microCoin = (() => {
       try {
@@ -105,33 +131,54 @@ const MsgFundCommunityPoolForm = ({
     const msg: EncodeObject = { typeUrl: MsgTypeUrls.FundCommunityPool, value: msgValue };
 
     setMsgGetter({ isMsgValid, msg });
-  }, [chain.assets, selectedDenom.value, senderAddress, setMsgGetter, trimmedInputs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chain.assets, selectedDenomBase, selectedAsset, senderAddress, trimmedInputs, balanceDenom, availableBalance]);
+  // Note: setMsgGetter intentionally excluded - it's a stable setter that shouldn't trigger re-runs
 
   return (
-    <StackableContainer lessPadding lessMargin>
-      <button className="remove" onClick={() => deleteMsg()}>
-        ✕
-      </button>
-      <h2>MsgFundCommunityPool</h2>
-      <div className="form-item form-select">
-        <label>Choose a denom:</label>
-        <Select
-          label="Select denom"
-          name="denom-select"
-          options={denomOptions}
-          value={selectedDenom}
-          onChange={(option: (typeof denomOptions)[number]) => {
-            setSelectedDenom(option);
-            if (option.value !== customDenomOption.value) {
-              setCustomDenom("");
-            }
-            setCustomDenomError("");
-          }}
-        />
+    <StackableContainer 
+      variant="institutional" 
+      lessPadding 
+      lessMargin
+      accent={categoryInfo.accent}
+    >
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        onClick={() => deleteMsg()}
+        className="absolute right-4 top-4 h-8 w-8 text-muted-foreground hover:text-foreground z-10"
+      >
+        <X className="h-4 w-4" />
+      </Button>
+      <div className="mb-4">
+        <CardLabel comment>{categoryInfo.label}</CardLabel>
+        <h2 className="text-xl font-heading font-semibold">MsgFundCommunityPool</h2>
       </div>
-      {selectedDenom.value === customDenomOption.value ? (
-        <div className="form-item">
+      <div className="space-y-4">
+        {balanceDenom && (
+          <BalanceDisplay
+            treasuryAddress={senderAddress}
+            denom={balanceDenom}
+            gasLimit={gasLimit}
+          />
+        )}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">Choose a denom:</label>
+          <DenomSelect
+            assets={chain.assets}
+            value={selectedDenomBase}
+            onValueChange={(val) => {
+              setSelectedDenomBase(val);
+              if (val !== CUSTOM_DENOM_VALUE) {
+                setCustomDenom("");
+              }
+              setCustomDenomError("");
+            }}
+          />
+        </div>
+        {selectedDenomBase === CUSTOM_DENOM_VALUE ? (
           <Input
+            variant="institutional"
             label="Custom denom"
             name="custom-denom"
             value={customDenom}
@@ -139,18 +186,12 @@ const MsgFundCommunityPoolForm = ({
               setCustomDenom(target.value);
               setCustomDenomError("");
             }}
-            placeholder={
-              selectedDenom.value === customDenomOption.value
-                ? "Enter custom denom"
-                : "Select Custom denom above"
-            }
-            disabled={selectedDenom.value !== customDenomOption.value}
+            placeholder="Enter custom denom"
             error={customDenomError}
           />
-        </div>
-      ) : null}
-      <div className="form-item">
+        ) : null}
         <Input
+          variant="institutional"
           type="number"
           label="Amount"
           name="amount"
@@ -162,31 +203,6 @@ const MsgFundCommunityPoolForm = ({
           error={amountError}
         />
       </div>
-      <style jsx>{`
-        .form-item {
-          margin-top: 1.5em;
-        }
-        .form-item label {
-          font-style: italic;
-          font-size: 12px;
-        }
-        .form-select {
-          display: flex;
-          flex-direction: column;
-          gap: 0.8em;
-        }
-        button.remove {
-          background: rgba(255, 255, 255, 0.2);
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          border: none;
-          color: white;
-          position: absolute;
-          right: 10px;
-          top: 10px;
-        }
-      `}</style>
     </StackableContainer>
   );
 };

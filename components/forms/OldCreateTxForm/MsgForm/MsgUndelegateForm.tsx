@@ -1,22 +1,29 @@
 import SelectValidator from "@/components/SelectValidator";
 import { MsgUndelegateEncodeObject } from "@cosmjs/stargate";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MsgGetter } from "..";
 import { useChains } from "../../../../context/ChainsContext";
 import { displayCoinToBaseCoin } from "../../../../lib/coinHelpers";
 import { checkAddress, exampleAddress, trimStringsObj } from "../../../../lib/displayHelpers";
 import { MsgCodecs, MsgTypeUrls } from "../../../../types/txMsg";
-import Input from "../../../inputs/Input";
+import { getMessageCategory } from "../../../../lib/msgCategoryHelpers";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { CardLabel } from "@/components/ui/card";
 import StackableContainer from "../../../layout/StackableContainer";
+import { X } from "lucide-react";
+import BalanceDisplay from "../BalanceDisplay";
 
 interface MsgUndelegateFormProps {
   readonly senderAddress: string;
   readonly setMsgGetter: (msgGetter: MsgGetter) => void;
   readonly deleteMsg: () => void;
+  readonly gasLimit?: number;
 }
 
-const MsgUndelegateForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgUndelegateFormProps) => {
+const MsgUndelegateForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLimit }: MsgUndelegateFormProps) => {
   const { chain } = useChains();
+  const categoryInfo = getMessageCategory(MsgTypeUrls.Undelegate);
 
   const [validatorAddress, setValidatorAddress] = useState("");
   const [amount, setAmount] = useState("0");
@@ -24,7 +31,7 @@ const MsgUndelegateForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgUndele
   const [validatorAddressError, setValidatorAddressError] = useState("");
   const [amountError, setAmountError] = useState("");
 
-  const trimmedInputs = trimStringsObj({ validatorAddress, amount });
+  const trimmedInputs = useMemo(() => trimStringsObj({ validatorAddress, amount }), [validatorAddress, amount]);
 
   useEffect(() => {
     // eslint-disable-next-line no-shadow
@@ -74,28 +81,48 @@ const MsgUndelegateForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgUndele
     const msg: MsgUndelegateEncodeObject = { typeUrl: MsgTypeUrls.Undelegate, value: msgValue };
 
     setMsgGetter({ isMsgValid, msg });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     chain.addressPrefix,
     chain.assets,
     chain.chainId,
     chain.displayDenom,
     senderAddress,
-    setMsgGetter,
+    // Note: setMsgGetter intentionally excluded - it's a stable setter that shouldn't trigger re-runs
     trimmedInputs,
   ]);
 
   return (
-    <StackableContainer lessPadding lessMargin>
-      <button className="remove" onClick={() => deleteMsg()}>
-        ✕
-      </button>
-      <h2>MsgUndelegate</h2>
-      <div className="form-item">
+    <StackableContainer 
+      variant="institutional" 
+      lessPadding 
+      lessMargin
+      accent={categoryInfo.accent}
+    >
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        onClick={() => deleteMsg()}
+        className="absolute right-4 top-4 h-8 w-8 text-muted-foreground hover:text-foreground z-10"
+      >
+        <X className="h-4 w-4" />
+      </Button>
+      <div className="mb-4">
+        <CardLabel comment>{categoryInfo.label}</CardLabel>
+        <h2 className="text-xl font-heading font-semibold">MsgUndelegate</h2>
+      </div>
+      <div className="space-y-4">
+        <BalanceDisplay
+          treasuryAddress={senderAddress}
+          denom={chain.displayDenom}
+          gasLimit={gasLimit}
+        />
         <SelectValidator
           selectedValidatorAddress={validatorAddress}
           setValidatorAddress={setValidatorAddress}
         />
         <Input
+          variant="institutional"
           label="Validator Address"
           name="validator-address"
           value={validatorAddress}
@@ -106,9 +133,8 @@ const MsgUndelegateForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgUndele
           error={validatorAddressError}
           placeholder={`E.g. ${exampleAddress(0, chain.addressPrefix)}`}
         />
-      </div>
-      <div className="form-item">
         <Input
+          variant="institutional"
           type="number"
           label={`Amount (${chain.displayDenom})`}
           name="amount"
@@ -120,22 +146,6 @@ const MsgUndelegateForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgUndele
           error={amountError}
         />
       </div>
-      <style jsx>{`
-        .form-item {
-          margin-top: 1.5em;
-        }
-        button.remove {
-          background: rgba(255, 255, 255, 0.2);
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          border: none;
-          color: white;
-          position: absolute;
-          right: 10px;
-          top: 10px;
-        }
-      `}</style>
     </StackableContainer>
   );
 };

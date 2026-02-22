@@ -4,25 +4,16 @@ import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { MsgGetter } from "..";
 import { useChains } from "../../../../context/ChainsContext";
-import { ChainInfo } from "../../../../context/ChainsContext/types";
 import { displayCoinToBaseCoin } from "../../../../lib/coinHelpers";
 import { checkAddress, exampleAddress, trimStringsObj } from "../../../../lib/displayHelpers";
 import { MsgCodecs, MsgTypeUrls } from "../../../../types/txMsg";
-import Input from "../../../inputs/Input";
-import Select from "../../../inputs/Select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { DenomSelect, CUSTOM_DENOM_VALUE } from "./DenomSelect";
 import StackableContainer from "../../../layout/StackableContainer";
+import { X } from "lucide-react";
 
 const JsonEditor = dynamic(() => import("../../../inputs/JsonEditor"), { ssr: false });
-
-const customDenomOption = { label: "Custom (enter denom below)", value: "custom" } as const;
-
-const getDenomOptions = (assets: ChainInfo["assets"]) => {
-  if (!assets?.length) {
-    return [customDenomOption];
-  }
-
-  return [...assets.map((asset) => ({ label: asset.symbol, value: asset })), customDenomOption];
-};
 
 interface MsgInstantiateContract2FormProps {
   readonly senderAddress: string;
@@ -37,16 +28,18 @@ const MsgInstantiateContract2Form = ({
 }: MsgInstantiateContract2FormProps) => {
   const { chain } = useChains();
 
-  const denomOptions = getDenomOptions(chain.assets);
-
   const [codeId, setCodeId] = useState("");
   const [label, setLabel] = useState("");
   const [adminAddress, setAdminAddress] = useState("");
   const [salt, setSalt] = useState("");
   const [msgContent, setMsgContent] = useState("{}");
-  const [selectedDenom, setSelectedDenom] = useState(denomOptions[0]);
+  const [selectedDenomBase, setSelectedDenomBase] = useState(
+    chain.assets?.length ? chain.assets[0].base : CUSTOM_DENOM_VALUE,
+  );
   const [customDenom, setCustomDenom] = useState("");
   const [amount, setAmount] = useState("0");
+
+  const selectedAsset = chain.assets?.find((a) => a.base === selectedDenomBase);
 
   const jsonError = useRef(false);
   const [codeIdError, setCodeIdError] = useState("");
@@ -102,7 +95,7 @@ const MsgInstantiateContract2Form = ({
       }
 
       if (
-        selectedDenom.value === customDenomOption.value &&
+        selectedDenomBase === CUSTOM_DENOM_VALUE &&
         !customDenom &&
         amount &&
         amount !== "0"
@@ -116,7 +109,7 @@ const MsgInstantiateContract2Form = ({
         return false;
       }
 
-      if (selectedDenom.value === customDenomOption.value && !Number.isInteger(Number(amount))) {
+      if (selectedDenomBase === CUSTOM_DENOM_VALUE && !Number.isInteger(Number(amount))) {
         setAmountError("Amount cannot be decimal for custom denom");
         return false;
       }
@@ -132,7 +125,7 @@ const MsgInstantiateContract2Form = ({
     };
 
     const denom =
-      selectedDenom.value === customDenomOption.value ? customDenom : selectedDenom.value.symbol;
+      selectedDenomBase === CUSTOM_DENOM_VALUE ? customDenom : (selectedAsset?.symbol ?? "");
 
     const microCoin = (() => {
       try {
@@ -156,16 +149,24 @@ const MsgInstantiateContract2Form = ({
 
     const msgContentUtf8Array = (() => {
       try {
-        // The JsonEditor does not escape \n or remove whitespaces, so we need to parse + stringify
         return toUtf8(JSON.stringify(JSON.parse(msgContent)));
       } catch {
         return undefined;
       }
     })();
 
+    const safeBigIntCodeId = (() => {
+      try {
+        const n = BigInt(codeId);
+        return n > 0n ? n : 0n;
+      } catch {
+        return 0n;
+      }
+    })();
+
     const msgValue = MsgCodecs[MsgTypeUrls.InstantiateContract2].fromPartial({
       sender: senderAddress,
-      codeId: BigInt(codeId),
+      codeId: safeBigIntCodeId,
       label,
       admin: adminAddress,
       fixMsg: false,
@@ -180,25 +181,33 @@ const MsgInstantiateContract2Form = ({
     };
 
     setMsgGetter({ isMsgValid, msg });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     chain.addressPrefix,
     chain.assets,
     chain.chainId,
     msgContent,
-    selectedDenom.value,
+    selectedDenomBase,
+    selectedAsset,
     senderAddress,
-    setMsgGetter,
+    // Note: setMsgGetter intentionally excluded - it's a stable setter that shouldn't trigger re-runs
     trimmedInputs,
   ]);
 
   return (
-    <StackableContainer lessPadding lessMargin>
-      <button className="remove" onClick={() => deleteMsg()}>
-        ✕
-      </button>
-      <h2>MsgInstantiateContract2</h2>
-      <div className="form-item">
+    <StackableContainer variant="institutional" lessPadding lessMargin>
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        onClick={() => deleteMsg()}
+        className="absolute right-4 top-4 h-8 w-8 text-muted-foreground hover:text-foreground"
+      >
+        <X className="h-4 w-4" />
+      </Button>
+      <h2 className="text-xl font-heading font-semibold mb-4">MsgInstantiateContract2</h2>
+      <div className="space-y-4">
         <Input
+          variant="institutional"
           label="Code ID"
           name="code-id"
           value={codeId}
@@ -208,9 +217,8 @@ const MsgInstantiateContract2Form = ({
           }}
           error={codeIdError}
         />
-      </div>
-      <div className="form-item">
         <Input
+          variant="institutional"
           label="Label"
           name="label"
           value={label}
@@ -220,9 +228,8 @@ const MsgInstantiateContract2Form = ({
           }}
           error={labelError}
         />
-      </div>
-      <div className="form-item">
         <Input
+          variant="institutional"
           label="Admin Address"
           name="admin-address"
           value={adminAddress}
@@ -233,9 +240,8 @@ const MsgInstantiateContract2Form = ({
           error={adminAddressError}
           placeholder={`E.g. ${exampleAddress(0, chain.addressPrefix)}`}
         />
-      </div>
-      <div className="form-item">
         <Input
+          variant="institutional"
           label="Salt (hex encoded)"
           name="salt"
           placeholder="E.g. 1bac68"
@@ -246,36 +252,33 @@ const MsgInstantiateContract2Form = ({
           }}
           error={saltError}
         />
-      </div>
-      <div className="form-item">
-        <JsonEditor
-          label="Msg JSON"
-          content={{ text: msgContent }}
-          onChange={(newMsgContent, _, { contentErrors }) => {
-            setMsgContent("text" in newMsgContent ? (newMsgContent.text ?? "{}") : "{}");
-            jsonError.current = !!contentErrors;
-          }}
-        />
-      </div>
-      <div className="form-item form-select">
-        <label>Choose a denom:</label>
-        <Select
-          label="Select denom"
-          name="denom-select"
-          options={denomOptions}
-          value={selectedDenom}
-          onChange={(option: (typeof denomOptions)[number]) => {
-            setSelectedDenom(option);
-            if (option.value !== customDenomOption.value) {
-              setCustomDenom("");
-            }
-            setCustomDenomError("");
-          }}
-        />
-      </div>
-      {selectedDenom.value === customDenomOption.value ? (
-        <div className="form-item">
+        <div>
+          <JsonEditor
+            label="Msg JSON"
+            content={{ text: msgContent }}
+            onChange={(newMsgContent, _, { contentErrors }) => {
+              setMsgContent("text" in newMsgContent ? (newMsgContent.text ?? "{}") : "{}");
+              jsonError.current = !!contentErrors;
+            }}
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">Choose a denom:</label>
+          <DenomSelect
+            assets={chain.assets}
+            value={selectedDenomBase}
+            onValueChange={(val) => {
+              setSelectedDenomBase(val);
+              if (val !== CUSTOM_DENOM_VALUE) {
+                setCustomDenom("");
+              }
+              setCustomDenomError("");
+            }}
+          />
+        </div>
+        {selectedDenomBase === CUSTOM_DENOM_VALUE ? (
           <Input
+            variant="institutional"
             label="Custom denom"
             name="custom-denom"
             value={customDenom}
@@ -283,18 +286,12 @@ const MsgInstantiateContract2Form = ({
               setCustomDenom(target.value);
               setCustomDenomError("");
             }}
-            placeholder={
-              selectedDenom.value === customDenomOption.value
-                ? "Enter custom denom"
-                : "Select Custom denom above"
-            }
-            disabled={selectedDenom.value !== customDenomOption.value}
+            placeholder="Enter custom denom"
             error={customDenomError}
           />
-        </div>
-      ) : null}
-      <div className="form-item">
+        ) : null}
         <Input
+          variant="institutional"
           type="number"
           label="Amount"
           name="amount"
@@ -306,31 +303,6 @@ const MsgInstantiateContract2Form = ({
           error={amountError}
         />
       </div>
-      <style jsx>{`
-        .form-item {
-          margin-top: 1.5em;
-        }
-        .form-item label {
-          font-style: italic;
-          font-size: 12px;
-        }
-        .form-select {
-          display: flex;
-          flex-direction: column;
-          gap: 0.8em;
-        }
-        button.remove {
-          background: rgba(255, 255, 255, 0.2);
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          border: none;
-          color: white;
-          position: absolute;
-          right: 10px;
-          top: 10px;
-        }
-      `}</style>
     </StackableContainer>
   );
 };

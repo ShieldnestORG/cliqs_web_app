@@ -1,5 +1,6 @@
 import { useChains } from "@/context/ChainsContext";
 import { setNewConnection } from "@/context/ChainsContext/helpers";
+import { Network } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Tabs, TabsContent, TabsList } from "../ui/tabs";
@@ -26,24 +27,37 @@ export default function ChainConnect() {
       <DialogButton />
       <DialogContent
         aria-describedby={undefined}
-        className={"max-h-[75%] max-w-[75%] overflow-y-auto bg-fuchsia-900"}
-        style={newConnection.action === "confirm" ? { width: "auto" } : {}}
+        className="flex h-[85vh] max-w-4xl flex-col overflow-hidden border-2 border-border bg-card p-0"
+        style={newConnection.action === "confirm" ? { maxWidth: "fit-content", height: "auto" } : {}}
       >
-        <DialogTitle className="hidden">Connect to a new chain</DialogTitle>
+        <DialogTitle className="sr-only">Connect to a new chain</DialogTitle>
         {newConnection.action === "confirm" ? (
-          <ConfirmConnection closeDialog={() => setDialogOpen(false)} />
+          <div className="p-6">
+            <ConfirmConnection closeDialog={() => setDialogOpen(false)} />
+          </div>
         ) : (
-          <Tabs defaultValue={newConnection.chain ? tabs.custom : tabs.choose}>
-            <DialogHeader>
-              <TabsList className="justify-start gap-2 bg-transparent">
+          <Tabs defaultValue={newConnection.chain ? tabs.custom : tabs.choose} className="flex min-h-0 flex-1 flex-col">
+            <DialogHeader className="flex-shrink-0 border-b border-border bg-muted/30 px-6 py-4">
+              <div className="flex items-center gap-4">
+                <div className="icon-container h-10 w-10 rounded-lg">
+                  <Network className="h-5 w-5" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-label text-label-comment text-[10px]">Select Network</span>
+                  <span className="font-heading text-lg font-semibold text-foreground">
+                    Connect to Blockchain
+                  </span>
+                </div>
+              </div>
+              <TabsList className="mt-4 justify-start gap-3 bg-transparent p-0">
                 <TabButton value={tabs.choose}>Choose chain</TabButton>
                 <TabButton value={tabs.custom}>Custom chain</TabButton>
               </TabsList>
             </DialogHeader>
-            <TabsContent value={tabs.choose}>
+            <TabsContent value={tabs.choose} className="mt-0 min-h-0 flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col">
               <ChooseChain />
             </TabsContent>
-            <TabsContent value={tabs.custom}>
+            <TabsContent value={tabs.custom} className="mt-0 min-h-0 flex-1 overflow-y-auto p-6">
               <CustomChainForm />
             </TabsContent>
           </Tabs>

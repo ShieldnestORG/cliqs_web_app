@@ -11,6 +11,9 @@ const mainnetsUrl = `https://api.github.com/repos/${chainRegistryRepo}/contents`
 const testnetsUrl = `https://api.github.com/repos/${chainRegistryRepo}/contents/testnets`;
 const registryCdnUrl = `https://cdn.jsdelivr.net/gh/${chainRegistryRepo}@${repoBranch}`;
 
+// Check if testnets are enabled via environment variable (default: false)
+export const isTestnetsEnabled = () => process.env.NEXT_PUBLIC_TESTNETS_ENABLED === "true";
+
 const getShaFromRegistry = async () => {
   const { sha }: { sha: string } = await requestGhJson(shaUrl);
   return sha;
@@ -23,11 +26,15 @@ interface RegistryPromises {
 
 const getChainsFromRegistry = async () => {
   const chains: ChainItems = { mainnets: new Map(), testnets: new Map(), localnets: new Map() };
+  const testnetsEnabled = isTestnetsEnabled();
 
+  // Only fetch testnets if enabled
   const [mainnetGhItems, testnetGhItems]: [
     readonly GithubChainRegistryItem[],
     readonly GithubChainRegistryItem[],
-  ] = await Promise.all([requestGhJson(mainnetsUrl), requestGhJson(testnetsUrl)]);
+  ] = testnetsEnabled
+    ? await Promise.all([requestGhJson(mainnetsUrl), requestGhJson(testnetsUrl)])
+    : [await requestGhJson(mainnetsUrl), []];
 
   const mainnetPromisesMap = new Map<string, RegistryPromises>();
 
@@ -175,20 +182,37 @@ const getChainInfoFromJsons = (
 
   const formattedGasPrice = firstAsset ? `${gasPrice}${firstAssetDenom}` : "";
 
+  const isCoreum = registryChain.chain_name.toLowerCase().includes("coreum");
+
   const chain: ChainInfo = {
-    registryName: registryChain.chain_name,
-    logo,
+    registryName: isCoreum ? "tx" : registryChain.chain_name,
+    logo: isCoreum ? "/tx.png" : logo,
     addressPrefix: registryChain.bech32_prefix,
     chainId: registryChain.chain_id,
-    chainDisplayName: registryChain.pretty_name,
+    chainDisplayName: isCoreum ? "TX" : registryChain.pretty_name,
     nodeAddresses,
     nodeAddress: "",
     explorerLinks: explorerLinks,
     denom: firstAssetDenom,
-    displayDenom,
+    displayDenom: isCoreum ? "TX" : displayDenom,
     displayDenomExponent,
     gasPrice: formattedGasPrice,
-    assets: cdnRegistryAssets,
+    assets: isCoreum ? cdnRegistryAssets.map(asset => {
+        const isCoreAsset = 
+            asset.symbol.toUpperCase().includes("CORE") || 
+            asset.display.toLowerCase().includes("core") ||
+            asset.base.toLowerCase().includes("core");
+        return {
+            ...asset,
+            symbol: isCoreAsset ? "TX" : asset.symbol,
+            display: isCoreAsset ? "TX" : asset.display,
+            logo_URIs: isCoreAsset ? { png: "/tx.png", svg: "/tx.png" } : asset.logo_URIs,
+            denom_units: isCoreAsset ? asset.denom_units.map(unit => ({
+                ...unit,
+                denom: (unit.denom.toLowerCase().includes("core") && unit.exponent > 0) ? "TX" : unit.denom
+            })) : asset.denom_units
+        };
+    }) : cdnRegistryAssets,
   };
 
   return chain;

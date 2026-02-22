@@ -13,7 +13,7 @@ export default function BadgeWithCopy({ name, toCopy }: BadgeWithCopyProps) {
     <Badge
       onClick={async () => {
         copy(toCopy);
-        toast(`Copied ${name} to clipboard`, { description: toCopy });
+        toast.success(`Copied ${name} to clipboard`, { description: toCopy });
       }}
       className="max-w-md self-start truncate hover:cursor-pointer"
     >

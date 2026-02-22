@@ -2,6 +2,7 @@ import { useChains } from "@/context/ChainsContext";
 import { setNewConnection } from "@/context/ChainsContext/helpers";
 import { RegistryAsset } from "@/types/chainRegistry";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Coins, Globe, Hash, Image as ImageIcon, Link2, Server, Tag, Wallet } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -101,186 +102,303 @@ export default function CustomChainForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="grid grid-cols-3 gap-4">
-          <FormField
-            name="localRegistryName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Local Registry Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="mynetwork" className="border-white" {...field} />
-                </FormControl>
-                <FormDescription>
-                  A unique key to store this chain on your local registry
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            name="chainName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Chain Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="My Network" className="border-white" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            name="chainId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Chain ID</FormLabel>
-                <FormControl>
-                  <Input placeholder="my-net-4" className="border-white" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            name="baseDenom"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Base Denom</FormLabel>
-                <FormControl>
-                  <Input placeholder="umycoin" className="border-white" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            name="displayDenom"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Display Denom</FormLabel>
-                <FormControl>
-                  <Input placeholder="MYCOIN" className="border-white" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            name="denomExponent"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Denom Exponent</FormLabel>
-                <FormControl>
-                  <Input placeholder="6" className="border-white" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            name="bech32Prefix"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Address Prefix</FormLabel>
-                <FormControl>
-                  <Input placeholder="mynet" className="border-white" {...field} />
-                </FormControl>
-                <FormDescription>Needs to be bech32</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            name="gasPrice"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Gas Price</FormLabel>
-                <FormControl>
-                  <Input placeholder="0.04umycoin" className="border-white" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            name="explorerTxLink"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Explorer Tx Link</FormLabel>
-                <FormControl>
-                  <Input placeholder="url" className="border-white" {...field} />
-                </FormControl>
-                <FormDescription>with {"'${txHash}'"} included</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            name="explorerAccountLink"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Explorer Account Link</FormLabel>
-                <FormControl>
-                  <Input placeholder="url" className="border-white" {...field} />
-                </FormControl>
-                <FormDescription>with {"'${accountAddress}'"} included</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <FormField
-          name="rpcNodes"
-          render={({ field }) => (
-            <FormItem className="mt-4">
-              <FormLabel>RPC nodes</FormLabel>
-              <FormControl>
-                <Input placeholder="url1, url2, …, urln" className="border-white" {...field} />
-              </FormControl>
-              <FormDescription>Can be one or more, separated by commas</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          name="logo"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Logo URI</FormLabel>
-              <FormControl>
-                <Input placeholder="logo" className="border-white" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        {showAssetsEditor ? (
-          <FormField
-            name="assets"
-            render={({ field }) => (
-              <FormItem className="mt-4">
-                <FormLabel>Assets</FormLabel>
-                <FormControl>
-                  <div>
-                    <JsonEditor
-                      content={{ text: field.value }}
-                      onChange={(newMsgContent) => {
-                        field.onChange(
-                          "text" in newMsgContent ? (newMsgContent.text ?? "{}") : "{}",
-                        );
-                      }}
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Basic Info Section */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Tag className="h-4 w-4 text-muted-foreground" />
+            <span className="text-label text-label-comment text-[10px]">Basic Information</span>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <FormField
+              name="localRegistryName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs font-medium text-foreground">
+                    Local Registry Name
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="mynetwork"
+                      className="h-10 border-2 border-border bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
+                      {...field}
                     />
-                  </div>
+                  </FormControl>
+                  <FormDescription className="text-[10px] text-muted-foreground">
+                    Unique key for local storage
+                  </FormDescription>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+            <FormField
+              name="chainName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs font-medium text-foreground">Chain Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="My Network"
+                      className="h-10 border-2 border-border bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+            <FormField
+              name="chainId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs font-medium text-foreground">Chain ID</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="my-net-4"
+                      className="h-10 border-2 border-border bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Token Info Section */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Coins className="h-4 w-4 text-muted-foreground" />
+            <span className="text-label text-label-comment text-[10px]">Token Configuration</span>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <FormField
+              name="baseDenom"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs font-medium text-foreground">Base Denom</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="umycoin"
+                      className="h-10 border-2 border-border bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+            <FormField
+              name="displayDenom"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs font-medium text-foreground">
+                    Display Denom
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="MYCOIN"
+                      className="h-10 border-2 border-border bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+            <FormField
+              name="denomExponent"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs font-medium text-foreground">Exponent</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="6"
+                      className="h-10 border-2 border-border bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+            <FormField
+              name="gasPrice"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs font-medium text-foreground">Gas Price</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="0.04umycoin"
+                      className="h-10 border-2 border-border bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Network Info Section */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Wallet className="h-4 w-4 text-muted-foreground" />
+            <span className="text-label text-label-comment text-[10px]">Network Settings</span>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FormField
+              name="bech32Prefix"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs font-medium text-foreground">
+                    Address Prefix (Bech32)
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="mynet"
+                      className="h-10 border-2 border-border bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+            <FormField
+              name="logo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1.5 text-xs font-medium text-foreground">
+                    <ImageIcon className="h-3 w-3" />
+                    Logo URI
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="https://..."
+                      className="h-10 border-2 border-border bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* RPC & Explorer Section */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Server className="h-4 w-4 text-muted-foreground" />
+            <span className="text-label text-label-comment text-[10px]">Endpoints & Explorer</span>
+          </div>
+          <FormField
+            name="rpcNodes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs font-medium text-foreground">RPC Nodes</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="https://rpc1.example.com, https://rpc2.example.com"
+                    className="h-10 border-2 border-border bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
+                    {...field}
+                  />
                 </FormControl>
-                <FormMessage />
+                <FormDescription className="text-[10px] text-muted-foreground">
+                  Comma-separated list of RPC endpoints
+                </FormDescription>
+                <FormMessage className="text-xs" />
               </FormItem>
             )}
           />
-        ) : null}
-        <Button type="submit" className="mt-4">
-          Submit
-        </Button>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FormField
+              name="explorerTxLink"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1.5 text-xs font-medium text-foreground">
+                    <Link2 className="h-3 w-3" />
+                    Explorer TX Link
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="https://explorer.example.com/tx/${txHash}"
+                      className="h-10 border-2 border-border bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription className="text-[10px] text-muted-foreground">
+                    Include {"${txHash}"} placeholder
+                  </FormDescription>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+            <FormField
+              name="explorerAccountLink"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1.5 text-xs font-medium text-foreground">
+                    <Globe className="h-3 w-3" />
+                    Explorer Account Link
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="https://explorer.example.com/account/${accountAddress}"
+                      className="h-10 border-2 border-border bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription className="text-[10px] text-muted-foreground">
+                    Include {"${accountAddress}"} placeholder
+                  </FormDescription>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Assets JSON Section */}
+        {showAssetsEditor && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Hash className="h-4 w-4 text-muted-foreground" />
+              <span className="text-label text-label-comment text-[10px]">Assets Configuration</span>
+            </div>
+            <FormField
+              name="assets"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs font-medium text-foreground">Assets JSON</FormLabel>
+                  <FormControl>
+                    <div className="overflow-hidden rounded-lg border-2 border-border">
+                      <JsonEditor
+                        content={{ text: field.value }}
+                        onChange={(newMsgContent) => {
+                          field.onChange(
+                            "text" in newMsgContent ? (newMsgContent.text ?? "{}") : "{}",
+                          );
+                        }}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
+
+        {/* Submit Button */}
+        <div className="flex justify-end border-t border-border pt-4">
+          <Button variant="action" size="action" type="submit">
+            Add Custom Chain
+          </Button>
+        </div>
       </form>
     </Form>
   );

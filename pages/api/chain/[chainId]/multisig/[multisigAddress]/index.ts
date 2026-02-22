@@ -1,9 +1,10 @@
 import { getMultisig } from "@/graphql/multisig";
+import { withByodbMiddleware } from "@/lib/byodb/middleware";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 const endpointErrMsg = "Failed to get multisig";
 
-export default async function apiGetMultisig(req: NextApiRequest, res: NextApiResponse) {
+async function apiGetMultisig(req: NextApiRequest, res: NextApiResponse) {
   const chainId = req.query.chainId;
   const multisigAddress = req.query.multisigAddress;
 
@@ -33,3 +34,5 @@ export default async function apiGetMultisig(req: NextApiRequest, res: NextApiRe
       .send(err instanceof Error ? `${endpointErrMsg}: ${err.message}` : endpointErrMsg);
   }
 }
+
+export default withByodbMiddleware(apiGetMultisig);

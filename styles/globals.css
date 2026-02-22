@@ -2,28 +2,46 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================
+   ShieldNest UI4 Institutional Design System
+   Cosmos Multisig Manager - Dark Theme
+   ============================================ */
+
 @layer base {
   :root {
-    --background: 296.76 90.24% 16.08%;
-    --foreground: 0 0% 100%;
-    --muted: 299.15 27.84% 50%;
-    --muted-foreground: 0 0% 83.14%;
-    --popover: 298.26 40.83% 33.14%;
-    --popover-foreground: 0 0% 100%;
-    --card: 298.26 40.83% 33.14%;
-    --card-foreground: 0 0% 100%;
-    --border: 297 0% 100%;
-    --input: 299.15 0% 100%;
-    --primary: 297 90% 16%;
-    --primary-foreground: 300 100% 85.69%;
-    --secondary: 300 100% 85.69%;
-    --secondary-foreground: 296.76 90.24% 16.08%;
-    --accent: 299.15 27.84% 50%;
-    --accent-foreground: 327 0% 100%;
-    --destructive: 0 84.24% 60.2%;
-    --destructive-foreground: 0 0% 100%;
-    --ring: 357.74 0% 100%;
-    --radius: 0.5rem;
+    --background: 220 13% 18%;
+    --foreground: 210 40% 98%;
+    --card: 220 13% 22%;
+    --card-foreground: 210 40% 98%;
+    --popover: 220 13% 22%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 10% 25%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 10% 25%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 10% 25%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 50%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 10% 30%;
+    --input: 217.2 10% 30%;
+    --ring: 212.7 26.8% 83.9%;
+    --radius: 0.75rem;
+    
+    /* UI4 Institutional Accent Colors */
+    --accent-green: 11 100% 71%;
+    --accent-green-bright: 11 100% 76%;
+    --toast-green: 142 71% 45%;
+    --accent-purple: 263 70% 65%;
+    --accent-bronze: 25 50% 40%;
+    --accent-bronze-foreground: 220 13% 18%; /* Using --background color for contrast */
+    
+    /* Personal Theme Specifics (Legacy/Compatibility) */
+    --accent-teal: 189 94% 43%;
+    --accent-orange: 24 100% 75%;
+    --accent-peach: 24 100% 92%;
   }
 }
 
@@ -33,5 +51,995 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   }
+  
+  /* Typography - Space Grotesk for headings */
+  h1 {
+    @apply text-3xl font-bold tracking-tight;
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+  }
+  h2 {
+    @apply text-2xl font-semibold tracking-tight;
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+  }
+  h3 {
+    @apply text-xl font-semibold;
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+  }
+  h4 {
+    @apply text-lg font-semibold;
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+  }
+}
+
+/* ============================================
+   UI4 Component Styles
+   ============================================ */
+
+@layer components {
+  /* ----------------------------------------
+     Institutional Card System
+     ---------------------------------------- */
+  .card-institutional {
+    @apply relative border-2 transition-all duration-200;
+    border-color: hsl(var(--border));
+    box-shadow: 
+      0 1px 3px rgba(0, 0, 0, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
+  .card-institutional:hover {
+    transform: translateY(-3px);
+    border-color: hsl(var(--border) / 0.8);
+    box-shadow: 
+      0 8px 24px rgba(0, 0, 0, 0.12),
+      0 4px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Card Accent Borders */
+  .card-accent-left {
+    border-left: 4px solid hsl(var(--accent-green)) !important;
+  }
+
+  .card-accent-top {
+    border-top: 3px solid hsl(var(--accent-green)) !important;
+  }
+
+  .card-header-dark {
+    position: relative;
+  }
+
+  .card-header-dark::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: hsl(var(--foreground));
+    border-radius: inherit;
+  }
+
+  /* Bracket Corners */
+  .card-bracket-corner {
+    position: relative;
+  }
+
+  .card-bracket-corner::before {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: 20px;
+    height: 20px;
+    border-top: 3px solid hsl(var(--accent-green));
+    border-left: 3px solid hsl(var(--accent-green));
+    border-top-left-radius: 8px;
+    opacity: 1;
+    transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  .card-bracket-corner::after {
+    content: '';
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    width: 20px;
+    height: 20px;
+    border-bottom: 3px solid hsl(var(--accent-green));
+    border-right: 3px solid hsl(var(--accent-green));
+    border-bottom-right-radius: 8px;
+    opacity: 0.6;
+    transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  .card-bracket-corner:hover::before,
+  .card-bracket-corner:hover::after {
+    width: 28px;
+    height: 28px;
+    opacity: 1;
+    top: 4px;
+    left: 4px;
+  }
+
+  .card-bracket-corner:hover::after {
+    top: auto;
+    left: auto;
+    bottom: 4px;
+    right: 4px;
+  }
+
+  /* 4-Corner Bracket Variant */
+  .card-bracket-all {
+    position: relative;
+  }
+
+  .card-bracket-all::before,
+  .card-bracket-all::after {
+    /* Top-Left and Bottom-Right handled by standard bracket logic if applied together, 
+       but for all 4 we need extra elements. Since we only have ::before and ::after,
+       we might need a wrapper or just use the 2 we have more creatively. 
+       Actually, many designs use just 2. If we need 4, we'd need more DOM.
+       Let's stick to improving the existing 2-bracket system first as requested. */
+  }
+
+  /* Purple bracket variant */
+  .card-bracket-purple::before,
+  .card-bracket-purple::after {
+    border-color: hsl(var(--accent-purple));
+  }
+
+  /* Rounded Bracket Corners (Deprecated/Merged into main) */
+  .card-bracket-corner-round {
+    @apply card-bracket-corner;
+  }
+
+  /* Purple rounded bracket variant */
+  .card-bracket-corner-round.card-bracket-purple::before,
+  .card-bracket-corner-round.card-bracket-purple::after {
+    border-color: hsl(var(--accent-purple));
+  }
+
+  /* ----------------------------------------
+     UI4 Button System
+     ---------------------------------------- */
+  
+  /* Primary Action Button (Pill) */
+  .btn-action-primary {
+    @apply px-6 py-2.5 rounded-full font-semibold text-sm uppercase tracking-wide;
+    @apply bg-foreground text-background;
+    @apply hover:opacity-90 transition-all duration-200;
+    @apply active:scale-95;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply flex items-center justify-center gap-2;
+    font-family: 'JetBrains Mono', 'SF Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+  }
+
+  /* Secondary Action Button (Outlined Pill) */
+  .btn-action-secondary {
+    @apply px-6 py-2.5 rounded-full font-semibold text-sm uppercase tracking-wide;
+    @apply bg-transparent border-2;
+    @apply hover:bg-muted transition-all duration-200;
+    @apply active:scale-95;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply flex items-center justify-center gap-2;
+    border-color: hsl(var(--foreground));
+    color: hsl(var(--foreground));
+    font-family: 'JetBrains Mono', 'SF Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+  }
+
+  /* Card CTA Button (Square) */
+  .btn-card-primary {
+    @apply px-6 py-3 rounded-xl font-semibold text-sm;
+    @apply bg-foreground text-background;
+    @apply hover:opacity-90 transition-all duration-200;
+    @apply active:scale-95;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  .btn-card-secondary {
+    @apply px-6 py-3 rounded-xl font-semibold text-sm;
+    @apply bg-transparent border-2;
+    @apply hover:bg-muted transition-all duration-200;
+    @apply active:scale-95;
+    border-color: hsl(var(--foreground));
+    color: hsl(var(--foreground));
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  /* Tab Buttons */
+  .btn-tab {
+    @apply px-5 py-2 rounded-full font-semibold text-xs uppercase tracking-wide;
+    @apply transition-all duration-200 whitespace-nowrap;
+    @apply active:scale-95;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.03em;
+  }
+
+  .btn-tab-active {
+    @apply border-2;
+    background: hsl(var(--accent-green));
+    border-color: hsl(var(--accent-green));
+    color: white;
+  }
+
+  .btn-tab-inactive {
+    @apply border-2;
+    background: transparent;
+    border-color: hsl(var(--muted-foreground));
+    color: hsl(var(--muted-foreground));
+  }
+
+  .btn-tab-inactive:hover {
+    border-color: hsl(var(--foreground));
+    background: hsl(var(--muted) / 0.5);
+  }
+
+  /* Link Button */
+  .btn-link {
+    @apply text-sm font-semibold;
+    @apply flex items-center gap-2;
+    @apply transition-colors duration-200;
+    color: hsl(var(--foreground));
+  }
+
+  .btn-link:hover {
+    color: hsl(var(--accent-purple));
+  }
+
+  .btn-link svg {
+    @apply transition-transform duration-200;
+  }
+
+  .btn-link:hover svg {
+    transform: translateX(4px);
+  }
+
+  /* Icon Button */
+  .btn-icon {
+    @apply p-2 rounded transition-all duration-200;
+    @apply flex items-center justify-center;
+    @apply active:scale-95;
+  }
+
+  .btn-icon:hover {
+    background: hsl(var(--muted));
+  }
+
+  .btn-icon svg {
+    @apply w-4 h-4 transition-colors duration-200;
+    color: hsl(var(--muted-foreground));
+  }
+
+  .btn-icon:hover svg {
+    color: hsl(var(--accent-purple));
+  }
+
+  /* Navigation Button */
+  .btn-nav {
+    @apply w-full flex items-center gap-4 px-4 py-3 rounded-lg;
+    @apply transition-all duration-200;
+  }
+
+  .btn-nav-active {
+    background: hsl(var(--accent-green) / 0.2);
+    border-left: 4px solid hsl(var(--accent-green));
+    color: hsl(var(--foreground));
+    font-weight: 600;
+  }
+
+  .btn-nav-inactive {
+    color: hsl(var(--muted-foreground));
+  }
+
+  .btn-nav-inactive:hover {
+    background: hsl(var(--muted) / 0.5);
+    color: hsl(var(--foreground));
+  }
+
+  /* ----------------------------------------
+     Typography Utilities
+     ---------------------------------------- */
+  
+  /* Section Labels (Comment Style) */
+  .text-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: hsl(var(--muted-foreground));
+  }
+
+  .text-label-comment::before {
+    content: '// ';
+    opacity: 0.6;
+  }
+
+  /* KPI Values */
+  .text-kpi {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.025em;
+  }
+
+  .text-kpi-lg {
+    font-size: 2.25rem;
+    line-height: 1.1;
+  }
+
+  .text-kpi-md {
+    font-size: 1.5rem;
+    line-height: 1.2;
+  }
+
+  .text-kpi-sm {
+    font-size: 1.125rem;
+    line-height: 1.3;
+  }
+
+  /* ----------------------------------------
+     Status Indicators
+     ---------------------------------------- */
+  
+  .status-dot {
+    @apply w-2 h-2 rounded-full;
+  }
+
+  .status-dot-active {
+    background: hsl(var(--accent-green));
+    animation: status-pulse 2s ease-in-out infinite;
+  }
+
+  .status-dot-inactive {
+    background: hsl(var(--muted-foreground));
+  }
+
+  @keyframes status-pulse {
+    0%, 100% {
+      box-shadow: 0 0 0 0 hsl(var(--accent-green) / 0.4);
+    }
+    50% {
+      box-shadow: 0 0 0 4px hsl(var(--accent-green) / 0);
+    }
+  }
+
+  /* Change Indicators */
+  .change-positive {
+    color: hsl(11 100% 71%);
+  }
+
+  .change-negative {
+    color: hsl(0 84% 60%);
+  }
+
+  /* ----------------------------------------
+     Progress Bar
+     ---------------------------------------- */
+  
+  .progress-track {
+    @apply h-2 rounded-full overflow-hidden;
+    background: hsl(var(--muted));
+  }
+
+  .progress-gradient {
+    @apply h-full rounded-full;
+    background: linear-gradient(
+      90deg,
+      hsl(11 100% 80%) 0%,
+      hsl(11 100% 71%) 50%,
+      hsl(11 100% 60%) 100%
+    );
+    box-shadow: 
+      0 0 12px hsl(var(--accent-green) / 0.4),
+      inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  }
+
+  /* ----------------------------------------
+     Icon Containers
+     ---------------------------------------- */
+  
+  .icon-container {
+    @apply w-12 h-12 border-2 flex items-center justify-center rounded-xl;
+    @apply transition-all duration-200;
+    border-color: hsl(var(--border));
+    background: hsl(var(--card));
+  }
+
+  .icon-container:hover {
+    border-color: hsl(var(--accent-green));
+    background: hsl(var(--muted) / 0.5);
+  }
+
+  .icon-container svg {
+    @apply w-6 h-6 transition-colors duration-200;
+    color: hsl(var(--muted-foreground));
+  }
+
+  .icon-container:hover svg {
+    color: hsl(var(--foreground));
+  }
+
+  /* ----------------------------------------
+     Loading Spinner
+     ---------------------------------------- */
+  
+  .card-loading-indicator {
+    @apply w-5 h-5 rounded-full;
+    border: 2px solid hsl(var(--accent-purple) / 0.2);
+    border-top-color: hsl(var(--accent-purple));
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+}
+
+/* ============================================
+   Modal Animations
+   ============================================ */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes zoomIn95 {
+  from { 
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to { 
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-in {
+  animation-duration: 200ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
+}
+
+.fade-in {
+  animation-name: fadeIn;
+}
+
+.zoom-in-95 {
+  animation-name: zoomIn95;
+}
+
+.slide-up {
+  animation-name: slideUp;
+}
+
+.slide-in-right {
+  animation-name: slideInRight;
+}
+
+/* Scroll Reveal Animations */
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes progress {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(0); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.reveal {
+  animation: reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.reveal-delay-1 { animation-delay: 0.1s; }
+.reveal-delay-2 { animation-delay: 0.2s; }
+.reveal-delay-3 { animation-delay: 0.3s; }
+
+/* ============================================
+   Custom Scrollbar
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* ============================================
+   Background Patterns & Gradients
+   ============================================ */
+
+/* Gradient backgrounds */
+.gradient-bg {
+  background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.3) 100%);
+}
+
+.gradient-hero {
+  background: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.2) 100%);
+}
+
+/* Glass morphism effect */
+.glass {
+  background: hsl(var(--background) / 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Section Backgrounds */
+.section-wrapper {
+  @apply relative w-full py-12;
+}
+
+.section-inner {
+  @apply relative z-10 max-w-[1600px] mx-auto px-[0.75in];
+}
+
+/* Dot Pattern Background */
+.bg-pattern-dots {
+  background-color: hsl(var(--background));
+  background-image: radial-gradient(
+    circle at center,
+    hsl(var(--muted-foreground) / 0.1) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+}
+
+/* Grid Pattern Background */
+.bg-pattern-grid {
+  background-color: hsl(var(--background));
+  background-image: 
+    linear-gradient(to right, hsl(var(--border) / 0.5) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--border) / 0.5) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Diagonal Stripes */
+.bg-pattern-stripes {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 8px,
+    hsl(var(--muted) / 0.3) 8px,
+    hsl(var(--muted) / 0.3) 9px
+  );
+}
+
+/* Card hover effects */
+.card-hover {
+  @apply transition-all duration-200;
+}
+
+.card-hover:hover {
+  @apply shadow-lg;
+  transform: translateY(-2px);
+}
+
+/* ============================================
+   Input Enhancements
+   ============================================ */
+
+/* Institutional Input Style */
+.input-institutional {
+  @apply h-12 px-4 py-3 border-2 transition-colors duration-200 rounded-xl;
+  @apply focus:outline-none;
+  border-color: hsl(var(--border));
+  background: hsl(var(--card));
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+}
+
+.input-institutional:focus {
+  border-color: hsl(var(--accent-green));
+  box-shadow: 0 0 0 3px hsl(var(--accent-green) / 0.1);
+}
+
+.input-institutional:disabled {
+  background: hsl(var(--muted));
+  border-color: hsl(var(--border));
+  color: hsl(var(--muted-foreground));
+  cursor: not-allowed;
+}
+
+.input-institutional.error {
+  border-color: hsl(var(--destructive));
+  background: hsl(var(--destructive) / 0.05);
+}
+
+/* ============================================
+   Highlight Bars
+   ============================================ */
+
+.highlight-bar {
+  display: inline;
+  padding: 2px 6px;
+  margin: 0 2px;
+  background: hsl(var(--accent-green) / 0.2);
+  border-radius: 2px;
+}
+
+.highlight-bar-purple {
+  display: inline;
+  padding: 2px 6px;
+  margin: 0 2px;
+  background: hsl(var(--accent-purple) / 0.15);
+  border-radius: 2px;
+}
+
+/* ============================================
+   Focus States (Accessibility)
+   ============================================ */
+
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 
+    0 0 0 3px hsl(var(--accent-purple) / 0.3),
+    0 4px 12px hsl(var(--accent-purple) / 0.12);
+}
+
+/* ============================================
+   Bento Grid Dashboard Styles
+   ============================================ */
+
+@layer components {
+  /* Bento Grid Layout */
+  .bento-grid {
+    @apply grid gap-4 md:gap-6;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+
+  /* Bento Card Base */
+  .bento-card {
+    @apply relative rounded-xl border-2 bg-card p-5;
+    @apply transition-all duration-300;
+    border-color: hsl(var(--border));
+  }
+
+  .bento-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      0 8px 24px rgba(0, 0, 0, 0.08),
+      0 4px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  /* Bento Card Sizes */
+  .bento-card-sm {
+    min-height: 120px;
+  }
+
+  .bento-card-md {
+    min-height: 180px;
+  }
+
+  .bento-card-lg {
+    min-height: 280px;
+  }
+
+  /* Bento Card Variants */
+  .bento-card-highlight {
+    border-color: hsl(var(--accent-green) / 0.5);
+    background: linear-gradient(
+      135deg,
+      hsl(var(--card)) 0%,
+      hsl(var(--accent-green) / 0.05) 100%
+    );
+  }
+
+  .bento-card-accent {
+    border-color: hsl(var(--accent-purple) / 0.3);
+    background: linear-gradient(
+      135deg,
+      hsl(var(--card)) 0%,
+      hsl(var(--accent-purple) / 0.05) 100%
+    );
+  }
+
+  /* Dashboard Quick Stats */
+  .quick-stat {
+    @apply flex items-center gap-4 p-4 rounded-xl;
+    @apply bg-card border-2 border-border;
+    @apply transition-all duration-200;
+  }
+
+  .quick-stat:hover {
+    border-color: hsl(var(--border) / 0.8);
+    transform: translateY(-1px);
+  }
+
+  .quick-stat-value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 1.25rem;
+    line-height: 1.2;
+  }
+
+  .quick-stat-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* Dashboard Tabs */
+  .dashboard-tabs {
+    @apply flex items-center gap-1 p-1 rounded-xl;
+    background: hsl(var(--muted) / 0.5);
+  }
+
+  .dashboard-tab {
+    @apply px-4 py-2 rounded-lg text-sm font-medium;
+    @apply transition-all duration-200;
+    color: hsl(var(--muted-foreground));
+  }
+
+  .dashboard-tab:hover {
+    color: hsl(var(--foreground));
+    background: hsl(var(--background) / 0.5);
+  }
+
+  .dashboard-tab-active {
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  }
+
+/* ============================================
+   Keyboard Hint Animation
+   ============================================ */
+
+@keyframes kbd-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+.kbd-bounce {
+  animation: kbd-bounce 2s ease-in-out infinite;
+}
+
+/* ============================================
+   Reduced Motion Support
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .card-institutional,
+  .card-institutional::before,
+  .card-institutional::after,
+  .btn-action-primary,
+  .btn-action-secondary,
+  .btn-tab,
+  .animate-in,
+  .bento-card,
+  .quick-stat {
+    transition: none;
+    animation: none;
+  }
+  
+  .card-institutional:hover,
+  .card-hover:hover,
+  .bento-card:hover,
+  .quick-stat:hover {
+    transform: none;
+  }
+}
+
+/* ============================================
+   Toast Notification Styles (Sonner)
+   Institutional Design System
+   ============================================ */
+
+/* Toast Container */
+[data-sonner-toaster] {
+  --normal-bg: hsl(var(--card));
+  --normal-border: hsl(var(--border));
+  --normal-text: hsl(var(--foreground));
+  font-family: 'Inter', sans-serif;
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Individual Toast */
+[data-sonner-toast] {
+  padding: 16px 20px;
+  gap: 12px;
+}
+
+/* Toast Title */
+[data-sonner-toast] [data-title] {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+}
+
+/* Toast Description */
+[data-sonner-toast] [data-description] {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  opacity: 0.8;
+  margin-top: 4px;
+}
+
+/* Toast Icon Container */
+[data-sonner-toast] [data-icon] {
+  margin-right: 4px;
+}
+
+/* Close Button Styling */
+[data-sonner-toast] [data-close-button] {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  color: hsl(var(--muted-foreground));
+  transition: all 150ms ease;
+}
+
+[data-sonner-toast] [data-close-button]:hover {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+  border-color: hsl(var(--foreground) / 0.3);
+}
+
+/* Success Toast */
+[data-sonner-toast][data-type="success"] {
+  border-left: 4px solid hsl(var(--toast-green)) !important;
+}
+
+[data-sonner-toast][data-type="success"] [data-icon] svg {
+  color: hsl(var(--toast-green));
+}
+
+/* Error Toast */
+[data-sonner-toast][data-type="error"] {
+  border-left: 4px solid hsl(var(--destructive)) !important;
+}
+
+[data-sonner-toast][data-type="error"] [data-icon] svg {
+  color: hsl(var(--destructive));
+}
+
+/* Warning Toast */
+[data-sonner-toast][data-type="warning"] {
+  border-left: 4px solid hsl(43 100% 50%) !important;
+}
+
+[data-sonner-toast][data-type="warning"] [data-icon] svg {
+  color: hsl(43 100% 50%);
+}
+
+/* Info Toast */
+[data-sonner-toast][data-type="info"] {
+  border-left: 4px solid hsl(var(--accent-purple)) !important;
+}
+
+[data-sonner-toast][data-type="info"] [data-icon] svg {
+  color: hsl(var(--accent-purple));
+}
+
+/* Loading Toast */
+[data-sonner-toast][data-type="loading"] {
+  border-left: 4px solid hsl(var(--accent-purple)) !important;
+}
+
+[data-sonner-toast][data-type="loading"] [data-icon] svg {
+  color: hsl(var(--accent-purple));
+}
+
+/* Default/Message Toast (no type) */
+[data-sonner-toast]:not([data-type]) {
+  border-left: 4px solid hsl(var(--foreground) / 0.3) !important;
+}
+
+/* Action Button in Toast */
+[data-sonner-toast] [data-button] {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 8px 16px;
+  border-radius: 6px;
+  background: hsl(var(--foreground));
+  color: hsl(var(--background));
+  transition: all 150ms ease;
+}
+
+[data-sonner-toast] [data-button]:hover {
+  opacity: 0.9;
+}
+
+/* Cancel Button in Toast */
+[data-sonner-toast] [data-cancel] {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 8px 16px;
+  border-radius: 6px;
+  background: transparent;
+  border: 2px solid hsl(var(--border));
+  color: hsl(var(--muted-foreground));
+  transition: all 150ms ease;
+}
+
+[data-sonner-toast] [data-cancel]:hover {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
+/* CLIQS Brand Text - Clean uppercase */
+.cliqs-brand {
+  letter-spacing: 0.06em;
+  text-transform: uppercase !important;
 }

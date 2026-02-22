@@ -1,8 +1,8 @@
 import { StdFee } from "@cosmjs/amino";
 import { EncodeObject } from "@cosmjs/proto-signing";
-import { gql } from "graphql-request";
 import { z } from "zod";
-import { DbMultisig, DbMultisigId, DbSignatureObj, gqlClient } from ".";
+import * as db from "@/lib/db";
+import { DbMultisig, DbMultisigId, DbSignatureObj } from ".";
 
 export const DbTransaction = z.object({
   id: z.string(),
@@ -11,6 +11,7 @@ export const DbTransaction = z.object({
   // When parsed with JSON.parse it's DbTransactionParsedDataJson
   dataJSON: z.string(),
   signatures: z.lazy(() => z.array(DbSignatureObj)),
+  status: z.enum(["pending", "broadcast", "cancelled"]).optional(),
 });
 export type DbTransaction = Readonly<z.infer<typeof DbTransaction>>;
 
@@ -29,130 +30,122 @@ export const DbTransactionId = DbTransaction.pick({ id: true });
 export type DbTransactionId = Readonly<z.infer<typeof DbTransactionId>>;
 
 export const getTransaction = async (id: string): Promise<DbTransaction | null> => {
-  type Response = { readonly getTransaction: DbTransaction | null };
-  type Variables = { readonly id: string };
-
-  const { getTransaction: fetchedTx } = await gqlClient.request<Response, Variables>(
-    gql`
-      query GetTransaction($id: ID!) {
-        getTransaction(id: $id) {
-          id
-          txHash
-          creator {
-            id
-            chainId
-            address
-            creator
-            pubkeyJSON
-          }
-          dataJSON
-          signatures {
-            bodyBytes
-            signature
-            address
-          }
-        }
-      }
-    `,
-    { id },
-  );
+  const fetchedTx = await db.getTransaction(id);
 
   if (!fetchedTx) {
     return null;
   }
 
-  DbTransaction.parse(fetchedTx);
+  // Get multisig creator
+  const multisig = await db.getMultisigById(fetchedTx.creatorId);
 
-  return fetchedTx;
+  // Get signatures
+  const signatures = await db.getSignaturesByTransaction(id);
+
+  const transaction: DbTransaction = {
+    id: fetchedTx.id,
+    txHash: fetchedTx.txHash,
+    creator: multisig || null,
+    dataJSON: fetchedTx.dataJSON,
+    signatures: signatures.map((s) => ({
+      bodyBytes: s.bodyBytes,
+      signature: s.signature,
+      address: s.address,
+    })),
+    status: fetchedTx.status || (fetchedTx.txHash ? "broadcast" : "pending"),
+  };
+
+  DbTransaction.parse(transaction);
+
+  return transaction;
 };
 
 const DbMultisigTxs = z.object({ transactions: z.array(DbTransaction) });
 type DbMultisigTxs = Readonly<z.infer<typeof DbMultisigTxs>>;
 
 export const getTransactions = async (creatorId: string): Promise<readonly DbTransaction[]> => {
-  type Response = { readonly getMultisig: DbMultisigTxs };
-  type Variables = { readonly creatorId: string };
+  const fetchedTxs = await db.getTransactionsByCreator(creatorId);
 
-  const { getMultisig } = await gqlClient.request<Response, Variables>(
-    gql`
-      query GetTransactions($creatorId: ID!) {
-        getMultisig(id: $creatorId) {
-          transactions {
-            id
-            txHash
-            creator {
-              id
-              chainId
-              address
-              creator
-              pubkeyJSON
-            }
-            dataJSON
-            signatures {
-              bodyBytes
-              signature
-              address
-            }
-          }
-        }
-      }
-    `,
-    { creatorId },
-  );
+  // Map transactions with full data
+  const transactions: DbTransaction[] = [];
+  for (const tx of fetchedTxs) {
+    const multisig = await db.getMultisigById(tx.creatorId);
+    const signatures = await db.getSignaturesByTransaction(tx.id);
 
-  const fetchedTxs: DbMultisigTxs = { transactions: getMultisig.transactions.reverse() };
-  DbMultisigTxs.parse(fetchedTxs);
+    transactions.push({
+      id: tx.id,
+      txHash: tx.txHash,
+      creator: multisig || null,
+      dataJSON: tx.dataJSON,
+      signatures: signatures.map((s) => ({
+        bodyBytes: s.bodyBytes,
+        signature: s.signature,
+        address: s.address,
+      })),
+      status: tx.status || (tx.txHash ? "broadcast" : "pending"),
+    });
+  }
 
-  return fetchedTxs.transactions;
+  // Reverse to show newest first
+  const result: DbMultisigTxs = { transactions: transactions.reverse() };
+  DbMultisigTxs.parse(result);
+
+  return result.transactions;
 };
 
 export const createTransaction = async (transaction: DbTransactionDraft) => {
-  type Response = { readonly addTransaction: { readonly transaction: readonly DbTransactionId[] } };
-  type Variables = { readonly dataJSON: string; readonly creatorId: string };
+  console.log("DEBUG: graphql.createTransaction called", {
+    dataJSON: transaction.dataJSON.substring(0, 100) + "...",
+    creatorId: transaction.creator.id,
+  });
 
-  const { addTransaction } = await gqlClient.request<Response, Variables>(
-    gql`
-      mutation CreateTransaction($dataJSON: String!, $creatorId: ID!) {
-        addTransaction(input: { dataJSON: $dataJSON, creator: { id: $creatorId } }) {
-          transaction {
-            id
-          }
-        }
-      }
-    `,
-    { ...transaction, creatorId: transaction.creator.id },
-  );
+  const createdTxId = await db.createTransaction({
+    dataJSON: transaction.dataJSON,
+    creatorId: transaction.creator.id,
+    txHash: null,
+  });
 
-  const createdTx = addTransaction.transaction[0];
-  DbTransactionId.parse(createdTx);
-
-  return createdTx.id;
+  console.log("DEBUG: graphql.createTransaction returning", createdTxId);
+  return createdTxId;
 };
 
-const DbTransactionTxHash = z.object({ txHash: z.string() });
-type DbTransactionTxHash = Readonly<z.infer<typeof DbTransactionTxHash>>;
+const _DbTransactionTxHash = z.object({ txHash: z.string() });
+type _DbTransactionTxHash = Readonly<z.infer<typeof _DbTransactionTxHash>>;
 
 export const updateTxHash = async (id: string, txHash: string) => {
-  type Response = {
-    readonly updateTransaction: { readonly transaction: readonly DbTransactionTxHash[] };
-  };
-  type Variables = { readonly id: string; readonly txHash: string };
+  await db.updateTransactionHash(id, txHash);
+  return txHash;
+};
 
-  const { updateTransaction } = await gqlClient.request<Response, Variables>(
-    gql`
-      mutation UpdateTxHash($id: [ID!], $txHash: String!) {
-        updateTransaction(input: { filter: { id: $id }, set: { txHash: $txHash } }) {
-          transaction {
-            txHash
-          }
-        }
-      }
-    `,
-    { id, txHash },
-  );
+export const cancelTransaction = async (id: string) => {
+  await db.cancelTransaction(id);
+  return id;
+};
 
-  const updatedTx = updateTransaction.transaction[0];
-  DbTransactionTxHash.parse(updatedTx);
+export const getPendingTransactions = async (
+  creatorId: string,
+): Promise<readonly DbTransaction[]> => {
+  const fetchedTxs = await db.getPendingTransactionsByCreator(creatorId);
 
-  return updatedTx.txHash;
+  // Map transactions with full data
+  const transactions: DbTransaction[] = [];
+  for (const tx of fetchedTxs) {
+    const multisig = await db.getMultisigById(tx.creatorId);
+    const signatures = await db.getSignaturesByTransaction(tx.id);
+
+    transactions.push({
+      id: tx.id,
+      txHash: tx.txHash,
+      creator: multisig || null,
+      dataJSON: tx.dataJSON,
+      signatures: signatures.map((s) => ({
+        bodyBytes: s.bodyBytes,
+        signature: s.signature,
+        address: s.address,
+      })),
+      status: "pending",
+    });
+  }
+
+  return transactions;
 };

@@ -3,10 +3,13 @@ import {
   MsgFundCommunityPool,
   MsgSetWithdrawAddress,
   MsgWithdrawDelegatorReward,
+  MsgWithdrawValidatorCommission,
 } from "cosmjs-types/cosmos/distribution/v1beta1/tx";
 import { MsgVote } from "cosmjs-types/cosmos/gov/v1beta1/tx";
 import {
   MsgBeginRedelegate,
+  MsgCreateValidator,
+  MsgEditValidator,
   MsgDelegate,
   MsgUndelegate,
 } from "cosmjs-types/cosmos/staking/v1beta1/tx";
@@ -27,10 +30,13 @@ export const MsgTypeUrls = {
   Delegate: "/cosmos.staking.v1beta1.MsgDelegate",
   Undelegate: "/cosmos.staking.v1beta1.MsgUndelegate",
   BeginRedelegate: "/cosmos.staking.v1beta1.MsgBeginRedelegate",
+  CreateValidator: "/cosmos.staking.v1beta1.MsgCreateValidator",
+  EditValidator: "/cosmos.staking.v1beta1.MsgEditValidator",
   // Distribution
   FundCommunityPool: "/cosmos.distribution.v1beta1.MsgFundCommunityPool",
   SetWithdrawAddress: "/cosmos.distribution.v1beta1.MsgSetWithdrawAddress",
   WithdrawDelegatorReward: "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward",
+  WithdrawValidatorCommission: "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission",
   // Vesting
   CreateVestingAccount: "/cosmos.vesting.v1beta1.MsgCreateVestingAccount",
   // Governance
@@ -54,10 +60,13 @@ export const MsgCodecs = {
   [MsgTypeUrls.Delegate]: MsgDelegate,
   [MsgTypeUrls.Undelegate]: MsgUndelegate,
   [MsgTypeUrls.BeginRedelegate]: MsgBeginRedelegate,
+  [MsgTypeUrls.CreateValidator]: MsgCreateValidator,
+  [MsgTypeUrls.EditValidator]: MsgEditValidator,
   // Distribution
   [MsgTypeUrls.FundCommunityPool]: MsgFundCommunityPool,
   [MsgTypeUrls.SetWithdrawAddress]: MsgSetWithdrawAddress,
   [MsgTypeUrls.WithdrawDelegatorReward]: MsgWithdrawDelegatorReward,
+  [MsgTypeUrls.WithdrawValidatorCommission]: MsgWithdrawValidatorCommission,
   // Vesting
   [MsgTypeUrls.CreateVestingAccount]: MsgCreateVestingAccount,
   // Governance

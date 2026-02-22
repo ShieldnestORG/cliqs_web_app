@@ -4,7 +4,10 @@ import { EncodeObject } from "@cosmjs/proto-signing";
 import { useChains } from "../../../context/ChainsContext";
 import { printableCoins } from "../../../lib/displayHelpers";
 import StackableContainer from "../../layout/StackableContainer";
+import HashView from "../HashView";
+import React from "react";
 import TxMsgBeginRedelegateDetails from "./TxMsgBeginRedelegateDetails";
+import TxMsgCreateValidatorDetails from "./TxMsgCreateValidatorDetails";
 import TxMsgCreateVestingAccountDetails from "./TxMsgCreateVestingAccountDetails";
 import TxMsgDelegateDetails from "./TxMsgDelegateDetails";
 import TxMsgExecuteContractDetails from "./TxMsgExecuteContractDetails";
@@ -19,6 +22,7 @@ import TxMsgUndelegateDetails from "./TxMsgUndelegateDetails";
 import TxMsgUpdateAdminDetails from "./TxMsgUpdateAdminDetails";
 import TxMsgVoteDetails from "./TxMsgVoteDetails";
 import TxMsgWithdrawDelegatorRewardDetails from "./TxMsgWithdrawDelegatorRewardDetails";
+import TxMsgWithdrawValidatorCommissionDetails from "./TxMsgWithdrawValidatorCommissionDetails";
 
 const TxMsgDetails = ({ typeUrl, value: msgValue }: EncodeObject) => {
   switch (typeUrl) {
@@ -32,6 +36,8 @@ const TxMsgDetails = ({ typeUrl, value: msgValue }: EncodeObject) => {
       return <TxMsgUndelegateDetails msgValue={msgValue} />;
     case MsgTypeUrls.BeginRedelegate:
       return <TxMsgBeginRedelegateDetails msgValue={msgValue} />;
+    case MsgTypeUrls.CreateValidator:
+      return <TxMsgCreateValidatorDetails msgValue={msgValue} />;
     // Distribution
     case MsgTypeUrls.FundCommunityPool:
       return <TxMsgFundCommunityPoolDetails msgValue={msgValue} />;
@@ -39,6 +45,8 @@ const TxMsgDetails = ({ typeUrl, value: msgValue }: EncodeObject) => {
       return <TxMsgSetWithdrawAddressDetails msgValue={msgValue} />;
     case MsgTypeUrls.WithdrawDelegatorReward:
       return <TxMsgWithdrawDelegatorRewardDetails msgValue={msgValue} />;
+    case MsgTypeUrls.WithdrawValidatorCommission:
+      return <TxMsgWithdrawValidatorCommissionDetails msgValue={msgValue} />;
     // Vesting
     case MsgTypeUrls.CreateVestingAccount:
       return <TxMsgCreateVestingAccountDetails msgValue={msgValue} />;
@@ -66,16 +74,151 @@ const TxMsgDetails = ({ typeUrl, value: msgValue }: EncodeObject) => {
 
 interface TransactionInfoProps {
   readonly tx: DbTransactionParsedDataJson;
+  readonly currentOnChainSequence?: number;
+  readonly compact?: boolean;
 }
 
-const TransactionInfo = ({ tx }: TransactionInfoProps) => {
+const TransactionInfo = ({ tx, currentOnChainSequence, compact }: TransactionInfoProps) => {
   const { chain } = useChains();
+  const hasSequenceMismatch =
+    currentOnChainSequence !== undefined && currentOnChainSequence !== tx.sequence;
 
+  // Compact mode for message card - clean formatted display
+  if (compact) {
+    return (
+      <div className="space-y-4">
+        {tx.msgs.map((msg, index) => {
+          const msgType = msg.typeUrl.split(".").pop()?.replace("Msg", "") || msg.typeUrl;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const msgValue = msg.value as Record<string, any>;
+          
+          // Extract key fields based on message type
+          const getMessageFields = () => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const fields: Array<{ label: string; value: any; isAddress?: boolean }> = [];
+            
+            // Common address fields
+            if (msgValue.validatorAddress) {
+              fields.push({ label: "Validator Address", value: msgValue.validatorAddress, isAddress: true });
+            }
+            if (msgValue.delegatorAddress) {
+              fields.push({ label: "Delegator Address", value: msgValue.delegatorAddress, isAddress: true });
+            }
+            if (msgValue.fromAddress) {
+              fields.push({ label: "From Address", value: msgValue.fromAddress, isAddress: true });
+            }
+            if (msgValue.toAddress) {
+              fields.push({ label: "To Address", value: msgValue.toAddress, isAddress: true });
+            }
+            if (msgValue.sender) {
+              fields.push({ label: "Sender", value: msgValue.sender, isAddress: true });
+            }
+            if (msgValue.receiver) {
+              fields.push({ label: "Receiver", value: msgValue.receiver, isAddress: true });
+            }
+            
+            // Amount fields
+            if (msgValue.amount) {
+              if (Array.isArray(msgValue.amount)) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const amounts = msgValue.amount.map((a: any) => `${a.amount} ${a.denom}`).join(", ");
+                fields.push({ label: "Amount", value: amounts });
+              } else if (msgValue.amount.amount) {
+                fields.push({ label: "Amount", value: `${msgValue.amount.amount} ${msgValue.amount.denom}` });
+              }
+            }
+            
+            // Other common fields
+            if (msgValue.contract) {
+              fields.push({ label: "Contract", value: msgValue.contract, isAddress: true });
+            }
+            if (msgValue.codeId) {
+              fields.push({ label: "Code ID", value: String(msgValue.codeId) });
+            }
+            if (msgValue.proposalId) {
+              fields.push({ label: "Proposal ID", value: String(msgValue.proposalId) });
+            }
+            if (msgValue.option) {
+              fields.push({ label: "Option", value: String(msgValue.option) });
+            }
+            
+            return fields;
+          };
+          
+          const fields = getMessageFields();
+          
+          return (
+            <div key={index} className="space-y-3">
+              <div className="text-xs uppercase tracking-wide text-muted-foreground font-mono mb-3">
+                {msgType}
+              </div>
+              {fields.length > 0 ? (
+                <div className="space-y-3">
+                  {fields.map((field, fieldIndex) => (
+                    <div key={fieldIndex} className="space-y-1">
+                      <div className="text-xs uppercase tracking-wide text-muted-foreground font-mono">
+                        {field.label}:
+                      </div>
+                      <div className={`font-mono text-sm p-2 rounded-lg bg-muted/20 border border-border/50 ${field.isAddress ? 'break-all' : ''}`}>
+                        {field.isAddress ? (
+                          <HashView hash={field.value} />
+                        ) : (
+                          <span className="break-words">{field.value}</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground italic">No additional details</div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Full mode (original layout)
   return (
     <>
       <ul className="meta-data">
         <>
           <StackableContainer lessPadding lessMargin>
+            <li className="signing-info-header">
+              <label>Signing Info</label>
+            </li>
+            <li>
+              <label>Chain ID:</label>
+              <div>{tx.chainId}</div>
+            </li>
+            <li>
+              <label>Account #:</label>
+              <div>{tx.accountNumber}</div>
+            </li>
+            <li className={hasSequenceMismatch ? "sequence-mismatch" : ""}>
+              <label>Tx Sequence:</label>
+              <div>{tx.sequence}</div>
+              {hasSequenceMismatch && (
+                <span className="mismatch-indicator">
+                  ⚠️ Chain is at {currentOnChainSequence}
+                </span>
+              )}
+            </li>
+            {currentOnChainSequence !== undefined && (
+              <li>
+                <label>Chain Sequence:</label>
+                <div
+                  style={{
+                    color: hasSequenceMismatch ? "#ff9999" : "#99ff99",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {currentOnChainSequence}
+                  {hasSequenceMismatch ? " ❌ MISMATCH" : " ✅ OK"}
+                </div>
+              </li>
+            )}
             {tx.fee ? (
               <>
                 <li>
@@ -119,6 +262,17 @@ const TransactionInfo = ({ tx }: TransactionInfoProps) => {
           display: flex;
           align-items: center;
         }
+        .meta-data li.signing-info-header {
+          background: transparent;
+          padding: 0;
+          margin-bottom: -5px;
+        }
+        .meta-data li.signing-info-header label {
+          background: transparent;
+          font-size: 14px;
+          font-weight: bold;
+          color: rgba(255, 255, 255, 0.7);
+        }
         .meta-data li div {
           padding: 3px 6px;
         }
@@ -128,6 +282,18 @@ const TransactionInfo = ({ tx }: TransactionInfoProps) => {
           padding: 3px 6px;
           border-radius: 5px;
           display: block;
+        }
+        .meta-data li.sequence-mismatch {
+          background: rgba(255, 100, 100, 0.15);
+          border: 1px solid rgba(255, 100, 100, 0.3);
+        }
+        .mismatch-indicator {
+          margin-left: auto;
+          font-size: 12px;
+          color: #ff9999;
+          background: rgba(255, 100, 100, 0.2);
+          padding: 3px 8px;
+          border-radius: 5px;
         }
       `}</style>
     </>

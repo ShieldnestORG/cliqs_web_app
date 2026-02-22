@@ -1,4 +1,5 @@
 import copy from "copy-to-clipboard";
+import { toast } from "sonner";
 
 interface Props {
   copyText: string;
@@ -7,7 +8,13 @@ interface Props {
 }
 
 const CopyAndPaste = (props: Props) => (
-  <div className="icon" onClick={() => copy(props.copyText)}>
+  <div
+    className="icon"
+    onClick={() => {
+      copy(props.copyText);
+      toast.success("Copied to clipboard", { description: props.copyText });
+    }}
+  >
     <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M13 32H41C53.1503 32 63 41.8497 63 54V94H13V32Z" />
       <path d="M37 6H65C77.1503 6 87 15.8497 87 28V68H37V6Z" />

@@ -1,4 +1,4 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardLabel } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -8,15 +8,17 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import { getKeplrKey } from "@/lib/keplr";
 import { toastError } from "@/lib/utils";
 import { StargateClient } from "@cosmjs/stargate";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/router";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
+import { Plus, Users } from "lucide-react";
 import { useChains } from "../../../context/ChainsContext";
 import { createMultisigFromCompressedSecp256k1Pubkeys } from "../../../lib/multisigHelpers";
 import ConfirmCreateMultisig from "./ConfirmCreateMultisig";
@@ -31,7 +33,7 @@ export default function CreateMultisigForm() {
 
   const createMultisigForm = useForm<z.infer<typeof createMultisigSchema>>({
     resolver: zodResolver(createMultisigSchema),
-    defaultValues: { members: [{ member: "" }, { member: "" }], threshold: 2 },
+    defaultValues: { members: [{ member: "" }], threshold: 1 },
   });
 
   const {
@@ -43,26 +45,21 @@ export default function CreateMultisigForm() {
 
   const watchedMembers = useWatch({ control: createMultisigForm.control, name: "members" });
 
-  useEffect(() => {
-    if (watchedMembers.every(({ member }) => member !== "")) {
-      membersAppend({ member: "" }, { shouldFocus: false });
-      createMultisigForm.trigger();
-    }
+  // Count of filled members (non-empty)
+  const filledMembersCount = watchedMembers.filter(({ member }) => member.trim() !== "").length;
 
-    if (
-      watchedMembers.length > 2 &&
-      watchedMembers.filter(({ member }) => member === "").length > 1
-    ) {
-      const memberToRemove = watchedMembers.findIndex(({ member }) => member === "");
-      membersRemove(memberToRemove);
-      createMultisigForm.trigger();
-    }
-  }, [createMultisigForm, membersAppend, membersRemove, watchedMembers]);
+  // Add new member handler
+  const handleAddMember = useCallback(() => {
+    membersAppend({ member: "" }, { shouldFocus: true });
+  }, [membersAppend]);
 
+  // Update threshold when members change - only adjust if current threshold exceeds member count
   useEffect(() => {
-    const numMembers = watchedMembers.filter(({ member }) => member !== "").length;
-    createMultisigForm.setValue("threshold", Math.max(2, numMembers));
-  }, [createMultisigForm, watchedMembers]);
+    const currentThreshold = createMultisigForm.getValues("threshold");
+    if (currentThreshold > filledMembersCount && filledMembersCount >= 2) {
+      createMultisigForm.setValue("threshold", filledMembersCount);
+    }
+  }, [createMultisigForm, filledMembersCount]);
 
   const submitCreateMultisig = async () => {
     try {
@@ -112,18 +109,25 @@ export default function CreateMultisigForm() {
 
   return (
     <>
-      <Card>
+      <Card variant="institutional" bracket="green" className="overflow-visible">
         <CardHeader>
-          <CardTitle>Create multisig</CardTitle>
-          <CardDescription>
-            <p className="mt-2">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="icon-container rounded-lg">
+              <Users className="w-5 h-5" />
+            </div>
+            <div>
+              <CardLabel comment>New Account</CardLabel>
+              <CardTitle className="text-xl">Create a Multisig Wallet</CardTitle>
+            </div>
+          </div>
+          <CardDescription className="space-y-2 mt-4">
+            <span className="block">
               Fill the form to create a new multisig account on{" "}
-              {chain.chainDisplayName || "Cosmos Hub"}.
-            </p>
-            <p className="mt-2">
-              You can paste several addresses on the first input if they are separated by whitespace
-              or commas.
-            </p>
+              <span className="font-semibold text-foreground">{chain.chainDisplayName || "Cosmos Hub"}</span>.
+            </span>
+            <span className="block text-xs">
+              💡 You can paste several addresses on the first input if they are separated by whitespace or commas.
+            </span>
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -131,42 +135,126 @@ export default function CreateMultisigForm() {
             <form
               id="create-multisig-form"
               onSubmit={createMultisigForm.handleSubmit(submitCreateMultisig)}
-              className="space-y-4"
+              className="space-y-6"
             >
-              {membersFields.map((arrayField, index) => (
-                <MemberFormField
-                  key={arrayField.id}
-                  createMultisigForm={createMultisigForm}
-                  index={index}
-                  membersReplace={membersReplace}
-                />
-              ))}
+              {/* Members Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-medium text-foreground">
+                    Members ({filledMembersCount} added)
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Minimum 2 required
+                  </div>
+                </div>
+                
+                {/* Member Fields */}
+                <div className="space-y-4">
+                  {membersFields.map((arrayField, index) => (
+                    <MemberFormField
+                      key={arrayField.id}
+                      createMultisigForm={createMultisigForm}
+                      index={index}
+                      membersReplace={membersReplace}
+                      membersRemove={membersRemove}
+                      totalMembers={membersFields.length}
+                    />
+                  ))}
+                </div>
+
+                {/* Add Member Button */}
+                <Button
+                  type="button"
+                  variant="action-outline"
+                  size="action-sm"
+                  onClick={handleAddMember}
+                  className="w-full gap-2 mt-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Member
+                </Button>
+              </div>
+
+              {/* Separator */}
+              <div className="h-px bg-border" />
+
+              {/* Threshold Section */}
               <FormField
                 control={createMultisigForm.control}
                 name="threshold"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Threshold</FormLabel>
-                    <FormDescription>
-                      Number of signatures needed to broadcast a transaction
-                    </FormDescription>
-                    <FormControl className="">
-                      <div className="flex items-center gap-2">
-                        <Input className="w-20" placeholder="2" {...field} />
-                        <span className="text-sm text-muted-foreground">
-                          out of{" "}
-                          <em className="text-base font-bold not-italic text-white">
-                            {watchedMembers.filter(({ member }) => member !== "").length}
-                          </em>{" "}
-                          members
-                        </span>
+                render={({ field }) => {
+                  const memberCount = filledMembersCount;
+                  const maxThreshold = Math.max(1, memberCount);
+                  const currentThreshold = Math.min(Number(field.value) || 2, maxThreshold);
+                  
+                  return (
+                    <FormItem className="space-y-4">
+                      <div>
+                        <FormLabel className="text-base font-semibold">Signing Threshold</FormLabel>
+                        <FormDescription className="mt-1">
+                          Number of signatures needed to broadcast a transaction
+                        </FormDescription>
                       </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                      <FormControl>
+                        <div className="space-y-6">
+                          {/* Slider with Value Display */}
+                          <div className="flex items-center gap-6">
+                            <div className="flex-1">
+                              <Slider
+                                size="lg"
+                                min={1}
+                                max={maxThreshold || 1}
+                                step={1}
+                                value={[currentThreshold]}
+                                onValueChange={(values) => field.onChange(values[0])}
+                                disabled={memberCount < 1}
+                              />
+                            </div>
+                            <div className="flex items-center gap-2 px-4 py-2 bg-muted rounded-lg min-w-[100px] justify-center">
+                              <span className="text-2xl font-heading font-bold text-foreground">
+                                {currentThreshold}
+                              </span>
+                              <span className="text-muted-foreground font-medium">
+                                / {memberCount}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          {/* Status Text */}
+                          <p className="text-sm text-muted-foreground">
+                            <span className="font-semibold text-foreground">{currentThreshold}</span> of{" "}
+                            <span className="font-semibold text-foreground">{memberCount}</span> members 
+                            must sign to approve a transaction
+                          </p>
+                          
+                          {/* Warning for max threshold */}
+                          {currentThreshold === memberCount && memberCount > 0 && (
+                            <div className="p-4 bg-yellow-500/10 border-2 border-yellow-500/30 rounded-lg">
+                              <div className="flex items-start gap-3">
+                                <span className="text-yellow-500 text-lg">⚠️</span>
+                                <div className="space-y-1">
+                                  <p className="text-sm font-semibold text-yellow-200">
+                                    Maximum threshold selected
+                                  </p>
+                                  <p className="text-xs text-yellow-200/80">
+                                    Losing access to any wallet will result in permanent loss of access to your multisig&apos;s assets.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
-              <ConfirmCreateMultisig createMultisigForm={createMultisigForm} />
+              
+              {/* Submit Section */}
+              <div className="pt-2">
+                <ConfirmCreateMultisig createMultisigForm={createMultisigForm} />
+              </div>
             </form>
           </Form>
         </CardContent>

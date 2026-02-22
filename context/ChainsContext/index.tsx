@@ -1,36 +1,50 @@
-import { emptyAllValidatorsEmpty, getAllValidators } from "@/lib/staking";
 import { toastError } from "@/lib/utils";
 import { ReactNode, createContext, useContext, useEffect, useReducer } from "react";
-import { emptyChain, isChainInfoFilled, setChain, setChains, setChainsError } from "./helpers";
+import {
+  emptyChain,
+  isChainInfoFilled,
+  rebrandChain,
+  rebrandChains,
+  setChain,
+  setChains,
+  setChainsError,
+} from "./helpers";
 import { getChain, getNodeFromArray, useChainsFromRegistry } from "./service";
 import { addLocalChainInStorage, addRecentChainNameInStorage, setChainInUrl } from "./storage";
 import { Action, ChainsContextType, Dispatch, State } from "./types";
+import type { AllValidators } from "@/lib/staking";
+
+// Inline empty validators to avoid importing staking module at top level
+// The full staking module is dynamically imported only when validators are requested
+const emptyAllValidatorsEmpty = (): AllValidators => ({ bonded: [], unbonding: [], unbonded: [] });
 
 const ChainsContext = createContext<ChainsContextType | undefined>(undefined);
 
 const chainsReducer = (state: State, action: Action): State => {
   switch (action.type) {
     case "setChains": {
-      return { ...state, chains: action.payload };
+      return { ...state, chains: rebrandChains(action.payload) };
     }
     case "setChain": {
       if (!isChainInfoFilled(action.payload)) {
         return state;
       }
 
+      const rebrandedChain = rebrandChain(action.payload);
+
       if (
-        !state.chains.mainnets.has(action.payload.registryName) &&
-        !state.chains.testnets.has(action.payload.registryName)
+        !state.chains.mainnets.has(rebrandedChain.registryName) &&
+        !state.chains.testnets.has(rebrandedChain.registryName)
       ) {
-        addLocalChainInStorage(action.payload, state.chains);
+        addLocalChainInStorage(rebrandedChain, state.chains);
       }
 
-      addRecentChainNameInStorage(action.payload.registryName);
-      setChainInUrl(action.payload, state.chains);
+      addRecentChainNameInStorage(rebrandedChain.registryName);
+      setChainInUrl(rebrandedChain, state.chains);
 
       return {
         ...state,
-        chain: action.payload,
+        chain: rebrandedChain,
         validatorState: { validators: emptyAllValidatorsEmpty(), status: "initial" },
       };
     }
@@ -97,6 +111,8 @@ export const ChainsProvider = ({ children }: ChainsProviderProps) => {
     (async function loadValidators() {
       if (state.validatorState.status === "loading" && state.chain.nodeAddress) {
         try {
+          // Dynamic import of staking module to reduce initial bundle size
+          const { getAllValidators } = await import("@/lib/staking");
           const validators = await getAllValidators(state.chain.nodeAddress);
           dispatch({ type: "setValidatorState", payload: { validators, status: "done" } });
         } catch (e) {

@@ -1,10 +1,11 @@
 import { createMultisig } from "@/graphql/multisig";
 import { CreateDbMultisigBody } from "@/lib/api";
+import { withByodbMiddleware } from "@/lib/byodb/middleware";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 const endpointErrMsg = "Failed to create multisig";
 
-export default async function apiCreateMultisig(req: NextApiRequest, res: NextApiResponse) {
+async function apiCreateMultisig(req: NextApiRequest, res: NextApiResponse) {
   const chainId = req.query.chainId;
 
   if (req.method !== "POST" || typeof chainId !== "string" || !chainId) {
@@ -31,3 +32,5 @@ export default async function apiCreateMultisig(req: NextApiRequest, res: NextAp
       .send(err instanceof Error ? `${endpointErrMsg}: ${err.message}` : endpointErrMsg);
   }
 }
+
+export default withByodbMiddleware(apiCreateMultisig);

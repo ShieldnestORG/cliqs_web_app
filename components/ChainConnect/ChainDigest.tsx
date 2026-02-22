@@ -1,7 +1,7 @@
 import { useChains } from "@/context/ChainsContext";
 import { deleteLocalChainFromStorage } from "@/context/ChainsContext/storage";
 import { ChainInfo } from "@/context/ChainsContext/types";
-import { CheckCircle, ChevronsUpDown, ExternalLink } from "lucide-react";
+import { CheckCircle2, ChevronDown, Coins, ExternalLink, Globe, Server } from "lucide-react";
 import Link from "next/link";
 import ButtonWithConfirm from "../inputs/ButtonWithConfirm";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -16,89 +16,129 @@ interface ChainItemProps {
 
 export default function ChainDigest({ chain, simplify }: ChainItemProps) {
   const { chain: connectedChain, chains } = useChains();
+  const isConnected = connectedChain.registryName === chain.registryName;
 
   return (
-    <div className="space-y-1">
-      <div className="column flex flex-wrap items-center gap-2">
-        <Avatar className="overflow-visible">
-          {!simplify && connectedChain.registryName === chain.registryName ? (
-            <CheckCircle
-              style={{
-                position: "absolute",
-                top: "-6px",
-                left: "-6px",
-                border: "2px solid rgb(134 239 172 / var(--tw-bg-opacity))",
-                borderRadius: "50%",
-                width: "20px",
-                height: "20px",
-                background: "rgb(134 239 172 / var(--tw-bg-opacity))",
-                color: "rgb(20 83 45 / var(--tw-text-opacity))",
-              }}
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="relative">
+          <Avatar className="h-12 w-12 border-2 border-border">
+            <AvatarImage
+              src={chain.logo}
+              alt={`${chain.chainDisplayName} logo`}
+              className="object-contain p-1"
             />
-          ) : null}
-          <AvatarImage src={chain.logo} alt={`${chain.chainDisplayName} logo`} className="h-auto" />
-          <AvatarFallback>{chain.registryName.slice(0, 1).toUpperCase()}</AvatarFallback>
-        </Avatar>
-        <h4 className="text-sm font-semibold">{chain.chainDisplayName}</h4>
-        <Badge>{chain.chainId}</Badge>
-      </div>
-      <h4 className="text-sm font-semibold">Fee token: {chain.displayDenom}</h4>
-      <Collapsible className="w-[350px] space-y-2">
-        <div className="flex items-center space-x-4">
-          {!simplify && chain.nodeAddresses.length > 1 ? (
-            <CollapsibleTrigger asChild>
-              <Button size="sm" className="p-1">
-                <ChevronsUpDown className="black h-4 w-4" />
-                <span className="sr-only">Toggle</span>
-                <h4 className="text-sm font-semibold">RPC endpoints:</h4>
-              </Button>
-            </CollapsibleTrigger>
-          ) : (
-            <h4 className="text-sm font-semibold">RPC endpoint:</h4>
+            <AvatarFallback className="bg-muted font-mono text-sm font-semibold">
+              {chain.registryName.slice(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          {!simplify && isConnected && (
+            <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[hsl(var(--accent-green))] shadow-md">
+              <CheckCircle2 className="h-3 w-3 text-white" />
+            </div>
           )}
         </div>
-        <div className="rounded-md border px-2 py-1 font-mono text-sm">
-          {chain.nodeAddress || chain.nodeAddresses[0]}
+        <div className="flex flex-col">
+          <span className="font-heading text-base font-semibold text-foreground">
+            {chain.chainDisplayName}
+          </span>
+          <div className="flex items-center gap-2">
+            <Badge
+              variant="outline"
+              className="border-border bg-muted/50 font-mono text-[10px] text-muted-foreground"
+            >
+              {chain.chainId}
+            </Badge>
+            {isConnected && (
+              <Badge className="bg-[hsl(var(--accent-green)/0.2)] text-[10px] text-[hsl(var(--accent-green-bright))]">
+                Connected
+              </Badge>
+            )}
+          </div>
         </div>
-        <CollapsibleContent className="space-y-2">
-          {chain.nodeAddresses
-            .filter(
-              (address, _, nodeAddresses) =>
-                (chain.nodeAddress && address !== chain.nodeAddress) ||
-                (!chain.nodeAddress && address !== nodeAddresses[0]),
-            )
-            .map((address) => (
-              <div key={address} className="rounded-md border px-2 py-1 font-mono text-sm">
-                {address}
-              </div>
-            ))}
-        </CollapsibleContent>
-      </Collapsible>
-      {!simplify && chains.localnets.has(chain.registryName) ? (
-        <div className="flex justify-center pt-2">
-          <ButtonWithConfirm
-            onClick={() => {
-              deleteLocalChainFromStorage(chain.registryName, chains);
-            }}
-            text="Delete custom chain"
-            confirmText="Confirm deletion?"
-            disabled={connectedChain.registryName === chain.registryName}
-          />
+      </div>
+
+      {/* Chain Details */}
+      <div className="space-y-2">
+        {/* Fee Token */}
+        <div className="flex items-center gap-2 text-sm">
+          <Coins className="h-4 w-4 text-muted-foreground" />
+          <span className="text-muted-foreground">Fee Token:</span>
+          <span className="font-mono font-medium text-foreground">{chain.displayDenom}</span>
         </div>
-      ) : !simplify ? (
-        <div className="flex items-center pt-2 hover:cursor-pointer">
-          <ExternalLink className="mr-2 h-4 w-4" />
-          <Link
-            href={`https://github.com/cosmos/chain-registry/tree/master/${
-              chains.testnets.has(chain.registryName) ? `testnets/` : ""
-            }${chain.registryName}`}
-            target="_blank"
-            className="text-xs underline"
-          >
-            Check it out on the registry
-          </Link>
+
+        {/* RPC Endpoints */}
+        <Collapsible className="w-full">
+          <div className="flex items-center gap-2">
+            <Server className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">
+              {chain.nodeAddresses.length > 1 ? "RPC Endpoints:" : "RPC Endpoint:"}
+            </span>
+            {!simplify && chain.nodeAddresses.length > 1 && (
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="ml-auto h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  <span className="mr-1">{chain.nodeAddresses.length}</span>
+                  <ChevronDown className="h-3 w-3 transition-transform duration-200 [[data-state=open]_&]:rotate-180" />
+                </Button>
+              </CollapsibleTrigger>
+            )}
+          </div>
+          <div className="mt-2 rounded-lg border border-border bg-muted/30 px-3 py-2">
+            <code className="block truncate font-mono text-xs text-foreground">
+              {chain.nodeAddress || chain.nodeAddresses[0]}
+            </code>
+          </div>
+          <CollapsibleContent className="mt-2 space-y-2">
+            {chain.nodeAddresses
+              .filter(
+                (address, _, nodeAddresses) =>
+                  (chain.nodeAddress && address !== chain.nodeAddress) ||
+                  (!chain.nodeAddress && address !== nodeAddresses[0]),
+              )
+              .map((address) => (
+                <div
+                  key={address}
+                  className="rounded-lg border border-border bg-muted/30 px-3 py-2"
+                >
+                  <code className="block truncate font-mono text-xs text-foreground">{address}</code>
+                </div>
+              ))}
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
+
+      {/* Actions */}
+      {!simplify && (
+        <div className="border-t border-border pt-3">
+          {chains.localnets.has(chain.registryName) ? (
+            <ButtonWithConfirm
+              onClick={() => {
+                deleteLocalChainFromStorage(chain.registryName, chains);
+              }}
+              text="Delete custom chain"
+              confirmText="Confirm deletion?"
+              disabled={isConnected}
+            />
+          ) : (
+            <Link
+              href={`https://github.com/cosmos/chain-registry/tree/master/${
+                chains.testnets.has(chain.registryName) ? `testnets/` : ""
+              }${chain.registryName}`}
+              target="_blank"
+              className="group flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-[hsl(var(--accent-purple))]"
+            >
+              <Globe className="h-3.5 w-3.5" />
+              <span>View on Chain Registry</span>
+              <ExternalLink className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          )}
         </div>
-      ) : null}
+      )}
     </div>
   );
 }

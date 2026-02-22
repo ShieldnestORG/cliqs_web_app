@@ -8,8 +8,10 @@ import {
 } from "../../../../lib/dateHelpers";
 import { checkAddress, exampleAddress, trimStringsObj } from "../../../../lib/displayHelpers";
 import { MsgCodecs, MsgTypeUrls } from "../../../../types/txMsg";
-import Input from "../../../inputs/Input";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import StackableContainer from "../../../layout/StackableContainer";
+import { X } from "lucide-react";
 
 const humanTimestampOptions = [
   { label: "12 hours from now", value: 12 * 60 * 60 * 1000 },
@@ -119,7 +121,9 @@ const MsgTransferForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgTransfer
     const msg: MsgTransferEncodeObject = { typeUrl: MsgTypeUrls.Transfer, value: msgValue };
 
     setMsgGetter({ isMsgValid, msg });
-  }, [chain.chainId, senderAddress, setMsgGetter, trimmedInputs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chain.chainId, senderAddress, trimmedInputs]);
+  // Note: setMsgGetter intentionally excluded - it's a stable setter that shouldn't trigger re-runs
 
   useEffect(() => {
     if (!denom || !denom.startsWith("ibc/")) {
@@ -141,13 +145,19 @@ const MsgTransferForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgTransfer
   }, [chain.assets, denom]);
 
   return (
-    <StackableContainer lessPadding lessMargin>
-      <button className="remove" onClick={() => deleteMsg()}>
-        ✕
-      </button>
-      <h2>MsgTransfer</h2>
-      <div className="form-item">
+    <StackableContainer variant="institutional" lessPadding lessMargin>
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        onClick={() => deleteMsg()}
+        className="absolute right-4 top-4 h-8 w-8 text-muted-foreground hover:text-foreground"
+      >
+        <X className="h-4 w-4" />
+      </Button>
+      <h2 className="text-xl font-heading font-semibold mb-4">MsgTransfer</h2>
+      <div className="space-y-4">
         <Input
+          variant="institutional"
           label="Recipient Address"
           name="recipient-address"
           value={toAddress}
@@ -158,9 +168,8 @@ const MsgTransferForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgTransfer
           error={toAddressError}
           placeholder={`E.g. ${exampleAddress(0, chain.addressPrefix)}`}
         />
-      </div>
-      <div className="form-item">
         <Input
+          variant="institutional"
           label="Denom"
           name="denom"
           value={denom}
@@ -170,9 +179,8 @@ const MsgTransferForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgTransfer
           }}
           error={denomError}
         />
-      </div>
-      <div className="form-item">
         <Input
+          variant="institutional"
           type="number"
           label="Amount"
           name="amount"
@@ -183,9 +191,8 @@ const MsgTransferForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgTransfer
           }}
           error={amountError}
         />
-      </div>
-      <div className="form-item">
         <Input
+          variant="institutional"
           label="Source Port"
           name="source-port"
           value={sourcePort}
@@ -195,9 +202,8 @@ const MsgTransferForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgTransfer
           }}
           error={sourcePortError}
         />
-      </div>
-      <div className="form-item">
         <Input
+          variant="institutional"
           label="Source Channel"
           name="source-channel"
           value={sourceChannel}
@@ -207,9 +213,8 @@ const MsgTransferForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgTransfer
           }}
           error={sourceChannelError}
         />
-      </div>
-      <div className="form-item">
         <Input
+          variant="institutional"
           type="datetime-local"
           list="timestamp-options"
           label="Timeout"
@@ -228,31 +233,14 @@ const MsgTransferForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgTransfer
             </option>
           ))}
         </datalist>
-      </div>
-      <div className="form-item">
         <Input
+          variant="institutional"
           label="Memo"
           name="memo"
           value={memo}
           onChange={({ target }) => setMemo(target.value)}
         />
       </div>
-      <style jsx>{`
-        .form-item {
-          margin-top: 1.5em;
-        }
-        button.remove {
-          background: rgba(255, 255, 255, 0.2);
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          border: none;
-          color: white;
-          position: absolute;
-          right: 10px;
-          top: 10px;
-        }
-      `}</style>
     </StackableContainer>
   );
 };

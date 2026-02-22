@@ -1,14 +1,22 @@
 import { printVoteOption, voteOptions } from "@/lib/gov";
 import { MsgVoteEncodeObject } from "@cosmjs/stargate";
 import { longify } from "@cosmjs/stargate/build/queryclient";
-import { voteOptionFromJSON } from "cosmjs-types/cosmos/gov/v1beta1/gov";
+import { VoteOption, voteOptionFromJSON } from "cosmjs-types/cosmos/gov/v1beta1/gov";
 import { useEffect, useState } from "react";
 import { MsgGetter } from "..";
 import { trimStringsObj } from "../../../../lib/displayHelpers";
 import { MsgCodecs, MsgTypeUrls } from "../../../../types/txMsg";
-import Input from "../../../inputs/Input";
-import Select from "../../../inputs/Select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import StackableContainer from "../../../layout/StackableContainer";
+import { X } from "lucide-react";
 
 const selectVoteOptions = voteOptions.map((opt) => {
   const voteOptionObj = voteOptionFromJSON(opt);
@@ -16,6 +24,7 @@ const selectVoteOptions = voteOptions.map((opt) => {
   return {
     label: printVoteOption(voteOptionObj),
     value: voteOptionObj,
+    key: String(voteOptionObj),
   };
 });
 
@@ -27,7 +36,7 @@ interface MsgVoteFormProps {
 
 const MsgVoteForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgVoteFormProps) => {
   const [proposalId, setProposalId] = useState("0");
-  const [selectedVote, setSelectedVote] = useState(selectVoteOptions[0]);
+  const [selectedVoteKey, setSelectedVoteKey] = useState(selectVoteOptions[0]?.key ?? "0");
 
   const [proposalIdError, setProposalIdError] = useState("");
 
@@ -63,25 +72,36 @@ const MsgVoteForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgVoteFormProp
       }
     })();
 
+    const selectedVoteOption: VoteOption =
+      selectVoteOptions.find((o) => o.key === selectedVoteKey)?.value ?? 0;
+
     const msgValue = MsgCodecs[MsgTypeUrls.Vote].fromPartial({
       voter: senderAddress,
       proposalId: proposalIdBigInt,
-      option: selectedVote.value,
+      option: selectedVoteOption,
     });
 
     const msg: MsgVoteEncodeObject = { typeUrl: MsgTypeUrls.Vote, value: msgValue };
 
     setMsgGetter({ isMsgValid, msg });
-  }, [selectedVote.value, senderAddress, setMsgGetter, trimmedInputs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedVoteKey, senderAddress, trimmedInputs]);
+  // Note: setMsgGetter intentionally excluded - it's a stable setter that shouldn't trigger re-runs
 
   return (
-    <StackableContainer lessPadding lessMargin>
-      <button className="remove" onClick={() => deleteMsg()}>
-        ✕
-      </button>
-      <h2>MsgVote</h2>
-      <div className="form-item">
+    <StackableContainer variant="institutional" lessPadding lessMargin>
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        onClick={() => deleteMsg()}
+        className="absolute right-4 top-4 h-8 w-8 text-muted-foreground hover:text-foreground"
+      >
+        <X className="h-4 w-4" />
+      </Button>
+      <h2 className="text-xl font-heading font-semibold mb-4">MsgVote</h2>
+      <div className="space-y-4">
         <Input
+          variant="institutional"
           type="number"
           label="Proposal ID"
           name="proposal-id"
@@ -92,44 +112,22 @@ const MsgVoteForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgVoteFormProp
           }}
           error={proposalIdError}
         />
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">Choose a vote:</label>
+          <Select value={selectedVoteKey} onValueChange={setSelectedVoteKey}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select vote option" />
+            </SelectTrigger>
+            <SelectContent>
+              {selectVoteOptions.map((opt) => (
+                <SelectItem key={opt.key} value={opt.key}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-      <div className="form-item form-select">
-        <label>Choose a vote:</label>
-        <Select
-          label="Select vote"
-          name="vote-select"
-          options={selectVoteOptions}
-          value={selectedVote}
-          onChange={(option: (typeof selectVoteOptions)[number]) => {
-            setSelectedVote(option);
-          }}
-        />
-      </div>
-      <style jsx>{`
-        .form-item {
-          margin-top: 1.5em;
-        }
-        .form-item label {
-          font-style: italic;
-          font-size: 12px;
-        }
-        .form-select {
-          display: flex;
-          flex-direction: column;
-          gap: 0.8em;
-        }
-        button.remove {
-          background: rgba(255, 255, 255, 0.2);
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          border: none;
-          color: white;
-          position: absolute;
-          right: 10px;
-          top: 10px;
-        }
-      `}</style>
     </StackableContainer>
   );
 };

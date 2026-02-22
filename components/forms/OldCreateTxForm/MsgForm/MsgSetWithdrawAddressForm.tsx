@@ -4,8 +4,10 @@ import { MsgGetter } from "..";
 import { useChains } from "../../../../context/ChainsContext";
 import { checkAddress, exampleAddress, trimStringsObj } from "../../../../lib/displayHelpers";
 import { MsgCodecs, MsgTypeUrls } from "../../../../types/txMsg";
-import Input from "../../../inputs/Input";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import StackableContainer from "../../../layout/StackableContainer";
+import { X } from "lucide-react";
 
 interface MsgSetWithdrawAddressFormProps {
   readonly senderAddress: string;
@@ -48,16 +50,24 @@ const MsgSetWithdrawAddressForm = ({
     const msg: EncodeObject = { typeUrl: MsgTypeUrls.SetWithdrawAddress, value: msgValue };
 
     setMsgGetter({ isMsgValid, msg });
-  }, [chain.addressPrefix, chain.chainId, senderAddress, setMsgGetter, trimmedInputs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chain.addressPrefix, chain.chainId, senderAddress, trimmedInputs]);
+  // Note: setMsgGetter intentionally excluded - it's a stable setter that shouldn't trigger re-runs
 
   return (
-    <StackableContainer lessPadding lessMargin>
-      <button className="remove" onClick={() => deleteMsg()}>
-        ✕
-      </button>
-      <h2>MsgSetWithdrawAddress</h2>
-      <div className="form-item">
+    <StackableContainer variant="institutional" lessPadding lessMargin>
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        onClick={() => deleteMsg()}
+        className="absolute right-4 top-4 h-8 w-8 text-muted-foreground hover:text-foreground"
+      >
+        <X className="h-4 w-4" />
+      </Button>
+      <h2 className="text-xl font-heading font-semibold mb-4">MsgSetWithdrawAddress</h2>
+      <div className="space-y-4">
         <Input
+          variant="institutional"
           label="Withdraw Address"
           name="withdraw-address"
           value={withdrawAddress}
@@ -69,22 +79,6 @@ const MsgSetWithdrawAddressForm = ({
           placeholder={`E.g. ${exampleAddress(0, chain.addressPrefix)}`}
         />
       </div>
-      <style jsx>{`
-        .form-item {
-          margin-top: 1.5em;
-        }
-        button.remove {
-          background: rgba(255, 255, 255, 0.2);
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          border: none;
-          color: white;
-          position: absolute;
-          right: 10px;
-          top: 10px;
-        }
-      `}</style>
     </StackableContainer>
   );
 };

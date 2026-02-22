@@ -1,37 +1,42 @@
 import { isChainInfoFilled } from "@/context/ChainsContext/helpers";
 import { DbSignatureObj } from "@/graphql";
 import { getTransaction } from "@/graphql/transaction";
-import { updateDbTxHash } from "@/lib/api";
+import { cancelDbTx, updateDbTxHash } from "@/lib/api";
+import { makeMultisignedTxBytesDirect, shouldUseDirectMode } from "@/lib/multisigDirect";
+import { createMultiRpcVerifier, BroadcastResult } from "@/lib/rpc";
+import { dispatchTransactionStatusChanged } from "@/lib/hooks/usePendingTransactions";
 import { toastError, toastSuccess } from "@/lib/utils";
-import { MultisigThresholdPubkey } from "@cosmjs/amino";
-import { fromBase64 } from "@cosmjs/encoding";
+import { MultisigThresholdPubkey, pubkeyToAddress } from "@cosmjs/amino";
+import { fromBase64, toBase64 } from "@cosmjs/encoding";
 import { Account, StargateClient, makeMultisignedTxBytes } from "@cosmjs/stargate";
 import { assert } from "@cosmjs/utils";
-import { GetServerSideProps } from "next";
+import type { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
+import { AlertTriangle, FileText, MessageSquare, Users, Zap, CheckCircle2 } from "lucide-react";
 import CompletedTransaction from "../../../../components/dataViews/CompletedTransaction";
-import ThresholdInfo from "../../../../components/dataViews/ThresholdInfo";
 import TransactionInfo from "../../../../components/dataViews/TransactionInfo";
+import HashView from "../../../../components/dataViews/HashView";
 import TransactionSigning from "../../../../components/forms/TransactionSigning";
 import Button from "../../../../components/inputs/Button";
 import Page from "../../../../components/layout/Page";
-import StackableContainer from "../../../../components/layout/StackableContainer";
 import { useChains } from "../../../../context/ChainsContext";
 import { getHostedMultisig, isAccount } from "../../../../lib/multisigHelpers";
 import { dbTxFromJson } from "../../../../lib/txMsgHelpers";
+import { printableCoins } from "../../../../lib/displayHelpers";
+import { BentoGrid, BentoCard, BentoCardHeader, BentoCardTitle, BentoCardContent, BentoCardFooter } from "../../../../components/ui/bento-grid";
+import { Card, CardContent, CardLabel } from "../../../../components/ui/card";
 
-interface Props {
-  props: {
-    transactionJSON: string;
-    transactionID: string;
-    txHash: string;
-    signatures: readonly DbSignatureObj[];
-  };
+interface PageProps {
+  transactionJSON: string;
+  transactionID: string;
+  txHash: string;
+  signatures: readonly DbSignatureObj[];
+  status: "pending" | "broadcast" | "cancelled";
 }
 
-export const getServerSideProps: GetServerSideProps = async (context): Promise<Props> => {
+export const getServerSideProps: GetServerSideProps<PageProps> = async (context) => {
   // get transaction info
   const transactionID = context.params?.transactionID?.toString();
   assert(transactionID, "Transaction ID missing");
@@ -40,7 +45,41 @@ export const getServerSideProps: GetServerSideProps = async (context): Promise<P
   if (!tx) {
     throw new Error("Transaction not found");
   }
-  console.log("success", tx);
+  console.log("🔍 DECIMAL DEBUG: getServerSideProps - retrieved transaction");
+  console.log("  - tx.dataJSON length:", tx.dataJSON.length);
+
+  // Parse and log the transaction data
+  try {
+    // tx.dataJSON is stored as a JSON string in the database, so we need to parse it
+    const parsedData = JSON.parse(tx.dataJSON);
+    console.log("🔍 DECIMAL DEBUG: server-side parsed transaction data");
+    console.log("  - accountNumber:", parsedData.accountNumber);
+    console.log("  - sequence:", parsedData.sequence);
+    console.log("  - chainId:", parsedData.chainId);
+    console.log("  - msgs count:", parsedData.msgs?.length || 0);
+
+    if (parsedData.msgs && parsedData.msgs.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      parsedData.msgs.forEach((msg: any, index: number) => {
+        console.log(`🔍 DECIMAL DEBUG: server msg[${index}]`);
+        console.log(`  - typeUrl:`, msg.typeUrl);
+
+        // Specifically check for CreateValidator messages and log commission
+        if (msg.typeUrl === "/cosmos.staking.v1beta1.MsgCreateValidator" && msg.value?.commission) {
+          console.log(`  - CREATE_VALIDATOR commission:`, msg.value.commission);
+          console.log(`    - rate:`, msg.value.commission.rate, typeof msg.value.commission.rate);
+          console.log(`    - maxRate:`, msg.value.commission.maxRate, typeof msg.value.commission.maxRate);
+          console.log(`    - maxChangeRate:`, msg.value.commission.maxChangeRate, typeof msg.value.commission.maxChangeRate);
+        }
+      });
+    }
+
+    console.log("  - fee:", parsedData.fee);
+    console.log("  - memo:", parsedData.memo);
+  } catch (parseError) {
+    console.error("🔍 DECIMAL DEBUG: Failed to parse server-side transaction dataJSON:", parseError);
+    console.error("🔍 DECIMAL DEBUG: tx.dataJSON:", tx.dataJSON);
+  }
 
   return {
     props: {
@@ -48,6 +87,7 @@ export const getServerSideProps: GetServerSideProps = async (context): Promise<P
       txHash: tx.txHash || "",
       transactionID,
       signatures: tx.signatures ?? [],
+      status: tx.status || (tx.txHash ? "broadcast" : "pending") as "pending" | "broadcast" | "cancelled",
     },
   };
 };
@@ -57,24 +97,36 @@ const TransactionPage = ({
   transactionID,
   signatures,
   txHash,
-}: {
-  transactionJSON: string;
-  transactionID: string;
-  signatures: DbSignatureObj[];
-  txHash: string;
-}) => {
+  status: initialStatus,
+}: PageProps) => {
   const { chain } = useChains();
-  const [currentSignatures, setCurrentSignatures] = useState(signatures);
+  const router = useRouter();
+  const [currentSignatures, setCurrentSignatures] = useState([...signatures]);
   const [isBroadcasting, setIsBroadcasting] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [transactionHash, setTransactionHash] = useState(txHash);
+  const [transactionStatus, setTransactionStatus] = useState(initialStatus);
   const [accountOnChain, setAccountOnChain] = useState<Account | null>(null);
   const [pubkey, setPubkey] = useState<MultisigThresholdPubkey>();
-  const txInfo = dbTxFromJson(transactionJSON);
-  const router = useRouter();
+  const [sequenceMismatch, setSequenceMismatch] = useState<{
+    expected: number;
+    actual: number;
+  } | null>(null);
+  // Track whether sequence has been verified (starts false, set true after check passes)
+  const [sequenceVerified, setSequenceVerified] = useState(false);
+  // Phase 0: Multi-RPC verification state
+  const [broadcastResult, setBroadcastResult] = useState<BroadcastResult | null>(null);
+  const [verificationStatus, setVerificationStatus] = useState<"idle" | "verifying" | "verified" | "failed">("idle");
+  // Memoize txInfo to prevent recalculating on every render
+  const txInfo = useMemo(() => {
+    console.log("🔍 DEBUG: Parsing transactionJSON (memoized)");
+    return dbTxFromJson(transactionJSON);
+  }, [transactionJSON]);
+
   const multisigAddress = router.query.address?.toString();
 
   const addSignature = (signature: DbSignatureObj) => {
-    setCurrentSignatures((prevState: DbSignatureObj[]) => [...prevState, signature]);
+    setCurrentSignatures((prevState) => [...prevState, signature]);
   };
 
   useEffect(() => {
@@ -84,6 +136,7 @@ const TransactionPage = ({
           return;
         }
 
+        console.log("🔍 SEQUENCE CHECK: Fetching multisig account state");
         const hostedMultisig = await getHostedMultisig(multisigAddress, chain);
 
         assert(
@@ -91,8 +144,39 @@ const TransactionPage = ({
           "Multisig address could not be found",
         );
 
+        console.log("🔍 SEQUENCE CHECK: Account found on chain");
+        console.log("  - on-chain accountNumber:", hostedMultisig.accountOnChain.accountNumber);
+        console.log("  - on-chain sequence:", hostedMultisig.accountOnChain.sequence);
+        console.log("  - tx stored accountNumber:", txInfo?.accountNumber);
+        console.log("  - tx stored sequence:", txInfo?.sequence);
+
         setPubkey(hostedMultisig.pubkeyOnDb);
         setAccountOnChain(hostedMultisig.accountOnChain);
+
+        // Check for sequence mismatch - this happens when another tx was broadcast
+        // from this account after this transaction was created
+        if (txInfo && hostedMultisig.accountOnChain.sequence !== txInfo.sequence) {
+          console.warn("🔍 SEQUENCE CHECK: ⚠️ SEQUENCE MISMATCH DETECTED!");
+          console.warn(`  - Transaction expects sequence: ${txInfo.sequence}`);
+          console.warn(`  - Chain current sequence: ${hostedMultisig.accountOnChain.sequence}`);
+          console.warn("  - This transaction's signatures are no longer valid");
+          setSequenceMismatch({
+            expected: txInfo.sequence,
+            actual: hostedMultisig.accountOnChain.sequence,
+          });
+          setSequenceVerified(false);
+        } else {
+          console.log("🔍 SEQUENCE CHECK: ✅ Sequence matches");
+          setSequenceMismatch(null);
+          setSequenceVerified(true);
+        }
+
+        // Also check account number mismatch (rare but possible after chain upgrades)
+        if (txInfo && hostedMultisig.accountOnChain.accountNumber !== txInfo.accountNumber) {
+          console.warn("🔍 SEQUENCE CHECK: ⚠️ ACCOUNT NUMBER MISMATCH!");
+          console.warn(`  - Transaction expects account #: ${txInfo.accountNumber}`);
+          console.warn(`  - Chain current account #: ${hostedMultisig.accountOnChain.accountNumber}`);
+        }
       } catch (e) {
         console.error("Failed to find multisig address:", e);
         toastError({
@@ -101,7 +185,7 @@ const TransactionPage = ({
         });
       }
     })();
-  }, [chain, multisigAddress]);
+  }, [chain, multisigAddress, txInfo]);
 
   const broadcastTx = async () => {
     const loadingToastId = toast.loading("Broadcasting transaction");
@@ -116,28 +200,341 @@ const TransactionPage = ({
       );
       assert(pubkey, "Pubkey not found on chain or in database");
       assert(txInfo, "Transaction not found in database");
+      assert(multisigAddress, "Multisig address missing");
+
+      console.log("🔍 BROADCAST DEBUG: Starting broadcast validation");
+      console.log("  - txInfo.accountNumber:", txInfo.accountNumber);
+      console.log("  - txInfo.sequence:", txInfo.sequence);
+      console.log("  - txInfo.chainId:", txInfo.chainId);
+
+      // CRITICAL: Re-fetch the current on-chain account state right before broadcasting
+      // This catches cases where the sequence changed since the page was loaded
+      const client = await StargateClient.connect(chain.nodeAddress);
+      const currentAccountOnChain = await client.getAccount(multisigAddress);
+
+      if (!currentAccountOnChain) {
+        throw new Error("Could not fetch current account state from chain");
+      }
+
+      console.log("🔍 BROADCAST DEBUG: Current on-chain state");
+      console.log("  - current accountNumber:", currentAccountOnChain.accountNumber);
+      console.log("  - current sequence:", currentAccountOnChain.sequence);
+
+      // Validate account number matches
+      if (currentAccountOnChain.accountNumber !== txInfo.accountNumber) {
+        throw new Error(
+          `Account number mismatch! Transaction was created for account #${txInfo.accountNumber}, ` +
+          `but the current on-chain account number is ${currentAccountOnChain.accountNumber}. ` +
+          `This transaction's signatures are no longer valid. Please cancel this transaction and create a new one.`
+        );
+      }
+
+      // Validate sequence matches
+      if (currentAccountOnChain.sequence !== txInfo.sequence) {
+        // Update the mismatch state so the UI shows the warning
+        setSequenceMismatch({
+          expected: txInfo.sequence,
+          actual: currentAccountOnChain.sequence,
+        });
+        
+        throw new Error(
+          `Sequence mismatch! Transaction was signed for sequence ${txInfo.sequence}, ` +
+          `but the current on-chain sequence is ${currentAccountOnChain.sequence}. ` +
+          `This typically means another transaction was broadcast from this multisig account. ` +
+          `The collected signatures are no longer valid. Please cancel this transaction and create a new one.`
+        );
+      }
+
+      console.log("🔍 BROADCAST DEBUG: Validation passed, proceeding with broadcast");
+      console.log("  - currentSignatures count:", currentSignatures.length);
+      console.log("  - txInfo.fee:", txInfo.fee);
+      console.log("  - txInfo.accountNumber:", txInfo.accountNumber);
+      console.log("  - txInfo.sequence:", txInfo.sequence);
+      console.log("  - txInfo.chainId:", txInfo.chainId);
+      console.log("  - txInfo.memo:", txInfo.memo);
+
+      console.log("🔍 BROADCAST DEBUG: Pubkey info");
+      console.log("  - pubkey.type:", pubkey.type);
+      console.log("  - pubkey.value.threshold:", pubkey.value.threshold);
+      console.log("  - pubkey.value.pubkeys count:", pubkey.value.pubkeys.length);
+      pubkey.value.pubkeys.forEach((pk, i) => {
+        console.log(`  - pubkey[${i}]:`, pk.value.substring(0, 20) + "...");
+      });
+
+      console.log("🔍 BROADCAST DEBUG: Signature addresses");
+      currentSignatures.forEach((sig, i) => {
+        console.log(`  - sig[${i}].address:`, sig.address);
+        console.log(`  - sig[${i}].signature length:`, fromBase64(sig.signature).length);
+      });
+
       const bodyBytes = fromBase64(currentSignatures[0].bodyBytes);
-      const signedTxBytes = makeMultisignedTxBytes(
-        pubkey,
-        txInfo.sequence,
-        txInfo.fee,
-        bodyBytes,
-        new Map(currentSignatures.map((s) => [s.address, fromBase64(s.signature)])),
+      console.log("  - bodyBytes length:", bodyBytes.length);
+
+      // Verify all signatures have the same bodyBytes
+      const allSameBodyBytes = currentSignatures.every(
+        (s) => s.bodyBytes === currentSignatures[0].bodyBytes
+      );
+      console.log("  - all signatures have same bodyBytes:", allSameBodyBytes);
+      if (!allSameBodyBytes) {
+        console.error("⚠️ CRITICAL: Signatures have different bodyBytes!");
+        currentSignatures.forEach((s, i) => {
+          console.log(`  - sig[${i}].bodyBytes:`, s.bodyBytes.substring(0, 50) + "...");
+        });
+      }
+
+      // Build signature map - cosmjs 0.35.0+ extracts prefix from first address automatically
+      console.log("🔍 BROADCAST DEBUG: Creating signature map");
+      const detectedPrefix = currentSignatures[0]?.address?.split('1')[0] || 'unknown';
+      console.log("  - Detected prefix:", detectedPrefix);
+      
+      // CRITICAL: Verify pubkey -> address derivation matches signature addresses
+      console.log("🔍 BROADCAST DEBUG: Verifying pubkey -> address mapping");
+      const derivedAddresses: string[] = [];
+      pubkey.value.pubkeys.forEach((memberPubkey, i) => {
+        const derivedAddress = pubkeyToAddress(memberPubkey, detectedPrefix);
+        derivedAddresses.push(derivedAddress);
+        console.log(`  - pubkey[${i}] -> ${derivedAddress}`);
+      });
+      
+      // Check if all signature addresses are in the derived list
+      console.log("🔍 BROADCAST DEBUG: Checking signature addresses against derived");
+      currentSignatures.forEach((s, i) => {
+        const found = derivedAddresses.includes(s.address);
+        console.log(`  - sig[${i}] ${s.address}: ${found ? '✅ MATCH' : '❌ NOT FOUND'}`);
+      });
+      
+      const signatureMap = new Map<string, Uint8Array>();
+      currentSignatures.forEach((s) => {
+        signatureMap.set(s.address, fromBase64(s.signature));
+      });
+      console.log("  - Signature map size:", signatureMap.size);
+
+      // CRITICAL DEBUG: Log exact values being used
+      console.log("🔍 BROADCAST DEBUG: EXACT VALUES for makeMultisignedTxBytes:");
+      console.log("  - sequence:", txInfo.sequence, typeof txInfo.sequence);
+      console.log("  - fee:", JSON.stringify(txInfo.fee));
+      console.log("  - fee.gas:", txInfo.fee.gas, typeof txInfo.fee.gas);
+      console.log("  - fee.amount[0]:", JSON.stringify(txInfo.fee.amount[0]));
+      console.log("  - bodyBytes (first 30 bytes hex):", Array.from(bodyBytes.slice(0, 30)).map(b => b.toString(16).padStart(2, '0')).join(''));
+      
+      // Check if this transaction should use Direct mode
+      const useDirectMode = shouldUseDirectMode(txInfo.msgs);
+      console.log("🔍 BROADCAST DEBUG: Using Direct mode:", useDirectMode);
+      
+      let signedTxBytes: Uint8Array;
+      if (useDirectMode) {
+        // Use SIGN_MODE_DIRECT for MsgWithdrawValidatorCommission transactions
+        console.log("🔍 BROADCAST DEBUG: Assembling with SIGN_MODE_DIRECT");
+        signedTxBytes = makeMultisignedTxBytesDirect(
+          pubkey,
+          txInfo.sequence,
+          txInfo.fee,
+          bodyBytes,
+          signatureMap,
+        );
+      } else {
+        // Use SIGN_MODE_LEGACY_AMINO_JSON for other transactions
+        console.log("🔍 BROADCAST DEBUG: Assembling with SIGN_MODE_LEGACY_AMINO_JSON");
+        signedTxBytes = makeMultisignedTxBytes(
+          pubkey,
+          txInfo.sequence,
+          txInfo.fee,
+          bodyBytes,
+          signatureMap,
+        );
+      }
+
+      console.log("🔍 BROADCAST DEBUG: signedTxBytes created, length:", signedTxBytes.length);
+      
+      // Import SignDoc debug utilities for comprehensive comparison
+      const { generateSignDocDebugInfo, logSignDocDebug } = await import("@/lib/signDocDebug");
+      const { makeDirectModeAuthInfo, makeDirectSignDoc, logDirectSignDocDebug } = await import("@/lib/multisigDirect");
+      const { aminoConverters } = await import("@/lib/msg");
+      const { makeSignDoc, serializeSignDoc } = await import("@cosmjs/amino");
+      const { sha256 } = await import("@cosmjs/crypto");
+      const { AminoTypes } = await import("@cosmjs/stargate");
+      const { Secp256k1, Secp256k1Signature } = await import("@cosmjs/crypto");
+      
+      let expectedHash: Uint8Array;
+      
+      if (useDirectMode) {
+        // For Direct mode, verify against Direct SignDoc hash
+        const { authInfoBytes } = makeDirectModeAuthInfo(pubkey, txInfo.sequence, txInfo.fee);
+        const { signDocHash } = makeDirectSignDoc(bodyBytes, authInfoBytes, txInfo.chainId, txInfo.accountNumber);
+        expectedHash = signDocHash;
+        
+        logDirectSignDocDebug(bodyBytes, authInfoBytes, txInfo.chainId, txInfo.accountNumber, "BROADCAST Direct SignDoc Analysis");
+        console.log("🔍 BROADCAST DEBUG: Using Direct SignDoc for verification");
+        console.log("🔍 BROADCAST DEBUG: Direct SignDoc hash:", toBase64(expectedHash));
+      } else {
+        // For Amino mode, use Amino SignDoc hash
+        const aminoTypes = new AminoTypes(aminoConverters);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const aminoMsgs = txInfo.msgs.map((msg: any) => aminoTypes.toAmino(msg));
+        
+        const expectedSignDoc = makeSignDoc(
+          aminoMsgs,
+          { amount: txInfo.fee.amount, gas: txInfo.fee.gas },
+          txInfo.chainId,
+          txInfo.memo,
+          String(txInfo.accountNumber),
+          String(txInfo.sequence)
+        );
+        const signDocBytes = serializeSignDoc(expectedSignDoc);
+        expectedHash = sha256(signDocBytes);
+        
+        // Enhanced debug output
+        console.log("🔍 BROADCAST DEBUG: Using Amino SignDoc for verification");
+        console.log("🔍 BROADCAST DEBUG: Expected SignDoc hash:", toBase64(expectedHash));
+        console.log("🔍 BROADCAST DEBUG: SignDoc (canonical JSON):", new TextDecoder().decode(signDocBytes));
+        console.log("🔍 BROADCAST DEBUG: SignDoc (parsed):", JSON.stringify(expectedSignDoc, null, 2));
+        
+        // Generate comprehensive debug info
+        const debugInfo = generateSignDocDebugInfo(
+          txInfo.msgs,
+          txInfo.fee,
+          txInfo.chainId,
+          txInfo.memo,
+          txInfo.accountNumber,
+          txInfo.sequence,
+          aminoTypes
+        );
+        logSignDocDebug(debugInfo, "BROADCAST SignDoc Analysis");
+      }
+      
+      // Verify signatures against expected hash
+      console.log(`🔍 BROADCAST DEBUG: Verifying signatures against ${useDirectMode ? 'Direct' : 'Amino'} hash:`);
+      for (let i = 0; i < currentSignatures.length; i++) {
+        const s = currentSignatures[i];
+        const sig = Secp256k1Signature.fromFixedLength(fromBase64(s.signature));
+        // Find the pubkey for this address
+        const pubkeyIndex = derivedAddresses.indexOf(s.address);
+        if (pubkeyIndex === -1) {
+          console.log(`  - sig[${i}] (${s.address}): ❌ No matching pubkey`);
+          continue;
+        }
+        const memberPubkey = pubkey.value.pubkeys[pubkeyIndex];
+        const pubkeyBytes = fromBase64(memberPubkey.value);
+        const valid = await Secp256k1.verifySignature(sig, expectedHash, pubkeyBytes);
+        console.log(`  - sig[${i}] (${s.address}): ${valid ? '✅ VALID' : '❌ INVALID'}`);
+      }
+      
+      console.log("🔍 BROADCAST DEBUG: Broadcasting to chain with multi-RPC verification...");
+
+      // Phase 0: Use MultiRpcVerifier for hardened broadcast
+      setVerificationStatus("verifying");
+      const verifier = createMultiRpcVerifier(
+        chain.chainId,
+        chain.nodeAddress,
+        chain.nodeAddresses,
       );
 
-      const broadcaster = await StargateClient.connect(chain.nodeAddress);
-      const result = await broadcaster.broadcastTx(signedTxBytes);
-      await updateDbTxHash(transactionID, result.transactionHash);
-      toastSuccess("Transaction broadcasted with hash", result.transactionHash);
-      setTransactionHash(result.transactionHash);
+      const verifiedResult = await verifier.broadcastAndVerify(signedTxBytes);
+      setBroadcastResult(verifiedResult);
+
+      console.log("🔍 BROADCAST DEBUG: Multi-RPC broadcast result");
+      console.log("  - transactionHash:", verifiedResult.txHash);
+      console.log("  - success:", verifiedResult.success);
+      console.log("  - height:", verifiedResult.height);
+      console.log("  - verifications:", verifiedResult.verifications.length);
+
+      // Also log individual verification results
+      verifiedResult.verifications.forEach((v, i) => {
+        console.log(`  - verification[${i}]: ${v.endpoint} - ${v.verified ? "✅" : "❌"} ${v.error || ""}`);
+      });
+
+      if (!verifiedResult.success) {
+        setVerificationStatus("failed");
+        throw new Error(
+          verifiedResult.error || 
+          `Transaction broadcast succeeded but verification failed. ` +
+          `Only ${verifiedResult.verifications.filter(v => v.verified).length + 1} endpoints confirmed.`
+        );
+      }
+
+      setVerificationStatus("verified");
+
+      // Disconnect the verifier's clients
+      await verifier.disconnect();
+
+      await updateDbTxHash(transactionID, verifiedResult.txHash);
+      toastSuccess("Transaction broadcasted and verified", verifiedResult.txHash);
+      setTransactionHash(verifiedResult.txHash);
+      
+      // Notify pending transactions hook to refresh (removes the indicator)
+      dispatchTransactionStatusChanged();
     } catch (e) {
       console.error("Failed to broadcast tx:", e);
+      
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      
+      // Check for sequence mismatch error from chain
+      if (errorMessage.includes("signature verification failed") || 
+          errorMessage.includes("sequence") ||
+          errorMessage.includes("account sequence mismatch")) {
+        // Re-fetch the current sequence to update UI
+        try {
+          const client = await StargateClient.connect(chain.nodeAddress);
+          const currentAccount = await client.getAccount(multisigAddress!);
+          if (currentAccount && txInfo) {
+            setAccountOnChain(currentAccount);
+            if (currentAccount.sequence !== txInfo.sequence) {
+              setSequenceMismatch({
+                expected: txInfo.sequence,
+                actual: currentAccount.sequence,
+              });
+              setSequenceVerified(false);
+            }
+          }
+        } catch (fetchErr) {
+          console.error("Failed to re-fetch account state:", fetchErr);
+        }
+        
+        toastError({
+          description: "Transaction rejected: the account's sequence number has changed. " +
+            "This usually means another transaction was broadcast from this multisig. " +
+            "Please cancel this transaction and create a new one.",
+          fullError: e instanceof Error ? e : undefined,
+        });
+      } else {
+        toastError({
+          description: "Failed to broadcast tx",
+          fullError: e instanceof Error ? e : undefined,
+        });
+      }
+    } finally {
+      setIsBroadcasting(false);
+      toast.dismiss(loadingToastId);
+    }
+  };
+
+  const cancelTx = async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to cancel this transaction?\n\n" +
+        "This will mark the transaction as cancelled and it won't be able to be signed or broadcast. " +
+        "This action cannot be undone.",
+    );
+
+    if (!confirmed) return;
+
+    const loadingToastId = toast.loading("Cancelling transaction");
+
+    try {
+      setIsCancelling(true);
+      await cancelDbTx(transactionID);
+      setTransactionStatus("cancelled");
+      toastSuccess("Transaction cancelled");
+      
+      // Notify pending transactions hook to refresh (removes the indicator)
+      dispatchTransactionStatusChanged();
+    } catch (e) {
+      console.error("Failed to cancel tx:", e);
       toastError({
-        description: "Failed to broadcast tx",
+        description: "Failed to cancel transaction",
         fullError: e instanceof Error ? e : undefined,
       });
     } finally {
-      setIsBroadcasting(false);
+      setIsCancelling(false);
       toast.dismiss(loadingToastId);
     }
   };
@@ -157,37 +554,566 @@ const TransactionPage = ({
           : undefined
       }
     >
-      <StackableContainer base>
-        <StackableContainer>
-          <h1>{transactionHash ? "Completed Transaction" : "In Progress Transaction"}</h1>
-        </StackableContainer>
-        {transactionHash ? <CompletedTransaction transactionHash={transactionHash} /> : null}
-        {!transactionHash ? (
-          <StackableContainer lessPadding lessMargin>
-            {pubkey ? <ThresholdInfo signatures={currentSignatures} pubkey={pubkey} /> : null}
-            {isThresholdMet ? (
-              <>
-                <Button
-                  label={isBroadcasting ? "Broadcasting..." : "Broadcast Transaction"}
-                  onClick={broadcastTx}
-                  primary
-                  disabled={isBroadcasting}
-                />
-              </>
-            ) : null}
-            {pubkey && txInfo ? (
-              <TransactionSigning
-                tx={txInfo}
-                transactionID={transactionID}
-                pubkey={pubkey}
-                signatures={currentSignatures}
-                addSignature={addSignature}
-              />
-            ) : null}
-          </StackableContainer>
+      {/* Page Title */}
+      <h1 className="text-3xl font-heading font-bold mb-6">
+        {transactionStatus === "cancelled"
+          ? "Cancelled Transaction"
+          : transactionHash
+            ? "Completed Transaction"
+            : "In Progress Transaction"}
+      </h1>
+
+      {/* Status Banners */}
+      {transactionStatus === "cancelled" ? (
+        <div className="mb-6 p-4 rounded-lg border-2 border-border bg-muted/20">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <div>
+              <h3 className="text-base font-semibold mb-1 text-foreground">Transaction Cancelled</h3>
+              <p className="text-sm text-muted-foreground">
+                  This transaction has been cancelled and cannot be signed or broadcast.
+                </p>
+              </div>
+            </div>
+        </div>
+      ) : null}
+
+      {transactionHash ? (
+        <div className="mb-6">
+          <CompletedTransaction transactionHash={transactionHash} />
+          
+          {/* Phase 0: Multi-RPC verification status */}
+          {broadcastResult && (
+            <Card className="mt-4">
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  {verificationStatus === "verified" ? (
+                    <CheckCircle2 className="h-5 w-5 text-green-accent" />
+                  ) : verificationStatus === "failed" ? (
+                    <AlertTriangle className="h-5 w-5 text-amber-500" />
+                  ) : null}
+                  <CardLabel comment className="mb-0">
+                    Multi-Endpoint Verification
+                  </CardLabel>
+                </div>
+                
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Primary endpoint:</span>
+                    <span className="font-mono text-xs truncate max-w-[200px]">
+                      {broadcastResult.broadcastEndpoint || "N/A"}
+                    </span>
+                  </div>
+                  
+                  {broadcastResult.verifications.length > 0 && (
+                    <>
+                      <div className="text-muted-foreground text-xs mt-2">
+                        Secondary verifications:
+                      </div>
+                      {broadcastResult.verifications.map((v, i) => (
+                        <div key={i} className="flex items-center gap-2 text-xs pl-2">
+                          {v.verified ? (
+                            <CheckCircle2 className="h-3 w-3 text-green-accent" />
+                          ) : (
+                            <AlertTriangle className="h-3 w-3 text-amber-500" />
+                          )}
+                          <span className="font-mono truncate max-w-[150px]">
+                            {new URL(v.endpoint).hostname}
+                          </span>
+                          <span className="text-muted-foreground">
+                            {v.responseTimeMs}ms
+                          </span>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      ) : null}
+
+      {sequenceMismatch ? (
+        <Card variant="institutional" className="mb-6 border-red-500/50 bg-red-500/10">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-red-400 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold mb-2 text-red-400">
+                  Sequence Mismatch Detected
+                </h3>
+                <p className="text-sm mb-2">
+                  This transaction was created with sequence{" "}
+                  <strong>{sequenceMismatch.expected}</strong>, but the account's current
+                  sequence is <strong>{sequenceMismatch.actual}</strong>.
+                </p>
+                <p className="text-sm mb-3">
+                  This usually means another transaction was broadcast from this multisig
+                  account after this transaction was created. The signatures collected are no
+                  longer valid.
+                </p>
+                <div className="bg-card/50 p-3 rounded-lg border border-border">
+                  <p className="text-sm">
+                    <strong>Solution:</strong> Cancel this transaction and create a new one with the
+                    current sequence number.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {/* Desktop-first Horizontal Layout for In Progress Transactions */}
+      {!transactionHash && transactionStatus !== "cancelled" && !sequenceMismatch && txInfo ? (
+        <div className="flex flex-col lg:flex-row gap-4 md:gap-6">
+          {/* LEFT COLUMN: Signing Status Card */}
+          <div className="w-full lg:w-[380px] lg:flex-shrink-0">
+            <BentoCard variant="highlight" className="p-6 h-full flex flex-col">
+              <BentoCardHeader>
+                <BentoCardTitle icon={<Users className="h-5 w-5 text-foreground" />}>
+                  Signing Status
+                </BentoCardTitle>
+              </BentoCardHeader>
+              <BentoCardContent className="space-y-4 flex-1">
+                {pubkey ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
+                      <div className="flex items-center gap-3">
+                        <div className="text-3xl font-bold font-heading">
+                          {currentSignatures.length}
+                        </div>
+                        <div className="text-muted-foreground">of</div>
+                        <div className="text-3xl font-bold font-heading">
+                          {pubkey.value.threshold}
+                        </div>
+                        <div className="text-sm text-muted-foreground">signatures</div>
+                      </div>
+                    </div>
+                    {currentSignatures.length < Number(pubkey.value.threshold) && (
+                      <p className="text-sm text-muted-foreground">
+                        {Number(pubkey.value.threshold) - currentSignatures.length} remaining{" "}
+                        {Number(pubkey.value.threshold) - currentSignatures.length === 1
+                          ? "signature"
+                          : "signatures"}{" "}
+                        needed
+                      </p>
+                    )}
+                  </div>
+                ) : null}
+
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                    Current Signers
+                  </h4>
+                  {currentSignatures.length > 0 ? (
+                    <div className="space-y-2">
+                      {currentSignatures.map((signature, i) => (
+                        <div
+                          key={`${signature.address}_${i}`}
+                          className="p-3 rounded-lg bg-muted/20 border border-border/50 font-mono text-sm break-all"
+                        >
+                          {signature.address}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No signatures yet</p>
+                  )}
+                </div>
+              </BentoCardContent>
+              {pubkey && txInfo ? (
+                <BentoCardFooter className="flex-col gap-3 mt-auto">
+                  <TransactionSigning
+                    tx={txInfo}
+                    transactionID={transactionID}
+                    pubkey={pubkey}
+                    signatures={currentSignatures}
+                    addSignature={addSignature}
+                    compact
+                  />
+                  {/* Integrated Actions */}
+                  <div className="flex flex-col gap-3 pt-3 border-t border-border/50 w-full">
+                    {isThresholdMet && !sequenceMismatch && sequenceVerified ? (
+                      <Button
+                        label={isBroadcasting ? "Broadcasting..." : "Broadcast Transaction"}
+                        onClick={broadcastTx}
+                        primary
+                        disabled={isBroadcasting}
+                      />
+                    ) : isThresholdMet && !sequenceMismatch && !sequenceVerified ? (
+                      <Button
+                        label="Verifying sequence..."
+                        disabled
+                      />
+                    ) : null}
+                    <Button
+                      label={isCancelling ? "Cancelling..." : "Cancel Transaction"}
+                      onClick={cancelTx}
+                      disabled={isCancelling || isBroadcasting}
+                    />
+                    <p className="text-xs text-muted-foreground text-center">
+                      Cancelling marks this transaction as invalid. It won't affect any on-chain state.
+                    </p>
+                  </div>
+                </BentoCardFooter>
+              ) : null}
+            </BentoCard>
+          </div>
+
+          {/* RIGHT COLUMN: Transaction Details + Message stacked vertically */}
+          <div className="flex-1 flex flex-col gap-4 md:gap-6 min-w-0">
+            {/* Transaction Details Card */}
+            <BentoCard variant="default" className="p-6">
+              <BentoCardHeader>
+                <BentoCardTitle icon={<FileText className="h-5 w-5 text-foreground" />}>
+                  Transaction Details
+                </BentoCardTitle>
+              </BentoCardHeader>
+              <BentoCardContent>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono block">
+                      Chain ID
+                    </span>
+                    <span className="font-mono text-sm">{txInfo.chainId}</span>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono block">
+                      Account #
+                    </span>
+                    <span className="font-mono text-sm">{txInfo.accountNumber}</span>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono block">
+                      Tx Sequence
+                    </span>
+                    <span className="font-mono text-sm">{txInfo.sequence}</span>
+                  </div>
+                  {accountOnChain?.sequence !== undefined && (
+                    <div className="space-y-1">
+                      <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono block">
+                        Chain Sequence
+                      </span>
+                      <span
+                        className={`font-mono text-sm font-semibold ${
+                          accountOnChain.sequence === txInfo.sequence
+                            ? "text-green-accent"
+                            : "text-red-400"
+                        }`}
+                      >
+                        {accountOnChain.sequence}{" "}
+                        {accountOnChain.sequence === txInfo.sequence ? "✓ OK" : "✗ MISMATCH"}
+                      </span>
+                    </div>
+                  )}
+                  {txInfo.fee && (
+                    <>
+                      <div className="space-y-1">
+                        <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono block">
+                          Gas
+                        </span>
+                        <span className="font-mono text-sm">{txInfo.fee.gas}</span>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono block">
+                          Fee
+                        </span>
+                        <span className="font-mono text-sm">
+                          {printableCoins(txInfo.fee.amount, chain) || "None"}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
+                {txInfo.memo && (
+                  <div className="mt-4 pt-4 border-t border-border/50">
+                    <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono block mb-1">
+                      Memo
+                    </span>
+                    <span className="font-mono text-sm">{txInfo.memo}</span>
+                  </div>
+                )}
+              </BentoCardContent>
+            </BentoCard>
+
+            {/* Message Details Card */}
+            <BentoCard variant="accent" className="p-6 flex-1">
+              <BentoCardHeader>
+                <BentoCardTitle icon={<MessageSquare className="h-5 w-5 text-foreground" />}>
+                  Message
+                </BentoCardTitle>
+              </BentoCardHeader>
+              <BentoCardContent>
+                <TransactionInfo tx={txInfo} currentOnChainSequence={accountOnChain?.sequence} compact />
+              </BentoCardContent>
+            </BentoCard>
+          </div>
+        </div>
         ) : null}
-        {txInfo ? <TransactionInfo tx={txInfo} /> : null}
-      </StackableContainer>
+
+      {/* Cancelled Transaction Layout - Clean, flat design without nested cards */}
+      {txInfo && transactionStatus === "cancelled" ? (
+        <div className="space-y-4">
+          {/* Signing Info - Compact Grid Layout */}
+          <Card variant="institutional" className="p-4 md:p-5">
+            <CardLabel comment className="mb-3">Signing Info</CardLabel>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+              <div className="space-y-1">
+                <div className="text-xs uppercase tracking-wide text-muted-foreground font-mono">Chain ID</div>
+                <div className="font-mono text-sm text-foreground">{txInfo.chainId}</div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs uppercase tracking-wide text-muted-foreground font-mono">Account #</div>
+                <div className="font-mono text-sm text-foreground">{txInfo.accountNumber}</div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs uppercase tracking-wide text-muted-foreground font-mono">Tx Sequence</div>
+                <div className="font-mono text-sm text-foreground">{txInfo.sequence}</div>
+              </div>
+              {accountOnChain?.sequence !== undefined && (
+                <div className="space-y-1">
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground font-mono">Chain Sequence</div>
+                  <div className={`font-mono text-sm font-semibold ${
+                    accountOnChain.sequence === txInfo.sequence ? "text-green-400" : "text-red-400"
+                  }`}>
+                    {accountOnChain.sequence} {accountOnChain.sequence === txInfo.sequence ? "✓ OK" : "✗ MISMATCH"}
+                  </div>
+                </div>
+              )}
+              {txInfo.fee ? (
+                <>
+                  <div className="space-y-1">
+                    <div className="text-xs uppercase tracking-wide text-muted-foreground font-mono">Gas</div>
+                    <div className="font-mono text-sm text-foreground">{txInfo.fee.gas}</div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xs uppercase tracking-wide text-muted-foreground font-mono">Fee</div>
+                    <div className="font-mono text-sm text-foreground">
+                      {printableCoins(txInfo.fee.amount, chain) || "None"}
+                    </div>
+                  </div>
+                </>
+              ) : null}
+            </div>
+            {txInfo.memo && (
+              <div className="mt-4 pt-4 border-t border-border">
+                <div className="text-xs uppercase tracking-wide text-muted-foreground font-mono mb-1">Memo</div>
+                <div className="font-mono text-sm text-foreground break-words">{txInfo.memo}</div>
+              </div>
+            )}
+          </Card>
+
+          {/* Message Details - Clean Format */}
+          {txInfo.msgs.map((msg, index) => {
+            const msgType = msg.typeUrl.split(".").pop()?.replace("Msg", "") || msg.typeUrl;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const msgValue = msg.value as Record<string, any>;
+            
+            // Extract key fields based on message type
+            const getMessageFields = () => {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const fields: Array<{ label: string; value: any; isAddress?: boolean }> = [];
+              
+              // Common address fields
+              if (msgValue.validatorAddress) {
+                fields.push({ label: "Validator Address", value: msgValue.validatorAddress, isAddress: true });
+              }
+              if (msgValue.delegatorAddress) {
+                fields.push({ label: "Delegator Address", value: msgValue.delegatorAddress, isAddress: true });
+              }
+              if (msgValue.fromAddress) {
+                fields.push({ label: "From Address", value: msgValue.fromAddress, isAddress: true });
+              }
+              if (msgValue.toAddress) {
+                fields.push({ label: "To Address", value: msgValue.toAddress, isAddress: true });
+              }
+              if (msgValue.sender) {
+                fields.push({ label: "Sender", value: msgValue.sender, isAddress: true });
+              }
+              if (msgValue.receiver) {
+                fields.push({ label: "Receiver", value: msgValue.receiver, isAddress: true });
+              }
+              
+              // Amount fields
+              if (msgValue.amount) {
+                if (Array.isArray(msgValue.amount)) {
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  const amounts = msgValue.amount.map((a: any) => `${a.amount} ${a.denom}`).join(", ");
+                  fields.push({ label: "Amount", value: amounts });
+                } else if (msgValue.amount.amount) {
+                  fields.push({ label: "Amount", value: `${msgValue.amount.amount} ${msgValue.amount.denom}` });
+                }
+              }
+              
+              // Other common fields
+              if (msgValue.contract) {
+                fields.push({ label: "Contract", value: msgValue.contract, isAddress: true });
+              }
+              if (msgValue.codeId) {
+                fields.push({ label: "Code ID", value: String(msgValue.codeId) });
+              }
+              if (msgValue.proposalId) {
+                fields.push({ label: "Proposal ID", value: String(msgValue.proposalId) });
+              }
+              if (msgValue.option) {
+                fields.push({ label: "Option", value: String(msgValue.option) });
+              }
+              
+              return fields;
+            };
+            
+            const fields = getMessageFields();
+            
+            return (
+              <Card key={index} variant="institutional" className="p-4 md:p-5">
+                <CardLabel comment className="mb-3">{msgType}</CardLabel>
+                {fields.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                    {fields.map((field, fieldIndex) => (
+                      <div key={fieldIndex} className="space-y-1">
+                        <div className="text-xs uppercase tracking-wide text-muted-foreground font-mono">
+                          {field.label}
+                        </div>
+                        {field.isAddress ? (
+                          <div className="font-mono text-sm p-2 rounded-lg bg-muted/20 border border-border/50 break-all">
+                            <HashView hash={field.value} />
+                          </div>
+                        ) : (
+                          <div className="font-mono text-sm text-foreground break-words">{field.value}</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-muted-foreground italic">No additional details</div>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      ) : null}
+
+      {/* Bento Grid Layout for Completed/Sequence Mismatch Transactions - Horizontal Layout */}
+      {txInfo && (transactionHash || sequenceMismatch) && transactionStatus !== "cancelled" ? (
+        <BentoGrid className="grid-cols-1 md:grid-cols-3 auto-rows-[minmax(200px,auto)] gap-4 md:gap-6">
+          {/* Transaction Details Card - 1 col */}
+          <BentoCard colSpan={1} variant="default" className="p-6">
+            <BentoCardHeader>
+              <BentoCardTitle icon={<FileText className="h-5 w-5 text-foreground" />}>
+                Transaction Details
+              </BentoCardTitle>
+            </BentoCardHeader>
+            <BentoCardContent>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-2 border-b border-border/50">
+                  <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono">
+                    Chain ID
+                  </span>
+                  <span className="font-mono text-sm">{txInfo.chainId}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-border/50">
+                  <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono">
+                    Account #
+                  </span>
+                  <span className="font-mono text-sm">{txInfo.accountNumber}</span>
+                </div>
+                <div className={`flex justify-between items-center py-2 border-b border-border/50 ${
+                  sequenceMismatch ? "bg-red-500/10 rounded px-2" : ""
+                }`}>
+                  <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono">
+                    Tx Sequence
+                  </span>
+                  <span className={`font-mono text-sm ${sequenceMismatch ? "text-red-400 font-semibold" : ""}`}>
+                    {txInfo.sequence}
+                  </span>
+                </div>
+                {accountOnChain?.sequence !== undefined && (
+                  <div className={`flex justify-between items-center py-2 border-b border-border/50 ${
+                    sequenceMismatch ? "bg-red-500/10 rounded px-2" : ""
+                  }`}>
+                    <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono">
+                      Chain Sequence
+                    </span>
+                    <span
+                      className={`font-mono text-sm font-semibold ${
+                        accountOnChain.sequence === txInfo.sequence
+                          ? "text-green-accent"
+                          : "text-red-400"
+                      }`}
+                    >
+                      {accountOnChain.sequence}{" "}
+                      {accountOnChain.sequence === txInfo.sequence ? "✓ OK" : "✗ MISMATCH"}
+                    </span>
+                  </div>
+                )}
+                {txInfo.fee && (
+                  <>
+                    <div className="flex justify-between items-center py-2 border-b border-border/50">
+                      <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono">
+                        Gas
+                      </span>
+                      <span className="font-mono text-sm">{txInfo.fee.gas}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono">
+                        Fee
+                      </span>
+                      <span className="font-mono text-sm">
+                        {printableCoins(txInfo.fee.amount, chain) || "None"}
+                      </span>
+                    </div>
+                  </>
+                )}
+                {txInfo.memo && (
+                  <div className="flex justify-between items-start py-2 border-t border-border/50 mt-2 pt-2">
+                    <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono">
+                      Memo
+                    </span>
+                    <span className="font-mono text-sm text-right">{txInfo.memo}</span>
+                  </div>
+                )}
+              </div>
+            </BentoCardContent>
+          </BentoCard>
+
+          {/* Message Details Card - 1 col */}
+          <BentoCard colSpan={1} variant="accent" className="p-6">
+            <BentoCardHeader>
+              <BentoCardTitle icon={<MessageSquare className="h-5 w-5 text-foreground" />}>
+                Message
+              </BentoCardTitle>
+            </BentoCardHeader>
+            <BentoCardContent>
+              <TransactionInfo tx={txInfo} currentOnChainSequence={accountOnChain?.sequence} compact />
+            </BentoCardContent>
+          </BentoCard>
+
+          {/* Actions Card - 1 col (only show cancel for completed/mismatch) */}
+          {sequenceMismatch && (
+            <BentoCard colSpan={1} variant="muted" className="p-6">
+              <BentoCardHeader>
+                <BentoCardTitle icon={<Zap className="h-5 w-5 text-foreground" />}>
+                  Actions
+                </BentoCardTitle>
+              </BentoCardHeader>
+              <BentoCardContent>
+                <div className="flex flex-col gap-3">
+                  <Button
+                    label={isCancelling ? "Cancelling..." : "Cancel Transaction"}
+                    onClick={cancelTx}
+                    disabled={isCancelling || isBroadcasting}
+                  />
+                  <p className="text-xs text-muted-foreground text-center">
+                    Cancelling marks this transaction as invalid. It won't affect any on-chain state.
+                  </p>
+                </div>
+              </BentoCardContent>
+            </BentoCard>
+          )}
+        </BentoGrid>
+      ) : null}
     </Page>
   );
 };

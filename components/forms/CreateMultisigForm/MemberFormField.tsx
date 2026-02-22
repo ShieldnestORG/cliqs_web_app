@@ -7,8 +7,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 import { ClipboardEventHandler } from "react";
-import { UseFieldArrayReplace, UseFormReturn } from "react-hook-form";
+import { UseFieldArrayReplace, UseFieldArrayRemove, UseFormReturn } from "react-hook-form";
 import { useChains } from "../../../context/ChainsContext";
 import { exampleAddress, examplePubkey } from "../../../lib/displayHelpers";
 
@@ -19,12 +21,16 @@ interface MemberFormFieldProps {
     { members: { member: string }[]; threshold: number },
     "members"
   >;
+  readonly membersRemove?: UseFieldArrayRemove;
+  readonly totalMembers: number;
 }
 
 export default function MemberFormField({
   createMultisigForm,
   index,
   membersReplace,
+  membersRemove,
+  totalMembers,
 }: MemberFormFieldProps) {
   const { chain } = useChains();
 
@@ -45,16 +51,34 @@ export default function MemberFormField({
     ev.preventDefault();
   };
 
+  // Can only remove if there are more than 2 members (minimum required for multisig)
+  const canRemove = totalMembers > 2 && membersRemove;
+
   return (
     <FormField
       control={createMultisigForm.control}
       name={`members.${index}.member`}
       render={() => (
-        <FormItem>
-          <FormLabel>Member #{index + 1}</FormLabel>
-          <FormDescription>Address or public key</FormDescription>
+        <FormItem className="relative">
+          <div className="flex items-center justify-between">
+            <FormLabel className="text-sm font-medium">Member #{index + 1}</FormLabel>
+            {canRemove && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => membersRemove(index)}
+                className="h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              >
+                <X className="h-4 w-4" />
+                <span className="sr-only">Remove member {index + 1}</span>
+              </Button>
+            )}
+          </div>
+          <FormDescription className="text-xs">Address or public key</FormDescription>
           <FormControl>
             <Input
+              variant="institutional"
               placeholder={`E.g. "${
                 index % 2 === 0 ? exampleAddress(index, chain.addressPrefix) : examplePubkey(index)
               }"`}

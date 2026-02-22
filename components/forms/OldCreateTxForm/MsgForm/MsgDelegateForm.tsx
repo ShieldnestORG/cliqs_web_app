@@ -1,22 +1,35 @@
 import SelectValidator from "@/components/SelectValidator";
 import { MsgDelegateEncodeObject } from "@cosmjs/stargate";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MsgGetter } from "..";
 import { useChains } from "../../../../context/ChainsContext";
 import { displayCoinToBaseCoin } from "../../../../lib/coinHelpers";
 import { checkAddress, exampleAddress, trimStringsObj } from "../../../../lib/displayHelpers";
 import { MsgCodecs, MsgTypeUrls } from "../../../../types/txMsg";
-import Input from "../../../inputs/Input";
+import { getMessageCategory } from "../../../../lib/msgCategoryHelpers";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { CardLabel } from "@/components/ui/card";
 import StackableContainer from "../../../layout/StackableContainer";
+import { X } from "lucide-react";
+import BalanceDisplay from "../BalanceDisplay";
+import { useBalance } from "@/lib/hooks/useBalance";
+import { Decimal } from "@cosmjs/math";
 
 interface MsgDelegateFormProps {
   readonly senderAddress: string;
   readonly setMsgGetter: (msgGetter: MsgGetter) => void;
   readonly deleteMsg: () => void;
+  readonly gasLimit?: number;
 }
 
-const MsgDelegateForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgDelegateFormProps) => {
+const MsgDelegateForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLimit }: MsgDelegateFormProps) => {
   const { chain } = useChains();
+  const { availableBalance } = useBalance({
+    address: senderAddress,
+    denom: chain.displayDenom,
+    gasLimit,
+  });
 
   const [validatorAddress, setValidatorAddress] = useState("");
   const [amount, setAmount] = useState("0");
@@ -24,7 +37,7 @@ const MsgDelegateForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgDelegate
   const [validatorAddressError, setValidatorAddressError] = useState("");
   const [amountError, setAmountError] = useState("");
 
-  const trimmedInputs = trimStringsObj({ validatorAddress, amount });
+  const trimmedInputs = useMemo(() => trimStringsObj({ validatorAddress, amount }), [validatorAddress, amount]);
 
   useEffect(() => {
     // eslint-disable-next-line no-shadow
@@ -46,6 +59,8 @@ const MsgDelegateForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgDelegate
         setAmountError("Amount must be greater than 0");
         return false;
       }
+
+      // Note: Balance validation moved to onChange handler to avoid reactive validation loops
 
       try {
         displayCoinToBaseCoin({ denom: chain.displayDenom, amount }, chain.assets);
@@ -74,28 +89,50 @@ const MsgDelegateForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgDelegate
     const msg: MsgDelegateEncodeObject = { typeUrl: MsgTypeUrls.Delegate, value: msgValue };
 
     setMsgGetter({ isMsgValid, msg });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     chain.addressPrefix,
     chain.assets,
     chain.chainId,
     chain.displayDenom,
     senderAddress,
-    setMsgGetter,
+    // Note: setMsgGetter intentionally excluded - it's a stable setter that shouldn't trigger re-runs
     trimmedInputs,
   ]);
 
+  const categoryInfo = getMessageCategory(MsgTypeUrls.Delegate);
+
   return (
-    <StackableContainer lessPadding lessMargin>
-      <button className="remove" onClick={() => deleteMsg()}>
-        ✕
-      </button>
-      <h2>MsgDelegate</h2>
-      <div className="form-item">
+    <StackableContainer 
+      variant="institutional" 
+      lessPadding 
+      lessMargin
+      accent={categoryInfo.accent}
+    >
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        onClick={() => deleteMsg()}
+        className="absolute right-4 top-4 h-8 w-8 text-muted-foreground hover:text-foreground z-10"
+      >
+        <X className="h-4 w-4" />
+      </Button>
+      <div className="mb-4">
+        <CardLabel comment>{categoryInfo.label}</CardLabel>
+        <h2 className="text-xl font-heading font-semibold">MsgDelegate</h2>
+      </div>
+      <div className="space-y-4">
+        <BalanceDisplay
+          treasuryAddress={senderAddress}
+          denom={chain.displayDenom}
+          gasLimit={gasLimit}
+        />
         <SelectValidator
           selectedValidatorAddress={validatorAddress}
           setValidatorAddress={setValidatorAddress}
         />
         <Input
+          variant="institutional"
           label="Validator Address"
           name="validator-address"
           value={validatorAddress}
@@ -106,9 +143,8 @@ const MsgDelegateForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgDelegate
           error={validatorAddressError}
           placeholder={`E.g. ${exampleAddress(0, chain.addressPrefix)}`}
         />
-      </div>
-      <div className="form-item">
         <Input
+          variant="institutional"
           type="number"
           label={`Amount (${chain.displayDenom})`}
           name="amount"
@@ -116,26 +152,26 @@ const MsgDelegateForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgDelegate
           onChange={({ target }) => {
             setAmount(target.value);
             setAmountError("");
+
+            // Validate against available balance
+            if (availableBalance && availableBalance.amount !== "0" && target.value) {
+              try {
+                const userAmountCoin = displayCoinToBaseCoin({ denom: chain.displayDenom, amount: target.value }, chain.assets);
+                const userAmountDecimal = Decimal.fromAtomics(userAmountCoin.amount, 0);
+                const availableAmountDecimal = Decimal.fromAtomics(availableBalance.amount, 0);
+
+                if (userAmountDecimal.isGreaterThan(availableAmountDecimal)) {
+                  setAmountError(`Amount exceeds available balance. Available: ${availableBalance.amount}`);
+                }
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              } catch (_: unknown) {
+                // If conversion fails, don't set error
+              }
+            }
           }}
           error={amountError}
         />
       </div>
-      <style jsx>{`
-        .form-item {
-          margin-top: 1.5em;
-        }
-        button.remove {
-          background: rgba(255, 255, 255, 0.2);
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          border: none;
-          color: white;
-          position: absolute;
-          right: 10px;
-          top: 10px;
-        }
-      `}</style>
     </StackableContainer>
   );
 };

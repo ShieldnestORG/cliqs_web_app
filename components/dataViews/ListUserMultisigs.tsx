@@ -1,16 +1,12 @@
 import { useChains } from "@/context/ChainsContext";
-import { FetchedMultisigs, getDbNonce, getDbUserMultisigs } from "@/lib/api";
-import { getConnectError } from "@/lib/errorHelpers";
-import { getKeplrKey, getKeplrVerifySignature, useKeplrReconnect } from "@/lib/keplr";
+import { useWallet } from "@/context/WalletContext";
+import { FetchedMultisigs, getDbUserMultisigs } from "@/lib/api";
 import { toastError } from "@/lib/utils";
-import { WalletInfo } from "@/types/signing";
 import { MultisigThresholdPubkey } from "@cosmjs/amino";
-import { toBase64 } from "@cosmjs/encoding";
-import { StargateClient } from "@cosmjs/stargate";
-import { Loader2, MoveRightIcon } from "lucide-react";
+import { Loader2, MoveRightIcon, RefreshCw } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
@@ -20,120 +16,164 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 export default function ListUserMultisigs() {
   const { chain } = useChains();
-  const [loading, setLoading] = useState(false);
-  const [walletInfo, setWalletInfo] = useState<Omit<WalletInfo, "type"> | null>(null);
+  const { 
+    walletInfo, 
+    loading: walletLoading, 
+    connectKeplr, 
+    isConnecting,
+    verify,
+    verificationSignature,
+    isVerified,
+    isVerifying 
+  } = useWallet();
+  
+  const [loadingMultisigs, setLoadingMultisigs] = useState(false);
   const [showBelonged, setShowBelonged] = useState(false);
   const [multisigs, setMultisigs] = useState<FetchedMultisigs | null>(null);
 
-  const getSignature = useCallback(
-    async (address: string) => {
-      const client = await StargateClient.connect(chain.nodeAddress);
-      const accountOnChain = await client.getAccount(address);
+  const fetchMultisigs = useCallback(async () => {
+    if (!walletInfo || walletInfo.type !== "Keplr") {
+      return;
+    }
 
-      if (!accountOnChain) {
-        throw new Error(`Account not found on chain for ${address}`);
-      }
-
-      const nonce = await getDbNonce(accountOnChain.address, chain.chainId);
-
-      const signature = await getKeplrVerifySignature(accountOnChain.address, chain, nonce);
-      return signature;
-    },
-    [chain],
-  );
-
-  const fetchMultisigs = useCallback(
-    async (address: string) => {
-      try {
-        const signature = await getSignature(address);
-        const fetchedMultisigs = await getDbUserMultisigs(signature, chain);
-        setMultisigs(fetchedMultisigs);
-      } catch (e: unknown) {
-        console.error("Failed to fetch multisigs:", e);
-        toastError({
-          description: "Failed to fetch multisigs",
-          fullError: e instanceof Error ? e : undefined,
-        });
-      }
-    },
-    [chain, getSignature],
-  );
-
-  const connectWallet = useCallback(async () => {
     try {
-      setLoading(true);
+      setLoadingMultisigs(true);
 
-      const { bech32Address: address, pubKey: pubKeyArray } = await getKeplrKey(chain.chainId);
-      const pubKey = toBase64(pubKeyArray);
-      setWalletInfo({ address, pubKey });
+      // Get or request verification signature (cached in context)
+      let signature = verificationSignature;
+      if (!signature) {
+        signature = await verify();
+        if (!signature) {
+          // User cancelled verification
+          return;
+        }
+      }
 
-      await fetchMultisigs(address);
-    } catch (e) {
-      const connectError = getConnectError(e);
-      console.error(connectError, e);
+      const fetchedMultisigs = await getDbUserMultisigs(chain, { signature });
+      setMultisigs(fetchedMultisigs);
+    } catch (e: unknown) {
+      console.error("Failed to fetch multisigs:", e);
       toastError({
-        description: connectError,
+        description: "Failed to fetch multisigs",
         fullError: e instanceof Error ? e : undefined,
       });
     } finally {
-      setLoading(false);
+      setLoadingMultisigs(false);
     }
-  }, [chain.chainId, fetchMultisigs]);
+  }, [chain, walletInfo, verify, verificationSignature]);
 
-  useKeplrReconnect(!!walletInfo?.address, connectWallet);
+  // Auto-fetch multisigs when wallet is verified (user must manually verify first)
+  useEffect(() => {
+    if (isVerified && walletInfo?.type === "Keplr" && !multisigs && !loadingMultisigs) {
+      fetchMultisigs();
+    }
+  }, [isVerified, walletInfo, multisigs, loadingMultisigs, fetchMultisigs]);
+
+  // Clear multisigs when wallet disconnects
+  useEffect(() => {
+    if (!walletInfo) {
+      setMultisigs(null);
+    }
+  }, [walletInfo]);
+
+  const handleConnect = useCallback(async () => {
+    await connectKeplr();
+  }, [connectKeplr]);
+
+  const handleVerifyAndFetch = useCallback(async () => {
+    await fetchMultisigs();
+  }, [fetchMultisigs]);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Multisigs</CardTitle>
+        <CardTitle>Your Multisigs</CardTitle>
         <CardDescription>
-          Your list of created multisigs on {chain.chainDisplayName}. Verify your identity with
-          Keplr by signing a message for free.
+          Your list of created multisigs on {chain.chainDisplayName}.
+          {!walletInfo && " Connect your wallet to see your multisigs."}
+          {walletInfo && !isVerified && " Verify your identity to see your multisigs."}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
-        {!walletInfo && !multisigs ? (
-          <Button onClick={connectWallet} disabled={loading} variant="outline">
-            {loading ? (
+        {/* Not connected state */}
+        {!walletInfo ? (
+          <Button onClick={handleConnect} disabled={isConnecting} variant="outline">
+            {walletLoading.keplr ? (
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
             ) : (
               <Image
                 alt=""
-                src={`/assets/icons/keplr.svg`}
+                src="/assets/icons/keplr.svg"
                 width={20}
                 height={20}
                 className="mr-2"
               />
             )}
-            Verify identity
+            Connect Keplr
           </Button>
         ) : null}
-        {walletInfo && !multisigs ? (
-          <div className="flex items-center gap-2">
-            <Loader2 className="animate-spin" />
-            <p>Loading multisigs</p>
+        
+        {/* Connected but not verified - Keplr only */}
+        {walletInfo && walletInfo.type === "Keplr" && !isVerified && !multisigs && !loadingMultisigs && !isVerifying ? (
+          <Button onClick={handleVerifyAndFetch} disabled={loadingMultisigs || isVerifying} variant="outline">
+            <Image
+              alt=""
+              src="/assets/icons/keplr.svg"
+              width={20}
+              height={20}
+              className="mr-2"
+            />
+            Verify identity to see multisigs
+          </Button>
+        ) : null}
+        
+        {/* Ledger connected - can't easily verify */}
+        {walletInfo && walletInfo.type === "Ledger" && !multisigs ? (
+          <div className="text-sm text-muted-foreground p-4 border border-border rounded-lg">
+            <p>Ledger wallet connected. To view your multisigs, please use Keplr to verify your identity.</p>
           </div>
         ) : null}
-        {!showBelonged && multisigs && !multisigs.created.length
-          ? "You have not created any multisig"
-          : null}
-        {showBelonged && multisigs && !multisigs.belonged.length
-          ? "You are not a member of any multisig"
-          : null}
-        {multisigs?.created.length || multisigs?.belonged.length ? (
+        
+        {/* Loading states */}
+        {(loadingMultisigs || isVerifying) && (
+          <div className="flex items-center gap-2">
+            <Loader2 className="animate-spin" />
+            <p>{isVerifying ? "Verifying wallet..." : "Loading multisigs"}</p>
+          </div>
+        )}
+        
+        {/* Empty states */}
+        {multisigs && !showBelonged && !multisigs.created.length && (
+          <p className="text-sm text-muted-foreground">You have not created any multisig</p>
+        )}
+        {multisigs && showBelonged && !multisigs.belonged.length && (
+          <p className="text-sm text-muted-foreground">You are not a member of any multisig</p>
+        )}
+        
+        {/* Multisig list */}
+        {(multisigs?.created.length || multisigs?.belonged.length) ? (
           <>
-            {multisigs.created.length !== multisigs.belonged.length ? (
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="multisigs-type"
-                  checked={showBelonged}
-                  onCheckedChange={(checked) => {
-                    setShowBelonged(checked);
-                  }}
-                />
-                <Label htmlFor="multisigs-type">Show all multisigs I'm a member of</Label>
-              </div>
-            ) : null}
+            <div className="flex items-center justify-between">
+              {multisigs.created.length !== multisigs.belonged.length ? (
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="multisigs-type"
+                    checked={showBelonged}
+                    onCheckedChange={setShowBelonged}
+                  />
+                  <Label htmlFor="multisigs-type">Show all multisigs I'm a member of</Label>
+                </div>
+              ) : <div />}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={fetchMultisigs}
+                disabled={loadingMultisigs || isVerifying}
+              >
+                <RefreshCw className={`h-4 w-4 mr-1 ${loadingMultisigs ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
             <div className="flex flex-col gap-2">
               {(showBelonged ? multisigs.belonged : multisigs.created).map((multisig) => {
                 const pubkey: MultisigThresholdPubkey = JSON.parse(multisig.pubkeyJSON);

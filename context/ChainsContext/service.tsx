@@ -1,8 +1,8 @@
-import { getChainsFromRegistry, getShaFromRegistry } from "@/lib/chainRegistry";
-import { toastError } from "@/lib/utils";
+import { getChainsFromRegistry, getShaFromRegistry, isTestnetsEnabled } from "@/lib/chainRegistry";
+import { toastError, ensureProtocol } from "@/lib/utils";
 import { StargateClient } from "@cosmjs/stargate";
 import { useEffect, useState } from "react";
-import { emptyChain, isChainInfoFilled } from "./helpers";
+import { emptyChain, isChainInfoFilled, rebrandChain, rebrandChains } from "./helpers";
 import {
   getChainFromEnvfile,
   getChainFromStorage,
@@ -25,7 +25,13 @@ export const useChainsFromRegistry = () => {
 
   useEffect(() => {
     (async function () {
-      if (chainItems.mainnets.size && chainItems.testnets.size) {
+      const testnetsEnabled = isTestnetsEnabled();
+      // When testnets are disabled, we only need mainnets to be populated
+      const chainsPopulated = testnetsEnabled
+        ? chainItems.mainnets.size && chainItems.testnets.size
+        : chainItems.mainnets.size;
+
+      if (chainsPopulated) {
         return;
       }
 
@@ -35,17 +41,25 @@ export const useChainsFromRegistry = () => {
         const storedSha = getShaFromStorage();
         const registrySha = await getShaFromRegistry();
 
-        if (storedSha === registrySha && storedChains.mainnets.size && storedChains.testnets.size) {
-          setChainItems(storedChains);
+        const storedChainsPopulated = testnetsEnabled
+          ? storedChains.mainnets.size && storedChains.testnets.size
+          : storedChains.mainnets.size;
+
+        if (storedSha === registrySha && storedChainsPopulated) {
+          setChainItems(rebrandChains(storedChains));
           return;
         }
 
         const registryChains = await getChainsFromRegistry();
-        const chains: ChainItems = { ...storedChains, ...registryChains };
+        const chains: ChainItems = rebrandChains({ ...storedChains, ...registryChains });
 
         setChainItems(chains);
 
-        if (chains.mainnets.size && chains.testnets.size) {
+        const newChainsPopulated = testnetsEnabled
+          ? chains.mainnets.size && chains.testnets.size
+          : chains.mainnets.size;
+
+        if (newChainsPopulated) {
           setChainsInStorage(chains);
           setShaInStorage(registrySha);
         } else {
@@ -53,7 +67,7 @@ export const useChainsFromRegistry = () => {
         }
       } catch (e) {
         if (storedChains.mainnets.size && storedChains.testnets.size) {
-          setChainItems(storedChains);
+          setChainItems(rebrandChains(storedChains));
           return;
         }
 
@@ -83,7 +97,7 @@ export const getNodeFromArray = async (nodeArray: readonly string[]) => {
   for (const node of secureNodes) {
     try {
       // test client connection
-      const client = await StargateClient.connect(node);
+      const client = await StargateClient.connect(ensureProtocol(node));
       await client.getHeight();
       return node;
     } catch {}
@@ -97,11 +111,16 @@ export const getChain = (chains: ChainItems) => {
 
   const rootRoute = location.pathname.split("/")[1];
   // Avoid app from thinking the /api route is a registryName
-  const chainNameFromUrl = rootRoute === "api" ? "" : rootRoute;
+  let chainNameFromUrl = rootRoute === "api" ? "" : rootRoute;
+
+  // Handle coreum -> tx mapping for URL lookup
+  if (chainNameFromUrl.toLowerCase().includes("coreum")) {
+    chainNameFromUrl = "tx";
+  }
 
   const recentChain = getRecentChainFromStorage(chains);
   if (!chainNameFromUrl && isChainInfoFilled(recentChain)) {
-    return recentChain;
+    return rebrandChain(recentChain as any);
   }
 
   const urlChain = getChainFromUrl(chainNameFromUrl);
@@ -111,7 +130,7 @@ export const getChain = (chains: ChainItems) => {
     chains,
   );
 
-  const chain = { ...storedChain, ...envfileChain, ...urlChain };
+  const chain = rebrandChain({ ...storedChain, ...envfileChain, ...urlChain } as any);
 
   return isChainInfoFilled(chain) ? chain : emptyChain;
 };

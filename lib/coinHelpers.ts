@@ -24,19 +24,42 @@ const displayCoinToBaseCoin = (displayCoin: Coin, assets: readonly RegistryAsset
 
   assert(asset, `An asset with the given symbol ${displayCoin.denom} was not found`);
 
-  const macroUnit = asset.denom_units.find(
-    (currentUnit) => lowerCaseDenom === currentUnit.denom.toLowerCase(),
+  let macroUnit = asset.denom_units.find(
+    (currentUnit) => lowerCaseDenom === currentUnit.denom.toLowerCase()
   );
+
+  // Fallback 1: Check aliases
+  if (!macroUnit) {
+    macroUnit = asset.denom_units.find((currentUnit) =>
+      currentUnit.aliases?.some(alias => alias.toLowerCase() === lowerCaseDenom)
+    );
+  }
+
+  // Fallback 2: Check if lowerCaseDenom matches asset.display or asset.symbol,
+  // and find the unit that matches asset.display
+  if (!macroUnit && (lowerCaseDenom === asset.display.toLowerCase() || lowerCaseDenom === asset.symbol.toLowerCase())) {
+    macroUnit = asset.denom_units.find(
+      (currentUnit) => currentUnit.denom.toLowerCase() === asset.display.toLowerCase()
+    );
+  }
+
+  // Fallback 3: If still not found and it matches symbol/display, try finding largest exponent unit
+  if (!macroUnit && (lowerCaseDenom === asset.display.toLowerCase() || lowerCaseDenom === asset.symbol.toLowerCase())) {
+     macroUnit = asset.denom_units.reduce((prev, current) =>
+       (prev.exponent > current.exponent) ? prev : current
+     );
+  }
+
   assert(macroUnit, `A unit with the given symbol ${lowerCaseDenom} was not found`);
 
   const baseUnit = asset.denom_units.find((currentUnit) => currentUnit.exponent === 0);
   assert(baseUnit, `A base unit with exponent = 0 was not found`);
 
+  const trimmedAmount = displayCoin.amount.trim() || "0";
+  const decimalResult = Decimal.fromUserInput(trimmedAmount, macroUnit.exponent);
+
   const denom = baseUnit.denom;
-  const amount = Decimal.fromUserInput(
-    displayCoin.amount.trim() || "0",
-    macroUnit.exponent,
-  ).atomics;
+  const amount = decimalResult.atomics;
 
   return { denom, amount };
 };

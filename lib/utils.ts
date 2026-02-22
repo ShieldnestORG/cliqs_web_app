@@ -43,3 +43,14 @@ export function toastSuccess(title: string, description?: string) {
     },
   });
 }
+
+/**
+ * Ensures a URL has a protocol (defaults to https:// if missing)
+ */
+export function ensureProtocol(url: string): string {
+  if (!url) return url;
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("ws://") || url.startsWith("wss://")) {
+    return url;
+  }
+  return `https://${url}`;
+}
