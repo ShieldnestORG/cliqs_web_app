@@ -1,0 +1,95 @@
+name: Check for New cw-plus Release
+
+# Runs weekly to check if CosmWasm/cw-plus has a new release.
+# If found, triggers the build-wasm workflow to produce updated binaries.
+
+on:
+  schedule:
+    # Every Monday at 09:00 UTC
+    - cron: "0 9 * * 1"
+
+  # Manual trigger for testing
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Check latest cw-plus release
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get current version from manifest
+        id: current
+        run: |
+          if [ -f public/wasm/manifest.json ]; then
+            CURRENT=$(python3 -c "import json; print(json.load(open('public/wasm/manifest.json'))['cwPlusVersion'])")
+          else
+            CURRENT="none"
+          fi
+          echo "version=$CURRENT" >> "$GITHUB_OUTPUT"
+          echo "Current bundled version: $CURRENT"
+
+      - name: Get latest cw-plus release
+        id: latest
+        run: |
+          LATEST=$(curl -s https://api.github.com/repos/CosmWasm/cw-plus/releases/latest | python3 -c "import sys,json; print(json.load(sys.stdin)['tag_name'])")
+          echo "version=$LATEST" >> "$GITHUB_OUTPUT"
+          echo "Latest cw-plus release: $LATEST"
+
+      - name: Compare versions
+        id: compare
+        run: |
+          CURRENT="${{ steps.current.outputs.version }}"
+          LATEST="${{ steps.latest.outputs.version }}"
+
+          if [ "$CURRENT" = "$LATEST" ]; then
+            echo "up_to_date=true" >> "$GITHUB_OUTPUT"
+            echo "Already up to date ($CURRENT)"
+          else
+            echo "up_to_date=false" >> "$GITHUB_OUTPUT"
+            echo "Update available: $CURRENT -> $LATEST"
+          fi
+
+      - name: Check if binaries are optimizer-built
+        id: quality
+        run: |
+          if [ -f public/wasm/manifest.json ]; then
+            COREUM_SAFE=$(python3 -c "import json; m=json.load(open('public/wasm/manifest.json')); print(str(m.get('allCoreumSafe', False)).lower())")
+            BUILD_METHOD=$(python3 -c "import json; print(json.load(open('public/wasm/manifest.json')).get('buildMethod', 'unknown'))")
+          else
+            COREUM_SAFE="false"
+            BUILD_METHOD="none"
+          fi
+          echo "coreum_safe=$COREUM_SAFE" >> "$GITHUB_OUTPUT"
+          echo "build_method=$BUILD_METHOD" >> "$GITHUB_OUTPUT"
+          echo "Coreum safe: $COREUM_SAFE, Build method: $BUILD_METHOD"
+
+      - name: Trigger WASM rebuild
+        if: steps.compare.outputs.up_to_date == 'false' || steps.quality.outputs.coreum_safe == 'false'
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: new-cw-plus-release
+          client-payload: |
+            {
+              "version": "${{ steps.latest.outputs.version }}",
+              "reason": "${{ steps.compare.outputs.up_to_date == 'false' && 'new-release' || 'not-optimizer-built' }}",
+              "previous": "${{ steps.current.outputs.version }}"
+            }
+
+      - name: Create issue if rebuild needed
+        if: steps.compare.outputs.up_to_date == 'false'
+        uses: peter-evans/create-or-update-comment@v4
+        continue-on-error: true
+        with:
+          issue-number: 1
+          body: |
+            **WASM Update Available**
+
+            A new cw-plus release is available: `${{ steps.latest.outputs.version }}` (current: `${{ steps.current.outputs.version }}`).
+
+            The `build-wasm` workflow has been triggered to build optimized binaries.
+            Check the Actions tab for progress.
