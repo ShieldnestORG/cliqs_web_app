@@ -220,7 +220,7 @@ export function IncidentPanel({
               <div className="space-y-4">
                 {sortedIncidents.map((incident) => {
                   const StatusIcon = getStatusIcon(incident.status);
-                  const isLoading = actionLoading === incident.id;
+                  const incidentLoading = actionLoading === incident.id;
 
                   return (
                     <div
@@ -261,7 +261,7 @@ export function IncidentPanel({
                               size="sm"
                               variant="outline"
                               onClick={() => handleAcknowledge(incident.id)}
-                              disabled={isLoading}
+                              disabled={incidentLoading}
                             >
                               <Eye className="h-4 w-4 mr-1" />
                               Acknowledge
@@ -272,7 +272,7 @@ export function IncidentPanel({
                               size="sm"
                               variant="default"
                               onClick={() => setSelectedIncident(incident)}
-                              disabled={isLoading}
+                              disabled={incidentLoading}
                             >
                               Resolve
                             </Button>

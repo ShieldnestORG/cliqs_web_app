@@ -45,8 +45,8 @@ if (uri) {
 export const getDb = async (): Promise<Db | null> => {
   if (!clientPromise) return null;
   try {
-    const client = await clientPromise;
-    return client.db();
+    const mongoClient = await clientPromise;
+    return mongoClient.db();
   } catch (e) {
     console.error("Failed to connect to MongoDB:", e);
     return null;

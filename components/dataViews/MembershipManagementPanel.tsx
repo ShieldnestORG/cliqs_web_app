@@ -366,7 +366,7 @@ export default function MembershipManagementPanel({
                         type="number"
                         min={1}
                         value={newMemberWeight}
-                        onChange={(e) => setNewMemberWeight(parseInt(e.target.value) || 1)}
+                        onChange={(e) => setNewMemberWeight(parseInt(e.target.value, 10) || 1)}
                       />
                     </div>
                   </div>
@@ -457,7 +457,7 @@ export default function MembershipManagementPanel({
                         type="number"
                         min={1}
                         value={editWeight}
-                        onChange={(e) => setEditWeight(parseInt(e.target.value) || 1)}
+                        onChange={(e) => setEditWeight(parseInt(e.target.value, 10) || 1)}
                         className="w-20 text-right"
                       />
                     ) : (

@@ -28,7 +28,7 @@ export default async function handler(
   }
 
   try {
-    const limit = parseInt(req.query.limit as string) || 100;
+    const limit = parseInt(req.query.limit as string, 10) || 100;
     const alerts = localDb.getAlerts(address, limit);
 
     return res.status(200).json({ alerts });

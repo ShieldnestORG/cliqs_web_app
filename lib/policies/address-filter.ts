@@ -160,7 +160,7 @@ export class AddressFilterPolicy implements Policy {
    */
   private isDenied(address: string): boolean {
     return this.config.denylist.some(
-      (denied) => denied.toLowerCase() === address,
+      (entry) => entry.toLowerCase() === address,
     );
   }
 
@@ -169,7 +169,7 @@ export class AddressFilterPolicy implements Policy {
    */
   private isAllowed(address: string): boolean {
     return this.config.allowlist.some(
-      (allowed) => allowed.toLowerCase() === address,
+      (entry) => entry.toLowerCase() === address,
     );
   }
 

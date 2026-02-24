@@ -267,7 +267,7 @@ export function EmergencyPanel({
                         id="pauseDuration"
                         type="number"
                         value={pauseDuration || ""}
-                        onChange={(e) => setPauseDuration(e.target.value ? parseInt(e.target.value) : undefined)}
+                        onChange={(e) => setPauseDuration(e.target.value ? parseInt(e.target.value, 10) : undefined)}
                         placeholder="Duration"
                         className="flex-1"
                       />
@@ -275,7 +275,7 @@ export function EmergencyPanel({
                         className="px-3 py-2 border rounded-md"
                         onChange={(e) => {
                           if (pauseDuration) {
-                            const multiplier = parseInt(e.target.value);
+                            const multiplier = parseInt(e.target.value, 10);
                             setPauseDuration(pauseDuration * multiplier);
                           }
                         }}
@@ -383,7 +383,7 @@ export function EmergencyPanel({
                       min={normalThreshold + 1}
                       max={totalWeight}
                       value={safeModeThreshold}
-                      onChange={(e) => setSafeModeThreshold(parseInt(e.target.value))}
+                      onChange={(e) => setSafeModeThreshold(parseInt(e.target.value, 10))}
                     />
                     <p className="text-xs text-muted-foreground">
                       Must be higher than normal threshold ({normalThreshold}) and at most {totalWeight}

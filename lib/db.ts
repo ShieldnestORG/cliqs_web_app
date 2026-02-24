@@ -27,6 +27,8 @@ import { isMongoAvailable } from "./mongodb";
 import { getRequestByodbUri } from "./byodb/middleware";
 import { getDynamicDb } from "./byodb/dynamicMongo";
 import { ObjectId, type Db, type WithId, type Document } from "mongodb";
+import fs from "node:fs";
+import path from "node:path";
 
 // ---------------------------------------------------------------------------
 // BYODB document interfaces – match the shape from mongodb.ts so that
@@ -633,8 +635,6 @@ async function migrateLocalMultisigsToMongo(): Promise<void> {
     // localDb stores data across all chains, so we read them all
     const localMultisigs = (() => {
       try {
-        const fs = require("fs");
-        const path = require("path");
         const dbPath = path.join(process.cwd(), "data", "local-db.json");
         if (!fs.existsSync(dbPath)) return [];
         const data = JSON.parse(fs.readFileSync(dbPath, "utf-8"));

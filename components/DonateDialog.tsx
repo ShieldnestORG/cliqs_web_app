@@ -54,7 +54,7 @@ interface TokenDisplay {
   amount: string;
   displayAmount: string;
   exponent: number;
-  logo?: string;
+  logo: string | undefined;
 }
 
 type DonationType = "one-time" | "recurring";
