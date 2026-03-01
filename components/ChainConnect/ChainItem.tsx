@@ -46,11 +46,11 @@ export default function ChainItem({ chain, hoverCardElementBoundary }: ChainItem
           )}
 
           {/* Chain Logo */}
-          <Avatar className="h-10 w-10 border-2 border-border bg-muted">
+          <Avatar className="h-10 w-10 shrink-0 border-2 border-border bg-muted">
             <AvatarImage
               src={chain.logo}
               alt={`${chain.chainDisplayName} logo`}
-              className="h-full w-full object-contain p-1"
+              className="h-full w-full"
             />
             <AvatarFallback className="bg-muted font-mono text-xs font-semibold text-muted-foreground">
               {chain.registryName.slice(0, 2).toUpperCase()}
@@ -60,7 +60,7 @@ export default function ChainItem({ chain, hoverCardElementBoundary }: ChainItem
           {/* Chain Name */}
           <span
             className={cn(
-              "text-center font-mono text-[11px] font-medium leading-tight",
+              "block min-h-[1.25rem] text-center font-mono text-[11px] font-medium leading-tight",
               isConnected ? "text-[hsl(var(--accent-green-bright))]" : "text-foreground",
             )}
           >
