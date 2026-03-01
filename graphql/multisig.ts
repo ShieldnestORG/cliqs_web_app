@@ -38,9 +38,7 @@ export const getMultisig = async (
   chainId: string,
   multisigAddress: string,
 ): Promise<DbMultisig | null> => {
-  console.log("DEBUG: graphql.getMultisig called", chainId, multisigAddress);
   const fetchedMultisig = await db.getMultisig(chainId, multisigAddress);
-  console.log("DEBUG: db.getMultisig returned", fetchedMultisig ? "found" : "null");
 
   if (!fetchedMultisig) {
     return null;

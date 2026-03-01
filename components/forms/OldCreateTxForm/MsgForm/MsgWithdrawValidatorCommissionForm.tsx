@@ -85,12 +85,6 @@ const MsgWithdrawValidatorCommissionForm = ({
     // Return BOTH messages bundled together (like CLI does with --commission flag)
     const msgs: EncodeObject[] = [delegatorRewardMsg, commissionMsg];
 
-    console.log("🔍 DEBUG: MsgWithdrawValidatorCommissionForm - bundling 2 messages like CLI");
-    console.log("  - Msg 1:", delegatorRewardMsg.typeUrl);
-    console.log("  - Msg 2:", commissionMsg.typeUrl);
-    console.log("  - delegatorAddress:", delegatorAddress);
-    console.log("  - validatorAddress:", validatorAddress);
-
     setMsgGetter({ isMsgValid, msg: msgs });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chain.addressPrefix, chain.chainId, senderAddress, trimmedInputs]);

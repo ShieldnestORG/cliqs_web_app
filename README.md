@@ -1,77 +1,35 @@
-🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨<br>
-🚨🚨 This project is not maintained anymore. The deployment previously<br>
-🚨🚨 provided by Confio does not work anymore.<br>
-🚨🚨 The main reason for this is the discontinuation of hosted drgraph<br>
-🚨🚨 databases. If you want to use this codebase, the database layer<br>
-🚨🚨 would need to be replaced by whatever database solution you prefer.<br>
-🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨
+# Cosmos Multisig UI (CLIQs)
 
-# Cosmoshub Multisig App
+This app allows multisig users to create, sign, and broadcast transactions on any Stargate-enabled Cosmos chain. Built with CosmJS, Next.js, React, and MongoDB (or local JSON for development).
 
-This app allows for multisig users to create, sign and broadcast transactions on any stargate enabled chain. It's built with Cosmjs, Next.js, Dgraph and Vercel.
+[User guide](https://github.com/samepant/cosmoshub-legacy-multisig/blob/master/docs/App%20User%20Guide.md)
 
-[The app is live here](https://multisig.confio.run).
+## Quick Start
 
-[Here is a user guide on how to use the app](https://github.com/samepant/cosmoshub-legacy-multisig/blob/master/docs/App%20User%20Guide.md)
-
-## Running your own instance
-
-### 1. Clone project / setup Vercel deployment
-
-This app uses Vercel for deployment and hosting, since they support next.js's serverless functions. You will need a vercel account to deploy this app. Use the button below to one-click clone and deploy this repo. The initial deployment will fail until all the necessary environment variables are input from the following steps.
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fhello-world)
-
-### 2. Setup environment variables
-
-In the Vercel control panel for your new app, go to `Settings -> Environment Variables` and add in the keys and values from this repo's `.env.sample` file. The only remaining variable should be the `DGRAPH_SECRET`, which will be available once you setup your DGraph instance.
-
-### 3. Initializing DGraph
-
-This app relies on DGraph as for storing account, transaction and signature details.
-
-- Create a [DGraph](https://cloud.dgraph.io) account
-- Launch a new backend
-- Click the `Develop -> Schema` menu item, and past the contents of the `db-schema.graphql` file in the root of this repo
-- On the `Develop -> Schema` view, click the `Access` tab, and make sure Anonymous Access is OFF.
-- Click the `Admin -> Settings` menu item, and create a key. Copy that key into your vercel app's environment variables as the `DGRAPH_SECRET` value
-
-As your instance of the app is used, you can return to the DGraph dashboard to view records for any accounts, transactions or signatures.
-
-### 4. Successful Deployment
-
-Redeploy the app and it will pickup the new environment variables and should be functioning normally.
-
-## Running Locally
-
-### 1. Setup .env.local file
-
-Copy the `.env.sample` file and rename it to `.env.local`
-
-### 2. Run a local cosmos-sdk Simapp instance
-
-It's recommended that you make your simapp instance mimic the denomination of cosmoshub-4 (`uatom`). Put the local address of your node as the value for `NEXT_PUBLIC_NODE_ADDRESS` in your `.env.local` file.
-
-A more in depth tutorial on this is coming soon :)
-
-### 3. Initializing DGraph
-
-This app relies on DGraph as for storing account, transaction and signature details.
-
-- Create a [DGraph](https://cloud.dgraph.io) account
-- Launch a new backend
-- Click the `Develop -> Schema` menu item, and past the contents of the `db-schema.graphql` file in the root of this repo
-- On the `Develop -> Schema` view, click the `Access` tab, and make sure Anonymous Access is OFF.
-- Click the `Admin -> Settings` menu item, and create a key. Copy that key into your vercel app's environment variables as the `DGRAPH_SECRET` value
-
-As your instance of the app is used, you can return to the DGraph dashboard to view records for any accounts, transactions or signatures.
-
-### 3. Run your instance
-
-With the simapp process running, run these commands in another window:
-
-```
-// with node v12.5.0 or later
+```bash
 npm install
-npm run dev
+cp .env.sample .env.local    # Edit as needed
+npm run dev                   # Runs on http://localhost:3003
 ```
+
+See [SETUP.md](SETUP.md) for detailed local setup, including MongoDB Atlas, local JSON database, and BYODB (Bring Your Own Database).
+
+## Architecture
+
+- **Database**: MongoDB Atlas (production), or local JSON file (`data/local-db.json`) for development. Users can also bring their own MongoDB via Settings (BYODB).
+- **Framework**: Next.js 15, React 19
+- **Wallet**: Keplr, Ledger (WebUSB)
+
+## Port
+
+The dev and production servers run on **port 3003** (configurable via `npm run dev -p <port>`).
+
+## Known Issues
+
+### npm audit – elliptic / Keplr
+
+`npm audit` may report vulnerabilities in the `elliptic` package (transitive dependency of `@keplr-wallet/cosmos`). Fixing this would require downgrading Keplr to an older version, which is a breaking change. We document this for awareness; track upstream Keplr updates for a resolution.
+
+## License
+
+Apache 2.0 – See [LICENSE.md](LICENSE.md).

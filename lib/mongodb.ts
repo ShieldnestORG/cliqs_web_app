@@ -42,11 +42,13 @@ if (uri) {
 /**
  * Get MongoDB database instance
  */
+const dbName = process.env.MONGODB_DB_NAME || undefined;
+
 export const getDb = async (): Promise<Db | null> => {
   if (!clientPromise) return null;
   try {
     const mongoClient = await clientPromise;
-    return mongoClient.db();
+    return mongoClient.db(dbName);
   } catch (e) {
     console.error("Failed to connect to MongoDB:", e);
     return null;

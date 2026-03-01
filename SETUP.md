@@ -47,7 +47,7 @@ You can modify these values as needed. To use a local node, change the `NEXT_PUB
 npm run dev
 ```
 
-The app will be available at `http://localhost:3000` (or `http://localhost:3001` if port 3000 is in use).
+The app will be available at `http://localhost:3003`.
 
 ## Database
 
