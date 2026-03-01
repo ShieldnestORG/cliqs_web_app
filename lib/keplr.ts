@@ -6,17 +6,19 @@ import { useLayoutEffect } from "react";
 // Note: verifyADR36Amino is dynamically imported in verifyKeplrSignature
 // to reduce initial bundle size
 
-const getKeplr = async (chainId: string) => {
+export const getKeplr = async (chainId: string) => {
   const keplr = window.keplr;
   if (!keplr) {
     throw new Error("Keplr not found");
   }
 
-  await keplr.enable(chainId);
-
+  // Set defaultOptions BEFORE enable() so Keplr respects them during the flow.
+  // This prevents a balance-check popup that would appear before the sign approval popup.
   keplr.defaultOptions = {
     sign: { preferNoSetFee: true, preferNoSetMemo: true, disableBalanceCheck: true },
   };
+
+  await keplr.enable(chainId);
 
   return keplr;
 };

@@ -1,5 +1,6 @@
 import { DbSignatureObj, DbSignatureObjDraft, DbTransactionParsedDataJson } from "@/graphql";
 import { createDbSignature } from "@/lib/api";
+import { getKeplr } from "@/lib/keplr";
 import { useWallet } from "@/context/WalletContext";
 import { aminoConverters } from "@/lib/msg";
 import { makeDirectModeAuthInfo, makeDirectSignDoc, logDirectSignDocDebug, shouldUseDirectMode } from "@/lib/multisigDirect";
@@ -110,11 +111,11 @@ const TransactionSigning = (props: TransactionSigningProps) => {
         props.tx.msgs.forEach((msg: any, index: number) => {
           console.log(`🔍 SIGN DEBUG: signing msg[${index}]`);
           console.log(`  - typeUrl:`, msg.typeUrl);
-          console.log(`  - value (raw):`, JSON.stringify(msg.value));
+          console.log(`  - value (raw):`, JSON.stringify(msg.value, (_, v) => (typeof v === "bigint" ? v.toString() : v)));
           try {
             const aminoMsg = aminoTypesDebug.toAmino(msg);
             console.log(`  - aminoType:`, aminoMsg.type);
-            console.log(`  - aminoValue:`, JSON.stringify(aminoMsg.value));
+            console.log(`  - aminoValue:`, JSON.stringify(aminoMsg.value, (_, v) => (typeof v === "bigint" ? v.toString() : v)));
           } catch (e) {
             console.error(`  - ❌ Failed to convert to Amino:`, e);
           }
@@ -171,13 +172,8 @@ const TransactionSigning = (props: TransactionSigningProps) => {
 
         console.log("🔍 SIGN DEBUG: Direct SignDoc Hash:", toBase64(signDocHash));
 
-        // 4. Get Keplr to sign directly
-        // We need to access Keplr's signDirect method directly
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const keplr = (window as any).keplr;
-        if (!keplr) {
-          throw new Error("Keplr not found. Please install Keplr extension.");
-        }
+        // 4. Get configured Keplr (sets defaultOptions before enable to avoid double popup)
+        const keplr = await getKeplr(props.tx.chainId);
 
         // Create the SignDoc in the format Keplr expects
         const signDoc = {

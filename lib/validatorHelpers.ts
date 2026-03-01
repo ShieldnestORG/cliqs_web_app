@@ -572,19 +572,141 @@ export async function getValidatorUnbondingDelegations(
 }
 
 /**
- * Get active proposals that need voting
+ * Derive REST/LCD endpoints from an RPC endpoint.
+ * Many nodes serve REST on port 1317 when RPC is on 26657.
+ */
+function deriveRestEndpoints(rpcEndpoint: string): string[] {
+  const endpoints = [rpcEndpoint];
+  try {
+    const url = new URL(rpcEndpoint);
+    if (url.port === "26657") {
+      url.port = "1317";
+      endpoints.push(url.toString().replace(/\/$/, ""));
+    }
+    if (url.port) {
+      const noPort = new URL(rpcEndpoint);
+      noPort.port = "";
+      endpoints.push(noPort.toString().replace(/\/$/, ""));
+    }
+  } catch {
+    // Invalid URL, just use as-is
+  }
+  return endpoints;
+}
+
+/**
+ * Gov v1 proposal response shape from REST API
+ */
+interface GovV1Proposal {
+  id: string;
+  status: string;
+  final_tally_result?: {
+    yes_count?: string;
+    abstain_count?: string;
+    no_count?: string;
+    no_with_veto_count?: string;
+  };
+  submit_time?: string;
+  deposit_end_time?: string;
+  total_deposit?: Array<{ denom: string; amount: string }>;
+  voting_start_time?: string;
+  voting_end_time?: string;
+  title?: string;
+  summary?: string;
+  proposer?: string;
+  messages?: unknown[];
+}
+
+interface GovV1ProposalsResponse {
+  proposals: GovV1Proposal[];
+}
+
+/**
+ * Convert gov v1 proposal to v1beta1 Proposal type for compatibility
+ */
+function convertV1ToV1Beta1Proposal(v1: GovV1Proposal): Proposal {
+  const statusMap: Record<string, number> = {
+    PROPOSAL_STATUS_VOTING_PERIOD: 2,
+    PROPOSAL_STATUS_PASSED: 3,
+    PROPOSAL_STATUS_REJECTED: 4,
+    PROPOSAL_STATUS_FAILED: 5,
+  };
+
+  return {
+    proposalId: BigInt(v1.id),
+    status: statusMap[v1.status] ?? 2,
+    finalTallyResult: v1.final_tally_result ? {
+      yes: v1.final_tally_result.yes_count || "0",
+      abstain: v1.final_tally_result.abstain_count || "0",
+      no: v1.final_tally_result.no_count || "0",
+      noWithVeto: v1.final_tally_result.no_with_veto_count || "0",
+    } : undefined,
+    submitTime: v1.submit_time ? { seconds: BigInt(Math.floor(new Date(v1.submit_time).getTime() / 1000)), nanos: 0 } : undefined,
+    depositEndTime: v1.deposit_end_time ? { seconds: BigInt(Math.floor(new Date(v1.deposit_end_time).getTime() / 1000)), nanos: 0 } : undefined,
+    totalDeposit: v1.total_deposit?.map(d => ({ denom: d.denom, amount: d.amount })) || [],
+    votingStartTime: v1.voting_start_time ? { seconds: BigInt(Math.floor(new Date(v1.voting_start_time).getTime() / 1000)), nanos: 0 } : undefined,
+    votingEndTime: v1.voting_end_time ? { seconds: BigInt(Math.floor(new Date(v1.voting_end_time).getTime() / 1000)), nanos: 0 } : undefined,
+    content: {
+      typeUrl: "/cosmos.gov.v1.MsgExecLegacyContent",
+      value: new Uint8Array(),
+      title: v1.title || "",
+      description: v1.summary || "",
+    } as unknown as Proposal["content"],
+  };
+}
+
+/**
+ * Fetch proposals via gov v1 REST API (fallback for chains that migrated from v1beta1)
+ */
+async function fetchProposalsViaRest(rpcUrl: string): Promise<Proposal[]> {
+  const endpoints = deriveRestEndpoints(rpcUrl);
+  
+  for (const endpoint of endpoints) {
+    try {
+      const response = await fetch(
+        `${endpoint}/cosmos/gov/v1/proposals?proposal_status=2`,
+        { headers: { Accept: "application/json" } }
+      );
+      
+      if (!response.ok) continue;
+      
+      const data: GovV1ProposalsResponse = await response.json();
+      if (data.proposals && data.proposals.length > 0) {
+        return data.proposals.map(convertV1ToV1Beta1Proposal);
+      }
+    } catch {
+      // Try next endpoint
+    }
+  }
+  
+  return [];
+}
+
+/**
+ * Get active proposals that need voting.
+ * Tries v1beta1 first, falls back to v1 REST API for newer chains.
  */
 export async function getActiveProposals(
-  queryClient: ValidatorQueryClient
+  queryClient: ValidatorQueryClient,
+  rpcUrl: string
 ): Promise<Proposal[]> {
   try {
-    // Query for proposals in voting period
+    // Try v1beta1 first (older chains)
     const response = await queryClient.gov.proposals(
       ProposalStatus.PROPOSAL_STATUS_VOTING_PERIOD,
       "",
       ""
     );
-    return response.proposals;
+    if (response.proposals.length > 0) {
+      return response.proposals;
+    }
+  } catch (e) {
+    // v1beta1 failed, will try v1 REST fallback
+  }
+
+  // Fallback to gov v1 REST API for chains that migrated
+  try {
+    return await fetchProposalsViaRest(rpcUrl);
   } catch (e) {
     console.error("Failed to get active proposals:", e);
     return [];
@@ -667,7 +789,7 @@ export async function getValidatorDashboardData(
       getSelfDelegation(queryClient, delegatorAddress, validatorAddress),
       getValidatorDelegations(queryClient, validatorAddress),
       getValidatorUnbondingDelegations(queryClient, validatorAddress),
-      getActiveProposals(queryClient),
+      getActiveProposals(queryClient, rpcUrl),
     ]);
 
     // Check votes for active proposals

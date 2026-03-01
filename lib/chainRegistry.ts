@@ -142,7 +142,18 @@ const getChainInfoFromJsons = (
 
   const firstAsset = cdnRegistryAssets[0];
   const logo = getLogoUri(registryChain, firstAsset);
-  const nodeAddresses = registryChain.apis?.rpc.map(({ address }) => address) ?? [];
+  let nodeAddresses = registryChain.apis?.rpc.map(({ address }) => address) ?? [];
+
+  // Coreum: Prefer Polkachu RPC first – Foundation RPC returns 500 for large payloads (contract uploads).
+  // See: https://github.com/cosmos/chain-registry – full-node.mainnet-1.coreum.dev fails on ~400KB requests.
+  const isCoreum = registryChain.chain_name.toLowerCase().includes("coreum");
+  if (isCoreum) {
+    const polkachuMainnet = "https://coreum-rpc.polkachu.com";
+    const polkachuTestnet = "https://coreum-testnet-rpc.polkachu.com";
+    const preferred =
+      registryChain.chain_id?.toLowerCase().includes("testnet") ? polkachuTestnet : polkachuMainnet;
+    nodeAddresses = [preferred, ...nodeAddresses.filter((a) => a !== preferred)];
+  }
 
   let explorerLinks: ExplorerLinks = { tx: "", account: "" };
 
@@ -181,8 +192,6 @@ const getChainInfoFromJsons = (
     0.03;
 
   const formattedGasPrice = firstAsset ? `${gasPrice}${firstAssetDenom}` : "";
-
-  const isCoreum = registryChain.chain_name.toLowerCase().includes("coreum");
 
   const chain: ChainInfo = {
     registryName: isCoreum ? "tx" : registryChain.chain_name,

@@ -29,12 +29,23 @@ export const rebrandChain = (chain: ChainInfo): ChainInfo => {
     return chain;
   }
 
+  // Reorder nodeAddresses: prefer Polkachu (handles large payloads; Foundation returns 500 on contract uploads)
+  const polkachuMainnet = "https://coreum-rpc.polkachu.com";
+  const polkachuTestnet = "https://coreum-testnet-rpc.polkachu.com";
+  const preferred =
+    chain.chainId?.toLowerCase().includes("testnet") ? polkachuTestnet : polkachuMainnet;
+  const nodeAddresses =
+    chain.nodeAddresses?.length
+      ? [preferred, ...chain.nodeAddresses.filter((a) => a !== preferred)]
+      : chain.nodeAddresses;
+
   return {
     ...chain,
     registryName: "tx",
     logo: "/tx.png",
     chainDisplayName: "TX",
     displayDenom: "TX",
+    nodeAddresses,
     assets: chain.assets.map((asset) => {
       const isCoreAsset =
         asset.symbol.toUpperCase().includes("CORE") ||

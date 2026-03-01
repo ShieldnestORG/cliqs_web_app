@@ -70,7 +70,7 @@ function validateMongoUri(uri: string): boolean {
   }
 
   // Must not contain null bytes or other control characters
-  // eslint-disable-next-line no-control-regex
+   
   if (/[\x00-\x08\x0b\x0c\x0e-\x1f]/.test(uri)) {
     return false;
   }

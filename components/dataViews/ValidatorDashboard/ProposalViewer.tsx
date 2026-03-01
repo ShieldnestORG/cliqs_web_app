@@ -22,6 +22,7 @@ import { MsgTypeUrls } from "@/types/txMsg";
 import { useWallet } from "@/context/WalletContext";
 import { useRouter } from "next/router";
 import { Proposal } from "cosmjs-types/cosmos/gov/v1beta1/gov";
+import { explorerLinkTx } from "@/lib/displayHelpers";
 
 // Helper to extract title from proposal content
 function getProposalTitle(proposal: Proposal): string {
@@ -113,11 +114,16 @@ export default function ProposalViewer({
         toast.dismiss(loadingToast);
 
         if (result.success && result.txId) {
+          const txUrl = `/${chain.registryName}/${cliqAddress}/transaction/${result.txId}`;
           toast.success("Transaction created!", {
-            description: "Redirecting to sign...",
+            description: "Ready for multisig signing",
+            action: {
+              label: "Sign Transaction",
+              onClick: () => router.push(txUrl),
+            },
           });
           setIsVoteDialogOpen(false);
-          router.push(`/${chain.registryName}/${cliqAddress}/transaction/${result.txId}`);
+          onTransactionComplete?.();
         } else {
           toast.error("Failed to create transaction", {
             description: result.error || "Unknown error",
@@ -178,8 +184,13 @@ export default function ProposalViewer({
         throw new Error(`Transaction failed: ${result.rawLog}`);
       }
 
+      const txExplorerUrl = explorerLinkTx(chain.explorerLinks.tx, result.transactionHash);
       toast.success("Vote broadcasted successfully!", {
-        description: `Transaction hash: ${result.transactionHash}`,
+        description: `Tx: ${result.transactionHash.slice(0, 12)}...`,
+        action: txExplorerUrl ? {
+          label: "View on Explorer",
+          onClick: () => window.open(txExplorerUrl, "_blank"),
+        } : undefined,
       });
 
       setIsVoteDialogOpen(false);
@@ -247,7 +258,7 @@ export default function ProposalViewer({
                     ) : (
                       <Badge variant="outline" className="bg-orange-500/10 text-orange-500 border-orange-500/30 gap-1">
                         <AlertCircle className="h-3 w-3" />
-                        PENDING
+                        NEEDS VOTE
                       </Badge>
                     )}
                   </div>
