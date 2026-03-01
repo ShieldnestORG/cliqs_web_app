@@ -56,7 +56,9 @@ export function delegatorToValidatorAddress(
 ): string {
   try {
     const decoded = fromBech32(delegatorAddress);
-    const validatorPrefix = `${addressPrefix}valoper`;
+    const validatorPrefix = addressPrefix.startsWith("cosmos")
+      ? "cosmosvaloper"
+      : `${addressPrefix}valoper`;
     return toBech32(validatorPrefix, decoded.data);
   } catch (e) {
     throw new Error(
