@@ -124,19 +124,17 @@ export default function OperationsPage() {
       const allCliqs = Array.from(cliqMap.values());
       const cliqAddresses = allCliqs.map((m) => m.address);
 
-      // 2. Check which CLIQs are validators
+      // 2. Check which CLIQs are validators (always check wallet + CLIQs)
       let validators: { address: string; validator: ValidatorInfo }[] = [];
-      if (cliqAddresses.length > 0) {
-        try {
-          validators = await getAssociatedValidators(
-            chain.nodeAddress,
-            walletInfo.address,
-            cliqAddresses,
-            chain.addressPrefix
-          );
-        } catch (e) {
-          console.log("Could not check validators:", e);
-        }
+      try {
+        validators = await getAssociatedValidators(
+          chain.nodeAddress,
+          walletInfo.address,
+          cliqAddresses,
+          chain.addressPrefix
+        );
+      } catch (e) {
+        console.log("Could not check validators:", e);
       }
 
       const validatorMap = new Map(validators.map((v) => [v.address, v.validator]));
