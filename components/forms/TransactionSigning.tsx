@@ -13,6 +13,7 @@ import { toBase64, fromBase64 } from "@cosmjs/encoding";
 import { Registry, TxBodyEncodeObject } from "@cosmjs/proto-signing";
 import { AminoTypes, SigningStargateClient, defaultRegistryTypes } from "@cosmjs/stargate";
 import { assert } from "@cosmjs/utils";
+import Long from "long";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { CheckCircle2, Shield } from "lucide-react";
@@ -180,7 +181,7 @@ const TransactionSigning = (props: TransactionSigningProps) => {
           bodyBytes,
           authInfoBytes,
           chainId: props.tx.chainId,
-          accountNumber: props.tx.accountNumber.toString(),
+          accountNumber: Long.fromNumber(props.tx.accountNumber),
         };
 
         console.log("🔍 SIGN DEBUG: Calling Keplr signDirect with multisig SignDoc");
