@@ -19,7 +19,6 @@ async function apiCreateSignature(req: NextApiRequest, res: NextApiResponse) {
     const signatureObjDraft: DbSignatureObjDraft = { ...body, transaction: { id: txId } };
     const signature = await createSignature(signatureObjDraft);
     res.status(200).send({ signature });
-    console.log("Create signature success", JSON.stringify({ signature }, null, 2));
   } catch (err: unknown) {
     console.error(err);
     res

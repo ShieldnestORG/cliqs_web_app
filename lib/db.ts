@@ -526,7 +526,12 @@ export const wipeCompletedTransactions = async (multisigId: string) => {
   if (await usesMongo()) {
     return mongoDb.wipeCompletedTransactions(multisigId);
   }
-  return { deletedTransactions: 0, deletedSignatures: 0 };
+  return {
+    deletedTransactions: 0,
+    deletedSignatures: 0,
+    localDbNotice:
+      "Wipe is not supported for local JSON database. To delete your transaction data, manually remove or edit the data/local-db.json file on your computer.",
+  };
 };
 
 export const wipeAllTransactions = async (multisigId: string) => {
@@ -547,7 +552,12 @@ export const wipeAllTransactions = async (multisigId: string) => {
   if (await usesMongo()) {
     return mongoDb.wipeAllTransactions(multisigId);
   }
-  return { deletedTransactions: 0, deletedSignatures: 0 };
+  return {
+    deletedTransactions: 0,
+    deletedSignatures: 0,
+    localDbNotice:
+      "Wipe is not supported for local JSON database. To delete your transaction data, manually remove or edit the data/local-db.json file on your computer.",
+  };
 };
 
 export const exportTransactionHistory = async (multisigId: string) => {

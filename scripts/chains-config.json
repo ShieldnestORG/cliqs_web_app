@@ -1,0 +1,10 @@
+{
+  "coreum-mainnet-1": {
+    "nodeAddress": "https://coreum-rpc.polkachu.com",
+    "addressPrefix": "core"
+  },
+  "cosmoshub-4": {
+    "nodeAddress": "https://cosmoshub-rpc.polkachu.com",
+    "addressPrefix": "cosmos"
+  }
+}

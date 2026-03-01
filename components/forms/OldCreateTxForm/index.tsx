@@ -161,11 +161,8 @@ const OldCreateTxForm = ({ router, senderAddress, accountOnChain }: OldCreateTxF
   const createTx = async () => {
     // Guard against duplicate submissions (ref check is synchronous, unlike state)
     if (isSubmittingRef.current || processing) {
-      console.log("DEBUG: createTx already in progress, ignoring duplicate call");
       return;
     }
-    
-    console.log("DEBUG: createTx called with", msgTypes.length, "message types");
 
     // Basic validation before proceeding (before showing loading state)
     if (!msgTypes.length) {
@@ -186,14 +183,6 @@ const OldCreateTxForm = ({ router, senderAddress, accountOnChain }: OldCreateTxF
     await sleep(500);
 
     try {
-      console.log("DEBUG: creating tx...", {
-        accountNumber: accountOnChain.accountNumber,
-        sequence: accountOnChain.sequence,
-        chainId: chain.chainId,
-        gasLimit,
-        gasPrice: chain.gasPrice,
-      });
-
       assert(typeof accountOnChain.accountNumber === "number", "accountNumber missing");
       assert(msgGetters.current.length, "form filled incorrectly");
 
@@ -205,14 +194,7 @@ const OldCreateTxForm = ({ router, senderAddress, accountOnChain }: OldCreateTxF
         return msgsArray.map(m => exportMsgToJson(m));
       });
 
-      console.log("DEBUG: msgs exported", msgs);
-      console.log("DEBUG: msgGetters.current length", msgGetters.current.length);
-      console.log("DEBUG: msgTypes length", msgTypes.length);
-      console.log("DEBUG: valid msgs count", msgs.length);
-      console.log("DEBUG: valid getters count", validGetters.length);
-
       if (!validGetters.length || validGetters.length !== msgTypes.length) {
-        console.error("DEBUG: msgs validation failed - some message forms are incomplete or invalid");
         toastError({
           description: "Please complete all message forms before creating the transaction. Check for validation errors in red.",
         });
@@ -224,9 +206,7 @@ const OldCreateTxForm = ({ router, senderAddress, accountOnChain }: OldCreateTxF
         return;
       }
 
-      console.log("DEBUG: calculating fee", { gasLimit, gasPrice: chain.gasPrice });
       const fee = calculateFee(gasLimit, chain.gasPrice);
-      console.log("DEBUG: fee calculated", fee);
 
       const txData: DbTransactionParsedDataJson = {
         accountNumber: accountOnChain.accountNumber,
@@ -237,9 +217,7 @@ const OldCreateTxForm = ({ router, senderAddress, accountOnChain }: OldCreateTxF
         memo,
       };
 
-      console.log("DEBUG: sending createDbTx request");
       const txId = await createDbTx(accountOnChain.address, chain.chainId, txData);
-      console.log("DEBUG: createDbTx success", txId);
       
       toastSuccess("Transaction created with ID", txId);
       const chainName = chain.registryName || router.query.chainName?.toString();
@@ -247,7 +225,6 @@ const OldCreateTxForm = ({ router, senderAddress, accountOnChain }: OldCreateTxF
       if (chainName && senderAddress && txId) {
         router.push(`/${chainName}/${senderAddress}/transaction/${txId}`);
       } else {
-        console.error("DEBUG: Missing redirect info", { chainName, senderAddress, txId });
         toast.error("Transaction created, but could not redirect. Please find it in your dashboard.");
       }
     } catch (e) {

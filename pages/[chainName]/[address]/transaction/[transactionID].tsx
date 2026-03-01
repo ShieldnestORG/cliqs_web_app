@@ -40,45 +40,9 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (context)
   // get transaction info
   const transactionID = context.params?.transactionID?.toString();
   assert(transactionID, "Transaction ID missing");
-  console.log("Function `findTransactionByID` invoked", transactionID);
   const tx = await getTransaction(transactionID);
   if (!tx) {
     throw new Error("Transaction not found");
-  }
-  console.log("🔍 DECIMAL DEBUG: getServerSideProps - retrieved transaction");
-  console.log("  - tx.dataJSON length:", tx.dataJSON.length);
-
-  // Parse and log the transaction data
-  try {
-    // tx.dataJSON is stored as a JSON string in the database, so we need to parse it
-    const parsedData = JSON.parse(tx.dataJSON);
-    console.log("🔍 DECIMAL DEBUG: server-side parsed transaction data");
-    console.log("  - accountNumber:", parsedData.accountNumber);
-    console.log("  - sequence:", parsedData.sequence);
-    console.log("  - chainId:", parsedData.chainId);
-    console.log("  - msgs count:", parsedData.msgs?.length || 0);
-
-    if (parsedData.msgs && parsedData.msgs.length > 0) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      parsedData.msgs.forEach((msg: any, index: number) => {
-        console.log(`🔍 DECIMAL DEBUG: server msg[${index}]`);
-        console.log(`  - typeUrl:`, msg.typeUrl);
-
-        // Specifically check for CreateValidator messages and log commission
-        if (msg.typeUrl === "/cosmos.staking.v1beta1.MsgCreateValidator" && msg.value?.commission) {
-          console.log(`  - CREATE_VALIDATOR commission:`, msg.value.commission);
-          console.log(`    - rate:`, msg.value.commission.rate, typeof msg.value.commission.rate);
-          console.log(`    - maxRate:`, msg.value.commission.maxRate, typeof msg.value.commission.maxRate);
-          console.log(`    - maxChangeRate:`, msg.value.commission.maxChangeRate, typeof msg.value.commission.maxChangeRate);
-        }
-      });
-    }
-
-    console.log("  - fee:", parsedData.fee);
-    console.log("  - memo:", parsedData.memo);
-  } catch (parseError) {
-    console.error("🔍 DECIMAL DEBUG: Failed to parse server-side transaction dataJSON:", parseError);
-    console.error("🔍 DECIMAL DEBUG: tx.dataJSON:", tx.dataJSON);
   }
 
   return {
@@ -118,10 +82,7 @@ const TransactionPage = ({
   const [broadcastResult, setBroadcastResult] = useState<BroadcastResult | null>(null);
   const [verificationStatus, setVerificationStatus] = useState<"idle" | "verifying" | "verified" | "failed">("idle");
   // Memoize txInfo to prevent recalculating on every render
-  const txInfo = useMemo(() => {
-    console.log("🔍 DEBUG: Parsing transactionJSON (memoized)");
-    return dbTxFromJson(transactionJSON);
-  }, [transactionJSON]);
+  const txInfo = useMemo(() => dbTxFromJson(transactionJSON), [transactionJSON]);
 
   const multisigAddress = router.query.address?.toString();
 
@@ -136,7 +97,6 @@ const TransactionPage = ({
           return;
         }
 
-        console.log("🔍 SEQUENCE CHECK: Fetching multisig account state");
         const hostedMultisig = await getHostedMultisig(multisigAddress, chain);
 
         assert(
@@ -144,39 +104,22 @@ const TransactionPage = ({
           "Multisig address could not be found",
         );
 
-        console.log("🔍 SEQUENCE CHECK: Account found on chain");
-        console.log("  - on-chain accountNumber:", hostedMultisig.accountOnChain.accountNumber);
-        console.log("  - on-chain sequence:", hostedMultisig.accountOnChain.sequence);
-        console.log("  - tx stored accountNumber:", txInfo?.accountNumber);
-        console.log("  - tx stored sequence:", txInfo?.sequence);
-
         setPubkey(hostedMultisig.pubkeyOnDb);
         setAccountOnChain(hostedMultisig.accountOnChain);
 
         // Check for sequence mismatch - this happens when another tx was broadcast
         // from this account after this transaction was created
         if (txInfo && hostedMultisig.accountOnChain.sequence !== txInfo.sequence) {
-          console.warn("🔍 SEQUENCE CHECK: ⚠️ SEQUENCE MISMATCH DETECTED!");
-          console.warn(`  - Transaction expects sequence: ${txInfo.sequence}`);
-          console.warn(`  - Chain current sequence: ${hostedMultisig.accountOnChain.sequence}`);
-          console.warn("  - This transaction's signatures are no longer valid");
           setSequenceMismatch({
             expected: txInfo.sequence,
             actual: hostedMultisig.accountOnChain.sequence,
           });
           setSequenceVerified(false);
         } else {
-          console.log("🔍 SEQUENCE CHECK: ✅ Sequence matches");
           setSequenceMismatch(null);
           setSequenceVerified(true);
         }
 
-        // Also check account number mismatch (rare but possible after chain upgrades)
-        if (txInfo && hostedMultisig.accountOnChain.accountNumber !== txInfo.accountNumber) {
-          console.warn("🔍 SEQUENCE CHECK: ⚠️ ACCOUNT NUMBER MISMATCH!");
-          console.warn(`  - Transaction expects account #: ${txInfo.accountNumber}`);
-          console.warn(`  - Chain current account #: ${hostedMultisig.accountOnChain.accountNumber}`);
-        }
       } catch (e) {
         console.error("Failed to find multisig address:", e);
         toastError({
@@ -202,11 +145,6 @@ const TransactionPage = ({
       assert(txInfo, "Transaction not found in database");
       assert(multisigAddress, "Multisig address missing");
 
-      console.log("🔍 BROADCAST DEBUG: Starting broadcast validation");
-      console.log("  - txInfo.accountNumber:", txInfo.accountNumber);
-      console.log("  - txInfo.sequence:", txInfo.sequence);
-      console.log("  - txInfo.chainId:", txInfo.chainId);
-
       // CRITICAL: Re-fetch the current on-chain account state right before broadcasting
       // This catches cases where the sequence changed since the page was loaded
       const client = await StargateClient.connect(chain.nodeAddress);
@@ -215,10 +153,6 @@ const TransactionPage = ({
       if (!currentAccountOnChain) {
         throw new Error("Could not fetch current account state from chain");
       }
-
-      console.log("🔍 BROADCAST DEBUG: Current on-chain state");
-      console.log("  - current accountNumber:", currentAccountOnChain.accountNumber);
-      console.log("  - current sequence:", currentAccountOnChain.sequence);
 
       // Validate account number matches
       if (currentAccountOnChain.accountNumber !== txInfo.accountNumber) {
@@ -245,86 +179,37 @@ const TransactionPage = ({
         );
       }
 
-      console.log("🔍 BROADCAST DEBUG: Validation passed, proceeding with broadcast");
-      console.log("  - currentSignatures count:", currentSignatures.length);
-      console.log("  - txInfo.fee:", txInfo.fee);
-      console.log("  - txInfo.accountNumber:", txInfo.accountNumber);
-      console.log("  - txInfo.sequence:", txInfo.sequence);
-      console.log("  - txInfo.chainId:", txInfo.chainId);
-      console.log("  - txInfo.memo:", txInfo.memo);
-
-      console.log("🔍 BROADCAST DEBUG: Pubkey info");
-      console.log("  - pubkey.type:", pubkey.type);
-      console.log("  - pubkey.value.threshold:", pubkey.value.threshold);
-      console.log("  - pubkey.value.pubkeys count:", pubkey.value.pubkeys.length);
-      pubkey.value.pubkeys.forEach((pk, i) => {
-        console.log(`  - pubkey[${i}]:`, pk.value.substring(0, 20) + "...");
-      });
-
-      console.log("🔍 BROADCAST DEBUG: Signature addresses");
-      currentSignatures.forEach((sig, i) => {
-        console.log(`  - sig[${i}].address:`, sig.address);
-        console.log(`  - sig[${i}].signature length:`, fromBase64(sig.signature).length);
-      });
-
       const bodyBytes = fromBase64(currentSignatures[0].bodyBytes);
-      console.log("  - bodyBytes length:", bodyBytes.length);
 
       // Verify all signatures have the same bodyBytes
       const allSameBodyBytes = currentSignatures.every(
         (s) => s.bodyBytes === currentSignatures[0].bodyBytes
       );
-      console.log("  - all signatures have same bodyBytes:", allSameBodyBytes);
       if (!allSameBodyBytes) {
-        console.error("⚠️ CRITICAL: Signatures have different bodyBytes!");
-        currentSignatures.forEach((s, i) => {
-          console.log(`  - sig[${i}].bodyBytes:`, s.bodyBytes.substring(0, 50) + "...");
-        });
+        console.error("Signatures have different bodyBytes");
       }
 
       // Build signature map - cosmjs 0.35.0+ extracts prefix from first address automatically
-      console.log("🔍 BROADCAST DEBUG: Creating signature map");
       const detectedPrefix = currentSignatures[0]?.address?.split('1')[0] || 'unknown';
-      console.log("  - Detected prefix:", detectedPrefix);
       
       // CRITICAL: Verify pubkey -> address derivation matches signature addresses
-      console.log("🔍 BROADCAST DEBUG: Verifying pubkey -> address mapping");
       const derivedAddresses: string[] = [];
-      pubkey.value.pubkeys.forEach((memberPubkey, i) => {
+      pubkey.value.pubkeys.forEach((memberPubkey) => {
         const derivedAddress = pubkeyToAddress(memberPubkey, detectedPrefix);
         derivedAddresses.push(derivedAddress);
-        console.log(`  - pubkey[${i}] -> ${derivedAddress}`);
-      });
-      
-      // Check if all signature addresses are in the derived list
-      console.log("🔍 BROADCAST DEBUG: Checking signature addresses against derived");
-      currentSignatures.forEach((s, i) => {
-        const found = derivedAddresses.includes(s.address);
-        console.log(`  - sig[${i}] ${s.address}: ${found ? '✅ MATCH' : '❌ NOT FOUND'}`);
       });
       
       const signatureMap = new Map<string, Uint8Array>();
       currentSignatures.forEach((s) => {
         signatureMap.set(s.address, fromBase64(s.signature));
       });
-      console.log("  - Signature map size:", signatureMap.size);
-
-      // CRITICAL DEBUG: Log exact values being used
-      console.log("🔍 BROADCAST DEBUG: EXACT VALUES for makeMultisignedTxBytes:");
-      console.log("  - sequence:", txInfo.sequence, typeof txInfo.sequence);
-      console.log("  - fee:", JSON.stringify(txInfo.fee));
-      console.log("  - fee.gas:", txInfo.fee.gas, typeof txInfo.fee.gas);
-      console.log("  - fee.amount[0]:", JSON.stringify(txInfo.fee.amount[0]));
-      console.log("  - bodyBytes (first 30 bytes hex):", Array.from(bodyBytes.slice(0, 30)).map(b => b.toString(16).padStart(2, '0')).join(''));
       
       // Check if this transaction should use Direct mode
       const useDirectMode = shouldUseDirectMode(txInfo.msgs);
-      console.log("🔍 BROADCAST DEBUG: Using Direct mode:", useDirectMode);
       
       let signedTxBytes: Uint8Array;
       if (useDirectMode) {
         // Use SIGN_MODE_DIRECT for MsgWithdrawValidatorCommission transactions
-        console.log("🔍 BROADCAST DEBUG: Assembling with SIGN_MODE_DIRECT");
         signedTxBytes = makeMultisignedTxBytesDirect(
           pubkey,
           txInfo.sequence,
@@ -334,7 +219,6 @@ const TransactionPage = ({
         );
       } else {
         // Use SIGN_MODE_LEGACY_AMINO_JSON for other transactions
-        console.log("🔍 BROADCAST DEBUG: Assembling with SIGN_MODE_LEGACY_AMINO_JSON");
         signedTxBytes = makeMultisignedTxBytes(
           pubkey,
           txInfo.sequence,
@@ -343,8 +227,6 @@ const TransactionPage = ({
           signatureMap,
         );
       }
-
-      console.log("🔍 BROADCAST DEBUG: signedTxBytes created, length:", signedTxBytes.length);
       
       // Import SignDoc debug utilities for comprehensive comparison
       const { generateSignDocDebugInfo, logSignDocDebug } = await import("@/lib/signDocDebug");
@@ -364,8 +246,6 @@ const TransactionPage = ({
         expectedHash = signDocHash;
         
         logDirectSignDocDebug(bodyBytes, authInfoBytes, txInfo.chainId, txInfo.accountNumber, "BROADCAST Direct SignDoc Analysis");
-        console.log("🔍 BROADCAST DEBUG: Using Direct SignDoc for verification");
-        console.log("🔍 BROADCAST DEBUG: Direct SignDoc hash:", toBase64(expectedHash));
       } else {
         // For Amino mode, use Amino SignDoc hash
         const aminoTypes = new AminoTypes(aminoConverters);
@@ -383,12 +263,6 @@ const TransactionPage = ({
         const signDocBytes = serializeSignDoc(expectedSignDoc);
         expectedHash = sha256(signDocBytes);
         
-        // Enhanced debug output
-        console.log("🔍 BROADCAST DEBUG: Using Amino SignDoc for verification");
-        console.log("🔍 BROADCAST DEBUG: Expected SignDoc hash:", toBase64(expectedHash));
-        console.log("🔍 BROADCAST DEBUG: SignDoc (canonical JSON):", new TextDecoder().decode(signDocBytes));
-        console.log("🔍 BROADCAST DEBUG: SignDoc (parsed):", JSON.stringify(expectedSignDoc, null, 2));
-        
         // Generate comprehensive debug info
         const debugInfo = generateSignDocDebugInfo(
           txInfo.msgs,
@@ -402,24 +276,21 @@ const TransactionPage = ({
         logSignDocDebug(debugInfo, "BROADCAST SignDoc Analysis");
       }
       
-      // Verify signatures against expected hash
-      console.log(`🔍 BROADCAST DEBUG: Verifying signatures against ${useDirectMode ? 'Direct' : 'Amino'} hash:`);
+      // Verify signatures against expected hash before broadcast
       for (let i = 0; i < currentSignatures.length; i++) {
         const s = currentSignatures[i];
         const sig = Secp256k1Signature.fromFixedLength(fromBase64(s.signature));
-        // Find the pubkey for this address
         const pubkeyIndex = derivedAddresses.indexOf(s.address);
         if (pubkeyIndex === -1) {
-          console.log(`  - sig[${i}] (${s.address}): ❌ No matching pubkey`);
-          continue;
+          throw new Error(`Signature from ${s.address} has no matching pubkey`);
         }
         const memberPubkey = pubkey.value.pubkeys[pubkeyIndex];
         const pubkeyBytes = fromBase64(memberPubkey.value);
         const valid = await Secp256k1.verifySignature(sig, expectedHash, pubkeyBytes);
-        console.log(`  - sig[${i}] (${s.address}): ${valid ? '✅ VALID' : '❌ INVALID'}`);
+        if (!valid) {
+          throw new Error(`Signature verification failed for ${s.address}`);
+        }
       }
-      
-      console.log("🔍 BROADCAST DEBUG: Broadcasting to chain with multi-RPC verification...");
 
       // Phase 0: Use MultiRpcVerifier for hardened broadcast
       setVerificationStatus("verifying");
@@ -431,17 +302,6 @@ const TransactionPage = ({
 
       const verifiedResult = await verifier.broadcastAndVerify(signedTxBytes);
       setBroadcastResult(verifiedResult);
-
-      console.log("🔍 BROADCAST DEBUG: Multi-RPC broadcast result");
-      console.log("  - transactionHash:", verifiedResult.txHash);
-      console.log("  - success:", verifiedResult.success);
-      console.log("  - height:", verifiedResult.height);
-      console.log("  - verifications:", verifiedResult.verifications.length);
-
-      // Also log individual verification results
-      verifiedResult.verifications.forEach((v, i) => {
-        console.log(`  - verification[${i}]: ${v.endpoint} - ${v.verified ? "✅" : "❌"} ${v.error || ""}`);
-      });
 
       if (!verifiedResult.success) {
         setVerificationStatus("failed");

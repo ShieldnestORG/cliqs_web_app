@@ -159,6 +159,8 @@ export type WipeResult = {
   readonly mode: WipeMode;
   readonly deletedTransactions: number;
   readonly deletedSignatures: number;
+  /** Shown when using local JSON DB; wipe not supported, user must delete data file manually */
+  readonly localDbNotice?: string;
 };
 
 export const wipeTransactions = async (

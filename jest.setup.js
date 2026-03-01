@@ -242,23 +242,6 @@ jest.mock('graphql-request', () => ({
   })),
 }));
 
-// Mock Supabase client
-jest.mock('@supabase/supabase-js', () => ({
-  createClient: jest.fn().mockReturnValue({
-    from: jest.fn().mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({ data: null, error: null }),
-          order: jest.fn().mockResolvedValue({ data: [], error: null }),
-        }),
-      }),
-      insert: jest.fn().mockResolvedValue({ data: null, error: null }),
-      update: jest.fn().mockResolvedValue({ data: null, error: null }),
-      delete: jest.fn().mockResolvedValue({ data: null, error: null }),
-    }),
-  }),
-}));
-
 // Mock sonner toast
 jest.mock('sonner', () => ({
   toast: {
@@ -411,6 +394,4 @@ afterAll(() => {
 });
 
 // Setup test environment variables
-process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
-process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
 process.env.NEXT_PUBLIC_GRAPHQL_URL = 'https://test.graphql.co';

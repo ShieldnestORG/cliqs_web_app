@@ -24,7 +24,6 @@ async function apiCreateMultisig(req: NextApiRequest, res: NextApiResponse) {
 
     const dbMultisigAddress = await createMultisig(multisigDraft);
     res.status(200).send({ dbMultisigAddress });
-    console.log("Create multisig success", JSON.stringify({ dbMultisigAddress }, null, 2));
   } catch (err: unknown) {
     console.error(err);
     res

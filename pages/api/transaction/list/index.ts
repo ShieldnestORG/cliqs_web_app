@@ -56,7 +56,6 @@ async function apiListTransactions(req: NextApiRequest, res: NextApiResponse) {
     if (verified) {
       const transactions = await getTransactions(multisig.id);
       res.status(200).send(transactions);
-      console.log("List transactions success", JSON.stringify(transactions, null, 2));
     } else {
       throw new Error("signature verification failed");
     }

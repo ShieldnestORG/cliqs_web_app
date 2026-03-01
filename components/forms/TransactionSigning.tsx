@@ -89,14 +89,6 @@ const TransactionSigning = (props: TransactionSigningProps) => {
       const signerAddress = walletInfo?.address;
       assert(signerAddress, "Missing signer address");
 
-      console.log("🔍 SIGN DEBUG: TransactionSigning - about to sign transaction");
-      console.log("  - SIGN MODE:", mode.toUpperCase());
-      console.log("  - signerAddress:", signerAddress);
-      console.log("  - tx.accountNumber:", props.tx.accountNumber);
-      console.log("  - tx.sequence:", props.tx.sequence);
-      console.log("  - tx.chainId:", props.tx.chainId);
-      console.log("  - chain.chainId (context):", chain.chainId);
-
       // CRITICAL: Verify chainId matches to prevent invalid signatures
       if (props.tx.chainId && props.tx.chainId !== chain.chainId) {
         throw new Error(
@@ -105,27 +97,6 @@ const TransactionSigning = (props: TransactionSigningProps) => {
         );
       }
 
-      console.log("  - tx.msgs count:", props.tx.msgs?.length || 0);
-      if (props.tx.msgs && props.tx.msgs.length > 0) {
-        const aminoTypesDebug = new AminoTypes(aminoConverters);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        props.tx.msgs.forEach((msg: any, index: number) => {
-          console.log(`🔍 SIGN DEBUG: signing msg[${index}]`);
-          console.log(`  - typeUrl:`, msg.typeUrl);
-          console.log(`  - value (raw):`, JSON.stringify(msg.value, (_, v) => (typeof v === "bigint" ? v.toString() : v)));
-          try {
-            const aminoMsg = aminoTypesDebug.toAmino(msg);
-            console.log(`  - aminoType:`, aminoMsg.type);
-            console.log(`  - aminoValue:`, JSON.stringify(aminoMsg.value, (_, v) => (typeof v === "bigint" ? v.toString() : v)));
-          } catch (e) {
-            console.error(`  - ❌ Failed to convert to Amino:`, e);
-          }
-        });
-      }
-
-      console.log("  - tx.fee:", props.tx.fee);
-      console.log("  - tx.memo:", props.tx.memo);
-
       let bodyBytes: Uint8Array;
       let signatureBytes: Uint8Array;
 
@@ -133,8 +104,6 @@ const TransactionSigning = (props: TransactionSigningProps) => {
         // DIRECT MODE: Sign the multisig's Direct SignDoc
         // This is different from Amino - we construct the SignDoc for the MULTISIG account,
         // not for the individual signer
-        console.log("🔍 SIGN DEBUG: Using DIRECT mode for multisig");
-
         const registry = new Registry([...defaultRegistryTypes, ...wasmTypes]);
         
         // 1. Construct bodyBytes (same as Amino)
@@ -171,8 +140,6 @@ const TransactionSigning = (props: TransactionSigningProps) => {
           "SIGNING Direct SignDoc (MULTISIG)"
         );
 
-        console.log("🔍 SIGN DEBUG: Direct SignDoc Hash:", toBase64(signDocHash));
-
         // 4. Get configured Keplr (sets defaultOptions before enable to avoid double popup)
         const keplr = await getKeplr(props.tx.chainId);
 
@@ -184,7 +151,6 @@ const TransactionSigning = (props: TransactionSigningProps) => {
           accountNumber: Long.fromNumber(props.tx.accountNumber),
         };
 
-        console.log("🔍 SIGN DEBUG: Calling Keplr signDirect with multisig SignDoc");
         const signResponse = await keplr.signDirect(
           props.tx.chainId,
           signerAddress,
@@ -192,11 +158,8 @@ const TransactionSigning = (props: TransactionSigningProps) => {
         );
 
         signatureBytes = fromBase64(signResponse.signature.signature);
-        console.log("🔍 SIGN DEBUG: Direct signing completed");
-        console.log("  - signature length:", signatureBytes.length);
       } else {
         // AMINO MODE: Use SigningStargateClient.sign() as before
-        console.log("🔍 SIGN DEBUG: Using AMINO mode");
 
         const offlineSigner = await getAminoSigner();
         if (!offlineSigner) {
@@ -226,9 +189,7 @@ const TransactionSigning = (props: TransactionSigningProps) => {
           aminoTypesForDebug
         );
         logSignDocDebug(signTimeDebugInfo, "SIGNING SignDoc (AMINO mode)");
-        console.log("🔍 SIGN DEBUG: Expected SignDoc Hash at sign time:", signTimeDebugInfo.signDocHashBase64);
 
-        console.log("🔍 SIGN DEBUG: calling signingClient.sign");
         const signResult = await signingClient.sign(
           signerAddress,
           props.tx.msgs,
@@ -239,10 +200,6 @@ const TransactionSigning = (props: TransactionSigningProps) => {
 
         bodyBytes = signResult.bodyBytes;
         signatureBytes = signResult.signatures[0];
-
-        console.log("🔍 SIGN DEBUG: Amino signing completed");
-        console.log("  - bodyBytes length:", bodyBytes.length);
-        console.log("  - signature length:", signatureBytes.length);
       }
 
       // Check for duplicate signatures

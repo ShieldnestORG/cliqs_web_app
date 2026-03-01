@@ -80,12 +80,23 @@ export default [
       ],
     },
   },
-  // Be less docmatic for config files
+  // Be less dogmatic for config files
   {
     files: ["**/*.config.{mjs,js}"],
     rules: {
       "@typescript-eslint/no-require-imports": "off",
       "import/no-anonymous-default-export": "off",
+    },
+  },
+  // Phase 3 fuzz/generators: RNG uses bitwise ops, fuzz tests use any, parseInt for tx fields
+  {
+    files: ["tests/phase3/**/*.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "no-bitwise": "off",
+      "no-param-reassign": "off",
+      radix: "off",
     },
   },
 ];

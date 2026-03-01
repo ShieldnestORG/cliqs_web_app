@@ -26,7 +26,6 @@ async function apiGetMultisig(req: NextApiRequest, res: NextApiResponse) {
     }
 
     res.status(200).send(multisig);
-    console.log("Get multisig success", JSON.stringify(multisig, null, 2));
   } catch (err: unknown) {
     console.error(err);
     res

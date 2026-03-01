@@ -58,11 +58,6 @@ async function apiWipeTransactions(
       mode: body.mode,
       ...result,
     });
-
-    console.log(
-      `[Wipe] ${body.mode} transactions wiped for ${body.multisigAddress}: ` +
-        `${result.deletedTransactions} txs, ${result.deletedSignatures} sigs`,
-    );
   } catch (err: unknown) {
     console.error("[Wipe] Error:", err);
     res.status(400).send(
