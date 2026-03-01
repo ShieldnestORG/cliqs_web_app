@@ -11,6 +11,7 @@
     "validate:wasm": "node scripts/validate-wasm.mjs --strict",
     "seed:coreum": "node scripts/seed-coreum-multisigs.mjs",
     "migrate:multisigs-to-mongo": "node scripts/migrate-local-multisigs-to-mongo.mjs",
+    "resync:pubkeys": "node scripts/resync-multisig-pubkeys-from-chain.mjs",
     "start": "next start -p 3003",
     "format": "prettier --write --log-level warn \"./**/*.{js,jsx,mjs,ts,tsx}\"",
     "lint": "eslint --max-warnings 0 \"./**/*.{js,jsx,mjs,ts,tsx}\"",
