@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { useChains } from "@/context/ChainsContext";
+import { isChainInfoFilled } from "@/context/ChainsContext/helpers";
 import { useWallet } from "@/context/WalletContext";
 import {
   getValidatorDashboardData,
@@ -28,7 +29,13 @@ import {
   ValidatorInfo,
 } from "@/lib/validatorHelpers";
 import { getDbUserMultisigs } from "@/lib/api";
+import { getKeplrKey } from "@/lib/keplr";
+import {
+  createMultisigFromCompressedSecp256k1Pubkeys,
+  getHostedMultisig,
+} from "@/lib/multisigHelpers";
 import { getUserSettings } from "@/lib/settingsStorage";
+import { toastError } from "@/lib/utils";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   RefreshCw,
@@ -43,6 +50,8 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { isMultisigThresholdPubkey } from "@cosmjs/amino";
+import { assert } from "@cosmjs/utils";
 import ValidatorIdentityCard from "./ValidatorIdentityCard";
 import PendingRewardsCard from "./PendingRewardsCard";
 import ValidatorPerformanceCard from "./ValidatorPerformanceCard";
@@ -198,15 +207,52 @@ export default function ValidatorDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [
-    isCliqMode,
-    walletInfo?.address,
-    walletInfo?.pubKey,
-    addressParam,
-    chain,
-    verificationSignature,
-    verify,
-  ]);
+  }, [addressParam, chain, isCliqMode, verificationSignature, verify, walletInfo?.address, walletInfo?.pubKey]);
+
+  // Register chain-only multisig in DB when viewing validator in CLIQ mode.
+  // Users can land here directly from "Manage Validator" without visiting the CLIQ page,
+  // so we must ensure the multisig is in DB before they click "Create: Claim All".
+  useEffect(() => {
+    (async function ensureCliqInDb() {
+      try {
+        if (
+          !isCliqMode ||
+          !cliqAddress ||
+          !walletInfo ||
+          !isChainInfoFilled(chain) ||
+          !chain.nodeAddress
+        ) {
+          return;
+        }
+
+        const hostedMultisig = await getHostedMultisig(cliqAddress, chain);
+
+        if (hostedMultisig.hosted === "chain" && hostedMultisig.accountOnChain?.pubkey) {
+          assert(
+            isMultisigThresholdPubkey(hostedMultisig.accountOnChain.pubkey),
+            "Pubkey on chain is not of type MultisigThreshold",
+          );
+
+          const { bech32Address: creatorAddress } = await getKeplrKey(chain.chainId);
+
+          await createMultisigFromCompressedSecp256k1Pubkeys(
+            hostedMultisig.accountOnChain.pubkey.value.pubkeys.map((p) => p.value),
+            Number(hostedMultisig.accountOnChain.pubkey.value.threshold),
+            chain.addressPrefix,
+            chain.chainId,
+            creatorAddress,
+          );
+          // Multisig is now in DB; "Create: Claim All" will succeed. No reload needed.
+        }
+      } catch (e) {
+        console.error("Failed to register chain multisig:", e);
+        toastError({
+          description: "Failed to register multisig",
+          fullError: e instanceof Error ? e : undefined,
+        });
+      }
+    })();
+  }, [isCliqMode, cliqAddress, walletInfo, chain.chainId, chain.nodeAddress, chain.addressPrefix]);
 
   // Fetch associated validators (CLIQs) when:
   // - "not-validator" state (wallet is not a validator - show CLIQ validators to pick from), or
