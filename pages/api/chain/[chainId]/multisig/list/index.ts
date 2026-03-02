@@ -1,5 +1,6 @@
 import { getBelongedMultisigs, getCreatedMultisigs } from "@/graphql/multisig";
 import { getNonce, incrementNonce } from "@/graphql/nonce";
+import { getMultisigsFromChainWhereMember } from "@/lib/chainMultisigDiscovery";
 import { GetDbUserMultisigsBody } from "@/lib/api";
 import { withByodbMiddleware } from "@/lib/byodb/middleware";
 import { ensureDbReady } from "@/lib/dbInit";
@@ -70,8 +71,24 @@ async function apiListMultisigs(req: NextApiRequest, res: NextApiResponse) {
       throw new Error("Either signature or (address and pubkey) must be provided");
     }
 
-    const created = await getCreatedMultisigs(chainId, address);
-    const belonged = await getBelongedMultisigs(chainId, pubkey);
+    const [dbResult, chainResult] = await Promise.allSettled([
+      Promise.all([
+        getCreatedMultisigs(chainId, address),
+        getBelongedMultisigs(chainId, pubkey),
+      ]),
+      getMultisigsFromChainWhereMember(body.chain, address, pubkey),
+    ]);
+
+    const created = dbResult.status === "fulfilled" ? dbResult.value[0] : [];
+    let belonged = dbResult.status === "fulfilled" ? dbResult.value[1] : [];
+    const chainMultisigs = chainResult.status === "fulfilled" ? chainResult.value : [];
+
+    const existingAddresses = new Set([
+      ...created.map((m) => m.address),
+      ...belonged.map((m) => m.address),
+    ]);
+    const chainOnly = chainMultisigs.filter((m) => !existingAddresses.has(m.address));
+    belonged = [...belonged, ...chainOnly];
 
     res.status(200).send({ created, belonged });
     console.log("List multisigs success", JSON.stringify({ created, belonged }, null, 2));

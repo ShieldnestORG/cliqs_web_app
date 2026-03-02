@@ -17,25 +17,28 @@ import { ObjectId, WithId, Document, MongoClient, Db } from "mongodb";
 
 const uri = process.env.MONGODB_URI || "";
 
+const MONGO_OPTIONS = {
+  serverSelectionTimeoutMS: 15000,
+  connectTimeoutMS: 15000,
+  maxIdleTimeMS: 40000,
+};
+
 let client: MongoClient | null = null;
 let clientPromise: Promise<MongoClient> | null = null;
 
 if (uri) {
   if (process.env.NODE_ENV === "development") {
-    // In development mode, use a global variable so that the value
-    // is preserved across module reloads caused by HMR (Hot Module Replacement).
     const globalWithMongo = global as typeof globalThis & {
       _mongoClientPromise?: Promise<MongoClient>;
     };
 
     if (!globalWithMongo._mongoClientPromise) {
-      client = new MongoClient(uri);
+      client = new MongoClient(uri, MONGO_OPTIONS);
       globalWithMongo._mongoClientPromise = client.connect();
     }
     clientPromise = globalWithMongo._mongoClientPromise;
   } else {
-    // In production mode, it's best to not use a global variable.
-    client = new MongoClient(uri);
+    client = new MongoClient(uri, MONGO_OPTIONS);
     clientPromise = client.connect();
   }
 }
