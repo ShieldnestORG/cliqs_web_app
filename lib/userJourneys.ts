@@ -542,7 +542,7 @@ export const userJourneys: UserJourney[] = [
         tip: "Consider exporting your data periodically as a backup. The Settings page has export/import tools.",
       },
     ],
-    navigateTo: "/settings",
+    navigateTo: "/settings#database-config",
   },
 
   {

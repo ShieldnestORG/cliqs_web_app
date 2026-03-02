@@ -33,8 +33,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { toastError, toastSuccess } from "@/lib/utils";
+import { toastError, toastSuccess, cn } from "@/lib/utils";
 import { useChains } from "@/context/ChainsContext";
+import { useWallet } from "@/context/WalletContext";
 import { requestJson } from "@/lib/request";
 import {
   saveCredential,
@@ -117,6 +118,7 @@ interface ImportResult {
 
 export default function DatabaseSettings() {
   const { chain } = useChains();
+  const { walletInfo } = useWallet();
 
   // State
   const [status, setStatus] = useState<ByodbStatus>({
@@ -252,6 +254,14 @@ export default function DatabaseSettings() {
       }
     }
 
+    if (securityLevel === 2 && !walletInfo) {
+      toastError({
+        title: "Wallet required",
+        description: "Connect your wallet to use Level 2 security.",
+      });
+      return;
+    }
+
     setSaving(true);
 
     try {
@@ -290,7 +300,7 @@ export default function DatabaseSettings() {
     } finally {
       setSaving(false);
     }
-  }, [connectionUri, securityLevel, passphrase, confirmPassphrase, chain]);
+  }, [connectionUri, securityLevel, passphrase, confirmPassphrase, chain, walletInfo]);
 
   const handleUnlock = useCallback(async () => {
     setUnlocking(true);
@@ -906,10 +916,26 @@ export default function DatabaseSettings() {
                 </div>
 
                 {/* Level 2 */}
-                <div className="flex items-start space-x-3 rounded-lg border border-border p-4 hover:bg-muted/50 transition-colors">
-                  <RadioGroupItem value="2" id="level-2" className="mt-1" />
+                <div
+                  className={cn(
+                    "flex items-start space-x-3 rounded-lg border border-border p-4 transition-colors",
+                    walletInfo ? "hover:bg-muted/50" : "opacity-70 bg-muted/30",
+                  )}
+                >
+                  <RadioGroupItem
+                    value="2"
+                    id="level-2"
+                    className="mt-1"
+                    disabled={!walletInfo}
+                  />
                   <div className="space-y-1 flex-1">
-                    <Label htmlFor="level-2" className="flex items-center gap-2 cursor-pointer">
+                    <Label
+                      htmlFor="level-2"
+                      className={cn(
+                        "flex items-center gap-2",
+                        walletInfo ? "cursor-pointer" : "cursor-not-allowed",
+                      )}
+                    >
                       <Wallet className="h-4 w-4 text-green-500" />
                       Level 2: Wallet Signature
                     </Label>
@@ -917,6 +943,11 @@ export default function DatabaseSettings() {
                       AES-256-GCM encryption with key derived from a Keplr wallet signature.
                       You&apos;ll sign a message to unlock each session. Most secure for crypto users.
                     </p>
+                    {!walletInfo && (
+                      <p className="text-xs text-amber-600 dark:text-amber-500 mt-1 font-medium">
+                        Connect your wallet to use Level 2 security.
+                      </p>
+                    )}
                   </div>
                 </div>
               </RadioGroup>

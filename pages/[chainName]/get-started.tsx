@@ -37,7 +37,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 const difficultyConfig = {
@@ -361,14 +361,13 @@ export default function GetStartedPage() {
   const [selectedJourney, setSelectedJourney] = useState<UserJourney | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
-  // Check for journey query param
+  // Sync journey query param to selected journey
   const journeyParam = router.query.journey as string | undefined;
-  if (journeyParam && !selectedJourney) {
+  useEffect(() => {
+    if (!journeyParam) return;
     const found = userJourneys.find((j) => j.id === journeyParam);
-    if (found) {
-      setSelectedJourney(found);
-    }
-  }
+    if (found) setSelectedJourney(found);
+  }, [journeyParam]);
 
   const filteredJourneys =
     categoryFilter === "all"

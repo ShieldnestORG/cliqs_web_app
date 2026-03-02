@@ -27,7 +27,7 @@ export default function ChainDigest({ chain, simplify }: ChainItemProps) {
             <AvatarImage
               src={chain.logo}
               alt={`${chain.chainDisplayName} logo`}
-              className="object-contain p-1"
+              className="h-full w-full"
             />
             <AvatarFallback className="bg-muted font-mono text-sm font-semibold">
               {chain.registryName.slice(0, 2).toUpperCase()}

@@ -25,7 +25,7 @@ import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { getKeplrKey } from "@/lib/keplr";
-import { toastError } from "@/lib/utils";
+import { toastError, toastSuccess } from "@/lib/utils";
 import { StargateClient } from "@cosmjs/stargate";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/router";
@@ -117,6 +117,8 @@ export default function CreateCliqForm() {
   }, [createCliqForm, filledMembersCount]);
 
   const submitCreateCliq = async () => {
+    const { toast } = await import("sonner");
+    const loadingId = toast.loading("Creating your CLIQ...");
     try {
       const { name, description, members, threshold } = createCliqForm.getValues();
 
@@ -154,11 +156,15 @@ export default function CreateCliqForm() {
         description, // Pass cliq description
       );
 
+      toast.dismiss(loadingId);
+      toastSuccess("CLIQ created!", `Redirecting to ${name || "your CLIQ"}...`);
       router.push(`/${chain.registryName}/${cliqAddress}`);
     } catch (e) {
       console.error("Failed to create cliq:", e);
+      toast.dismiss(loadingId);
       toastError({
-        description: "Failed to create CLIQ",
+        title: "Failed to create CLIQ",
+        description: e instanceof Error ? e.message : undefined,
         fullError: e instanceof Error ? e : undefined,
       });
     }

@@ -21,6 +21,7 @@
  * from localDb or mongoDb.
  */
 
+import escapeStringRegexp from "escape-string-regexp";
 import * as localDb from "./localDb";
 import * as mongoDb from "./mongodb";
 import { isMongoAvailable } from "./mongodb";
@@ -204,7 +205,7 @@ export const getBelongedMultisigs = async (chainId: string, memberPubkey: string
   if (byodb) {
     const col = byodb.collection<BMultisig>(COL.MULTISIGS);
     const candidates = await col
-      .find({ chainId, pubkeyJSON: { $regex: memberPubkey } })
+      .find({ chainId, pubkeyJSON: { $regex: escapeStringRegexp(memberPubkey) } })
       .toArray();
     const exact = candidates.filter((doc) => {
       try {
