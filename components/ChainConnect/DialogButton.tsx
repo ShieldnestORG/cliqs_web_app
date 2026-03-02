@@ -13,7 +13,7 @@ export function ChainHeader() {
       <div className="relative">
         <Avatar className="h-7 w-7 border border-border">
           <AvatarImage src={chain.logo} alt={`${chain.chainDisplayName} logo`} />
-          <AvatarFallback className="bg-muted text-[10px] font-mono">
+          <AvatarFallback className="bg-muted font-mono text-[10px]">
             {chain.registryName.slice(0, 2).toUpperCase()}
           </AvatarFallback>
         </Avatar>

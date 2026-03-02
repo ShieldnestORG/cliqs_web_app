@@ -49,7 +49,12 @@ export function toastSuccess(title: string, description?: string) {
  */
 export function ensureProtocol(url: string): string {
   if (!url) return url;
-  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("ws://") || url.startsWith("wss://")) {
+  if (
+    url.startsWith("http://") ||
+    url.startsWith("https://") ||
+    url.startsWith("ws://") ||
+    url.startsWith("wss://")
+  ) {
     return url;
   }
   return `https://${url}`;

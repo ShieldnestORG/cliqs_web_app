@@ -21,9 +21,15 @@ interface MsgEditValidatorFormProps {
   readonly deleteMsg: () => void;
 }
 
-const MsgEditValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgEditValidatorFormProps) => {
+const MsgEditValidatorForm = ({
+  senderAddress,
+  setMsgGetter,
+  deleteMsg,
+}: MsgEditValidatorFormProps) => {
   const { chain } = useChains();
-  const isTX = chain.registryName.toLowerCase() === "tx" || chain.registryName.toLowerCase().includes("coreum");
+  const isTX =
+    chain.registryName.toLowerCase() === "tx" ||
+    chain.registryName.toLowerCase().includes("coreum");
 
   // Enabled fields state
   const [enabledFields, setEnabledFields] = useState<Record<string, boolean>>({
@@ -41,7 +47,7 @@ const MsgEditValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgEdi
     identity: "",
     website: "",
     securityContact: "",
-    details: ""
+    details: "",
   });
   const [commissionRate, setCommissionRate] = useState("");
   const [minSelfDelegation, setMinSelfDelegation] = useState("");
@@ -50,9 +56,9 @@ const MsgEditValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgEdi
   const [validatorAddressError, setValidatorAddressError] = useState("");
 
   const toggleField = (field: string) => {
-    setEnabledFields(prev => ({
+    setEnabledFields((prev) => ({
       ...prev,
-      [field]: !prev[field]
+      [field]: !prev[field],
     }));
   };
 
@@ -68,7 +74,9 @@ const MsgEditValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgEdi
         : `${addressPrefix}valoper`;
       return toBech32(validatorPrefix, decoded.data);
     } catch (e) {
-      throw new Error(`Failed to convert to validator address: ${e instanceof Error ? e.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to convert to validator address: ${e instanceof Error ? e.message : "Unknown error"}`,
+      );
     }
   };
 
@@ -76,12 +84,12 @@ const MsgEditValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgEdi
     validatorAddress,
     commissionRate,
     minSelfDelegation,
-    ...description
+    ...description,
   });
 
   // Check if any fields are enabled
   const hasEnabledFields = () => {
-    return Object.values(enabledFields).some(enabled => enabled);
+    return Object.values(enabledFields).some((enabled) => enabled);
   };
 
   useEffect(() => {
@@ -97,9 +105,7 @@ const MsgEditValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgEdi
         : `${chain.addressPrefix}valoper`;
 
       if (!validatorAddress.startsWith(validatorPrefix)) {
-        setValidatorAddressError(
-          `Validator address must start with ${validatorPrefix}`,
-        );
+        setValidatorAddressError(`Validator address must start with ${validatorPrefix}`);
         return false;
       }
 
@@ -108,7 +114,7 @@ const MsgEditValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgEdi
         fromBech32(validatorAddress);
       } catch (e) {
         setValidatorAddressError(
-          `Invalid validator address checksum. ${e instanceof Error ? e.message : ''}`,
+          `Invalid validator address checksum. ${e instanceof Error ? e.message : ""}`,
         );
         return false;
       }
@@ -122,7 +128,11 @@ const MsgEditValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgEdi
       }
 
       // Validate commission rate if enabled
-      if (enabledFields.commissionRate && commissionRate && (Number(commissionRate) < 0 || Number(commissionRate) > 1)) {
+      if (
+        enabledFields.commissionRate &&
+        commissionRate &&
+        (Number(commissionRate) < 0 || Number(commissionRate) > 1)
+      ) {
         return false;
       }
 
@@ -151,18 +161,25 @@ const MsgEditValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgEdi
 
     const msgValue = MsgCodecs[MsgTypeUrls.EditValidator].fromPartial({
       description: {
-        moniker: enabledFields.moniker ? (desc.moniker || undefined) : undefined,
-        identity: enabledFields.identity ? (desc.identity || undefined) : undefined,
-        website: enabledFields.website ? (desc.website || undefined) : undefined,
-        securityContact: enabledFields.securityContact ? (desc.securityContact || undefined) : undefined,
-        details: enabledFields.details ? (desc.details || undefined) : undefined
+        moniker: enabledFields.moniker ? desc.moniker || undefined : undefined,
+        identity: enabledFields.identity ? desc.identity || undefined : undefined,
+        website: enabledFields.website ? desc.website || undefined : undefined,
+        securityContact: enabledFields.securityContact
+          ? desc.securityContact || undefined
+          : undefined,
+        details: enabledFields.details ? desc.details || undefined : undefined,
       },
       validatorAddress,
       commissionRate: enabledFields.commissionRate ? commissionRateAtomics : undefined,
-      minSelfDelegation: enabledFields.minSelfDelegation ? (minSelfDelegation || undefined) : undefined,
+      minSelfDelegation: enabledFields.minSelfDelegation
+        ? minSelfDelegation || undefined
+        : undefined,
     });
 
-    const msg: MsgEditValidatorEncodeObject = { typeUrl: MsgTypeUrls.EditValidator, value: msgValue };
+    const msg: MsgEditValidatorEncodeObject = {
+      typeUrl: MsgTypeUrls.EditValidator,
+      value: msgValue,
+    };
 
     setMsgGetter({ isMsgValid, msg });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -185,7 +202,7 @@ const MsgEditValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgEdi
       >
         <X className="h-4 w-4" />
       </Button>
-      <h2 className="text-xl font-heading font-semibold mb-4">MsgEditValidator</h2>
+      <h2 className="mb-4 font-heading text-xl font-semibold">MsgEditValidator</h2>
       <div className="space-y-6">
         <div className="space-y-2">
           <Input
@@ -210,7 +227,7 @@ const MsgEditValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgEdi
                 setValidatorAddress(converted);
                 setValidatorAddressError("");
               } catch (e) {
-                setValidatorAddressError(e instanceof Error ? e.message : 'Conversion failed');
+                setValidatorAddressError(e instanceof Error ? e.message : "Conversion failed");
               }
             }}
             className="w-full"
@@ -222,37 +239,79 @@ const MsgEditValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgEdi
         <Separator />
 
         <div className="space-y-4">
-          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+          <h3 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
             Select fields to update
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center justify-between space-x-2 border p-3 rounded-lg bg-muted/20">
-              <Label htmlFor="toggle-moniker" className="flex-1 cursor-pointer">Moniker (Name)</Label>
-              <Switch id="toggle-moniker" checked={enabledFields.moniker} onCheckedChange={() => toggleField('moniker')} />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="flex items-center justify-between space-x-2 rounded-lg border bg-muted/20 p-3">
+              <Label htmlFor="toggle-moniker" className="flex-1 cursor-pointer">
+                Moniker (Name)
+              </Label>
+              <Switch
+                id="toggle-moniker"
+                checked={enabledFields.moniker}
+                onCheckedChange={() => toggleField("moniker")}
+              />
             </div>
-            <div className="flex items-center justify-between space-x-2 border p-3 rounded-lg bg-muted/20">
-              <Label htmlFor="toggle-identity" className="flex-1 cursor-pointer">Identity (Keybase)</Label>
-              <Switch id="toggle-identity" checked={enabledFields.identity} onCheckedChange={() => toggleField('identity')} />
+            <div className="flex items-center justify-between space-x-2 rounded-lg border bg-muted/20 p-3">
+              <Label htmlFor="toggle-identity" className="flex-1 cursor-pointer">
+                Identity (Keybase)
+              </Label>
+              <Switch
+                id="toggle-identity"
+                checked={enabledFields.identity}
+                onCheckedChange={() => toggleField("identity")}
+              />
             </div>
-            <div className="flex items-center justify-between space-x-2 border p-3 rounded-lg bg-muted/20">
-              <Label htmlFor="toggle-website" className="flex-1 cursor-pointer">Website</Label>
-              <Switch id="toggle-website" checked={enabledFields.website} onCheckedChange={() => toggleField('website')} />
+            <div className="flex items-center justify-between space-x-2 rounded-lg border bg-muted/20 p-3">
+              <Label htmlFor="toggle-website" className="flex-1 cursor-pointer">
+                Website
+              </Label>
+              <Switch
+                id="toggle-website"
+                checked={enabledFields.website}
+                onCheckedChange={() => toggleField("website")}
+              />
             </div>
-            <div className="flex items-center justify-between space-x-2 border p-3 rounded-lg bg-muted/20">
-              <Label htmlFor="toggle-security" className="flex-1 cursor-pointer">Security Contact</Label>
-              <Switch id="toggle-security" checked={enabledFields.securityContact} onCheckedChange={() => toggleField('securityContact')} />
+            <div className="flex items-center justify-between space-x-2 rounded-lg border bg-muted/20 p-3">
+              <Label htmlFor="toggle-security" className="flex-1 cursor-pointer">
+                Security Contact
+              </Label>
+              <Switch
+                id="toggle-security"
+                checked={enabledFields.securityContact}
+                onCheckedChange={() => toggleField("securityContact")}
+              />
             </div>
-            <div className="flex items-center justify-between space-x-2 border p-3 rounded-lg bg-muted/20">
-              <Label htmlFor="toggle-details" className="flex-1 cursor-pointer">Details</Label>
-              <Switch id="toggle-details" checked={enabledFields.details} onCheckedChange={() => toggleField('details')} />
+            <div className="flex items-center justify-between space-x-2 rounded-lg border bg-muted/20 p-3">
+              <Label htmlFor="toggle-details" className="flex-1 cursor-pointer">
+                Details
+              </Label>
+              <Switch
+                id="toggle-details"
+                checked={enabledFields.details}
+                onCheckedChange={() => toggleField("details")}
+              />
             </div>
-            <div className="flex items-center justify-between space-x-2 border p-3 rounded-lg bg-muted/20">
-              <Label htmlFor="toggle-commission" className="flex-1 cursor-pointer">Commission Rate</Label>
-              <Switch id="toggle-commission" checked={enabledFields.commissionRate} onCheckedChange={() => toggleField('commissionRate')} />
+            <div className="flex items-center justify-between space-x-2 rounded-lg border bg-muted/20 p-3">
+              <Label htmlFor="toggle-commission" className="flex-1 cursor-pointer">
+                Commission Rate
+              </Label>
+              <Switch
+                id="toggle-commission"
+                checked={enabledFields.commissionRate}
+                onCheckedChange={() => toggleField("commissionRate")}
+              />
             </div>
-            <div className="flex items-center justify-between space-x-2 border p-3 rounded-lg bg-muted/20">
-              <Label htmlFor="toggle-min-delegation" className="flex-1 cursor-pointer">Min Self Delegation</Label>
-              <Switch id="toggle-min-delegation" checked={enabledFields.minSelfDelegation} onCheckedChange={() => toggleField('minSelfDelegation')} />
+            <div className="flex items-center justify-between space-x-2 rounded-lg border bg-muted/20 p-3">
+              <Label htmlFor="toggle-min-delegation" className="flex-1 cursor-pointer">
+                Min Self Delegation
+              </Label>
+              <Switch
+                id="toggle-min-delegation"
+                checked={enabledFields.minSelfDelegation}
+                onCheckedChange={() => toggleField("minSelfDelegation")}
+              />
             </div>
           </div>
         </div>
@@ -267,7 +326,9 @@ const MsgEditValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgEdi
               label="Moniker"
               name="moniker"
               value={description.moniker}
-              onChange={({ target }) => setDescription(prev => ({ ...prev, moniker: target.value }))}
+              onChange={({ target }) =>
+                setDescription((prev) => ({ ...prev, moniker: target.value }))
+              }
               placeholder="Validator name"
             />
           )}
@@ -277,7 +338,9 @@ const MsgEditValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgEdi
               label="Identity"
               name="identity"
               value={description.identity}
-              onChange={({ target }) => setDescription(prev => ({ ...prev, identity: target.value }))}
+              onChange={({ target }) =>
+                setDescription((prev) => ({ ...prev, identity: target.value }))
+              }
               placeholder="Keybase identity"
             />
           )}
@@ -287,7 +350,9 @@ const MsgEditValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgEdi
               label="Website"
               name="website"
               value={description.website}
-              onChange={({ target }) => setDescription(prev => ({ ...prev, website: target.value }))}
+              onChange={({ target }) =>
+                setDescription((prev) => ({ ...prev, website: target.value }))
+              }
               placeholder="https://validator.com"
             />
           )}
@@ -297,7 +362,9 @@ const MsgEditValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgEdi
               label="Security Contact"
               name="security-contact"
               value={description.securityContact}
-              onChange={({ target }) => setDescription(prev => ({ ...prev, securityContact: target.value }))}
+              onChange={({ target }) =>
+                setDescription((prev) => ({ ...prev, securityContact: target.value }))
+              }
               placeholder="security@validator.com"
             />
           )}
@@ -307,13 +374,15 @@ const MsgEditValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgEdi
               label="Details"
               name="details"
               value={description.details}
-              onChange={({ target }) => setDescription(prev => ({ ...prev, details: target.value }))}
+              onChange={({ target }) =>
+                setDescription((prev) => ({ ...prev, details: target.value }))
+              }
               placeholder="Validator description"
             />
           )}
-          
+
           {enabledFields.commissionRate && (
-            <div className="space-y-4 pt-1 pb-2">
+            <div className="space-y-4 pb-2 pt-1">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">Commission Rate</Label>
                 <div className="flex items-center gap-2">
@@ -322,7 +391,7 @@ const MsgEditValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgEdi
                   </span>
                 </div>
               </div>
-              
+
               <Slider
                 value={[Number(commissionRate || (isTX ? "0.05" : "0")) * 100]}
                 min={isTX ? 5 : 0}
@@ -331,13 +400,13 @@ const MsgEditValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgEdi
                 onValueChange={(vals) => setCommissionRate((vals[0] / 100).toString())}
                 className="py-2"
               />
-              
+
               <p className="text-xs text-muted-foreground">
-                {isTX 
-                  ? "TX requires a commission rate between 5% and 20%." 
+                {isTX
+                  ? "TX requires a commission rate between 5% and 20%."
                   : "Set the commission rate for your validator."}
               </p>
-              
+
               <div className="relative">
                 <Input
                   variant="institutional"
@@ -350,7 +419,7 @@ const MsgEditValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgEdi
               </div>
             </div>
           )}
-          
+
           {enabledFields.minSelfDelegation && (
             <Input
               variant="institutional"

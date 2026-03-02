@@ -1,12 +1,12 @@
 /**
  * Incidents API
- * 
+ *
  * File: pages/api/chain/[chainId]/[address]/monitoring/incidents.ts
- * 
+ *
  * GET: Get incidents
  * POST: Create an incident
  * PUT: Update an incident (acknowledge/resolve)
- * 
+ *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards
  */
 
@@ -14,10 +14,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import * as localDb from "@/lib/localDb";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { chainId, address } = req.query;
 
   if (typeof chainId !== "string" || typeof address !== "string") {
@@ -40,8 +37,8 @@ export default async function handler(
         const { type, severity, title, description, triggeredBy, playbookId } = req.body;
 
         if (!type || !severity || !title || !description || !triggeredBy) {
-          return res.status(400).json({ 
-            error: "Missing required fields: type, severity, title, description, triggeredBy" 
+          return res.status(400).json({
+            error: "Missing required fields: type, severity, title, description, triggeredBy",
           });
         }
 
@@ -68,8 +65,8 @@ export default async function handler(
         const { incidentId, action, actor } = req.body;
 
         if (!incidentId || !action || !actor) {
-          return res.status(400).json({ 
-            error: "Missing required fields: incidentId, action, actor" 
+          return res.status(400).json({
+            error: "Missing required fields: incidentId, action, actor",
           });
         }
 
@@ -88,8 +85,8 @@ export default async function handler(
             resolvedBy: actor,
           });
         } else {
-          return res.status(400).json({ 
-            error: "Invalid action. Use 'acknowledge' or 'resolve'" 
+          return res.status(400).json({
+            error: "Invalid action. Use 'acknowledge' or 'resolve'",
           });
         }
 
@@ -105,9 +102,8 @@ export default async function handler(
     }
   } catch (error) {
     console.error("Incidents API error:", error);
-    return res.status(500).json({ 
-      error: error instanceof Error ? error.message : "Internal server error" 
+    return res.status(500).json({
+      error: error instanceof Error ? error.message : "Internal server error",
     });
   }
 }
-

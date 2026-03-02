@@ -1,18 +1,24 @@
 /**
  * Validator Delegators Card
- * 
+ *
  * File: components/dataViews/ValidatorDashboard/ValidatorDelegatorsCard.tsx
- * 
+ *
  * Displays active delegators, their amounts, and unbonding delegations.
  */
 
 import { Card, CardContent, CardHeader, CardTitle, CardLabel } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import { ValidatorDashboardData } from "@/lib/validatorHelpers";
 import { useChains } from "@/context/ChainsContext";
-import { Users, Clock, ArrowRight, ExternalLink } from "lucide-react";
+import { Users, Clock, ExternalLink } from "lucide-react";
 import { explorerLinkAccount } from "@/lib/displayHelpers";
 import { Button } from "@/components/ui/button";
 
@@ -44,14 +50,12 @@ export default function ValidatorDelegatorsCard({ data }: ValidatorDelegatorsCar
     <Card variant="institutional" className="h-full">
       <CardHeader>
         <CardLabel comment>Staking</CardLabel>
-        <CardTitle className="text-xl font-heading font-bold">
-          Delegators & Unbonding
-        </CardTitle>
+        <CardTitle className="font-heading text-xl font-bold">Delegators & Unbonding</CardTitle>
       </CardHeader>
 
       <CardContent>
         <Tabs defaultValue="active" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsList className="mb-4 grid w-full grid-cols-2">
             <TabsTrigger value="active" className="gap-2">
               <Users className="h-4 w-4" />
               Active Stakers ({delegations.length})
@@ -63,10 +67,10 @@ export default function ValidatorDelegatorsCard({ data }: ValidatorDelegatorsCar
           </TabsList>
 
           <TabsContent value="active" className="mt-0">
-            <div className="rounded-md border border-border/50 overflow-hidden">
+            <div className="overflow-hidden rounded-md border border-border/50">
               <div className="max-h-[300px] overflow-y-auto">
                 <Table>
-                  <TableHeader className="bg-muted/30 sticky top-0">
+                  <TableHeader className="sticky top-0 bg-muted/30">
                     <TableRow>
                       <TableHead className="w-[180px]">Delegator</TableHead>
                       <TableHead className="text-right">Amount</TableHead>
@@ -76,7 +80,7 @@ export default function ValidatorDelegatorsCard({ data }: ValidatorDelegatorsCar
                   <TableBody>
                     {delegations.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={3} className="py-8 text-center text-muted-foreground">
                           No active delegators found
                         </TableCell>
                       </TableRow>
@@ -84,7 +88,7 @@ export default function ValidatorDelegatorsCard({ data }: ValidatorDelegatorsCar
                       delegations.map((del, i) => {
                         const explorerLink = explorerLinkAccount(
                           chain.explorerLinks.account,
-                          del.delegation?.delegatorAddress || ""
+                          del.delegation?.delegatorAddress || "",
                         );
                         return (
                           <TableRow key={i}>
@@ -116,17 +120,17 @@ export default function ValidatorDelegatorsCard({ data }: ValidatorDelegatorsCar
 
           <TabsContent value="unbonding" className="mt-0">
             <div className="space-y-4">
-              <div className="p-4 rounded-lg bg-muted/30 border border-border/50 flex justify-between items-center">
+              <div className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/30 p-4">
                 <span className="text-sm text-muted-foreground">Total Unbonding</span>
-                <span className="text-lg font-heading font-bold">
+                <span className="font-heading text-lg font-bold">
                   {formatTokens(totalUnbonding.toString())} {displayDenom}
                 </span>
               </div>
 
-              <div className="rounded-md border border-border/50 overflow-hidden">
+              <div className="overflow-hidden rounded-md border border-border/50">
                 <div className="max-h-[220px] overflow-y-auto">
                   <Table>
-                    <TableHeader className="bg-muted/30 sticky top-0">
+                    <TableHeader className="sticky top-0 bg-muted/30">
                       <TableRow>
                         <TableHead>Delegator</TableHead>
                         <TableHead className="text-right">Amount</TableHead>
@@ -136,21 +140,27 @@ export default function ValidatorDelegatorsCard({ data }: ValidatorDelegatorsCar
                     <TableBody>
                       {unbondingDelegations.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={3} className="py-8 text-center text-muted-foreground">
                             No unbonding delegations found
                           </TableCell>
                         </TableRow>
                       ) : (
                         unbondingDelegations.map((unb, i) => {
-                          const amount = unb.entries.reduce((acc, curr) => acc + BigInt(curr.balance), BigInt(0));
+                          const amount = unb.entries.reduce(
+                            (acc, curr) => acc + BigInt(curr.balance),
+                            BigInt(0),
+                          );
                           // Get earliest completion time
                           const completionTime = unb.entries[0]?.completionTime;
-                          const date = completionTime ? new Date(Number(completionTime.seconds) * 1000) : null;
-                          
+                          const date = completionTime
+                            ? new Date(Number(completionTime.seconds) * 1000)
+                            : null;
+
                           return (
                             <TableRow key={i}>
                               <TableCell className="font-mono text-xs">
-                                {unb.delegatorAddress.slice(0, 6)}...{unb.delegatorAddress.slice(-6)}
+                                {unb.delegatorAddress.slice(0, 6)}...
+                                {unb.delegatorAddress.slice(-6)}
                               </TableCell>
                               <TableCell className="text-right font-mono">
                                 {formatTokens(amount.toString())}

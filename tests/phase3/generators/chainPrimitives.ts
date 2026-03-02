@@ -21,7 +21,7 @@ export function genAmount(rng: RNG, opts?: { max?: number; min?: number }): stri
 
 export function genBech32LikeAddress(
   rng: RNG,
-  prefixes = ["cosmos", "core", "osmo", "juno", "inj", "kujira", "sei"]
+  prefixes = ["cosmos", "core", "osmo", "juno", "inj", "kujira", "sei"],
 ): string {
   const prefix = rng.pick(prefixes);
   const charset = "023456789acdefghjklmnpqrstuvwxyz";

@@ -51,17 +51,13 @@ export function useTokenMetadata(denom: string): UseTokenMetadataResult {
 
     // Check chain registry assets
     const asset = chain.assets.find(
-      (a) =>
-        a.base === denom ||
-        a.denom_units.some((u) => u.denom === denom)
+      (a) => a.base === denom || a.denom_units.some((u) => u.denom === denom),
     );
 
     if (asset) {
       const displayUnit =
         asset.denom_units.find(
-          (u) =>
-            u.denom === asset.display ||
-            u.denom === asset.symbol.toLowerCase()
+          (u) => u.denom === asset.display || u.denom === asset.symbol.toLowerCase(),
         ) ||
         asset.denom_units.find((u) => u.exponent > 0) ||
         asset.denom_units[0];
@@ -139,17 +135,13 @@ export function useTokensMetadata(denoms: string[]): {
 
       // Check chain registry
       const asset = chain.assets.find(
-        (a) =>
-          a.base === denom ||
-          a.denom_units.some((u) => u.denom === denom)
+        (a) => a.base === denom || a.denom_units.some((u) => u.denom === denom),
       );
 
       if (asset) {
         const displayUnit =
           asset.denom_units.find(
-            (u) =>
-              u.denom === asset.display ||
-              u.denom === asset.symbol.toLowerCase()
+            (u) => u.denom === asset.display || u.denom === asset.symbol.toLowerCase(),
           ) ||
           asset.denom_units.find((u) => u.exponent > 0) ||
           asset.denom_units[0];
@@ -170,9 +162,7 @@ export function useTokensMetadata(denoms: string[]): {
     setLoading(false);
 
     // Async fetch for unknown tokens (don't block UI)
-    const unknownDenoms = denoms.filter(
-      (d) => !newMap.has(d) && !metadataCache.has(d)
-    );
+    const unknownDenoms = denoms.filter((d) => !newMap.has(d) && !metadataCache.has(d));
 
     if (unknownDenoms.length > 0) {
       const restEndpoint = chain.nodeAddress.replace(":26657", ":1317");

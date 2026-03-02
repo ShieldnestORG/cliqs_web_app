@@ -1,7 +1,7 @@
 export class RNG {
   private seed: number;
 
-  constructor(seed = 0xC0FFEE) {
+  constructor(seed = 0xc0ffee) {
     this.seed = seed >>> 0;
   }
 

@@ -1,21 +1,18 @@
 /**
  * Credential Service
- * 
+ *
  * File: lib/credentials/service.ts
- * 
+ *
  * Service for managing identity NFT credentials on TX.
  * Handles credential class creation, issuance, revocation, and verification.
- * 
+ *
  * Phase 3: Identity NFTs (Credential-Gated Multisig)
  */
 
 import { GasPrice, SigningStargateClient } from "@cosmjs/stargate";
 import { OfflineSigner } from "@cosmjs/proto-signing";
 
-import {
-  AssetNFTClient,
-  createAssetNFTClient,
-} from "../coreum/assetnft-client";
+import { AssetNFTClient, createAssetNFTClient } from "../coreum/assetnft-client";
 import {
   Credential,
   CredentialClass,
@@ -86,7 +83,7 @@ export class CredentialService {
 
   /**
    * Create a credential class for a team/multisig
-   * 
+   *
    * @param senderAddress - Address that will be the issuer (usually the multisig admin)
    * @param teamAddress - The multisig contract address this class is for
    * @param config - Class configuration
@@ -162,14 +159,14 @@ export class CredentialService {
   async getCredentialClass(teamAddress: string): Promise<CredentialClass | null> {
     // First check local DB
     const dbClass = localDb.getCredentialClass(this.config.chainId, teamAddress);
-    
+
     if (!dbClass) {
       return null;
     }
 
     // Optionally verify on chain
     const chainClass = await this.assetNFTClient.queryClass(dbClass.classId);
-    
+
     if (!chainClass) {
       return null;
     }
@@ -202,10 +199,8 @@ export class CredentialService {
   ): Promise<CredentialOperationResult> {
     try {
       // Generate token ID if not provided
-      const tokenId = input.tokenId || AssetNFTClient.generateTokenId(
-        input.teamAddress,
-        input.recipientAddress,
-      );
+      const tokenId =
+        input.tokenId || AssetNFTClient.generateTokenId(input.teamAddress, input.recipientAddress);
 
       // Create credential data
       const credentialData: CredentialData = {
@@ -293,7 +288,7 @@ export class CredentialService {
 
   /**
    * Revoke a credential by burning the NFT
-   * 
+   *
    * CRITICAL: Frozen tokens cannot be burned. Check frozen status first.
    */
   async revokeCredential(
@@ -302,10 +297,7 @@ export class CredentialService {
   ): Promise<CredentialOperationResult> {
     try {
       // Check if token is frozen
-      const isFrozen = await this.assetNFTClient.queryFrozen(
-        input.classId,
-        input.tokenId,
-      );
+      const isFrozen = await this.assetNFTClient.queryFrozen(input.classId, input.tokenId);
 
       if (isFrozen) {
         throw new CredentialError(
@@ -316,11 +308,7 @@ export class CredentialService {
       }
 
       // Burn the NFT
-      const result = await this.assetNFTClient.burn(
-        senderAddress,
-        input.classId,
-        input.tokenId,
-      );
+      const result = await this.assetNFTClient.burn(senderAddress, input.classId, input.tokenId);
 
       if (!result.success) {
         return {
@@ -372,7 +360,7 @@ export class CredentialService {
 
   /**
    * Verify if an address holds a valid credential for a team
-   * 
+   *
    * This performs on-chain verification for critical operations.
    */
   async verifyCredential(
@@ -386,7 +374,7 @@ export class CredentialService {
     try {
       // Get the credential class for this team
       const credentialClass = await this.getCredentialClass(teamAddress);
-      
+
       if (!credentialClass) {
         return {
           isValid: false,
@@ -415,7 +403,7 @@ export class CredentialService {
       for (const nft of nfts) {
         // Parse credential data
         const data = this.assetNFTClient.parseCredentialData(nft);
-        
+
         if (!data) {
           continue;
         }
@@ -426,10 +414,7 @@ export class CredentialService {
         }
 
         // Check if frozen
-        const isFrozen = await this.assetNFTClient.queryFrozen(
-          credentialClass.classId,
-          nft.id,
-        );
+        const isFrozen = await this.assetNFTClient.queryFrozen(credentialClass.classId, nft.id);
 
         if (isFrozen) {
           return {
@@ -489,7 +474,7 @@ export class CredentialService {
         verifiedAtHeight: height,
         verifiedAt,
       };
-    } catch (_error) {
+    } catch {
       return {
         isValid: false,
         reason: "query_failed",
@@ -502,10 +487,7 @@ export class CredentialService {
   /**
    * Quick check if an address has a valid credential (uses cache first)
    */
-  async hasValidCredential(
-    teamAddress: string,
-    signerAddress: string,
-  ): Promise<boolean> {
+  async hasValidCredential(teamAddress: string, signerAddress: string): Promise<boolean> {
     // Check local DB first for quick response
     const dbCredential = localDb.getCredentialByOwner(
       this.config.chainId,
@@ -532,7 +514,7 @@ export class CredentialService {
 
   /**
    * Rotate a signer's credential
-   * 
+   *
    * This performs:
    * 1. Burns the old signer's credential
    * 2. Issues a new credential to the new signer
@@ -551,25 +533,18 @@ export class CredentialService {
       );
 
       if (!oldCredential) {
-        throw new CredentialError(
-          "No credential found for old signer",
-          "CREDENTIAL_NOT_FOUND",
-          { address: input.oldSignerAddress },
-        );
+        throw new CredentialError("No credential found for old signer", "CREDENTIAL_NOT_FOUND", {
+          address: input.oldSignerAddress,
+        });
       }
 
       // Check if token is frozen
-      const isFrozen = await this.assetNFTClient.queryFrozen(
-        input.classId,
-        oldCredential.tokenId,
-      );
+      const isFrozen = await this.assetNFTClient.queryFrozen(input.classId, oldCredential.tokenId);
 
       if (isFrozen) {
-        throw new CredentialError(
-          "Cannot rotate: old credential is frozen",
-          "CANNOT_BURN_FROZEN",
-          { tokenId: oldCredential.tokenId },
-        );
+        throw new CredentialError("Cannot rotate: old credential is frozen", "CANNOT_BURN_FROZEN", {
+          tokenId: oldCredential.tokenId,
+        });
       }
 
       // Step 1: Burn old credential
@@ -595,10 +570,7 @@ export class CredentialService {
       );
 
       // Step 2: Issue new credential
-      const newTokenId = AssetNFTClient.generateTokenId(
-        input.teamAddress,
-        input.newSignerAddress,
-      );
+      const newTokenId = AssetNFTClient.generateTokenId(input.teamAddress, input.newSignerAddress);
 
       const credentialData: CredentialData = {
         teamId: input.teamAddress,
@@ -741,10 +713,7 @@ export class CredentialService {
   /**
    * Get credentials for a team member
    */
-  async getCredentialsForMember(
-    teamAddress: string,
-    memberAddress: string,
-  ): Promise<Credential[]> {
+  async getCredentialsForMember(teamAddress: string, memberAddress: string): Promise<Credential[]> {
     return this.listCredentials({
       teamAddress,
       ownerAddress: memberAddress,
@@ -770,10 +739,7 @@ export class CredentialService {
 /**
  * Create a credential service for queries only
  */
-export function createCredentialService(
-  nodeAddress: string,
-  chainId: string,
-): CredentialService {
+export function createCredentialService(nodeAddress: string, chainId: string): CredentialService {
   return new CredentialService({ nodeAddress, chainId });
 }
 
@@ -803,13 +769,10 @@ export async function createSigningCredentialServiceFromSigner(
   signer: OfflineSigner,
   gasPrice: string,
 ): Promise<CredentialService> {
-  const signingClient = await SigningStargateClient.connectWithSigner(
-    nodeAddress,
-    signer,
-    { gasPrice: GasPrice.fromString(gasPrice) },
-  );
+  const signingClient = await SigningStargateClient.connectWithSigner(nodeAddress, signer, {
+    gasPrice: GasPrice.fromString(gasPrice),
+  });
   const service = new CredentialService({ nodeAddress, chainId });
   service.setSigningClient(signingClient);
   return service;
 }
-

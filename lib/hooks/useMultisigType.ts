@@ -1,8 +1,8 @@
 /**
  * Hook for detecting multisig type
- * 
+ *
  * File: lib/hooks/useMultisigType.ts
- * 
+ *
  * Determines whether an address is a PubKey multisig or Contract multisig
  * by querying the chain.
  */
@@ -167,7 +167,11 @@ interface PubkeyInfoResult {
 export async function detectMultisigType(
   address: string,
   nodeAddress: string,
-): Promise<{ type: MultisigType; contractInfo?: ContractInfoResult; pubkeyInfo?: PubkeyInfoResult }> {
+): Promise<{
+  type: MultisigType;
+  contractInfo?: ContractInfoResult;
+  pubkeyInfo?: PubkeyInfoResult;
+}> {
   // Try contract first
   try {
     const cosmWasmClient = await CosmWasmClient.connect(nodeAddress);
@@ -214,4 +218,3 @@ export async function detectMultisigType(
 
   return { type: "unknown" };
 }
-

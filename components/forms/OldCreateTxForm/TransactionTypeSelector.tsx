@@ -2,17 +2,7 @@ import { BentoCard, BentoGrid } from "@/components/ui/bento-grid";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { MsgTypeUrl, MsgTypeUrls } from "@/types/txMsg";
-import {
-  Coins,
-  Gavel,
-  Globe,
-  Send,
-  TrendingUp,
-  Users,
-  Vote,
-  Wallet,
-  Settings,
-} from "lucide-react";
+import { Coins, Gavel, Globe, Send, TrendingUp, Users, Vote, Wallet, Settings } from "lucide-react";
 import { useState } from "react";
 
 interface TransactionType {
@@ -164,11 +154,14 @@ export default function TransactionTypeSelector({
   disabled,
 }: TransactionTypeSelectorProps) {
   const [activeTab, setActiveTab] = useState("standard");
-  
+
   const validatorCommands = transactionTypes.filter((t) => t.category === "validator");
   const standardCommands = transactionTypes.filter((t) => t.category === "standard");
 
-  const renderCommands = (commands: TransactionType[], variant: "default" | "highlight" | "accent" | "muted" = "default") => (
+  const _renderCommands = (
+    commands: TransactionType[],
+    variant: "default" | "highlight" | "accent" | "muted" = "default",
+  ) => (
     <BentoGrid className="grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {commands.map((tx) => {
         const isDisabled = disabled?.(tx.typeUrl) ?? false;
@@ -178,17 +171,14 @@ export default function TransactionTypeSelector({
             variant={variant}
             interactive={!isDisabled}
             onClick={() => !isDisabled && onSelect(tx.typeUrl)}
-            className={cn(
-              isDisabled ? "opacity-50 cursor-not-allowed" : "",
-              "p-4 min-h-0"
-            )}
+            className={cn(isDisabled ? "cursor-not-allowed opacity-50" : "", "min-h-0 p-4")}
           >
-            <div className="flex flex-col h-full">
-              <div className="flex items-center gap-2 mb-2">
+            <div className="flex h-full flex-col">
+              <div className="mb-2 flex items-center gap-2">
                 {tx.icon}
-                <h4 className="text-sm font-heading font-semibold leading-tight">{tx.name}</h4>
+                <h4 className="font-heading text-sm font-semibold leading-tight">{tx.name}</h4>
               </div>
-              <p className="text-xs text-muted-foreground leading-tight">{tx.description}</p>
+              <p className="text-xs leading-tight text-muted-foreground">{tx.description}</p>
             </div>
           </BentoCard>
         );
@@ -198,17 +188,17 @@ export default function TransactionTypeSelector({
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="w-full grid grid-cols-2 h-auto p-1 bg-muted/50 rounded-lg mb-6">
-        <TabsTrigger 
-          value="standard" 
-          className="gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2.5"
+      <TabsList className="mb-6 grid h-auto w-full grid-cols-2 rounded-lg bg-muted/50 p-1">
+        <TabsTrigger
+          value="standard"
+          className="gap-2 px-4 py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
         >
           <Users className="h-4 w-4" />
           <span>Standard User Commands</span>
         </TabsTrigger>
-        <TabsTrigger 
-          value="validator" 
-          className="gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2.5"
+        <TabsTrigger
+          value="validator"
+          className="gap-2 px-4 py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
         >
           <Gavel className="h-4 w-4" />
           <span>Validator Commands</span>
@@ -218,10 +208,14 @@ export default function TransactionTypeSelector({
       <TabsContent value="standard" className="mt-0 space-y-8">
         {/* Staking & Governance Section */}
         <div>
-          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">{`// Staking & Governance`}</h3>
+          <h3 className="mb-4 text-sm font-medium uppercase tracking-wide text-muted-foreground">{`// Staking & Governance`}</h3>
           <BentoGrid className="grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {standardCommands
-              .filter(cmd => ["Delegate", "Redelegate", "Undelegate", "Withdraw Rewards", "Vote"].includes(cmd.name))
+              .filter((cmd) =>
+                ["Delegate", "Redelegate", "Undelegate", "Withdraw Rewards", "Vote"].includes(
+                  cmd.name,
+                ),
+              )
               .map((tx) => {
                 const isDisabled = disabled?.(tx.typeUrl) ?? false;
                 return (
@@ -230,17 +224,18 @@ export default function TransactionTypeSelector({
                     variant="default"
                     interactive={!isDisabled}
                     onClick={() => !isDisabled && onSelect(tx.typeUrl)}
-                    className={cn(
-                      isDisabled ? "opacity-50 cursor-not-allowed" : "",
-                      "p-4 min-h-0"
-                    )}
+                    className={cn(isDisabled ? "cursor-not-allowed opacity-50" : "", "min-h-0 p-4")}
                   >
-                    <div className="flex flex-col h-full">
-                      <div className="flex items-center gap-2 mb-2">
+                    <div className="flex h-full flex-col">
+                      <div className="mb-2 flex items-center gap-2">
                         {tx.icon}
-                        <h4 className="text-sm font-heading font-semibold leading-tight">{tx.name}</h4>
+                        <h4 className="font-heading text-sm font-semibold leading-tight">
+                          {tx.name}
+                        </h4>
                       </div>
-                      <p className="text-xs text-muted-foreground leading-tight">{tx.description}</p>
+                      <p className="text-xs leading-tight text-muted-foreground">
+                        {tx.description}
+                      </p>
                     </div>
                   </BentoCard>
                 );
@@ -250,10 +245,10 @@ export default function TransactionTypeSelector({
 
         {/* Transfer Section */}
         <div>
-          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">{`// Transfers`}</h3>
+          <h3 className="mb-4 text-sm font-medium uppercase tracking-wide text-muted-foreground">{`// Transfers`}</h3>
           <BentoGrid className="grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {standardCommands
-              .filter(cmd => ["IBC Transfer", "Send"].includes(cmd.name))
+              .filter((cmd) => ["IBC Transfer", "Send"].includes(cmd.name))
               .map((tx) => {
                 const isDisabled = disabled?.(tx.typeUrl) ?? false;
                 return (
@@ -262,17 +257,18 @@ export default function TransactionTypeSelector({
                     variant="default"
                     interactive={!isDisabled}
                     onClick={() => !isDisabled && onSelect(tx.typeUrl)}
-                    className={cn(
-                      isDisabled ? "opacity-50 cursor-not-allowed" : "",
-                      "p-4 min-h-0"
-                    )}
+                    className={cn(isDisabled ? "cursor-not-allowed opacity-50" : "", "min-h-0 p-4")}
                   >
-                    <div className="flex flex-col h-full">
-                      <div className="flex items-center gap-2 mb-2">
+                    <div className="flex h-full flex-col">
+                      <div className="mb-2 flex items-center gap-2">
                         {tx.icon}
-                        <h4 className="text-sm font-heading font-semibold leading-tight">{tx.name}</h4>
+                        <h4 className="font-heading text-sm font-semibold leading-tight">
+                          {tx.name}
+                        </h4>
                       </div>
-                      <p className="text-xs text-muted-foreground leading-tight">{tx.description}</p>
+                      <p className="text-xs leading-tight text-muted-foreground">
+                        {tx.description}
+                      </p>
                     </div>
                   </BentoCard>
                 );
@@ -282,10 +278,10 @@ export default function TransactionTypeSelector({
 
         {/* Advanced Section */}
         <div>
-          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">{`// Advanced`}</h3>
+          <h3 className="mb-4 text-sm font-medium uppercase tracking-wide text-muted-foreground">{`// Advanced`}</h3>
           <BentoGrid className="grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {standardCommands
-              .filter(cmd => ["Create Vesting Account", "Fund Community Pool"].includes(cmd.name))
+              .filter((cmd) => ["Create Vesting Account", "Fund Community Pool"].includes(cmd.name))
               .map((tx) => {
                 const isDisabled = disabled?.(tx.typeUrl) ?? false;
                 return (
@@ -294,17 +290,18 @@ export default function TransactionTypeSelector({
                     variant="muted"
                     interactive={!isDisabled}
                     onClick={() => !isDisabled && onSelect(tx.typeUrl)}
-                    className={cn(
-                      isDisabled ? "opacity-50 cursor-not-allowed" : "",
-                      "p-4 min-h-0"
-                    )}
+                    className={cn(isDisabled ? "cursor-not-allowed opacity-50" : "", "min-h-0 p-4")}
                   >
-                    <div className="flex flex-col h-full">
-                      <div className="flex items-center gap-2 mb-2">
+                    <div className="flex h-full flex-col">
+                      <div className="mb-2 flex items-center gap-2">
                         {tx.icon}
-                        <h4 className="text-sm font-heading font-semibold leading-tight">{tx.name}</h4>
+                        <h4 className="font-heading text-sm font-semibold leading-tight">
+                          {tx.name}
+                        </h4>
                       </div>
-                      <p className="text-xs text-muted-foreground leading-tight">{tx.description}</p>
+                      <p className="text-xs leading-tight text-muted-foreground">
+                        {tx.description}
+                      </p>
                     </div>
                   </BentoCard>
                 );
@@ -316,10 +313,14 @@ export default function TransactionTypeSelector({
       <TabsContent value="validator" className="mt-0 space-y-8">
         {/* Staking & Governance Section */}
         <div>
-          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">{`// Staking & Governance`}</h3>
+          <h3 className="mb-4 text-sm font-medium uppercase tracking-wide text-muted-foreground">{`// Staking & Governance`}</h3>
           <BentoGrid className="grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {validatorCommands
-              .filter(cmd => ["Delegate", "Redelegate", "Undelegate", "Withdraw Rewards", "Vote"].includes(cmd.name))
+              .filter((cmd) =>
+                ["Delegate", "Redelegate", "Undelegate", "Withdraw Rewards", "Vote"].includes(
+                  cmd.name,
+                ),
+              )
               .map((tx) => {
                 const isDisabled = disabled?.(tx.typeUrl) ?? false;
                 return (
@@ -328,17 +329,18 @@ export default function TransactionTypeSelector({
                     variant="highlight"
                     interactive={!isDisabled}
                     onClick={() => !isDisabled && onSelect(tx.typeUrl)}
-                    className={cn(
-                      isDisabled ? "opacity-50 cursor-not-allowed" : "",
-                      "p-4 min-h-0"
-                    )}
+                    className={cn(isDisabled ? "cursor-not-allowed opacity-50" : "", "min-h-0 p-4")}
                   >
-                    <div className="flex flex-col h-full">
-                      <div className="flex items-center gap-2 mb-2">
+                    <div className="flex h-full flex-col">
+                      <div className="mb-2 flex items-center gap-2">
                         {tx.icon}
-                        <h4 className="text-sm font-heading font-semibold leading-tight">{tx.name}</h4>
+                        <h4 className="font-heading text-sm font-semibold leading-tight">
+                          {tx.name}
+                        </h4>
                       </div>
-                      <p className="text-xs text-muted-foreground leading-tight">{tx.description}</p>
+                      <p className="text-xs leading-tight text-muted-foreground">
+                        {tx.description}
+                      </p>
                     </div>
                   </BentoCard>
                 );
@@ -348,10 +350,15 @@ export default function TransactionTypeSelector({
 
         {/* Validator Management Section */}
         <div>
-          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">{`// Validator Management`}</h3>
+          <h3 className="mb-4 text-sm font-medium uppercase tracking-wide text-muted-foreground">{`// Validator Management`}</h3>
           <BentoGrid className="grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {validatorCommands
-              .filter(cmd => !["Delegate", "Redelegate", "Undelegate", "Withdraw Rewards", "Vote"].includes(cmd.name))
+              .filter(
+                (cmd) =>
+                  !["Delegate", "Redelegate", "Undelegate", "Withdraw Rewards", "Vote"].includes(
+                    cmd.name,
+                  ),
+              )
               .map((tx) => {
                 const isDisabled = disabled?.(tx.typeUrl) ?? false;
                 return (
@@ -360,17 +367,18 @@ export default function TransactionTypeSelector({
                     variant="highlight"
                     interactive={!isDisabled}
                     onClick={() => !isDisabled && onSelect(tx.typeUrl)}
-                    className={cn(
-                      isDisabled ? "opacity-50 cursor-not-allowed" : "",
-                      "p-4 min-h-0"
-                    )}
+                    className={cn(isDisabled ? "cursor-not-allowed opacity-50" : "", "min-h-0 p-4")}
                   >
-                    <div className="flex flex-col h-full">
-                      <div className="flex items-center gap-2 mb-2">
+                    <div className="flex h-full flex-col">
+                      <div className="mb-2 flex items-center gap-2">
                         {tx.icon}
-                        <h4 className="text-sm font-heading font-semibold leading-tight">{tx.name}</h4>
+                        <h4 className="font-heading text-sm font-semibold leading-tight">
+                          {tx.name}
+                        </h4>
                       </div>
-                      <p className="text-xs text-muted-foreground leading-tight">{tx.description}</p>
+                      <p className="text-xs leading-tight text-muted-foreground">
+                        {tx.description}
+                      </p>
                     </div>
                   </BentoCard>
                 );
@@ -381,6 +389,3 @@ export default function TransactionTypeSelector({
     </Tabs>
   );
 }
-
-
-

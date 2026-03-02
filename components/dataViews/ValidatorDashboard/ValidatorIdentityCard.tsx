@@ -74,23 +74,20 @@ export default function ValidatorIdentityCard({ validator }: ValidatorIdentityCa
     return `${(numRate * 100).toFixed(1)}%`;
   };
 
-  const explorerLink = explorerLinkAccount(
-    chain.explorerLinks.account,
-    validator.operatorAddress
-  );
+  const explorerLink = explorerLinkAccount(chain.explorerLinks.account, validator.operatorAddress);
 
   return (
     <Card variant="institutional" bracket="green" className="h-full">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
             <CardLabel comment>Validator</CardLabel>
-            <CardTitle className="text-xl font-heading font-bold truncate">
+            <CardTitle className="truncate font-heading text-xl font-bold">
               {validator.moniker}
             </CardTitle>
           </div>
           <Badge className={statusConfig.className}>
-            <StatusIcon className="h-3 w-3 mr-1" />
+            <StatusIcon className="mr-1 h-3 w-3" />
             {statusConfig.label}
           </Badge>
         </div>
@@ -98,7 +95,7 @@ export default function ValidatorIdentityCard({ validator }: ValidatorIdentityCa
 
       <CardContent className="space-y-4">
         {/* Commission Rate */}
-        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+        <div className="flex items-center justify-between rounded-lg bg-muted/30 p-3">
           <span className="text-sm text-muted-foreground">Commission Rate</span>
           <span className="font-mono font-semibold text-foreground">
             {formatCommissionRate(validator.commissionRate)}
@@ -107,43 +104,33 @@ export default function ValidatorIdentityCard({ validator }: ValidatorIdentityCa
 
         {/* Operator Address */}
         <div className="space-y-2">
-          <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
+          <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
             Operator Address
           </span>
           <div className="flex items-center gap-2">
-            <code className="flex-1 text-xs font-mono text-foreground bg-muted/30 px-3 py-2 rounded truncate">
+            <code className="flex-1 truncate rounded bg-muted/30 px-3 py-2 font-mono text-xs text-foreground">
               {validator.operatorAddress}
             </code>
-            <CopyButton
-              value={validator.operatorAddress}
-              copyLabel="operator address"
-            />
+            <CopyButton value={validator.operatorAddress} copyLabel="operator address" />
           </div>
         </div>
 
         {/* Account Address */}
         <div className="space-y-2">
-          <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
+          <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
             Account Address
           </span>
           <div className="flex items-center gap-2">
-            <code className="flex-1 text-xs font-mono text-foreground bg-muted/30 px-3 py-2 rounded truncate">
+            <code className="flex-1 truncate rounded bg-muted/30 px-3 py-2 font-mono text-xs text-foreground">
               {validator.delegatorAddress}
             </code>
-            <CopyButton
-              value={validator.delegatorAddress}
-              copyLabel="account address"
-            />
+            <CopyButton value={validator.delegatorAddress} copyLabel="account address" />
           </div>
         </div>
 
         {/* Explorer Link */}
         {explorerLink && (
-          <Button
-            variant="outline"
-            className="w-full gap-2"
-            asChild
-          >
+          <Button variant="outline" className="w-full gap-2" asChild>
             <a href={explorerLink} target="_blank" rel="noopener noreferrer">
               <ExternalLink className="h-4 w-4" />
               View in Explorer
@@ -153,12 +140,12 @@ export default function ValidatorIdentityCard({ validator }: ValidatorIdentityCa
 
         {/* Jailed Warning */}
         {validator.jailed && (
-          <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30">
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3">
             <div className="flex items-start gap-2">
-              <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
               <div className="text-sm">
                 <p className="font-medium text-destructive">Validator Jailed</p>
-                <p className="text-muted-foreground mt-1">
+                <p className="mt-1 text-muted-foreground">
                   Your validator has been jailed. You can still claim pending rewards.
                 </p>
               </div>
@@ -169,4 +156,3 @@ export default function ValidatorIdentityCard({ validator }: ValidatorIdentityCa
     </Card>
   );
 }
-

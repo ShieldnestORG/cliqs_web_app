@@ -54,7 +54,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="container mx-auto px-[0.75in] py-8 max-w-[1600px]">
+    <div className="container mx-auto max-w-[1600px] px-[0.75in] py-8">
       <Head title={`Settings - ${chain.chainDisplayName || "Cosmos Hub"}`} />
 
       <div className="space-y-6">
@@ -74,11 +74,11 @@ export default function SettingsPage() {
 
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-heading font-bold flex items-center gap-2">
+            <h1 className="flex items-center gap-2 font-heading text-3xl font-bold">
               <SettingsIcon className="h-8 w-8" />
               Settings
             </h1>
-            <p className="text-muted-foreground mt-2">
+            <p className="mt-2 text-muted-foreground">
               Manage your security preferences, database configuration, and account settings
             </p>
           </div>
@@ -96,7 +96,7 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between space-x-2 rounded-lg border border-border p-4">
-                <div className="space-y-0.5 flex-1">
+                <div className="flex-1 space-y-0.5">
                   <Label htmlFor="require-wallet-signin" className="text-base font-medium">
                     Require Wallet Sign-In for Cliqs
                   </Label>
@@ -116,10 +116,14 @@ export default function SettingsPage() {
 
           {/* Database Settings (BYODB) */}
           <div id="database-config" className="scroll-mt-8">
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="mb-4 text-sm text-muted-foreground">
               New to BYODB?{" "}
               <Link
-                href={chain.registryName ? `/${chain.registryName}/get-started?journey=setup-byodb` : "#"}
+                href={
+                  chain.registryName
+                    ? `/${chain.registryName}/get-started?journey=setup-byodb`
+                    : "#"
+                }
                 className="underline hover:text-foreground"
               >
                 See our step-by-step guide

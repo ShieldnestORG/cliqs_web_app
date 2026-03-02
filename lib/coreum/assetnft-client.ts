@@ -1,17 +1,17 @@
 /**
  * TX AssetNFT Client
- * 
+ *
  * File: lib/coreum/assetnft-client.ts
- * 
+ *
  * Client for interacting with TX's assetnft module.
  * This module provides NFT functionality with advanced features like:
  * - Soulbound tokens (issuer-only transfer)
  * - Burning (for credential revocation)
  * - Freezing (pause functionality)
  * - Whitelisting (restrict recipients)
- * 
+ *
  * Used for identity/credential NFTs in the multisig system.
- * 
+ *
  * Phase 3: Identity NFTs (Credential-Gated Multisig)
  */
 
@@ -235,7 +235,7 @@ export class AssetNFTClient {
 
   /**
    * Create an assetnft class for credentials
-   * 
+   *
    * @param senderAddress - Address that will be the issuer
    * @param config - Class configuration
    * @returns Operation result with class ID
@@ -246,7 +246,7 @@ export class AssetNFTClient {
   ): Promise<AssetNFTOperationResult & { classId?: string }> {
     try {
       const client = this.getSigningClient();
-      
+
       // Convert features to bit flags
       const features = config.features.map((f) => this.featureToNumber(f));
 
@@ -264,11 +264,7 @@ export class AssetNFTClient {
         },
       };
 
-      const result = await client.signAndBroadcast(
-        senderAddress,
-        [msg],
-        "auto",
-      );
+      const result = await client.signAndBroadcast(senderAddress, [msg], "auto");
 
       if (result.code !== 0) {
         return {
@@ -301,7 +297,7 @@ export class AssetNFTClient {
 
   /**
    * Query a class by ID
-   * 
+   *
    * Note: This uses REST API for TX-specific queries.
    * In production, integrate with @coreum/coreum-js SDK for proper module queries.
    */
@@ -331,7 +327,7 @@ export class AssetNFTClient {
 
   /**
    * Mint a credential NFT
-   * 
+   *
    * @param senderAddress - Issuer address
    * @param classId - Class ID
    * @param tokenId - Unique token ID
@@ -366,11 +362,7 @@ export class AssetNFTClient {
         },
       };
 
-      const result = await client.signAndBroadcast(
-        senderAddress,
-        [msg],
-        "auto",
-      );
+      const result = await client.signAndBroadcast(senderAddress, [msg], "auto");
 
       if (result.code !== 0) {
         return {
@@ -399,7 +391,7 @@ export class AssetNFTClient {
 
   /**
    * Burn a credential NFT (revocation)
-   * 
+   *
    * @param senderAddress - Token owner or issuer (for soulbound)
    * @param classId - Class ID
    * @param tokenId - Token ID to burn
@@ -421,11 +413,7 @@ export class AssetNFTClient {
         },
       };
 
-      const result = await client.signAndBroadcast(
-        senderAddress,
-        [msg],
-        "auto",
-      );
+      const result = await client.signAndBroadcast(senderAddress, [msg], "auto");
 
       if (result.code !== 0) {
         return {
@@ -472,11 +460,7 @@ export class AssetNFTClient {
         },
       };
 
-      const result = await client.signAndBroadcast(
-        senderAddress,
-        [msg],
-        "auto",
-      );
+      const result = await client.signAndBroadcast(senderAddress, [msg], "auto");
 
       return {
         success: result.code === 0,
@@ -516,11 +500,7 @@ export class AssetNFTClient {
         },
       };
 
-      const result = await client.signAndBroadcast(
-        senderAddress,
-        [msg],
-        "auto",
-      );
+      const result = await client.signAndBroadcast(senderAddress, [msg], "auto");
 
       return {
         success: result.code === 0,
@@ -587,7 +567,7 @@ export class AssetNFTClient {
         return null;
       }
 
-      const data = await response.json() as NFTOwnerResponse;
+      const data = (await response.json()) as NFTOwnerResponse;
       return data.owner;
     } catch {
       return null;
@@ -608,7 +588,7 @@ export class AssetNFTClient {
         return false;
       }
 
-      const data = await response.json() as FrozenResponse;
+      const data = (await response.json()) as FrozenResponse;
       return data.frozen;
     } catch {
       return false;
@@ -618,10 +598,7 @@ export class AssetNFTClient {
   /**
    * Query NFTs owned by an address in a specific class
    */
-  async queryNFTsByOwner(
-    classId: string,
-    ownerAddress: string,
-  ): Promise<AssetNFTResponse[]> {
+  async queryNFTsByOwner(classId: string, ownerAddress: string): Promise<AssetNFTResponse[]> {
     try {
       const restEndpoint = this.getRestEndpoint();
       const response = await fetch(
@@ -657,7 +634,7 @@ export class AssetNFTClient {
         return false;
       }
 
-      const data = await response.json() as WhitelistedResponse;
+      const data = (await response.json()) as WhitelistedResponse;
       return data.whitelisted;
     } catch {
       return false;
@@ -696,11 +673,7 @@ export class AssetNFTClient {
         },
       };
 
-      const result = await client.signAndBroadcast(
-        senderAddress,
-        [msg],
-        "auto",
-      );
+      const result = await client.signAndBroadcast(senderAddress, [msg], "auto");
 
       return {
         success: result.code === 0,
@@ -739,11 +712,7 @@ export class AssetNFTClient {
         },
       };
 
-      const result = await client.signAndBroadcast(
-        senderAddress,
-        [msg],
-        "auto",
-      );
+      const result = await client.signAndBroadcast(senderAddress, [msg], "auto");
 
       return {
         success: result.code === 0,
@@ -846,10 +815,7 @@ export class AssetNFTClient {
 /**
  * Create an AssetNFT client for queries only
  */
-export function createAssetNFTClient(
-  nodeAddress: string,
-  chainId: string,
-): AssetNFTClient {
+export function createAssetNFTClient(nodeAddress: string, chainId: string): AssetNFTClient {
   return new AssetNFTClient(nodeAddress, chainId);
 }
 
@@ -879,13 +845,10 @@ export async function createSigningAssetNFTClientFromSigner(
   signer: OfflineSigner,
   gasPrice: string,
 ): Promise<AssetNFTClient> {
-  const signingClient = await SigningStargateClient.connectWithSigner(
-    nodeAddress,
-    signer,
-    { gasPrice: GasPrice.fromString(gasPrice) },
-  );
+  const signingClient = await SigningStargateClient.connectWithSigner(nodeAddress, signer, {
+    gasPrice: GasPrice.fromString(gasPrice),
+  });
   const client = new AssetNFTClient(nodeAddress, chainId);
   client.setSigningClient(signingClient);
   return client;
 }
-

@@ -1,14 +1,14 @@
 /**
  * Signer Rotation Form
- * 
+ *
  * File: components/forms/SignerRotationForm/index.tsx
- * 
+ *
  * Step-by-step wizard for rotating a signer's credential.
  * This performs:
  * 1. Burn the old signer's credential
  * 2. Issue a new credential to the new signer
  * 3. Update group membership (if applicable)
- * 
+ *
  * Phase 3: Identity NFTs (Credential-Gated Multisig)
  */
 
@@ -143,7 +143,7 @@ export function SignerRotationForm({
   const executeRotation = async () => {
     setStep("executing");
     setIsSubmitting(true);
-    
+
     try {
       // Generate new token ID
       const newTokenId = `cred-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
@@ -173,7 +173,7 @@ export function SignerRotationForm({
       }
 
       const result = await response.json();
-      
+
       setState((prev) => ({
         ...prev,
         burnTxHash: result.revokedCredential ? "success" : undefined,
@@ -226,10 +226,8 @@ export function SignerRotationForm({
                     <SelectItem key={member.address} value={member.address}>
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-mono text-sm">
-                          {truncateAddress(member.address)}
-                        </span>
-                        <span className="text-xs text-muted-foreground capitalize">
+                        <span className="font-mono text-sm">{truncateAddress(member.address)}</span>
+                        <span className="text-xs capitalize text-muted-foreground">
                           ({member.role})
                         </span>
                       </div>
@@ -278,9 +276,7 @@ export function SignerRotationForm({
               <Label htmlFor="role">Assigned Role</Label>
               <Select
                 value={state.role}
-                onValueChange={(value) =>
-                  setState((prev) => ({ ...prev, role: value }))
-                }
+                onValueChange={(value) => setState((prev) => ({ ...prev, role: value }))}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -317,16 +313,15 @@ export function SignerRotationForm({
       case "confirm":
         return (
           <div className="space-y-4">
-            <Alert variant="default" className="bg-amber-500/10 border-amber-500/30">
+            <Alert variant="default" className="border-amber-500/30 bg-amber-500/10">
               <AlertTriangle className="h-4 w-4 text-amber-500" />
               <AlertTitle>Review Rotation Details</AlertTitle>
               <AlertDescription>
-                Please review the following changes before proceeding.
-                This action cannot be undone.
+                Please review the following changes before proceeding. This action cannot be undone.
               </AlertDescription>
             </Alert>
 
-            <div className="space-y-3 bg-muted/50 rounded-lg p-4">
+            <div className="space-y-3 rounded-lg bg-muted/50 p-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Old Signer (to remove)</span>
                 <code className="text-xs">{truncateAddress(state.oldSignerAddress)}</code>
@@ -345,16 +340,14 @@ export function SignerRotationForm({
               {groupAddress && (
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Update Group</span>
-                  <span className="text-sm">
-                    {state.updateGroupMembership ? "Yes" : "No"}
-                  </span>
+                  <span className="text-sm">{state.updateGroupMembership ? "Yes" : "No"}</span>
                 </div>
               )}
             </div>
 
             <div className="space-y-2">
               <p className="text-sm font-medium">The following will happen:</p>
-              <ul className="text-sm text-muted-foreground space-y-1">
+              <ul className="space-y-1 text-sm text-muted-foreground">
                 <li className="flex items-center gap-2">
                   <Shield className="h-3 w-3" />
                   Old signer's credential NFT will be burned
@@ -376,8 +369,8 @@ export function SignerRotationForm({
 
       case "executing":
         return (
-          <div className="py-8 text-center space-y-4">
-            <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />
+          <div className="space-y-4 py-8 text-center">
+            <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
             <p className="text-lg font-medium">Executing Rotation...</p>
             <p className="text-sm text-muted-foreground">
               Please wait while we process the credential rotation.
@@ -396,7 +389,7 @@ export function SignerRotationForm({
               </Alert>
             ) : (
               <>
-                <Alert className="bg-emerald-500/10 border-emerald-500/30">
+                <Alert className="border-emerald-500/30 bg-emerald-500/10">
                   <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                   <AlertTitle>Rotation Complete</AlertTitle>
                   <AlertDescription>
@@ -404,7 +397,7 @@ export function SignerRotationForm({
                   </AlertDescription>
                 </Alert>
 
-                <div className="space-y-2 bg-muted/50 rounded-lg p-4">
+                <div className="space-y-2 rounded-lg bg-muted/50 p-4">
                   {state.burnTxHash && (
                     <div className="flex items-center gap-2 text-sm">
                       <CheckCircle2 className="h-4 w-4 text-emerald-500" />
@@ -426,8 +419,8 @@ export function SignerRotationForm({
                 </div>
 
                 <p className="text-sm text-muted-foreground">
-                  The team address remains unchanged. The new signer can now participate
-                  in proposals and voting.
+                  The team address remains unchanged. The new signer can now participate in
+                  proposals and voting.
                 </p>
               </>
             )}
@@ -457,7 +450,7 @@ export function SignerRotationForm({
 
       <CardFooter className="flex justify-between">
         {step === "complete" ? (
-          <div className="w-full flex justify-end gap-2">
+          <div className="flex w-full justify-end gap-2">
             {state.error && (
               <Button
                 variant="outline"
@@ -483,10 +476,10 @@ export function SignerRotationForm({
               onClick={step === "select" ? onCancel : goBack}
               disabled={isSubmitting}
             >
-              <ArrowLeft className="h-4 w-4 mr-1" />
+              <ArrowLeft className="mr-1 h-4 w-4" />
               {step === "select" ? "Cancel" : "Back"}
             </Button>
-            
+
             <Button
               onClick={step === "confirm" ? executeRotation : goNext}
               disabled={!canGoNext() || isSubmitting}
@@ -494,12 +487,12 @@ export function SignerRotationForm({
               {step === "confirm" ? (
                 <>
                   Execute Rotation
-                  <RotateCcw className="h-4 w-4 ml-1" />
+                  <RotateCcw className="ml-1 h-4 w-4" />
                 </>
               ) : (
                 <>
                   Next
-                  <ArrowRight className="h-4 w-4 ml-1" />
+                  <ArrowRight className="ml-1 h-4 w-4" />
                 </>
               )}
             </Button>
@@ -511,4 +504,3 @@ export function SignerRotationForm({
 }
 
 export default SignerRotationForm;
-

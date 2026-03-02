@@ -1,4 +1,9 @@
-import { getKeplrKey, getKeplrAminoSigner, getKeplrDirectSigner, getKeplrVerifySignature } from "@/lib/keplr";
+import {
+  getKeplrKey,
+  getKeplrAminoSigner,
+  getKeplrDirectSigner,
+  getKeplrVerifySignature,
+} from "@/lib/keplr";
 import { getConnectError } from "@/lib/errorHelpers";
 import { toastError, toastSuccess, ensureProtocol } from "@/lib/utils";
 import { WalletInfo, WalletType, LoadingStates } from "@/types/signing";
@@ -120,7 +125,13 @@ export const WalletProvider = ({ children }: WalletProviderProps) => {
     }
     // Use stable primitive dependencies instead of entire chain object
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [walletInfo?.address, walletInfo?.type, chain.nodeAddress, chain.chainId, verificationSignature]);
+  }, [
+    walletInfo?.address,
+    walletInfo?.type,
+    chain.nodeAddress,
+    chain.chainId,
+    verificationSignature,
+  ]);
 
   // Connect to Keplr wallet
   const connectKeplr = useCallback(async () => {

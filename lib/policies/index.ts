@@ -1,8 +1,8 @@
 /**
  * Policy Module Exports
- * 
+ *
  * File: lib/policies/index.ts
- * 
+ *
  * Central export point for Phase 4 policy system.
  * All policy logic flows through PolicyEvaluator interface.
  */
@@ -13,17 +13,17 @@ export {
   type PolicyType,
   type PolicyViolationSeverity,
   type PolicyViolationCode,
-  
+
   // Context and decision types
   type PolicyContext,
   type PolicyViolation,
   type PolicyDecision,
   type PolicyEvaluationResult,
-  
+
   // Policy interfaces
   type Policy,
   type PolicyEvaluator,
-  
+
   // Configuration types
   type TimelockPolicyConfig,
   type SpendLimitPolicyConfig,
@@ -31,19 +31,19 @@ export {
   type AddressFilterPolicyConfig,
   type EmergencyPolicyConfig,
   type PolicyConfig,
-  
+
   // Storage types
   type StoredPolicy,
   type StoredPolicyViolation,
-  
+
   // Event types
   type PolicyEventType,
   type PolicyEvent,
-  
+
   // Error types
   type PolicyErrorCode,
   PolicyError,
-  
+
   // Helper functions
   allowed,
   denied,
@@ -107,4 +107,3 @@ export {
   createCombinedFilterPolicy,
   createTrustedAddressesPolicy,
 } from "./address-filter";
-

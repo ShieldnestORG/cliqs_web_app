@@ -6,25 +6,33 @@
  * Main validator dashboard component that orchestrates all cards.
  */
 
-import { Card, CardContent, CardHeader, CardTitle, CardLabel, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardLabel,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { useChains } from "@/context/ChainsContext";
 import { useWallet } from "@/context/WalletContext";
-import { 
-  getValidatorDashboardData, 
+import {
+  getValidatorDashboardData,
   ValidatorDashboardData,
   delegatorToValidatorAddress,
   getAssociatedValidators,
   ValidatorInfo,
 } from "@/lib/validatorHelpers";
 import { getDbUserMultisigs } from "@/lib/api";
-import { useState, useEffect, useCallback, useRef } from "react";
-import { 
-  RefreshCw, 
-  AlertCircle, 
+import { getUserSettings } from "@/lib/settingsStorage";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import {
+  RefreshCw,
+  AlertCircle,
   Shield,
   Users,
   Loader2,
@@ -54,31 +62,34 @@ interface AssociatedValidator {
 
 export default function ValidatorDashboard() {
   const { chain } = useChains();
-  const { walletInfo, loading, connectKeplr, connectLedger, verificationSignature, verify } = useWallet();
+  const { walletInfo, loading, connectKeplr, connectLedger, verificationSignature, verify } =
+    useWallet();
   const router = useRouter();
-  
+
   const addressParam = router.query.address as string;
   const effectiveAddress = addressParam || walletInfo?.address;
-  
+
   // Detect if we're managing via CLIQ (address param differs from connected wallet)
-  const isCliqMode = Boolean(addressParam && walletInfo?.address && addressParam !== walletInfo.address);
+  const isCliqMode = Boolean(
+    addressParam && walletInfo?.address && addressParam !== walletInfo.address,
+  );
   const cliqAddress = isCliqMode ? addressParam : undefined;
-  
+
   const [loadingState, setLoadingState] = useState<LoadingState>("idle");
   const [dashboardData, setDashboardData] = useState<ValidatorDashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchAddress, setSearchAddress] = useState("");
-  
+
   // Associated validators (CLIQs that are validators)
   const [associatedValidators, setAssociatedValidators] = useState<AssociatedValidator[]>([]);
   const [isLoadingAssociated, setIsLoadingAssociated] = useState(false);
   const [cliqLookupError, setCliqLookupError] = useState<string | null>(null);
-  
+
   // CLIQ mode membership verification
   const [isCliqMember, setIsCliqMember] = useState<boolean | null>(null);
   const [isVerifyingMembership, setIsVerifyingMembership] = useState(false);
-  
+
   // Race condition guard for async effects
   const associatedFetchId = useRef(0);
 
@@ -90,40 +101,43 @@ export default function ValidatorDashboard() {
   };
 
   // Fetch validator data
-  const fetchData = useCallback(async (showRefreshIndicator = false) => {
-    if (!effectiveAddress || !chain.nodeAddress || !chain.addressPrefix) {
-      return;
-    }
-
-    try {
-      if (showRefreshIndicator) {
-        setIsRefreshing(true);
-      } else {
-        setLoadingState("loading");
+  const fetchData = useCallback(
+    async (showRefreshIndicator = false) => {
+      if (!effectiveAddress || !chain.nodeAddress || !chain.addressPrefix) {
+        return;
       }
-      setError(null);
 
-      const data = await getValidatorDashboardData(
-        chain.nodeAddress,
-        effectiveAddress,
-        chain.addressPrefix
-      );
+      try {
+        if (showRefreshIndicator) {
+          setIsRefreshing(true);
+        } else {
+          setLoadingState("loading");
+        }
+        setError(null);
 
-      if (!data) {
-        setLoadingState("not-validator");
-        setDashboardData(null);
-      } else {
-        setDashboardData(data);
-        setLoadingState("loaded");
+        const data = await getValidatorDashboardData(
+          chain.nodeAddress,
+          effectiveAddress,
+          chain.addressPrefix,
+        );
+
+        if (!data) {
+          setLoadingState("not-validator");
+          setDashboardData(null);
+        } else {
+          setDashboardData(data);
+          setLoadingState("loaded");
+        }
+      } catch (e) {
+        console.error("Failed to fetch validator data:", e);
+        setError(e instanceof Error ? e.message : "Failed to fetch validator data");
+        setLoadingState("error");
+      } finally {
+        setIsRefreshing(false);
       }
-    } catch (e) {
-      console.error("Failed to fetch validator data:", e);
-      setError(e instanceof Error ? e.message : "Failed to fetch validator data");
-      setLoadingState("error");
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [effectiveAddress, chain.nodeAddress, chain.addressPrefix]);
+    },
+    [effectiveAddress, chain.nodeAddress, chain.addressPrefix],
+  );
 
   // Fetch data when wallet connects or address param changes
   useEffect(() => {
@@ -166,8 +180,8 @@ export default function ValidatorDashboard() {
         if (cancelled) return;
 
         const allAddresses = [
-          ...multisigs.created.map(m => m.address),
-          ...multisigs.belonged.map(m => m.address),
+          ...multisigs.created.map((m) => m.address),
+          ...multisigs.belonged.map((m) => m.address),
         ];
 
         setIsCliqMember(allAddresses.includes(addressParam));
@@ -181,37 +195,72 @@ export default function ValidatorDashboard() {
     }
 
     verifyCliqMembership();
-    return () => { cancelled = true; };
-  }, [isCliqMode, walletInfo?.address, walletInfo?.pubKey, addressParam, chain, verificationSignature, verify]);
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    isCliqMode,
+    walletInfo?.address,
+    walletInfo?.pubKey,
+    addressParam,
+    chain,
+    verificationSignature,
+    verify,
+  ]);
 
-  // Fetch associated validators (CLIQs) when in "not-validator" state.
+  // Fetch associated validators (CLIQs) when:
+  // - "not-validator" state (wallet is not a validator - show CLIQ validators to pick from), or
+  // - "loaded" state with direct wallet (wallet IS a validator - show CLIQ validators so user can switch).
   // Lazily requests a verification signature only when actually needed.
+  const shouldFetchAssociated =
+    !addressParam &&
+    !!walletInfo?.address &&
+    (loadingState === "not-validator" ||
+      (loadingState === "loaded" && effectiveAddress === walletInfo.address));
+
+  const cliqOnlyValidators = useMemo(
+    () => associatedValidators.filter((v) => v.address !== effectiveAddress),
+    [associatedValidators, effectiveAddress],
+  );
+
   useEffect(() => {
+    if (!shouldFetchAssociated) return;
+
     const fetchId = ++associatedFetchId.current;
 
     async function fetchAssociatedValidators() {
-      if (loadingState !== "not-validator" || !walletInfo?.address || addressParam) {
-        return;
-      }
-
       try {
         setIsLoadingAssociated(true);
         setCliqLookupError(null);
 
-        const sig = verificationSignature ?? (await verify());
-        if (fetchId !== associatedFetchId.current) return;
+        const settings = getUserSettings();
+        const requiresVerification = settings.requireWalletSignInForCliqs;
 
-        const multisigs = await getDbUserMultisigs(chain, {
-          address: walletInfo.address,
-          pubkey: walletInfo.pubKey,
-          signature: sig || undefined,
-        });
+        let sig = verificationSignature ?? undefined;
+        if (requiresVerification && !sig) {
+          sig = (await verify()) ?? undefined;
+          if (fetchId !== associatedFetchId.current) return;
+          if (!sig) {
+            setAssociatedValidators([]);
+            return;
+          }
+        }
+
+        if (!walletInfo?.pubKey) {
+          setAssociatedValidators([]);
+          return;
+        }
+
+        const multisigs = await getDbUserMultisigs(
+          chain,
+          sig ? { signature: sig } : { address: walletInfo.address, pubkey: walletInfo.pubKey },
+        );
 
         if (fetchId !== associatedFetchId.current) return;
 
         const cliqAddresses = [
-          ...multisigs.created.map(m => m.address),
-          ...multisigs.belonged.map(m => m.address)
+          ...multisigs.created.map((m) => m.address),
+          ...multisigs.belonged.map((m) => m.address),
         ];
 
         if (cliqAddresses.length === 0) {
@@ -223,12 +272,12 @@ export default function ValidatorDashboard() {
           chain.nodeAddress,
           walletInfo.address,
           cliqAddresses,
-          chain.addressPrefix
+          chain.addressPrefix,
         );
 
         if (fetchId !== associatedFetchId.current) return;
 
-        const associated: AssociatedValidator[] = validators.map(v => ({
+        const associated: AssociatedValidator[] = validators.map((v) => ({
           address: v.address,
           validator: v.validator,
           isCliq: v.address !== walletInfo.address,
@@ -250,7 +299,16 @@ export default function ValidatorDashboard() {
     }
 
     fetchAssociatedValidators();
-  }, [loadingState, walletInfo?.address, walletInfo?.pubKey, addressParam, chain, verificationSignature, verify]);
+  }, [
+    shouldFetchAssociated,
+    loadingState,
+    walletInfo?.address,
+    walletInfo?.pubKey,
+    effectiveAddress,
+    chain,
+    verificationSignature,
+    verify,
+  ]);
 
   // Refresh data after transaction
   const handleTransactionComplete = () => {
@@ -265,7 +323,7 @@ export default function ValidatorDashboard() {
   if (isChainInitializing) {
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
           <Card variant="institutional" className="lg:col-span-2">
             <CardHeader>
               <Skeleton className="h-4 w-24" />
@@ -303,12 +361,14 @@ export default function ValidatorDashboard() {
   if (!effectiveAddress && !walletInfo) {
     return (
       <div className="space-y-6">
-        <Card variant="institutional" bracket="green" className="max-w-4xl mx-auto">
+        <Card variant="institutional" bracket="green" className="mx-auto max-w-4xl">
           <CardHeader className="text-center">
-            <div className="mx-auto w-16 h-16 rounded-2xl bg-green-accent/20 flex items-center justify-center mb-4">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-green-accent/20">
               <Shield className="h-8 w-8 text-green-accent" />
             </div>
-            <CardLabel comment className="justify-center">Validator Tools</CardLabel>
+            <CardLabel comment className="justify-center">
+              Validator Tools
+            </CardLabel>
             <CardTitle className="text-2xl">Connect Your Wallet</CardTitle>
             <CardDescription className="text-base">
               Connect your validator operator wallet to access the dashboard.
@@ -316,29 +376,24 @@ export default function ValidatorDashboard() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <Button 
-                onClick={connectKeplr} 
-                disabled={loading.keplr || loading.ledger} 
+              <Button
+                onClick={connectKeplr}
+                disabled={loading.keplr || loading.ledger}
                 variant="outline"
-                className="h-auto py-4 flex-col gap-2"
+                className="h-auto flex-col gap-2 py-4"
               >
                 {loading.keplr ? (
                   <Loader2 className="h-6 w-6 animate-spin" />
                 ) : (
-                  <Image
-                    alt="Keplr"
-                    src="/assets/icons/keplr.svg"
-                    width={24}
-                    height={24}
-                  />
+                  <Image alt="Keplr" src="/assets/icons/keplr.svg" width={24} height={24} />
                 )}
                 <span className="text-sm">Keplr</span>
               </Button>
-              <Button 
-                onClick={connectLedger} 
-                disabled={loading.keplr || loading.ledger} 
+              <Button
+                onClick={connectLedger}
+                disabled={loading.keplr || loading.ledger}
                 variant="outline"
-                className="h-auto py-4 flex-col gap-2"
+                className="h-auto flex-col gap-2 py-4"
               >
                 {loading.ledger ? (
                   <Loader2 className="h-6 w-6 animate-spin" />
@@ -348,14 +403,14 @@ export default function ValidatorDashboard() {
                     src="/assets/icons/ledger.svg"
                     width={24}
                     height={24}
-                    className="bg-white p-0.5 rounded"
+                    className="rounded bg-white p-0.5"
                   />
                 )}
                 <span className="text-sm">Ledger</span>
               </Button>
             </div>
-            
-            <p className="text-sm text-muted-foreground text-center">
+
+            <p className="text-center text-sm text-muted-foreground">
               Connect the wallet associated with your validator operator address.
             </p>
           </CardContent>
@@ -372,7 +427,7 @@ export default function ValidatorDashboard() {
     return (
       <div className="space-y-6">
         {/* Identity Card Skeleton */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
           <Card variant="institutional" className="lg:col-span-2">
             <CardHeader>
               <Skeleton className="h-4 w-24" />
@@ -384,7 +439,7 @@ export default function ValidatorDashboard() {
               <Skeleton className="h-10 w-full" />
             </CardContent>
           </Card>
-          
+
           <Card variant="institutional" className="lg:col-span-3">
             <CardHeader>
               <Skeleton className="h-4 w-24" />
@@ -412,17 +467,17 @@ export default function ValidatorDashboard() {
   if (loadingState === "not-validator") {
     const validatorAddress = delegatorToValidatorAddress(
       effectiveAddress || "",
-      chain.addressPrefix
+      chain.addressPrefix,
     );
 
     return (
       <div className="space-y-6">
         {/* Show associated validators (CLIQs) if found */}
         {associatedValidators.length > 0 && (
-          <Card variant="institutional" bracket="green" className="max-w-2xl mx-auto">
+          <Card variant="institutional" bracket="green" className="mx-auto max-w-2xl">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-green-accent/20 flex items-center justify-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-accent/20">
                   <CheckCircle className="h-6 w-6 text-green-accent" />
                 </div>
                 <div>
@@ -431,31 +486,41 @@ export default function ValidatorDashboard() {
                 </div>
               </div>
               <CardDescription>
-                Your connected wallet is a member of {associatedValidators.length === 1 ? "a CLIQ that is" : `${associatedValidators.length} CLIQs that are`} operating as {associatedValidators.length === 1 ? "a validator" : "validators"}. Select one to manage.
+                Your connected wallet is a member of{" "}
+                {associatedValidators.length === 1
+                  ? "a CLIQ that is"
+                  : `${associatedValidators.length} CLIQs that are`}{" "}
+                operating as {associatedValidators.length === 1 ? "a validator" : "validators"}.
+                Select one to manage.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {associatedValidators.map((item, idx) => (
-                <Link 
-                  key={idx} 
+                <Link
+                  key={idx}
                   href={`/${chain.registryName}/validator?address=${item.address}`}
                   className="block"
                 >
-                  <div className="p-4 rounded-xl bg-muted/30 border border-border/50 hover:border-green-accent/50 hover:bg-green-accent/5 transition-all flex items-center justify-between gap-4 group">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-full bg-green-accent/20 flex items-center justify-center shrink-0">
+                  <div className="group flex items-center justify-between gap-4 rounded-xl border border-border/50 bg-muted/30 p-4 transition-all hover:border-green-accent/50 hover:bg-green-accent/5">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-accent/20">
                         <Shield className="h-5 w-5 text-green-accent" />
                       </div>
                       <div className="min-w-0">
-                        <h4 className="font-heading font-bold text-foreground truncate">
+                        <h4 className="truncate font-heading font-bold text-foreground">
                           {item.validator.moniker}
                         </h4>
-                        <p className="text-xs text-muted-foreground font-mono truncate">
-                          {item.isCliq ? "CLIQ: " : ""}{item.address.slice(0, 12)}...{item.address.slice(-8)}
+                        <p className="truncate font-mono text-xs text-muted-foreground">
+                          {item.isCliq ? "CLIQ: " : ""}
+                          {item.address.slice(0, 12)}...{item.address.slice(-8)}
                         </p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" className="shrink-0 gap-2 group-hover:bg-green-accent/10 group-hover:text-green-accent">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="shrink-0 gap-2 group-hover:bg-green-accent/10 group-hover:text-green-accent"
+                    >
                       Manage
                       <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Button>
@@ -468,7 +533,7 @@ export default function ValidatorDashboard() {
 
         {/* Loading associated validators */}
         {isLoadingAssociated && (
-          <Card variant="institutional" className="max-w-4xl mx-auto">
+          <Card variant="institutional" className="mx-auto max-w-4xl">
             <CardContent className="py-8">
               <div className="flex items-center justify-center gap-3">
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -480,16 +545,16 @@ export default function ValidatorDashboard() {
 
         {/* CLIQ lookup error - show so user knows why discovery may have failed */}
         {cliqLookupError && !isLoadingAssociated && associatedValidators.length === 0 && (
-          <Card variant="institutional" className="max-w-4xl mx-auto border-yellow-500/30">
+          <Card variant="institutional" className="mx-auto max-w-4xl border-yellow-500/30">
             <CardContent className="py-4">
               <div className="flex items-start gap-3">
-                <Info className="h-5 w-5 text-yellow-500 shrink-0 mt-0.5" />
+                <Info className="mt-0.5 h-5 w-5 shrink-0 text-yellow-500" />
                 <div>
                   <p className="text-sm font-medium text-yellow-500">CLIQ Lookup Issue</p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Could not check your CLIQs for associated validators: {cliqLookupError}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     If you are a multisig member, try entering the CLIQ address manually below.
                   </p>
                 </div>
@@ -500,29 +565,32 @@ export default function ValidatorDashboard() {
 
         {/* Original "Not a Validator" card - only show if no associated validators found */}
         {!isLoadingAssociated && associatedValidators.length === 0 && (
-          <Card variant="institutional" className="max-w-4xl mx-auto">
+          <Card variant="institutional" className="mx-auto max-w-4xl">
             <CardHeader className="text-center">
-              <div className="mx-auto w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
                 <Users className="h-8 w-8 text-muted-foreground" />
               </div>
-              <CardLabel comment className="justify-center">Info</CardLabel>
+              <CardLabel comment className="justify-center">
+                Info
+              </CardLabel>
               <CardTitle className="text-2xl">Not a Validator</CardTitle>
               <CardDescription className="text-base">
-                The connected wallet is not associated with a validator on {chain.chainDisplayName || "this chain"}.
+                The connected wallet is not associated with a validator on{" "}
+                {chain.chainDisplayName || "this chain"}.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <div className="p-4 rounded-lg bg-muted/30 border border-border/50">
-                  <p className="text-sm text-muted-foreground mb-2">Checked Address:</p>
-                  <code className="text-xs font-mono text-foreground break-all">
+                <div className="rounded-lg border border-border/50 bg-muted/30 p-4">
+                  <p className="mb-2 text-sm text-muted-foreground">Checked Address:</p>
+                  <code className="break-all font-mono text-xs text-foreground">
                     {effectiveAddress}
                   </code>
                 </div>
-                
-                <div className="p-4 rounded-lg bg-muted/30 border border-border/50">
-                  <p className="text-sm text-muted-foreground mb-2">Expected Validator Address:</p>
-                  <code className="text-xs font-mono text-foreground break-all">
+
+                <div className="rounded-lg border border-border/50 bg-muted/30 p-4">
+                  <p className="mb-2 text-sm text-muted-foreground">Expected Validator Address:</p>
+                  <code className="break-all font-mono text-xs text-foreground">
                     {validatorAddress}
                   </code>
                 </div>
@@ -531,14 +599,15 @@ export default function ValidatorDashboard() {
               <Separator />
 
               <div className="space-y-4">
-                <h4 className="text-sm font-heading font-bold">Search by Account Address</h4>
+                <h4 className="font-heading text-sm font-bold">Search by Account Address</h4>
                 <p className="text-xs text-muted-foreground">
-                  If your validator is managed via a CLIQ (multisig), please enter the CLIQ address below.
+                  If your validator is managed via a CLIQ (multisig), please enter the CLIQ address
+                  below.
                 </p>
                 <form onSubmit={handleSearch} className="flex gap-2">
                   <div className="flex-1">
-                    <Input 
-                      placeholder="Enter account or CLIQ address" 
+                    <Input
+                      placeholder="Enter account or CLIQ address"
                       value={searchAddress}
                       onChange={(e) => setSearchAddress(e.target.value)}
                       className="font-mono text-xs"
@@ -550,8 +619,9 @@ export default function ValidatorDashboard() {
                 </form>
               </div>
 
-              <p className="text-sm text-muted-foreground text-center">
-                If you are a validator, make sure you&apos;re connecting with the correct wallet or providing the correct address.
+              <p className="text-center text-sm text-muted-foreground">
+                If you are a validator, make sure you&apos;re connecting with the correct wallet or
+                providing the correct address.
               </p>
             </CardContent>
           </Card>
@@ -567,9 +637,9 @@ export default function ValidatorDashboard() {
   if (loadingState === "error") {
     return (
       <div className="space-y-6">
-        <Card variant="institutional" className="max-w-xl mx-auto border-destructive/50">
+        <Card variant="institutional" className="mx-auto max-w-xl border-destructive/50">
           <CardHeader className="text-center">
-            <div className="mx-auto w-16 h-16 rounded-2xl bg-destructive/20 flex items-center justify-center mb-4">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-destructive/20">
               <AlertCircle className="h-8 w-8 text-destructive" />
             </div>
             <CardTitle className="text-2xl">Failed to Load Data</CardTitle>
@@ -578,11 +648,7 @@ export default function ValidatorDashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button 
-              onClick={() => fetchData()} 
-              variant="outline" 
-              className="w-full gap-2"
-            >
+            <Button onClick={() => fetchData()} variant="outline" className="w-full gap-2">
               <RefreshCw className="h-4 w-4" />
               Try Again
             </Button>
@@ -608,13 +674,13 @@ export default function ValidatorDashboard() {
         <Card variant="institutional" className="border-yellow-500/30">
           <CardContent className="py-4">
             <div className="flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-yellow-500 shrink-0 mt-0.5" />
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-yellow-500" />
               <div>
                 <p className="text-sm font-medium text-yellow-500">Read-Only Mode</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Your connected wallet could not be verified as a member of this CLIQ.
-                  Transaction actions are disabled. If you believe this is an error, reconnect
-                  with the correct wallet or ensure the CLIQ is registered in the database.
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Your connected wallet could not be verified as a member of this CLIQ. Transaction
+                  actions are disabled. If you believe this is an error, reconnect with the correct
+                  wallet or ensure the CLIQ is registered in the database.
                 </p>
               </div>
             </div>
@@ -622,13 +688,70 @@ export default function ValidatorDashboard() {
         </Card>
       )}
 
+      {/* You also manage via CLIQ - when viewing direct validator and user has CLIQ validators */}
+      {!isCliqMode &&
+        effectiveAddress === walletInfo?.address &&
+        chain.registryName &&
+        cliqOnlyValidators.length > 0 && (
+          <Card variant="institutional" bracket="green" className="border-green-accent/30">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-accent/20">
+                  <Users className="h-5 w-5 text-green-accent" />
+                </div>
+                <div>
+                  <CardLabel className="text-green-accent">Also Manage Via CLIQ</CardLabel>
+                  <CardTitle className="text-base">Your CLIQ Validators</CardTitle>
+                </div>
+              </div>
+              <CardDescription>
+                You are also a member of{" "}
+                {cliqOnlyValidators.length === 1 ? "a CLIQ that operates" : "CLIQs that operate"} as{" "}
+                {cliqOnlyValidators.length === 1 ? "a validator" : "validators"}. Manage rewards
+                from any of them.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {cliqOnlyValidators.map((item, idx) => (
+                <Link
+                  key={idx}
+                  href={`/${chain.registryName}/validator?address=${item.address}`}
+                  className="block"
+                >
+                  <div className="group flex items-center justify-between gap-4 rounded-xl border border-border/50 bg-muted/30 p-3 transition-all hover:border-green-accent/50 hover:bg-green-accent/5">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-accent/20">
+                        <Shield className="h-4 w-4 text-green-accent" />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="truncate font-heading text-sm font-semibold text-foreground">
+                          {item.validator.moniker}
+                        </h4>
+                        <p className="truncate font-mono text-xs text-muted-foreground">
+                          CLIQ: {item.address.slice(0, 12)}...{item.address.slice(-8)}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="shrink-0 gap-2 group-hover:bg-green-accent/10 group-hover:text-green-accent"
+                    >
+                      Manage
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </Button>
+                  </div>
+                </Link>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
       {/* Header with Refresh */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-heading font-bold">Validator Dashboard</h1>
-          <p className="text-muted-foreground">
-            Manage rewards and monitor performance
-          </p>
+          <h1 className="font-heading text-2xl font-bold">Validator Dashboard</h1>
+          <p className="text-muted-foreground">Manage rewards and monitor performance</p>
         </div>
         <Button
           variant="outline"
@@ -643,7 +766,7 @@ export default function ValidatorDashboard() {
       </div>
 
       {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         {/* Identity Card - 2 cols */}
         <div className="lg:col-span-2">
           <ValidatorIdentityCard validator={dashboardData.validator} />
@@ -656,7 +779,7 @@ export default function ValidatorDashboard() {
       </div>
 
       {/* Second Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         {/* Pending Rewards Card - 2 cols */}
         <div className="lg:col-span-2">
           <PendingRewardsCard
@@ -684,7 +807,7 @@ export default function ValidatorDashboard() {
       </div>
 
       {/* Third Row - Stakers & Governance */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         {/* Delegators Card - 3 cols */}
         <div className="lg:col-span-3">
           <ValidatorDelegatorsCard data={dashboardData} />
@@ -692,8 +815,8 @@ export default function ValidatorDashboard() {
 
         {/* Proposal Viewer - 2 cols */}
         <div className="lg:col-span-2">
-          <ProposalViewer 
-            data={dashboardData} 
+          <ProposalViewer
+            data={dashboardData}
             onTransactionComplete={handleTransactionComplete}
             isCliqMode={isCliqMode}
             cliqAddress={cliqAddress}
@@ -718,4 +841,3 @@ export default function ValidatorDashboard() {
     </div>
   );
 }
-

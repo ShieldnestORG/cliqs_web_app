@@ -1,17 +1,17 @@
 /**
  * Policy Types for Phase 4 Advanced Policies
- * 
+ *
  * File: lib/policies/types.ts
- * 
+ *
  * This module defines the core policy abstractions for the multisig system.
  * All policy logic flows through ONE explicit abstraction (PolicyEvaluator)
  * to prevent policy spaghetti in business logic.
- * 
+ *
  * Key Design Rules:
  * - ContractMultisigEngine calls PolicyEvaluator
  * - PolicyEvaluator calls individual policies
  * - No policy logic in engine
- * 
+ *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards
  */
 
@@ -210,10 +210,7 @@ export interface Policy {
    * @param context Full context for evaluation
    * @returns Decision allowing or denying the action
    */
-  evaluateProposal(
-    proposal: Proposal,
-    context: PolicyContext,
-  ): Promise<PolicyDecision>;
+  evaluateProposal(proposal: Proposal, context: PolicyContext): Promise<PolicyDecision>;
 
   /**
    * Evaluate this policy for proposal execution
@@ -221,10 +218,7 @@ export interface Policy {
    * @param context Full context for evaluation
    * @returns Decision allowing or denying the action
    */
-  evaluateExecution(
-    proposal: Proposal,
-    context: PolicyContext,
-  ): Promise<PolicyDecision>;
+  evaluateExecution(proposal: Proposal, context: PolicyContext): Promise<PolicyDecision>;
 }
 
 // ============================================================================
@@ -233,7 +227,7 @@ export interface Policy {
 
 /**
  * Central policy evaluation interface
- * 
+ *
  * ALL policy logic flows through this interface.
  * ContractMultisigEngine calls PolicyEvaluator.
  * PolicyEvaluator calls individual policies.
@@ -246,10 +240,7 @@ export interface PolicyEvaluator {
    * @param context Full context for evaluation
    * @returns Combined result from all policies
    */
-  evaluateProposal(
-    proposal: Proposal,
-    context: PolicyContext,
-  ): Promise<PolicyEvaluationResult>;
+  evaluateProposal(proposal: Proposal, context: PolicyContext): Promise<PolicyEvaluationResult>;
 
   /**
    * Evaluate all policies for proposal execution
@@ -257,10 +248,7 @@ export interface PolicyEvaluator {
    * @param context Full context for evaluation
    * @returns Combined result from all policies
    */
-  evaluateExecution(
-    proposal: Proposal,
-    context: PolicyContext,
-  ): Promise<PolicyEvaluationResult>;
+  evaluateExecution(proposal: Proposal, context: PolicyContext): Promise<PolicyEvaluationResult>;
 
   /**
    * Pre-validate a proposal before creation (UI optimization)
@@ -500,17 +488,17 @@ export function createViolation(
  */
 export function mergeDecisions(decisions: PolicyDecision[]): PolicyDecision {
   const violations: PolicyViolation[] = [];
-  
+
   for (const decision of decisions) {
     if (!decision.allowed) {
       violations.push(...decision.violations);
     }
   }
-  
+
   if (violations.length > 0) {
     return { allowed: false, violations };
   }
-  
+
   return { allowed: true };
 }
 
@@ -528,17 +516,16 @@ export function getHighestSeverity(
   violations: readonly PolicyViolation[],
 ): PolicyViolationSeverity | null {
   if (violations.length === 0) return null;
-  
+
   const severityOrder: PolicyViolationSeverity[] = ["low", "medium", "high", "critical"];
   let highest = 0;
-  
+
   for (const violation of violations) {
     const index = severityOrder.indexOf(violation.severity);
     if (index > highest) {
       highest = index;
     }
   }
-  
+
   return severityOrder[highest];
 }
-

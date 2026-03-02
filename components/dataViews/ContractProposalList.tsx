@@ -1,8 +1,8 @@
 /**
  * Contract Proposal List
- * 
+ *
  * File: components/dataViews/ContractProposalList.tsx
- * 
+ *
  * Displays a list of proposals for a CW3 contract multisig
  * with status badges, vote counts, and action buttons.
  */
@@ -19,11 +19,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { 
-  FileText, 
-  Clock, 
-  CheckCircle2, 
-  XCircle, 
+import {
+  FileText,
+  Clock,
+  CheckCircle2,
+  XCircle,
   PlayCircle,
   Loader2,
   RefreshCw,
@@ -62,7 +62,14 @@ interface ProposalSummary {
 // ============================================================================
 
 function StatusBadge({ status }: { status: string }) {
-  const statusConfig: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ReactNode; label: string }> = {
+  const statusConfig: Record<
+    string,
+    {
+      variant: "default" | "secondary" | "destructive" | "outline";
+      icon: React.ReactNode;
+      label: string;
+    }
+  > = {
     pending: { variant: "secondary", icon: <Clock className="h-3 w-3" />, label: "Open" },
     open: { variant: "secondary", icon: <Clock className="h-3 w-3" />, label: "Open" },
     passed: { variant: "default", icon: <CheckCircle2 className="h-3 w-3" />, label: "Passed" },
@@ -110,7 +117,7 @@ export default function ContractProposalList({
 
     try {
       const response = await fetch(
-        `/api/chain/${chainId}/contract-multisig/${contractAddress}?nodeAddress=${encodeURIComponent(nodeAddress)}&proposals=true`
+        `/api/chain/${chainId}/contract-multisig/${contractAddress}?nodeAddress=${encodeURIComponent(nodeAddress)}&proposals=true`,
       );
 
       if (!response.ok) {
@@ -139,17 +146,14 @@ export default function ContractProposalList({
   const handleSync = async () => {
     setIsRefreshing(true);
     try {
-      const response = await fetch(
-        `/api/chain/${chainId}/contract-multisig/${contractAddress}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "sync",
-            nodeAddress,
-          }),
-        }
-      );
+      const response = await fetch(`/api/chain/${chainId}/contract-multisig/${contractAddress}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "sync",
+          nodeAddress,
+        }),
+      });
 
       if (response.ok) {
         // Refetch proposals after sync
@@ -165,7 +169,7 @@ export default function ContractProposalList({
   // Calculate time remaining
   const getTimeRemaining = (expiresAt: string | null): string => {
     if (!expiresAt) return "Never";
-    
+
     try {
       const expiry = new Date(expiresAt);
       if (expiry < new Date()) {
@@ -192,7 +196,7 @@ export default function ContractProposalList({
   if (error) {
     return (
       <Card>
-        <CardContent className="flex flex-col items-center justify-center py-12 gap-4">
+        <CardContent className="flex flex-col items-center justify-center gap-4 py-12">
           <XCircle className="h-8 w-8 text-destructive" />
           <p className="text-sm text-muted-foreground">{error}</p>
           <Button variant="outline" size="sm" onClick={() => fetchProposals()}>
@@ -216,9 +220,9 @@ export default function ContractProposalList({
           </CardDescription>
         </div>
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleSync}
             disabled={isRefreshing}
             className="gap-1"
@@ -231,11 +235,9 @@ export default function ContractProposalList({
       <CardContent>
         {proposals.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <FileText className="h-12 w-12 text-muted-foreground/30 mb-4" />
+            <FileText className="mb-4 h-12 w-12 text-muted-foreground/30" />
             <p className="text-muted-foreground">No proposals yet</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Create a proposal to get started
-            </p>
+            <p className="mt-1 text-sm text-muted-foreground">Create a proposal to get started</p>
           </div>
         ) : (
           <Table>
@@ -251,12 +253,15 @@ export default function ContractProposalList({
             </TableHeader>
             <TableBody>
               {proposals.map((proposal) => {
-                const canExecute = proposal.yesWeight >= threshold && 
-                  (proposal.status === "pending" || proposal.status === "open" || proposal.status === "passed");
+                const canExecute =
+                  proposal.yesWeight >= threshold &&
+                  (proposal.status === "pending" ||
+                    proposal.status === "open" ||
+                    proposal.status === "passed");
                 const canVote = proposal.status === "pending" || proposal.status === "open";
 
                 return (
-                  <TableRow 
+                  <TableRow
                     key={proposal.proposalId}
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => onProposalClick?.(proposal.proposalId)}
@@ -266,9 +271,7 @@ export default function ContractProposalList({
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p className="font-medium truncate max-w-[200px]">
-                          {proposal.title}
-                        </p>
+                        <p className="max-w-[200px] truncate font-medium">{proposal.title}</p>
                         {!proposal.isConfirmed && (
                           <span className="text-xs text-yellow-500">Unconfirmed</span>
                         )}
@@ -278,7 +281,11 @@ export default function ContractProposalList({
                       <StatusBadge status={proposal.status} />
                     </TableCell>
                     <TableCell className="text-right">
-                      <span className={proposal.yesWeight >= threshold ? "text-green-accent font-medium" : ""}>
+                      <span
+                        className={
+                          proposal.yesWeight >= threshold ? "font-medium text-green-accent" : ""
+                        }
+                      >
                         {proposal.yesWeight}
                       </span>
                       <span className="text-muted-foreground"> / {threshold}</span>
@@ -325,4 +332,3 @@ export default function ContractProposalList({
     </Card>
   );
 }
-

@@ -135,7 +135,7 @@ export default function DevTools() {
     walletInfo,
     getAminoSigner,
     getDirectSigner,
-    loading: walletLoading,
+    loading: _walletLoading,
     connectKeplr,
     verify,
     verificationSignature,
@@ -205,7 +205,9 @@ export default function DevTools() {
         setLoadingMultisigs(true);
         const fetched = await getDbUserMultisigs(chain, { signature: verificationSignature });
         const all = [...fetched.created, ...fetched.belonged];
-        const unique = all.filter((value, idx, arr) => arr.findIndex((item) => item.address === value.address) === idx);
+        const unique = all.filter(
+          (value, idx, arr) => arr.findIndex((item) => item.address === value.address) === idx,
+        );
         setMultisigs(unique);
       } catch (error) {
         console.error("Failed to fetch multisigs", error);
@@ -233,7 +235,12 @@ export default function DevTools() {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !e.defaultPrevented) {
         const active = document.activeElement;
-        if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.tagName === "SELECT")) {
+        if (
+          active &&
+          (active.tagName === "INPUT" ||
+            active.tagName === "TEXTAREA" ||
+            active.tagName === "SELECT")
+        ) {
           return;
         }
         setSelectedCommand(null);
@@ -286,7 +293,10 @@ export default function DevTools() {
     if (rawLog.includes("codespace wasm code 2") || rawLog.includes("no such code")) {
       return "Code ID not found on chain. Verify the code ID is correct and has been uploaded.";
     }
-    if (rawLog.includes("execute wasm contract failed") || rawLog.includes("Error calling the VM")) {
+    if (
+      rawLog.includes("execute wasm contract failed") ||
+      rawLog.includes("Error calling the VM")
+    ) {
       return `Contract execution error: ${rawLog}`;
     }
     return rawLog;
@@ -295,7 +305,9 @@ export default function DevTools() {
   const executeMsgTx = async (msgType: MsgTypeUrl) => {
     if (!selectedAccount || !msgGetters.current[0]) return;
     const loadingToastId = toast.loading(
-      selectedAccount.type === "wallet" ? "Broadcasting transaction..." : "Creating multisig transaction...",
+      selectedAccount.type === "wallet"
+        ? "Broadcasting transaction..."
+        : "Creating multisig transaction...",
     );
     setProcessing(true);
     await sleep(300);
@@ -313,11 +325,20 @@ export default function DevTools() {
       if (selectedAccount.type === "wallet") {
         const signer = await getAminoSigner();
         if (!signer) throw new Error("No signer available");
-        const client = await SigningCosmWasmClient.connectWithSigner(ensureProtocol(chain.nodeAddress), signer, {
-          gasPrice: GasPrice.fromString(chain.gasPrice),
-        });
+        const client = await SigningCosmWasmClient.connectWithSigner(
+          ensureProtocol(chain.nodeAddress),
+          signer,
+          {
+            gasPrice: GasPrice.fromString(chain.gasPrice),
+          },
+        );
         const fee = calculateFee(gasLimit, chain.gasPrice);
-        const broadcastResult = await client.signAndBroadcast(selectedAccount.address, msgs, fee, memo);
+        const broadcastResult = await client.signAndBroadcast(
+          selectedAccount.address,
+          msgs,
+          fee,
+          memo,
+        );
         if (broadcastResult.code !== 0) {
           throw new Error(parseChainError(broadcastResult.rawLog || "Transaction failed", msgType));
         }
@@ -327,7 +348,8 @@ export default function DevTools() {
               ? "migrate"
               : msgType === MsgTypeUrls.UpdateAdmin
                 ? "update-admin"
-                : msgType === MsgTypeUrls.InstantiateContract || msgType === MsgTypeUrls.InstantiateContract2
+                : msgType === MsgTypeUrls.InstantiateContract ||
+                    msgType === MsgTypeUrls.InstantiateContract2
                   ? "instantiate"
                   : "execute",
           network,
@@ -361,7 +383,8 @@ export default function DevTools() {
               ? "migrate"
               : msgType === MsgTypeUrls.UpdateAdmin
                 ? "update-admin"
-                : msgType === MsgTypeUrls.InstantiateContract || msgType === MsgTypeUrls.InstantiateContract2
+                : msgType === MsgTypeUrls.InstantiateContract ||
+                    msgType === MsgTypeUrls.InstantiateContract2
                   ? "instantiate"
                   : "execute",
           network,
@@ -386,7 +409,7 @@ export default function DevTools() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="mb-2 flex items-center gap-2 text-3xl font-heading font-bold tracking-tight">
+        <h1 className="mb-2 flex items-center gap-2 font-heading text-3xl font-bold tracking-tight">
           <Terminal className="h-8 w-8 text-green-accent" />
           Developer Tools
         </h1>
@@ -411,7 +434,7 @@ export default function DevTools() {
             <CardContent className="space-y-4">
               {!walletInfo ? (
                 <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground italic">
+                  <p className="text-sm italic text-muted-foreground">
                     Connect your wallet to see available accounts.
                   </p>
                   <Button onClick={connectKeplr} className="w-full gap-2" variant="outline">
@@ -483,13 +506,19 @@ export default function DevTools() {
                               : "border-border hover:border-border/80 hover:bg-muted/50"
                           }`}
                         >
-                          <p className="truncate text-sm font-semibold">{multisig.name || "Unnamed Multisig"}</p>
-                          <p className="truncate font-mono text-xs text-muted-foreground">{multisig.address}</p>
+                          <p className="truncate text-sm font-semibold">
+                            {multisig.name || "Unnamed Multisig"}
+                          </p>
+                          <p className="truncate font-mono text-xs text-muted-foreground">
+                            {multisig.address}
+                          </p>
                         </button>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-muted-foreground">No multisigs found on this chain.</p>
+                    <p className="text-xs text-muted-foreground">
+                      No multisigs found on this chain.
+                    </p>
                   )}
                 </div>
               )}
@@ -498,10 +527,17 @@ export default function DevTools() {
 
           {selectedAccount && (
             <div className="rounded-xl border border-border bg-muted/20 p-4">
-              <p className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">Selected Identity</p>
+              <p className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">
+                Selected Identity
+              </p>
               <p className="truncate text-sm font-bold">{selectedAccount.name}</p>
-              <p className="truncate font-mono text-xs text-muted-foreground">{selectedAccount.address}</p>
-              <Badge className="mt-2 capitalize" variant={selectedAccount.type === "wallet" ? "default" : "outline"}>
+              <p className="truncate font-mono text-xs text-muted-foreground">
+                {selectedAccount.address}
+              </p>
+              <Badge
+                className="mt-2 capitalize"
+                variant={selectedAccount.type === "wallet" ? "default" : "outline"}
+              >
                 {selectedAccount.type}
               </Badge>
             </div>
@@ -511,7 +547,7 @@ export default function DevTools() {
         <div className="space-y-6 xl:col-span-3">
           {!selectedCommand ? (
             <div className="space-y-6">
-              <h2 className="text-xl font-heading font-semibold">Available Commands</h2>
+              <h2 className="font-heading text-xl font-semibold">Available Commands</h2>
               <BentoGrid className="grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
                 {devCommands.map((command) => {
                   const isEnabled = !command.requiresAccount || Boolean(selectedAccount);
@@ -525,8 +561,12 @@ export default function DevTools() {
                     >
                       <div className="flex h-full flex-col">
                         <div className="mb-3 flex items-center gap-3">
-                          <div className="rounded-lg bg-green-accent/10 p-2 text-green-accent">{command.icon}</div>
-                          <h4 className="text-lg font-heading font-bold leading-tight">{command.name}</h4>
+                          <div className="rounded-lg bg-green-accent/10 p-2 text-green-accent">
+                            {command.icon}
+                          </div>
+                          <h4 className="font-heading text-lg font-bold leading-tight">
+                            {command.name}
+                          </h4>
                         </div>
                         <p className="mb-4 text-sm text-muted-foreground">{command.description}</p>
                         <div className="mt-auto flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-green-accent opacity-0 transition-opacity group-hover:opacity-100">
@@ -551,7 +591,9 @@ export default function DevTools() {
                   <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                     Back to commands
                   </p>
-                  <p className="truncate text-base font-heading font-semibold">{selectedCommandMeta?.name}</p>
+                  <p className="truncate font-heading text-base font-semibold">
+                    {selectedCommandMeta?.name}
+                  </p>
                 </div>
                 <span className="hidden text-xs text-muted-foreground sm:block">ESC</span>
               </button>
@@ -623,7 +665,12 @@ export default function DevTools() {
                     </div>
 
                     <div className="flex flex-col gap-4 sm:flex-row">
-                      <Button variant="outline" size="lg" onClick={() => setSelectedCommand(null)} className="flex-1">
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={() => setSelectedCommand(null)}
+                        className="flex-1"
+                      >
                         Cancel
                       </Button>
                       <Button

@@ -94,12 +94,7 @@ const MsgInstantiateContract2Form = ({
         return false;
       }
 
-      if (
-        selectedDenomBase === CUSTOM_DENOM_VALUE &&
-        !customDenom &&
-        amount &&
-        amount !== "0"
-      ) {
+      if (selectedDenomBase === CUSTOM_DENOM_VALUE && !customDenom && amount && amount !== "0") {
         setCustomDenomError("Custom denom must be set because of selection above");
         return false;
       }
@@ -204,7 +199,7 @@ const MsgInstantiateContract2Form = ({
       >
         <X className="h-4 w-4" />
       </Button>
-      <h2 className="text-xl font-heading font-semibold mb-4">MsgInstantiateContract2</h2>
+      <h2 className="mb-4 font-heading text-xl font-semibold">MsgInstantiateContract2</h2>
       <div className="space-y-4">
         <Input
           variant="institutional"

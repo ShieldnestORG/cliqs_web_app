@@ -19,7 +19,7 @@ import TransactionTypeSelector from "./TransactionTypeSelector";
 
 export interface MsgGetter {
   readonly isMsgValid: () => boolean;
-  readonly msg: EncodeObject | EncodeObject[];  // Support single or multiple messages
+  readonly msg: EncodeObject | EncodeObject[]; // Support single or multiple messages
 }
 
 interface OldCreateTxFormProps {
@@ -62,7 +62,7 @@ const OldCreateTxForm = ({ router, senderAddress, accountOnChain }: OldCreateTxF
     ];
     // Use ref to batch validation triggers and avoid excessive re-renders
     validationTriggerRef.current += 1;
-    
+
     // Debounce the state update using setTimeout to prevent infinite loops
     // Cancel any pending update before scheduling a new one
     if (debounceTimeoutRef.current) {
@@ -94,13 +94,15 @@ const OldCreateTxForm = ({ router, senderAddress, accountOnChain }: OldCreateTxF
 
   const handleSelectTransactionType = (typeUrl: MsgTypeUrl) => {
     // Check if this message type requires validators
-    const requiresValidator = ([
-      MsgTypeUrls.Delegate,
-      MsgTypeUrls.Undelegate,
-      MsgTypeUrls.BeginRedelegate,
-      MsgTypeUrls.WithdrawDelegatorReward,
-      MsgTypeUrls.WithdrawValidatorCommission,
-    ] as readonly MsgTypeUrl[]).includes(typeUrl);
+    const requiresValidator = (
+      [
+        MsgTypeUrls.Delegate,
+        MsgTypeUrls.Undelegate,
+        MsgTypeUrls.BeginRedelegate,
+        MsgTypeUrls.WithdrawDelegatorReward,
+        MsgTypeUrls.WithdrawValidatorCommission,
+      ] as readonly MsgTypeUrl[]
+    ).includes(typeUrl);
 
     if (requiresValidator) {
       addMsgWithValidator(typeUrl);
@@ -108,7 +110,6 @@ const OldCreateTxForm = ({ router, senderAddress, accountOnChain }: OldCreateTxF
       addMsgType(typeUrl);
     }
   };
-
 
   // Cleanup debounce timeout on unmount
   useEffect(() => {
@@ -152,7 +153,9 @@ const OldCreateTxForm = ({ router, senderAddress, accountOnChain }: OldCreateTxF
       setGasLimitError("");
     } else if (msgTypes.length > 0) {
       // Only show error if there are messages (form is being used)
-      setGasLimitError(gasLimit <= 0 ? "Gas limit must be positive" : "Gas limit must be an integer");
+      setGasLimitError(
+        gasLimit <= 0 ? "Gas limit must be positive" : "Gas limit must be an integer",
+      );
     } else {
       setGasLimitError("");
     }
@@ -191,12 +194,13 @@ const OldCreateTxForm = ({ router, senderAddress, accountOnChain }: OldCreateTxF
       const msgs = validGetters.flatMap(({ msg }) => {
         // Handle both single message and array of messages
         const msgsArray = Array.isArray(msg) ? msg : [msg];
-        return msgsArray.map(m => exportMsgToJson(m));
+        return msgsArray.map((m) => exportMsgToJson(m));
       });
 
       if (!validGetters.length || validGetters.length !== msgTypes.length) {
         toastError({
-          description: "Please complete all message forms before creating the transaction. Check for validation errors in red.",
+          description:
+            "Please complete all message forms before creating the transaction. Check for validation errors in red.",
         });
         return;
       }
@@ -218,14 +222,16 @@ const OldCreateTxForm = ({ router, senderAddress, accountOnChain }: OldCreateTxF
       };
 
       const txId = await createDbTx(accountOnChain.address, chain.chainId, txData);
-      
+
       toastSuccess("Transaction created with ID", txId);
       const chainName = chain.registryName || router.query.chainName?.toString();
-      
+
       if (chainName && senderAddress && txId) {
         router.push(`/${chainName}/${senderAddress}/transaction/${txId}`);
       } else {
-        toast.error("Transaction created, but could not redirect. Please find it in your dashboard.");
+        toast.error(
+          "Transaction created, but could not redirect. Please find it in your dashboard.",
+        );
       }
     } catch (e) {
       console.error("Failed to create transaction:", e);
@@ -245,22 +251,26 @@ const OldCreateTxForm = ({ router, senderAddress, accountOnChain }: OldCreateTxF
     <div className="w-full space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-heading font-semibold tracking-tight mb-2">Create New Transaction</h2>
-        <p className="text-sm text-muted-foreground">Select a command type and fill in the transaction details below</p>
+        <h2 className="mb-2 font-heading text-2xl font-semibold tracking-tight">
+          Create New Transaction
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Select a command type and fill in the transaction details below
+        </p>
       </div>
 
       {/* Command Selector - Always visible */}
       <div className="w-full">
-        <TransactionTypeSelector 
+        <TransactionTypeSelector
           onSelect={(typeUrl) => {
             handleSelectTransactionType(typeUrl);
-          }} 
+          }}
         />
       </div>
 
       {/* Transaction Forms - Show below selector when commands are selected */}
       {msgTypes.length > 0 && (
-        <div className="space-y-6 mt-8">
+        <div className="mt-8 space-y-6">
           {msgTypes.map((msgType, index) => (
             <div key={msgKeys[index]} className="space-y-4">
               <MsgForm
@@ -286,10 +296,10 @@ const OldCreateTxForm = ({ router, senderAddress, accountOnChain }: OldCreateTxF
               />
             </div>
           ))}
-          
+
           {/* Transaction Settings */}
-          <div className="space-y-4 pt-4 border-t border-border">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-4 border-t border-border pt-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <div>
                 <Input
                   variant="institutional"
@@ -326,15 +336,15 @@ const OldCreateTxForm = ({ router, senderAddress, accountOnChain }: OldCreateTxF
               </div>
             </div>
           </div>
-          
+
           {/* Action Buttons */}
-          <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4">
+          <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row">
             <Button
               variant="action-outline"
               size="action"
               onClick={() => {
                 // Scroll to top to show selector
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                window.scrollTo({ top: 0, behavior: "smooth" });
               }}
               className="w-full sm:flex-1"
             >

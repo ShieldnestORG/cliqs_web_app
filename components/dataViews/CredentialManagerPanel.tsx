@@ -1,22 +1,16 @@
 /**
  * Credential Manager Panel
- * 
+ *
  * File: components/dataViews/CredentialManagerPanel.tsx
- * 
+ *
  * Panel for managing team credentials in a multisig.
  * Allows viewing, issuing, and revoking credentials.
- * 
+ *
  * Phase 3: Identity NFTs (Credential-Gated Multisig)
  */
 
 import { useState, useEffect, useCallback } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -44,19 +38,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  CredentialBadge,
-  CredentialStatusType,
-} from "@/components/ui/credential-badge";
-import {
-  Shield,
-  Plus,
-  Trash2,
-  RefreshCw,
-  AlertTriangle,
-} from "lucide-react";
+import { CredentialBadge, CredentialStatusType } from "@/components/ui/credential-badge";
+import { Shield, Plus, Trash2, RefreshCw, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
 import { CopyButton } from "@/components/ui/copy-button";
 
 // ============================================================================
@@ -110,12 +94,12 @@ export function CredentialManagerPanel({
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Dialog state
   const [isIssueDialogOpen, setIsIssueDialogOpen] = useState(false);
   const [isRevokeDialogOpen, setIsRevokeDialogOpen] = useState(false);
   const [selectedCredential, setSelectedCredential] = useState<Credential | null>(null);
-  
+
   // Form state
   const [newRecipientAddress, setNewRecipientAddress] = useState("");
   const [newRole, setNewRole] = useState<string>("member");
@@ -130,16 +114,16 @@ export function CredentialManagerPanel({
       const response = await fetch(
         `/api/chain/${chainId}/credentials/class?teamAddress=${teamAddress}`,
       );
-      
+
       if (response.status === 404) {
         setCredentialClass(null);
         return;
       }
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch credential class");
       }
-      
+
       const data = await response.json();
       setCredentialClass(data);
     } catch (err) {
@@ -154,14 +138,12 @@ export function CredentialManagerPanel({
     }
 
     try {
-      const response = await fetch(
-        `/api/chain/${chainId}/credentials/${teamAddress}?type=team`,
-      );
-      
+      const response = await fetch(`/api/chain/${chainId}/credentials/${teamAddress}?type=team`);
+
       if (!response.ok) {
         throw new Error("Failed to fetch credentials");
       }
-      
+
       const data = await response.json();
       setCredentials(data.credentials || []);
     } catch (err) {
@@ -172,7 +154,7 @@ export function CredentialManagerPanel({
   const loadData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       await fetchCredentialClass();
     } catch (err) {
@@ -291,14 +273,14 @@ export function CredentialManagerPanel({
     return (
       <Card className={cn("animate-pulse", className)}>
         <CardHeader>
-          <div className="h-6 bg-muted rounded w-1/3" />
-          <div className="h-4 bg-muted rounded w-2/3 mt-2" />
+          <div className="h-6 w-1/3 rounded bg-muted" />
+          <div className="mt-2 h-4 w-2/3 rounded bg-muted" />
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="h-10 bg-muted rounded" />
-            <div className="h-10 bg-muted rounded" />
-            <div className="h-10 bg-muted rounded" />
+            <div className="h-10 rounded bg-muted" />
+            <div className="h-10 rounded bg-muted" />
+            <div className="h-10 rounded bg-muted" />
           </div>
         </CardContent>
       </Card>
@@ -313,15 +295,14 @@ export function CredentialManagerPanel({
             <Shield className="h-5 w-5 text-muted-foreground" />
             Credentials
           </CardTitle>
-          <CardDescription>
-            This team does not have credential gating enabled
-          </CardDescription>
+          <CardDescription>This team does not have credential gating enabled</CardDescription>
         </CardHeader>
         <CardContent>
           <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              Credential gating is not enabled for this multisig. All members can vote without holding a credential NFT.
+              Credential gating is not enabled for this multisig. All members can vote without
+              holding a credential NFT.
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -338,32 +319,22 @@ export function CredentialManagerPanel({
               <Shield className="h-5 w-5 text-emerald-500" />
               Credential Management
             </CardTitle>
-            <CardDescription>
-              Manage identity NFT credentials for team members
-            </CardDescription>
+            <CardDescription>Manage identity NFT credentials for team members</CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={loadData}
-              disabled={isLoading}
-            >
+            <Button variant="outline" size="sm" onClick={loadData} disabled={isLoading}>
               <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
             </Button>
             {isAdmin && (
-              <Button
-                size="sm"
-                onClick={() => setIsIssueDialogOpen(true)}
-              >
-                <Plus className="h-4 w-4 mr-1" />
+              <Button size="sm" onClick={() => setIsIssueDialogOpen(true)}>
+                <Plus className="mr-1 h-4 w-4" />
                 Issue
               </Button>
             )}
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent>
         {error && (
           <Alert variant="destructive" className="mb-4">
@@ -373,11 +344,11 @@ export function CredentialManagerPanel({
         )}
 
         {/* Class Info */}
-        <div className="bg-muted/50 rounded-lg p-4 mb-4 space-y-2">
+        <div className="mb-4 space-y-2 rounded-lg bg-muted/50 p-4">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Class ID</span>
             <div className="flex items-center gap-2">
-              <code className="text-xs bg-background px-2 py-1 rounded">
+              <code className="rounded bg-background px-2 py-1 text-xs">
                 {truncateAddress(credentialClass.classId)}
               </code>
               <CopyButton
@@ -391,10 +362,7 @@ export function CredentialManagerPanel({
             <span className="text-sm text-muted-foreground">Features</span>
             <div className="flex gap-1">
               {credentialClass.features.map((f) => (
-                <span
-                  key={f}
-                  className="text-xs bg-background px-2 py-1 rounded capitalize"
-                >
+                <span key={f} className="rounded bg-background px-2 py-1 text-xs capitalize">
                   {f}
                 </span>
               ))}
@@ -410,9 +378,7 @@ export function CredentialManagerPanel({
 
         {/* Credentials Table */}
         {credentials.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            No credentials issued yet
-          </div>
+          <div className="py-8 text-center text-muted-foreground">No credentials issued yet</div>
         ) : (
           <Table>
             <TableHeader>
@@ -429,9 +395,7 @@ export function CredentialManagerPanel({
                 <TableRow key={cred.id}>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <code className="text-xs">
-                        {truncateAddress(cred.ownerAddress)}
-                      </code>
+                      <code className="text-xs">{truncateAddress(cred.ownerAddress)}</code>
                       <CopyButton
                         value={cred.ownerAddress}
                         copyLabel="member address"
@@ -440,16 +404,12 @@ export function CredentialManagerPanel({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="capitalize text-sm">{cred.role}</span>
+                    <span className="text-sm capitalize">{cred.role}</span>
                   </TableCell>
                   <TableCell>
-                    <CredentialBadge
-                      status={getCredentialStatus(cred)}
-                      role={cred.role}
-                      compact
-                    />
+                    <CredentialBadge status={getCredentialStatus(cred)} role={cred.role} compact />
                   </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
+                  <TableCell className="text-sm text-muted-foreground">
                     {new Date(cred.issuedAt).toLocaleDateString()}
                   </TableCell>
                   {isAdmin && (
@@ -481,11 +441,9 @@ export function CredentialManagerPanel({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Issue Credential</DialogTitle>
-            <DialogDescription>
-              Issue a new credential NFT to a team member
-            </DialogDescription>
+            <DialogDescription>Issue a new credential NFT to a team member</DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="recipient">Recipient Address</Label>
@@ -496,7 +454,7 @@ export function CredentialManagerPanel({
                 onChange={(e) => setNewRecipientAddress(e.target.value)}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="role">Role</Label>
               <Select value={newRole} onValueChange={setNewRole}>
@@ -512,7 +470,7 @@ export function CredentialManagerPanel({
               </Select>
             </div>
           </div>
-          
+
           <DialogFooter>
             <Button
               variant="outline"
@@ -521,10 +479,7 @@ export function CredentialManagerPanel({
             >
               Cancel
             </Button>
-            <Button
-              onClick={handleIssueCredential}
-              disabled={isSubmitting || !newRecipientAddress}
-            >
+            <Button onClick={handleIssueCredential} disabled={isSubmitting || !newRecipientAddress}>
               {isSubmitting ? "Issuing..." : "Issue Credential"}
             </Button>
           </DialogFooter>
@@ -540,7 +495,7 @@ export function CredentialManagerPanel({
               This action will burn the credential NFT and immediately revoke access
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedCredential && (
             <div className="py-4">
               <Alert variant="destructive">
@@ -555,7 +510,7 @@ export function CredentialManagerPanel({
               </Alert>
             </div>
           )}
-          
+
           <DialogFooter>
             <Button
               variant="outline"
@@ -567,11 +522,7 @@ export function CredentialManagerPanel({
             >
               Cancel
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleRevokeCredential}
-              disabled={isSubmitting}
-            >
+            <Button variant="destructive" onClick={handleRevokeCredential} disabled={isSubmitting}>
               {isSubmitting ? "Revoking..." : "Revoke Credential"}
             </Button>
           </DialogFooter>
@@ -582,4 +533,3 @@ export function CredentialManagerPanel({
 }
 
 export default CredentialManagerPanel;
-

@@ -55,20 +55,14 @@ export class MultisigChaosHarness {
     await faultController.fire("afterVote");
   }
 
-  async executeProposal(
-    proposalId: string | number,
-    opts?: { executor?: string }
-  ) {
+  async executeProposal(proposalId: string | number, opts?: { executor?: string }) {
     await faultController.fire("beforeExecute");
 
     let result: any;
 
     if (this.mode === "contract") {
       if (!this.contractEngine) throw new Error("Contract engine not initialized");
-      result = await this.contractEngine.executeProposal(
-        String(proposalId),
-        opts?.executor
-      );
+      result = await this.contractEngine.executeProposal(String(proposalId), opts?.executor);
     }
 
     if (this.mode === "pubkey") {

@@ -26,7 +26,7 @@ export default function ConfirmConnection({ closeDialog }: ConfirmConnectionProp
             <Plug className="h-5 w-5 text-[hsl(var(--accent-purple))]" />
           </div>
           <div>
-            <span className="text-label text-label-comment text-[10px]">Network Switch</span>
+            <span className="text-label-comment text-[10px] text-label">Network Switch</span>
             <h3 className="font-heading text-xl font-semibold text-foreground">
               Confirm Connection
             </h3>
@@ -51,7 +51,7 @@ export default function ConfirmConnection({ closeDialog }: ConfirmConnectionProp
       <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:justify-center">
         {/* Current Chain */}
         <div className="w-full max-w-sm rounded-lg border-2 border-border bg-muted/30 p-4 sm:w-auto">
-          <span className="text-label mb-3 block text-[10px] text-destructive">{`// FROM`}</span>
+          <span className="mb-3 block text-[10px] text-label text-destructive">{`// FROM`}</span>
           <ChainDigest chain={chain} simplify />
         </div>
 
@@ -62,7 +62,7 @@ export default function ConfirmConnection({ closeDialog }: ConfirmConnectionProp
 
         {/* New Chain */}
         <div className="w-full max-w-sm rounded-lg border-2 border-[hsl(var(--accent-green)/0.3)] bg-[hsl(var(--accent-green)/0.05)] p-4 sm:w-auto">
-          <span className="text-label mb-3 block text-[10px] text-[hsl(var(--accent-green-bright))]">
+          <span className="mb-3 block text-[10px] text-label text-[hsl(var(--accent-green-bright))]">
             {`// TO`}
           </span>
           <ChainDigest chain={newConnection.chain} simplify />

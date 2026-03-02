@@ -1,8 +1,8 @@
 /**
  * Cliq Dashboard Page
- * 
+ *
  * File: pages/[chainName]/[address]/index.tsx
- * 
+ *
  * Main dashboard for viewing and managing a Cliq (multisig).
  * Supports both PubKey multisigs and Contract multisigs (CW3).
  */
@@ -11,10 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import DashboardLayout, {
-  QuickStatsRow,
-  QuickStat,
-} from "@/components/layout/DashboardLayout";
+import DashboardLayout, { QuickStatsRow, QuickStat } from "@/components/layout/DashboardLayout";
 import { isChainInfoFilled } from "@/context/ChainsContext/helpers";
 import { checkAddress } from "@/lib/displayHelpers";
 import { getKeplrKey } from "@/lib/keplr";
@@ -171,14 +168,14 @@ export default function CliqDashboardPage() {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage className="font-mono text-xs flex items-center gap-1.5">
+            <BreadcrumbPage className="flex items-center gap-1.5 font-mono text-xs">
               <Users className="h-3 w-3" />
               {cliqAddress?.slice(0, 12)}...{cliqAddress?.slice(-6)}
             </BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      
+
       <div className="flex items-center gap-2">
         {explorerLink && (
           <Button asChild variant="ghost" size="sm" className="gap-2 text-xs">
@@ -202,13 +199,15 @@ export default function CliqDashboardPage() {
         <div className="flex items-center justify-center py-24">
           <div className="flex flex-col items-center gap-4 text-center">
             <div className="relative">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-green-accent/20 to-green-accent/10 animate-pulse" />
+              <div className="h-16 w-16 animate-pulse rounded-full bg-gradient-to-br from-green-accent/20 to-green-accent/10" />
               <Loader2 className="absolute inset-0 m-auto h-8 w-8 animate-spin text-green-accent" />
             </div>
             <div>
               <p className="font-medium">Loading your Cliq...</p>
               <p className="text-sm text-muted-foreground">
-                {multisigTypeResult.isLoading ? "Detecting multisig type..." : "Fetching cliq information"}
+                {multisigTypeResult.isLoading
+                  ? "Detecting multisig type..."
+                  : "Fetching cliq information"}
               </p>
             </div>
           </div>
@@ -240,14 +239,14 @@ export default function CliqDashboardPage() {
         variant="wide"
         subheader={subheader}
       >
-        <div className="max-w-4xl mx-auto py-12">
+        <div className="mx-auto max-w-4xl py-12">
           <Alert variant="warning" className="mb-6">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               {checkAddress(cliqAddress || "", chain.addressPrefix) ? (
                 <p>
-                  This address doesn&apos;t appear to belong to {chain.chainDisplayName}{" "}
-                  and wasn&apos;t found on the network or in our database.
+                  This address doesn&apos;t appear to belong to {chain.chainDisplayName} and
+                  wasn&apos;t found on the network or in our database.
                 </p>
               ) : (
                 <p>
@@ -291,26 +290,26 @@ export default function CliqDashboardPage() {
     >
       {/* Header Section */}
       <div className="mb-8">
-        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-6">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-green-accent/20 to-green-accent/10 border border-green-accent/30">
+        <div className="mb-6 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="mb-3 flex items-center gap-3">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-green-accent/30 bg-gradient-to-br from-green-accent/20 to-green-accent/10">
                 <Users className="h-7 w-7 text-green-accent" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-2xl lg:text-3xl font-heading font-bold tracking-tight">
+                  <h1 className="font-heading text-2xl font-bold tracking-tight lg:text-3xl">
                     Your CLIQ
                   </h1>
-                  <span className="px-2 py-0.5 text-xs font-medium bg-green-accent/20 text-green-accent rounded-full">
+                  <span className="rounded-full bg-green-accent/20 px-2 py-0.5 text-xs font-medium text-green-accent">
                     {memberCount} members
                   </span>
                 </div>
                 <button
                   onClick={copyAddress}
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group"
+                  className="group flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  <span className="font-mono truncate max-w-[200px] sm:max-w-none">
+                  <span className="max-w-[200px] truncate font-mono sm:max-w-none">
                     {cliqAddress}
                   </span>
                   <Copy className="h-3.5 w-3.5 opacity-50 group-hover:opacity-100" />
@@ -318,9 +317,9 @@ export default function CliqDashboardPage() {
               </div>
             </div>
           </div>
-          
+
           {hostedMultisig.hosted === "db+chain" && cliqAddress && (
-            <div className="flex items-center gap-3 shrink-0">
+            <div className="flex shrink-0 items-center gap-3">
               <Link href={`/${chain.registryName}/${cliqAddress}/transaction/new`}>
                 <Button variant="action" size="action-lg" className="gap-2">
                   <Plus className="h-4 w-4" />
@@ -366,8 +365,8 @@ export default function CliqDashboardPage() {
           <Alert variant="warning" className="mt-4">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Your Cliq needs to be funded. Send some tokens to its address so it appears on
-              the network and can start transacting.
+              Your Cliq needs to be funded. Send some tokens to its address so it appears on the
+              network and can start transacting.
             </AlertDescription>
           </Alert>
         )}
@@ -375,31 +374,31 @@ export default function CliqDashboardPage() {
 
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="bg-muted/50 p-1 h-auto">
+        <TabsList className="h-auto bg-muted/50 p-1">
           <TabsTrigger
             value="overview"
-            className="gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2.5"
+            className="gap-2 px-4 py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
           >
             <Wallet className="h-4 w-4" />
             <span className="hidden sm:inline">Overview</span>
           </TabsTrigger>
           <TabsTrigger
             value="transactions"
-            className="gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2.5"
+            className="gap-2 px-4 py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
           >
             <FileText className="h-4 w-4" />
             <span className="hidden sm:inline">Transactions</span>
           </TabsTrigger>
           <TabsTrigger
             value="members"
-            className="gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2.5"
+            className="gap-2 px-4 py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
           >
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">Members</span>
           </TabsTrigger>
           <TabsTrigger
             value="settings"
-            className="gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2.5"
+            className="gap-2 px-4 py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
           >
             <Settings className="h-4 w-4" />
             <span className="hidden sm:inline">Settings</span>
@@ -411,11 +410,11 @@ export default function CliqDashboardPage() {
           {hostedMultisig.hosted === "db+chain" && cliqAddress && (
             <>
               {/* Main Dashboard Grid - Asymmetric Layout */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-6">
                 {/* Left Column - Treasury (compact) */}
-                <div className="lg:col-span-3 space-y-4">
+                <div className="space-y-4 lg:col-span-3">
                   {/* Treasury Card */}
-                  <Card className="border-green-accent/50 card-bracket-corner">
+                  <Card className="card-bracket-corner border-green-accent/50">
                     <CardHeader className="pb-3">
                       <CardTitle className="flex items-center gap-2 text-base">
                         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-accent/20">
@@ -432,12 +431,15 @@ export default function CliqDashboardPage() {
                   {/* Quick Actions - Stacked on left */}
                   <Card>
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-sm text-muted-foreground font-normal uppercase tracking-wide">
+                      <CardTitle className="text-sm font-normal uppercase tracking-wide text-muted-foreground">
                         {/* Label */} Quick Actions
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                      <Link href={`/${chain.registryName}/${cliqAddress}/transaction/new`} className="block">
+                      <Link
+                        href={`/${chain.registryName}/${cliqAddress}/transaction/new`}
+                        className="block"
+                      >
                         <Button variant="action" className="w-full justify-start gap-3">
                           <Plus className="h-4 w-4" />
                           New Transaction
@@ -445,7 +447,7 @@ export default function CliqDashboardPage() {
                       </Link>
                       <CopyButton
                         variant="outline"
-                        className="w-full justify-start gap-3 h-auto py-3 px-4"
+                        className="h-auto w-full justify-start gap-3 px-4 py-3"
                         value={cliqAddress || ""}
                         copyLabel="Cliq address"
                       >
@@ -473,8 +475,8 @@ export default function CliqDashboardPage() {
 
                 {/* Center/Right - Pending Actions (larger area) */}
                 <div className="lg:col-span-9">
-                  <Card className="h-full min-h-[400px] flex flex-col">
-                    <CardHeader className="pb-3 flex-shrink-0">
+                  <Card className="flex h-full min-h-[400px] flex-col">
+                    <CardHeader className="flex-shrink-0 pb-3">
                       <div className="flex items-center justify-between">
                         <CardTitle className="flex items-center gap-2 text-base">
                           <History className="h-4 w-4" />
@@ -502,14 +504,14 @@ export default function CliqDashboardPage() {
               </div>
 
               {/* Bottom Section - Activity & Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {/* Recent Activity Summary */}
                 <Card className="border-dashed">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm text-muted-foreground font-normal uppercase tracking-wide">
+                    <CardTitle className="text-sm font-normal uppercase tracking-wide text-muted-foreground">
                       {/* Label */} Recent Activity
                     </CardTitle>
-                    <div className="text-lg font-heading font-semibold">Transaction History</div>
+                    <div className="font-heading text-lg font-semibold">Transaction History</div>
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-col items-center justify-center py-6 text-center">
@@ -531,21 +533,23 @@ export default function CliqDashboardPage() {
                 {/* Cliq Info */}
                 <Card className="border-dashed">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm text-muted-foreground font-normal uppercase tracking-wide">
+                    <CardTitle className="text-sm font-normal uppercase tracking-wide text-muted-foreground">
                       {/* Label */} Cliq Info
                     </CardTitle>
-                    <div className="text-lg font-heading font-semibold">Configuration</div>
+                    <div className="font-heading text-lg font-semibold">Configuration</div>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <div className="flex justify-between items-center">
+                    <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Threshold</span>
-                      <span className="text-sm font-mono font-medium">{threshold}/{memberCount}</span>
+                      <span className="font-mono text-sm font-medium">
+                        {threshold}/{memberCount}
+                      </span>
                     </div>
-                    <div className="flex justify-between items-center">
+                    <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Members</span>
                       <span className="text-sm font-medium">{memberCount}</span>
                     </div>
-                    <div className="flex justify-between items-center">
+                    <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Network</span>
                       <span className="text-sm font-medium">{chain.chainDisplayName}</span>
                     </div>
@@ -555,23 +559,23 @@ export default function CliqDashboardPage() {
                 {/* Keyboard Shortcuts */}
                 <Card className="border-dashed">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm text-muted-foreground font-normal uppercase tracking-wide">
+                    <CardTitle className="text-sm font-normal uppercase tracking-wide text-muted-foreground">
                       {/* Label */} Power User Tips
                     </CardTitle>
-                    <div className="text-lg font-heading font-semibold">Shortcuts</div>
+                    <div className="font-heading text-lg font-semibold">Shortcuts</div>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    <div className="flex justify-between items-center text-sm">
+                    <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">Quick Commands</span>
-                      <kbd className="px-2 py-0.5 rounded bg-muted text-xs font-mono">⌘K</kbd>
+                      <kbd className="rounded bg-muted px-2 py-0.5 font-mono text-xs">⌘K</kbd>
                     </div>
-                    <div className="flex justify-between items-center text-sm">
+                    <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">New Transaction</span>
-                      <kbd className="px-2 py-0.5 rounded bg-muted text-xs font-mono">N</kbd>
+                      <kbd className="rounded bg-muted px-2 py-0.5 font-mono text-xs">N</kbd>
                     </div>
-                    <div className="flex justify-between items-center text-sm">
+                    <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">Copy Address</span>
-                      <kbd className="px-2 py-0.5 rounded bg-muted text-xs font-mono">C</kbd>
+                      <kbd className="rounded bg-muted px-2 py-0.5 font-mono text-xs">C</kbd>
                     </div>
                   </CardContent>
                 </Card>
@@ -587,9 +591,7 @@ export default function CliqDashboardPage() {
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>Transactions</CardTitle>
-                  <CardDescription>
-                    View and manage all transactions for this Cliq.
-                  </CardDescription>
+                  <CardDescription>View and manage all transactions for this Cliq.</CardDescription>
                 </div>
                 <Link href={`/${chain.registryName}/${cliqAddress}/transaction/new`}>
                   <Button variant="action-outline" size="sm" className="gap-2">
@@ -630,21 +632,21 @@ export default function CliqDashboardPage() {
                 return (
                   <div
                     key={memberAddress}
-                    className="flex items-center gap-4 p-4 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors group"
+                    className="group flex items-center gap-4 rounded-lg border border-border bg-card p-4 transition-colors hover:bg-muted/50"
                   >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-green-accent/20 to-green-accent/10 border border-green-accent/30 shrink-0">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-green-accent/30 bg-gradient-to-br from-green-accent/20 to-green-accent/10">
                       <span className="text-sm font-bold text-green-accent">{index + 1}</span>
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="font-mono text-sm truncate">{memberAddress}</p>
+                        <p className="truncate font-mono text-sm">{memberAddress}</p>
                         {index === 0 && (
-                          <span className="px-1.5 py-0.5 text-[10px] font-medium bg-green-accent/20 text-green-accent rounded">
+                          <span className="rounded bg-green-accent/20 px-1.5 py-0.5 text-[10px] font-medium text-green-accent">
                             Creator
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground font-mono truncate mt-0.5">
+                      <p className="mt-0.5 truncate font-mono text-xs text-muted-foreground">
                         {simplePubkey}
                       </p>
                     </div>
@@ -673,33 +675,31 @@ export default function CliqDashboardPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
+                  <p className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">
                     Address
                   </p>
-                  <p className="font-mono text-sm break-all">{cliqAddress}</p>
+                  <p className="break-all font-mono text-sm">{cliqAddress}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
+                  <p className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">
                     Network
                   </p>
                   <p className="text-sm">{chain.chainDisplayName}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
+                  <p className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">
                     Chain ID
                   </p>
                   <p className="font-mono text-sm">{chain.chainId}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
+                  <p className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">
                     Status
                   </p>
                   <div className="flex items-center gap-2">
                     <span
                       className={`h-2 w-2 rounded-full ${
-                        hostedMultisig.hosted === "db+chain"
-                          ? "bg-green-accent"
-                          : "bg-yellow-500"
+                        hostedMultisig.hosted === "db+chain" ? "bg-green-accent" : "bg-yellow-500"
                       }`}
                     />
                     <span className="text-sm">
@@ -717,7 +717,7 @@ export default function CliqDashboardPage() {
               <CardContent className="space-y-3">
                 <CopyButton
                   variant="outline"
-                  className="w-full justify-start gap-3 h-auto py-3 px-4"
+                  className="h-auto w-full justify-start gap-3 px-4 py-3"
                   value={cliqAddress || ""}
                   copyLabel="Cliq address"
                 >

@@ -1,10 +1,10 @@
 /**
  * Multi-RPC Broadcast Verifier
- * 
+ *
  * File: lib/rpc/multi-rpc-verifier.ts
- * 
+ *
  * Implements hardened broadcast with cross-endpoint confirmation.
- * 
+ *
  * Broadcast policy:
  * 1. Primary: Send tx to private/trusted RPC endpoint
  * 2. Secondary: Confirm via multiple independent endpoints
@@ -102,7 +102,7 @@ export class MultiRpcVerifier {
 
   /**
    * Broadcast transaction and verify across multiple endpoints
-   * 
+   *
    * 1. Broadcast to primary endpoint
    * 2. Wait for confirmation
    * 3. Verify on secondary/witness endpoints
@@ -170,9 +170,7 @@ export class MultiRpcVerifier {
     const confirmedCount = verifications.filter((v) => v.verified).length + 1; // +1 for primary
     const isFullyVerified = confirmedCount >= this.config.minConfirmations;
 
-    console.log(
-      `🔍 Verification: ${confirmedCount}/${this.config.minConfirmations} confirmations`,
-    );
+    console.log(`🔍 Verification: ${confirmedCount}/${this.config.minConfirmations} confirmations`);
 
     return {
       txHash: broadcastResponse.transactionHash,
@@ -283,9 +281,10 @@ export class MultiRpcVerifier {
             result = null;
         }
 
-        const matched = check.expected !== undefined
-          ? JSON.stringify(result) === JSON.stringify(check.expected)
-          : true;
+        const matched =
+          check.expected !== undefined
+            ? JSON.stringify(result) === JSON.stringify(check.expected)
+            : true;
 
         results.push({
           check,
@@ -394,9 +393,6 @@ export function createMultiRpcVerifier(
 /**
  * Create a MultiRpcVerifier with custom configuration
  */
-export function createMultiRpcVerifierWithConfig(
-  config: EndpointConfig,
-): MultiRpcVerifier {
+export function createMultiRpcVerifierWithConfig(config: EndpointConfig): MultiRpcVerifier {
   return new MultiRpcVerifier(config);
 }
-

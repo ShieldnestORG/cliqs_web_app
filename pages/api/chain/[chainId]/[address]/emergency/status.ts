@@ -1,10 +1,10 @@
 /**
  * Emergency Status API
- * 
+ *
  * File: pages/api/chain/[chainId]/[address]/emergency/status.ts
- * 
+ *
  * GET: Get current emergency state
- * 
+ *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards
  */
 
@@ -13,10 +13,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { getPauseController } from "@/lib/emergency";
 import { getSafeModeController } from "@/lib/emergency/safe-mode";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { chainId, address } = req.query;
 
   if (typeof chainId !== "string" || typeof address !== "string") {
@@ -47,9 +44,8 @@ export default async function handler(
     });
   } catch (error) {
     console.error("Emergency status API error:", error);
-    return res.status(500).json({ 
-      error: error instanceof Error ? error.message : "Internal server error" 
+    return res.status(500).json({
+      error: error instanceof Error ? error.message : "Internal server error",
     });
   }
 }
-

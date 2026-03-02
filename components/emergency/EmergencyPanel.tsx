@@ -1,10 +1,10 @@
 /**
  * Emergency Panel Component
- * 
+ *
  * File: components/emergency/EmergencyPanel.tsx
- * 
+ *
  * Displays emergency controls for pause/unpause and safe mode activation.
- * 
+ *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards
  */
 
@@ -34,11 +34,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { EmergencyState } from "@/lib/emergency/types";
 
 // ============================================================================
@@ -65,8 +61,8 @@ interface EmergencyPanelProps {
 // ============================================================================
 
 export function EmergencyPanel({
-  multisigAddress,
-  chainId,
+  multisigAddress: _multisigAddress,
+  chainId: _chainId,
   state,
   normalThreshold,
   totalWeight,
@@ -91,7 +87,7 @@ export function EmergencyPanel({
 
   const handlePause = async () => {
     if (!pauseReason.trim()) return;
-    
+
     setIsActionLoading(true);
     try {
       await onPause(pauseReason, pauseDuration);
@@ -148,7 +144,7 @@ export function EmergencyPanel({
     return new Date(timestamp * 1000).toLocaleString();
   };
 
-  const formatDuration = (seconds: number): string => {
+  const _formatDuration = (seconds: number): string => {
     if (seconds < 60) return `${seconds}s`;
     if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
     if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;
@@ -165,9 +161,7 @@ export function EmergencyPanel({
       {(state.isPaused || state.isSafeMode) && (
         <Alert variant={state.isPaused ? "destructive" : "default"}>
           <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>
-            {state.isPaused ? "Operations Paused" : "Safe Mode Active"}
-          </AlertTitle>
+          <AlertTitle>{state.isPaused ? "Operations Paused" : "Safe Mode Active"}</AlertTitle>
           <AlertDescription>
             {state.isPaused && (
               <>
@@ -181,8 +175,8 @@ export function EmergencyPanel({
             )}
             {!state.isPaused && state.isSafeMode && (
               <>
-                Safe mode is active with elevated threshold of{" "}
-                {state.safeModeThreshold} (normal: {normalThreshold})
+                Safe mode is active with elevated threshold of {state.safeModeThreshold} (normal:{" "}
+                {normalThreshold})
               </>
             )}
           </AlertDescription>
@@ -200,15 +194,13 @@ export function EmergencyPanel({
             )}
             Pause Control
           </CardTitle>
-          <CardDescription>
-            Pause or resume all multisig operations
-          </CardDescription>
+          <CardDescription>Pause or resume all multisig operations</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4">
             <div className="flex-1">
               <div className="text-sm text-muted-foreground">Current Status</div>
-              <div className="flex items-center gap-2 mt-1">
+              <div className="mt-1 flex items-center gap-2">
                 <Badge variant={state.isPaused ? "destructive" : "secondary"}>
                   {state.isPaused ? "PAUSED" : "OPERATIONAL"}
                 </Badge>
@@ -228,17 +220,14 @@ export function EmergencyPanel({
               onClick={handleUnpause}
               disabled={!canUnpause || isLoading || isActionLoading}
             >
-              <Play className="h-4 w-4 mr-2" />
+              <Play className="mr-2 h-4 w-4" />
               Resume Operations
             </Button>
           ) : (
             <Dialog open={isPauseDialogOpen} onOpenChange={setIsPauseDialogOpen}>
               <DialogTrigger asChild>
-                <Button
-                  variant="destructive"
-                  disabled={!canPause || isLoading || isActionLoading}
-                >
-                  <Pause className="h-4 w-4 mr-2" />
+                <Button variant="destructive" disabled={!canPause || isLoading || isActionLoading}>
+                  <Pause className="mr-2 h-4 w-4" />
                   Pause Operations
                 </Button>
               </DialogTrigger>
@@ -246,8 +235,8 @@ export function EmergencyPanel({
                 <DialogHeader>
                   <DialogTitle>Pause Multisig Operations</DialogTitle>
                   <DialogDescription>
-                    This will block all new approvals and executions.
-                    Queries will still work. Credential checks remain enforced.
+                    This will block all new approvals and executions. Queries will still work.
+                    Credential checks remain enforced.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
@@ -267,12 +256,16 @@ export function EmergencyPanel({
                         id="pauseDuration"
                         type="number"
                         value={pauseDuration || ""}
-                        onChange={(e) => setPauseDuration(e.target.value ? parseInt(e.target.value, 10) : undefined)}
+                        onChange={(e) =>
+                          setPauseDuration(
+                            e.target.value ? parseInt(e.target.value, 10) : undefined,
+                          )
+                        }
                         placeholder="Duration"
                         className="flex-1"
                       />
                       <select
-                        className="px-3 py-2 border rounded-md"
+                        className="rounded-md border px-3 py-2"
                         onChange={(e) => {
                           if (pauseDuration) {
                             const multiplier = parseInt(e.target.value, 10);
@@ -352,17 +345,14 @@ export function EmergencyPanel({
               onClick={handleDeactivateSafeMode}
               disabled={isLoading || isActionLoading}
             >
-              <Shield className="h-4 w-4 mr-2" />
+              <Shield className="mr-2 h-4 w-4" />
               Deactivate Safe Mode
             </Button>
           ) : (
             <Dialog open={isSafeModeDialogOpen} onOpenChange={setIsSafeModeDialogOpen}>
               <DialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  disabled={state.isPaused || isLoading || isActionLoading}
-                >
-                  <ShieldAlert className="h-4 w-4 mr-2" />
+                <Button variant="outline" disabled={state.isPaused || isLoading || isActionLoading}>
+                  <ShieldAlert className="mr-2 h-4 w-4" />
                   Activate Safe Mode
                 </Button>
               </DialogTrigger>
@@ -370,8 +360,8 @@ export function EmergencyPanel({
                 <DialogHeader>
                   <DialogTitle>Activate Safe Mode</DialogTitle>
                   <DialogDescription>
-                    Temporarily require a higher threshold for all operations.
-                    This is useful during uncertain conditions.
+                    Temporarily require a higher threshold for all operations. This is useful during
+                    uncertain conditions.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
@@ -386,7 +376,8 @@ export function EmergencyPanel({
                       onChange={(e) => setSafeModeThreshold(parseInt(e.target.value, 10))}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Must be higher than normal threshold ({normalThreshold}) and at most {totalWeight}
+                      Must be higher than normal threshold ({normalThreshold}) and at most{" "}
+                      {totalWeight}
                     </p>
                   </div>
                 </div>
@@ -397,7 +388,11 @@ export function EmergencyPanel({
                   <Button
                     variant="default"
                     onClick={handleActivateSafeMode}
-                    disabled={safeModeThreshold <= normalThreshold || safeModeThreshold > totalWeight || isActionLoading}
+                    disabled={
+                      safeModeThreshold <= normalThreshold ||
+                      safeModeThreshold > totalWeight ||
+                      isActionLoading
+                    }
                   >
                     {isActionLoading ? "Activating..." : "Activate"}
                   </Button>
@@ -413,12 +408,10 @@ export function EmergencyPanel({
         <CardHeader>
           <CardTitle className="text-sm">Permissions</CardTitle>
         </CardHeader>
-        <CardContent className="text-sm space-y-2">
+        <CardContent className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Can Pause:</span>
-            <Badge variant={canPause ? "default" : "secondary"}>
-              {canPause ? "Yes" : "No"}
-            </Badge>
+            <Badge variant={canPause ? "default" : "secondary"}>{canPause ? "Yes" : "No"}</Badge>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Can Unpause:</span>
@@ -426,9 +419,9 @@ export function EmergencyPanel({
               {canUnpause ? "Yes" : "No"}
             </Badge>
           </div>
-          <p className="text-xs text-muted-foreground mt-4">
-            Unpause requires higher threshold (N+1) or timelocked admin action.
-            Emergency controls do NOT bypass credential checks.
+          <p className="mt-4 text-xs text-muted-foreground">
+            Unpause requires higher threshold (N+1) or timelocked admin action. Emergency controls
+            do NOT bypass credential checks.
           </p>
         </CardContent>
       </Card>
@@ -437,4 +430,3 @@ export function EmergencyPanel({
 }
 
 export default EmergencyPanel;
-

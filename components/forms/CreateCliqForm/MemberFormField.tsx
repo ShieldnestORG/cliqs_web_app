@@ -1,8 +1,8 @@
 /**
  * Cliq Member Form Field
- * 
+ *
  * File: components/forms/CreateCliqForm/MemberFormField.tsx
- * 
+ *
  * Individual member input field for the Cliq creation form.
  * Supports paste of multiple addresses at once.
  */
@@ -65,10 +65,10 @@ export default function MemberFormField({
       control={createCliqForm.control}
       name={`members.${index}.member`}
       render={() => (
-        <FormItem className="relative group">
+        <FormItem className="group relative">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-accent/20 text-green-accent text-xs font-bold">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-accent/20 text-xs font-bold text-green-accent">
                 {index + 1}
               </div>
               <FormLabel className="text-sm font-medium">
@@ -81,7 +81,7 @@ export default function MemberFormField({
                 variant="ghost"
                 size="icon-sm"
                 onClick={() => membersRemove(index)}
-                className="h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="h-6 w-6 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
               >
                 <X className="h-4 w-4" />
                 <span className="sr-only">Remove member {index + 1}</span>
@@ -89,9 +89,7 @@ export default function MemberFormField({
             )}
           </div>
           <FormDescription className="text-xs text-muted-foreground">
-            {index === 0 
-              ? "Your wallet address or public key" 
-              : "Wallet address or public key"}
+            {index === 0 ? "Your wallet address or public key" : "Wallet address or public key"}
           </FormDescription>
           <FormControl>
             <Input

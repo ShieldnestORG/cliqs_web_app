@@ -18,7 +18,7 @@ export default function DevPage() {
   return (
     <DashboardLayout>
       <Head title={`Developer Tools - ${chain.chainDisplayName || "Cosmos Hub"}`} />
-      
+
       <div className="py-2">
         <div className="space-y-6">
           <Breadcrumb>

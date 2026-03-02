@@ -22,7 +22,7 @@ describe("PHASE 3 GAS FUZZ: resource pressure + out-of-gas safety", () => {
     bc.enqueueSuccess({ code: 0, txhash: "OK1" });
     bc.enqueueSuccess({ code: 0, txhash: "OK2" });
 
-    const rng = new RNG(0xBADA55);
+    const rng = new RNG(0xbada55);
 
     for (let i = 0; i < 400; i++) {
       const msgs = genMsgBatch(rng, { maxMsgs: rng.int(1, 40), includeDisallowedChance: 0.0 });

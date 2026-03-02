@@ -11,10 +11,7 @@ import * as db from "@/lib/db";
 import { withByodbMiddleware } from "@/lib/byodb/middleware";
 import type { NextApiRequest, NextApiResponse } from "next";
 
-async function apiDbStats(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+async function apiDbStats(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
     res.status(405).end();
     return;
@@ -43,9 +40,7 @@ async function apiDbStats(
     });
   } catch (err: unknown) {
     console.error("[DB Stats] Error:", err);
-    res.status(500).send(
-      err instanceof Error ? err.message : "Failed to get stats",
-    );
+    res.status(500).send(err instanceof Error ? err.message : "Failed to get stats");
   }
 }
 

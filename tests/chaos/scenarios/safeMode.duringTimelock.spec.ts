@@ -17,14 +17,17 @@ describe("CHAOS: safe-mode during timelock", () => {
 
         // before unlock: should deny due to timelock
         hh.schedule(now, "pre-unlock execute attempt", async () => {
-          const res = await evaluatePoliciesMinimal({
-            nowMs: now,
-            timelock: { unlockAtMs: now + 60_000 },
-            safeMode: false,
-            emergencyPaused: false,
-            policyVersion: 1,
-            expectedPolicyVersion: 1,
-          }, 'execution');
+          const res = await evaluatePoliciesMinimal(
+            {
+              nowMs: now,
+              timelock: { unlockAtMs: now + 60_000 },
+              safeMode: false,
+              emergencyPaused: false,
+              policyVersion: 1,
+              expectedPolicyVersion: 1,
+            },
+            "execution",
+          );
           expect(res.allowed).toBe(false);
         });
 
@@ -35,13 +38,16 @@ describe("CHAOS: safe-mode during timelock", () => {
 
         // after unlock: still deny because safe-mode
         hh.schedule(now + 60_001, "post-unlock execute attempt", async () => {
-          const res = await evaluatePoliciesMinimal({
-            nowMs: now + 60_001,
-            timelock: { unlockAtMs: now + 60_000 },
-            emergencyPaused: false,
-            policyVersion: 1,
-            expectedPolicyVersion: 1,
-          }, 'execution');
+          const res = await evaluatePoliciesMinimal(
+            {
+              nowMs: now + 60_001,
+              timelock: { unlockAtMs: now + 60_000 },
+              emergencyPaused: false,
+              policyVersion: 1,
+              expectedPolicyVersion: 1,
+            },
+            "execution",
+          );
           expect(res.allowed).toBe(false);
         });
       },

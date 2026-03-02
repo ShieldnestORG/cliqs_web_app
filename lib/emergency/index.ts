@@ -1,8 +1,8 @@
 /**
  * Emergency Module Exports
- * 
+ *
  * File: lib/emergency/index.ts
- * 
+ *
  * Central export point for Phase 4 emergency controls.
  * Includes pause mechanism and safe mode.
  */
@@ -44,4 +44,3 @@ export {
   setSafeModeController,
   type SafeModeConfig,
 } from "./safe-mode";
-

@@ -110,7 +110,7 @@ export function validateWasm(
   if (constraints?.wasmSizeLimitKB && sizeKB > constraints.wasmSizeLimitKB) {
     errors.push(
       `WASM size ${sizeKB}KB exceeds chain limit of ${constraints.wasmSizeLimitKB}KB. ` +
-      `Recompile with cosmwasm/optimizer to reduce size.`,
+        `Recompile with cosmwasm/optimizer to reduce size.`,
     );
   }
 
@@ -122,14 +122,14 @@ export function validateWasm(
     const opcodeList = bulkMemoryOpcodes.map((h) => `${h.name} x${h.count}`).join(", ");
     errors.push(
       `WASM contains bulk-memory opcodes (${opcodeList}) which this chain does not support. ` +
-      `Recompile with Rust <= ${constraints.maxRustVersion || "1.81"} or use ` +
-      `${constraints.optimizerImage || "cosmwasm/optimizer:0.16.1"} to strip them.`,
+        `Recompile with Rust <= ${constraints.maxRustVersion || "1.81"} or use ` +
+        `${constraints.optimizerImage || "cosmwasm/optimizer:0.16.1"} to strip them.`,
     );
   } else if (hasBulkMemory) {
     const opcodeList = bulkMemoryOpcodes.map((h) => `${h.name} x${h.count}`).join(", ");
     warnings.push(
       `WASM contains bulk-memory opcodes (${opcodeList}). ` +
-      `This is fine for most chains but may fail on chains that don't support them.`,
+        `This is fine for most chains but may fail on chains that don't support them.`,
     );
   }
 

@@ -1,17 +1,17 @@
 /**
  * Layer 3: On-Demand Chain Verification
- * 
+ *
  * File: lib/indexer/chain-verifier.ts
- * 
+ *
  * This layer provides on-demand verification against chain state
- * before security-critical operations. The DB is advisory; 
+ * before security-critical operations. The DB is advisory;
  * chain state is authoritative.
- * 
+ *
  * Called before:
  * - approve: verify proposal is open, signer is member
  * - execute: verify threshold met, proposal not expired
  * - rotate signer: verify caller has authority
- * 
+ *
  * This is what makes the system:
  * - Attack-resistant
  * - DB-compromise-safe
@@ -19,11 +19,7 @@
  */
 
 import { CW3Client } from "../contract/cw3-client";
-import { 
-  CW3Proposal, 
-  VoteOption,
-  ThresholdResponse,
-} from "../multisig/contract-types";
+import { CW3Proposal, VoteOption, ThresholdResponse } from "../multisig/contract-types";
 import * as localDb from "../localDb";
 
 // ============================================================================
@@ -108,7 +104,7 @@ export class ChainVerifier {
 
   /**
    * Verify before voting on a proposal
-   * 
+   *
    * Checks:
    * 1. Contract exists and is a CW3 multisig
    * 2. Proposal exists and is open
@@ -173,9 +169,9 @@ export class ChainVerifier {
           verified: false,
           errorCode: "ALREADY_VOTED",
           errorMessage: `Address ${voterAddress} has already voted on proposal ${proposalId}`,
-          chainData: { 
-            proposal, 
-            hasVoted: true, 
+          chainData: {
+            proposal,
+            hasVoted: true,
             existingVote: existingVote.vote,
             verifiedAt,
           },
@@ -218,7 +214,7 @@ export class ChainVerifier {
 
   /**
    * Verify before executing a proposal
-   * 
+   *
    * Checks:
    * 1. Proposal exists
    * 2. Proposal has passed (threshold met)
@@ -270,9 +266,9 @@ export class ChainVerifier {
               verified: false,
               errorCode: "THRESHOLD_NOT_MET",
               errorMessage: `Proposal ${proposalId} has not met threshold (${currentYesWeight}/${threshold})`,
-              chainData: { 
-                proposal, 
-                currentYesWeight, 
+              chainData: {
+                proposal,
+                currentYesWeight,
                 threshold,
                 verifiedAt,
               },
@@ -342,7 +338,7 @@ export class ChainVerifier {
       const verifiedAt = new Date().toISOString();
 
       const voterInfo = await client.queryVoter(memberAddress);
-      
+
       if (!voterInfo || voterInfo.weight === 0) {
         return {
           verified: false,
@@ -528,13 +524,13 @@ export class ChainVerifier {
 
   private getClient(nodeAddress: string, contractAddress: string, chainId: string): CW3Client {
     const key = `${nodeAddress}:${contractAddress}`;
-    
+
     let client = this.clientCache.get(key);
     if (!client) {
       client = new CW3Client(nodeAddress, contractAddress, chainId);
       this.clientCache.set(key, client);
     }
-    
+
     return client;
   }
 
@@ -545,20 +541,19 @@ export class ChainVerifier {
     if (threshold.absolute_percentage) {
       return Math.ceil(
         parseFloat(threshold.absolute_percentage.percentage) *
-        threshold.absolute_percentage.total_weight
+          threshold.absolute_percentage.total_weight,
       );
     }
     if (threshold.threshold_quorum) {
       return Math.ceil(
-        parseFloat(threshold.threshold_quorum.threshold) *
-        threshold.threshold_quorum.total_weight
+        parseFloat(threshold.threshold_quorum.threshold) * threshold.threshold_quorum.total_weight,
       );
     }
     return 1;
   }
 
   private mapChainStatus(
-    status: string
+    status: string,
   ): "pending" | "open" | "passed" | "rejected" | "executed" | "expired" {
     switch (status) {
       case "pending":
@@ -618,7 +613,9 @@ export async function verifyCanExecute(params: VerifyExecuteParams): Promise<Ver
 /**
  * Verify membership in a multisig
  */
-export async function verifyMembership(params: VerifyMembershipParams): Promise<VerificationResult> {
+export async function verifyMembership(
+  params: VerifyMembershipParams,
+): Promise<VerificationResult> {
   return chainVerifier.verifyMembership(params);
 }
 
@@ -633,4 +630,3 @@ export async function verifyAndReconcileProposal(
 ): Promise<{ reconciled: boolean; changes: string[] }> {
   return chainVerifier.verifyAndReconcile(nodeAddress, contractAddress, chainId, proposalId);
 }
-

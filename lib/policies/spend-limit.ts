@@ -1,11 +1,11 @@
 /**
  * Spend Limit Policy
- * 
+ *
  * File: lib/policies/spend-limit.ts
- * 
+ *
  * Priority 4 policy - Only safe after timelocks provide reaction window.
  * Enforces per-transaction and daily spending limits.
- * 
+ *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards
  */
 
@@ -50,7 +50,7 @@ export class SpendLimitPolicy implements Policy {
   readonly name: string;
   readonly enabled: boolean;
   readonly priority: number;
-  
+
   private readonly config: SpendLimitPolicyConfig;
 
   constructor(
@@ -63,7 +63,7 @@ export class SpendLimitPolicy implements Policy {
     this.name = name;
     this.enabled = options.enabled ?? true;
     this.priority = options.priority ?? 40; // After timelock, emergency, msg-type
-    
+
     this.config = {
       perTxLimits: config.perTxLimits ?? DEFAULT_CONFIG.perTxLimits,
       dailyLimits: config.dailyLimits ?? DEFAULT_CONFIG.dailyLimits,
@@ -75,10 +75,7 @@ export class SpendLimitPolicy implements Policy {
   /**
    * Evaluate for proposal creation
    */
-  async evaluateProposal(
-    proposal: Proposal,
-    context: PolicyContext,
-  ): Promise<PolicyDecision> {
+  async evaluateProposal(proposal: Proposal, context: PolicyContext): Promise<PolicyDecision> {
     const violations: PolicyViolation[] = [];
 
     // Calculate proposal value (excluding exempt message types)
@@ -90,7 +87,7 @@ export class SpendLimitPolicy implements Policy {
       if (spent) {
         const spentAmount = BigInt(spent.amount);
         const limitAmount = BigInt(limit.amount);
-        
+
         if (spentAmount > limitAmount) {
           violations.push(
             createViolation(
@@ -114,13 +111,13 @@ export class SpendLimitPolicy implements Policy {
     for (const limit of this.config.dailyLimits) {
       const alreadySpent = context.spentInWindow.get(limit.denom);
       const proposalSpend = proposalValue.find((c) => c.denom === limit.denom);
-      
+
       if (proposalSpend) {
         const alreadySpentAmount = alreadySpent ? BigInt(alreadySpent.amount) : BigInt(0);
         const proposalAmount = BigInt(proposalSpend.amount);
         const totalWouldSpend = alreadySpentAmount + proposalAmount;
         const limitAmount = BigInt(limit.amount);
-        
+
         if (totalWouldSpend > limitAmount) {
           const remaining = limitAmount - alreadySpentAmount;
           violations.push(
@@ -153,10 +150,7 @@ export class SpendLimitPolicy implements Policy {
   /**
    * Evaluate for proposal execution
    */
-  async evaluateExecution(
-    proposal: Proposal,
-    context: PolicyContext,
-  ): Promise<PolicyDecision> {
+  async evaluateExecution(proposal: Proposal, context: PolicyContext): Promise<PolicyDecision> {
     // Re-evaluate at execution time with current spending totals
     return this.evaluateProposal(proposal, context);
   }
@@ -168,15 +162,12 @@ export class SpendLimitPolicy implements Policy {
   /**
    * Calculate the value of non-exempt message types
    */
-  private calculateNonExemptValue(
-    proposal: Proposal,
-    _context: PolicyContext,
-  ): Coin[] {
+  private calculateNonExemptValue(proposal: Proposal, _context: PolicyContext): Coin[] {
     const valueMap = new Map<string, bigint>();
 
     for (const msg of proposal.content.msgs) {
       const msgType = msg.typeUrl as MsgTypeUrl;
-      
+
       // Skip exempt message types
       if (this.config.exemptMsgTypes?.includes(msgType)) {
         continue;
@@ -200,7 +191,7 @@ export class SpendLimitPolicy implements Policy {
    */
   private extractValueFromMsg(msg: { typeUrl: string; value: unknown }): Coin[] {
     const value = msg.value as Record<string, unknown>;
-    
+
     switch (msg.typeUrl) {
       case MsgTypeUrls.Send: {
         const amount = value.amount as Coin[] | undefined;
@@ -316,13 +307,11 @@ export class SpendLimitPolicy implements Policy {
  */
 export function createSpendLimitPolicy(stored: StoredPolicy): SpendLimitPolicy {
   const config: SpendLimitPolicyConfig = JSON.parse(stored.configJSON);
-  
-  return new SpendLimitPolicy(
-    stored.id,
-    stored.name,
-    config,
-    { enabled: stored.enabled, priority: stored.priority },
-  );
+
+  return new SpendLimitPolicy(stored.id, stored.name, config, {
+    enabled: stored.enabled,
+    priority: stored.priority,
+  });
 }
 
 /**
@@ -353,4 +342,3 @@ export function createMultiDenomSpendLimitPolicy(
     windowSeconds: 86400,
   });
 }
-

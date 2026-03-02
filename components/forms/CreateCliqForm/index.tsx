@@ -1,14 +1,21 @@
 /**
  * Create Cliq Form
- * 
+ *
  * File: components/forms/CreateCliqForm/index.tsx
- * 
+ *
  * Main form component for creating a new Cliq (multisig group).
  * A Cliq lets multiple people manage shared funds and coordinate transactions.
  * Uses a tabbed interface for each step of the creation process.
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardLabel } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardLabel,
+} from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -31,7 +38,19 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/router";
 import { useEffect, useCallback, useState } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
-import { Users, Shield, ShieldPlus, UserPlus, FileText, UsersRound, Check, ChevronRight, ChevronLeft, Key, AlertCircle } from "lucide-react";
+import {
+  Users,
+  Shield,
+  ShieldPlus,
+  UserPlus,
+  FileText,
+  UsersRound,
+  Check,
+  ChevronRight,
+  ChevronLeft,
+  Key,
+  AlertCircle,
+} from "lucide-react";
 import { useChains } from "../../../context/ChainsContext";
 import { createMultisigFromCompressedSecp256k1Pubkeys } from "../../../lib/multisigHelpers";
 import ConfirmCreateCliq from "./ConfirmCreateCliq";
@@ -49,10 +68,10 @@ export default function CreateCliqForm() {
 
   const createCliqForm = useForm<CreateCliqFormValues>({
     resolver: zodResolver(createCliqSchema),
-    defaultValues: { 
+    defaultValues: {
       name: "",
       description: "",
-      members: [{ member: "" }], 
+      members: [{ member: "" }],
       threshold: 1,
       // Phase 3: Credential gating defaults
       enableCredentialGating: false,
@@ -65,9 +84,9 @@ export default function CreateCliqForm() {
   });
 
   // Phase 3: Watch credential gating toggle
-  const enableCredentialGating = useWatch({ 
-    control: createCliqForm.control, 
-    name: "enableCredentialGating" 
+  const enableCredentialGating = useWatch({
+    control: createCliqForm.control,
+    name: "enableCredentialGating",
   });
 
   const {
@@ -86,13 +105,13 @@ export default function CreateCliqForm() {
   // Tab navigation helpers
   const tabs: TabValue[] = ["name", "members", "approval"];
   const currentTabIndex = tabs.indexOf(activeTab);
-  
+
   const goToNextTab = () => {
     if (currentTabIndex < tabs.length - 1) {
       setActiveTab(tabs[currentTabIndex + 1]);
     }
   };
-  
+
   const goToPrevTab = () => {
     if (currentTabIndex > 0) {
       setActiveTab(tabs[currentTabIndex - 1]);
@@ -174,10 +193,10 @@ export default function CreateCliqForm() {
     <>
       <Card variant="institutional" bracket="green" className="overflow-visible">
         <CardHeader>
-          <div className="flex items-center gap-4 mb-2">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted border border-border">
-                  <Users className="w-7 h-7 text-foreground" />
-                </div>
+          <div className="mb-2 flex items-center gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-muted">
+              <Users className="h-7 w-7 text-foreground" />
+            </div>
             <div>
               <CardLabel comment className="flex items-center gap-1">
                 <ShieldPlus className="h-3 w-3" />
@@ -186,84 +205,94 @@ export default function CreateCliqForm() {
               <CardTitle className="text-2xl">Build Your Shared Wallet</CardTitle>
             </div>
           </div>
-          <CardDescription className="space-y-3 mt-4">
+          <CardDescription className="mt-4 space-y-3">
             <span className="block text-base">
               Build a shared wallet with your team on{" "}
-              <span className="font-semibold text-foreground">{chain.chainDisplayName || "Cosmos"}</span>
+              <span className="font-semibold text-foreground">
+                {chain.chainDisplayName || "Cosmos"}
+              </span>
             </span>
             <span className="block text-sm text-muted-foreground">
-              A CLIQ requires multiple signatures to approve transactions—perfect for teams, DAOs, or shared treasuries.
+              A CLIQ requires multiple signatures to approve transactions—perfect for teams, DAOs,
+              or shared treasuries.
             </span>
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...createCliqForm}>
-            <form
-              id="create-cliq-form"
-              onSubmit={createCliqForm.handleSubmit(submitCreateCliq)}
-            >
-              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabValue)} className="w-full">
+            <form id="create-cliq-form" onSubmit={createCliqForm.handleSubmit(submitCreateCliq)}>
+              <Tabs
+                value={activeTab}
+                onValueChange={(v) => setActiveTab(v as TabValue)}
+                className="w-full"
+              >
                 {/* Tab Navigation */}
-                <TabsList className="w-full grid grid-cols-3 h-auto p-1 bg-muted/50 rounded-xl mb-6">
-                  <TabsTrigger 
-                    value="name" 
-                    className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border rounded-lg shadow-sm transition-all"
+                <TabsList className="mb-6 grid h-auto w-full grid-cols-3 rounded-xl bg-muted/50 p-1">
+                  <TabsTrigger
+                    value="name"
+                    className="flex items-center gap-2 rounded-lg px-4 py-3 shadow-sm transition-all data-[state=active]:border data-[state=active]:border-border data-[state=active]:bg-background data-[state=active]:text-foreground"
                   >
-                    <div className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-colors ${
-                      isNameStepComplete 
-                        ? "bg-primary text-primary-foreground" 
-                        : activeTab === "name" 
-                          ? "bg-muted text-foreground border border-border" 
-                          : "bg-muted text-muted-foreground"
-                    }`}>
+                    <div
+                      className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-colors ${
+                        isNameStepComplete
+                          ? "bg-primary text-primary-foreground"
+                          : activeTab === "name"
+                            ? "border border-border bg-muted text-foreground"
+                            : "bg-muted text-muted-foreground"
+                      }`}
+                    >
                       {isNameStepComplete ? <Check className="h-3.5 w-3.5" /> : "1"}
                     </div>
-                    <span className="hidden sm:inline font-medium">Name</span>
+                    <span className="hidden font-medium sm:inline">Name</span>
                     <FileText className="h-4 w-4 sm:hidden" />
                   </TabsTrigger>
-                  
-                  <TabsTrigger 
-                    value="members" 
-                    className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border rounded-lg shadow-sm transition-all"
+
+                  <TabsTrigger
+                    value="members"
+                    className="flex items-center gap-2 rounded-lg px-4 py-3 shadow-sm transition-all data-[state=active]:border data-[state=active]:border-border data-[state=active]:bg-background data-[state=active]:text-foreground"
                   >
-                    <div className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-colors ${
-                      isMembersStepComplete 
-                        ? "bg-primary text-primary-foreground" 
-                        : activeTab === "members" 
-                          ? "bg-muted text-foreground border border-border" 
-                          : "bg-muted text-muted-foreground"
-                    }`}>
+                    <div
+                      className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-colors ${
+                        isMembersStepComplete
+                          ? "bg-primary text-primary-foreground"
+                          : activeTab === "members"
+                            ? "border border-border bg-muted text-foreground"
+                            : "bg-muted text-muted-foreground"
+                      }`}
+                    >
                       {isMembersStepComplete ? <Check className="h-3.5 w-3.5" /> : "2"}
                     </div>
-                    <span className="hidden sm:inline font-medium">Members</span>
+                    <span className="hidden font-medium sm:inline">Members</span>
                     <UsersRound className="h-4 w-4 sm:hidden" />
                     {filledMembersCount > 0 && (
-                      <span className="text-xs bg-muted text-foreground px-1.5 py-0.5 rounded-full border border-border">
+                      <span className="rounded-full border border-border bg-muted px-1.5 py-0.5 text-xs text-foreground">
                         {filledMembersCount}
                       </span>
                     )}
                   </TabsTrigger>
-                  
-                  <TabsTrigger 
-                    value="approval" 
-                    className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border rounded-lg shadow-sm transition-all"
+
+                  <TabsTrigger
+                    value="approval"
+                    className="flex items-center gap-2 rounded-lg px-4 py-3 shadow-sm transition-all data-[state=active]:border data-[state=active]:border-border data-[state=active]:bg-background data-[state=active]:text-foreground"
                   >
-                    <div className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-colors ${
-                      activeTab === "approval" 
-                        ? "bg-muted text-foreground border border-border" 
-                        : "bg-muted text-muted-foreground"
-                    }`}>
+                    <div
+                      className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-colors ${
+                        activeTab === "approval"
+                          ? "border border-border bg-muted text-foreground"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
                       3
                     </div>
-                    <span className="hidden sm:inline font-medium">Approval</span>
+                    <span className="hidden font-medium sm:inline">Approval</span>
                     <Shield className="h-4 w-4 sm:hidden" />
                   </TabsTrigger>
                 </TabsList>
 
                 {/* Tab 1: Name Your Cliq */}
-                <TabsContent value="name" className="space-y-6 mt-0">
-                  <div className="space-y-1 mb-6">
-                    <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <TabsContent value="name" className="mt-0 space-y-6">
+                  <div className="mb-6 space-y-1">
+                    <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
                       <FileText className="h-5 w-5 text-muted-foreground" />
                       Name Your CLIQ
                     </h3>
@@ -271,7 +300,7 @@ export default function CreateCliqForm() {
                       Give your CLIQ a memorable name and optional description
                     </p>
                   </div>
-                  
+
                   <FormField
                     control={createCliqForm.control}
                     name="name"
@@ -285,14 +314,12 @@ export default function CreateCliqForm() {
                             {...field}
                           />
                         </FormControl>
-                        <FormDescription>
-                          Choose a memorable name for your CLIQ
-                        </FormDescription>
+                        <FormDescription>Choose a memorable name for your CLIQ</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={createCliqForm.control}
                     name="description"
@@ -302,7 +329,7 @@ export default function CreateCliqForm() {
                         <FormControl>
                           <Textarea
                             placeholder="What is this CLIQ for? (e.g., Managing project treasury)"
-                            className="resize-none h-24"
+                            className="h-24 resize-none"
                             {...field}
                           />
                         </FormControl>
@@ -312,7 +339,7 @@ export default function CreateCliqForm() {
                   />
 
                   {/* Navigation */}
-                  <div className="flex justify-end pt-4 border-t border-border">
+                  <div className="flex justify-end border-t border-border pt-4">
                     <Button
                       type="button"
                       variant="action"
@@ -328,10 +355,10 @@ export default function CreateCliqForm() {
                 </TabsContent>
 
                 {/* Tab 2: Add Members */}
-                <TabsContent value="members" className="space-y-6 mt-0">
-                  <div className="flex items-center justify-between mb-6">
+                <TabsContent value="members" className="mt-0 space-y-6">
+                  <div className="mb-6 flex items-center justify-between">
                     <div className="space-y-1">
-                      <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                      <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
                         <UsersRound className="h-5 w-5 text-muted-foreground" />
                         Add Members
                       </h3>
@@ -339,17 +366,18 @@ export default function CreateCliqForm() {
                         Add the wallet addresses or public keys of CLIQ members
                       </p>
                     </div>
-                    <div className="text-sm font-medium px-3 py-1.5 bg-muted text-foreground rounded-full border border-border">
+                    <div className="rounded-full border border-border bg-muted px-3 py-1.5 text-sm font-medium text-foreground">
                       {filledMembersCount} member{filledMembersCount !== 1 ? "s" : ""} added
                     </div>
                   </div>
-                  
-                  <div className="p-3 bg-muted/30 rounded-lg border border-border">
+
+                  <div className="rounded-lg border border-border bg-muted/30 p-3">
                     <p className="text-xs text-muted-foreground">
-                      💡 <strong>Tip:</strong> You can paste multiple addresses at once in the first field, separated by commas or spaces.
+                      💡 <strong>Tip:</strong> You can paste multiple addresses at once in the first
+                      field, separated by commas or spaces.
                     </p>
                   </div>
-                  
+
                   {/* Member Fields */}
                   <div className="space-y-4">
                     {membersFields.map((arrayField, index) => (
@@ -378,16 +406,17 @@ export default function CreateCliqForm() {
 
                   {/* Minimum members warning */}
                   {filledMembersCount < 2 && (
-                    <div className="p-3 bg-muted border border-border rounded-lg">
-                      <p className="text-xs text-muted-foreground flex items-center gap-2">
-                        <AlertCircle className="h-3.5 w-3.5 text-yellow-500" />
-                        A CLIQ requires at least 2 members. Add {2 - filledMembersCount} more member{2 - filledMembersCount !== 1 ? "s" : ""} to continue.
+                    <div className="rounded-lg border border-border bg-muted p-3">
+                      <p className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <AlertCircle className="h-3.5 w-3.5 text-yellow-500" />A CLIQ requires at
+                        least 2 members. Add {2 - filledMembersCount} more member
+                        {2 - filledMembersCount !== 1 ? "s" : ""} to continue.
                       </p>
                     </div>
                   )}
 
                   {/* Navigation */}
-                  <div className="flex justify-between pt-4 border-t border-border">
+                  <div className="flex justify-between border-t border-border pt-4">
                     <Button
                       type="button"
                       variant="ghost"
@@ -413,9 +442,9 @@ export default function CreateCliqForm() {
                 </TabsContent>
 
                 {/* Tab 3: Set Approval Rules */}
-                <TabsContent value="approval" className="space-y-6 mt-0">
-                  <div className="space-y-1 mb-6">
-                    <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <TabsContent value="approval" className="mt-0 space-y-6">
+                  <div className="mb-6 space-y-1">
+                    <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
                       <Shield className="h-5 w-5 text-muted-foreground" />
                       Set Approval Rules
                     </h3>
@@ -431,7 +460,7 @@ export default function CreateCliqForm() {
                       const memberCount = filledMembersCount;
                       const maxThreshold = Math.max(1, memberCount);
                       const currentThreshold = Math.min(Number(field.value) || 1, maxThreshold);
-                      
+
                       return (
                         <FormItem className="space-y-6">
                           <div>
@@ -455,35 +484,39 @@ export default function CreateCliqForm() {
                                     disabled={memberCount < 1}
                                   />
                                 </div>
-                                <div className="flex items-center gap-2 px-4 py-3 bg-muted border border-border rounded-xl min-w-[120px] justify-center shadow-sm">
+                                <div className="flex min-w-[120px] items-center justify-center gap-2 rounded-xl border border-border bg-muted px-4 py-3 shadow-sm">
                                   <Shield className="h-5 w-5 text-foreground" />
-                                  <span className="text-2xl font-heading font-bold text-foreground">
+                                  <span className="font-heading text-2xl font-bold text-foreground">
                                     {currentThreshold}
                                   </span>
-                                  <span className="text-muted-foreground font-medium">
+                                  <span className="font-medium text-muted-foreground">
                                     / {memberCount}
                                   </span>
                                 </div>
                               </div>
-                              
+
                               {/* Status Text */}
                               <p className="text-sm text-muted-foreground">
-                                <span className="font-semibold text-foreground">{currentThreshold}</span> of{" "}
-                                <span className="font-semibold text-foreground">{memberCount}</span> members 
-                                must sign to approve a transaction
+                                <span className="font-semibold text-foreground">
+                                  {currentThreshold}
+                                </span>{" "}
+                                of{" "}
+                                <span className="font-semibold text-foreground">{memberCount}</span>{" "}
+                                members must sign to approve a transaction
                               </p>
-                              
+
                               {/* Warning for max threshold */}
                               {currentThreshold === memberCount && memberCount > 0 && (
-                                <div className="p-4 bg-muted border border-border rounded-lg">
+                                <div className="rounded-lg border border-border bg-muted p-4">
                                   <div className="flex items-start gap-3">
-                                    <AlertCircle className="h-5 w-5 text-yellow-500 shrink-0 mt-0.5" />
+                                    <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-yellow-500" />
                                     <div className="space-y-1">
                                       <p className="text-sm font-semibold text-foreground">
                                         Maximum threshold selected
                                       </p>
                                       <p className="text-xs text-muted-foreground">
-                                        If any member loses access to their wallet, your CLIQ&apos;s assets will be permanently locked.
+                                        If any member loses access to their wallet, your CLIQ&apos;s
+                                        assets will be permanently locked.
                                       </p>
                                     </div>
                                   </div>
@@ -498,10 +531,10 @@ export default function CreateCliqForm() {
                   />
 
                   {/* Phase 3: Credential Gating Section */}
-                  <div className="space-y-4 pt-6 border-t border-border">
+                  <div className="space-y-4 border-t border-border pt-6">
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
-                        <h4 className="text-base font-semibold text-foreground flex items-center gap-2">
+                        <h4 className="flex items-center gap-2 text-base font-semibold text-foreground">
                           <Key className="h-4 w-4 text-green-accent" />
                           Credential Gating
                         </h4>
@@ -515,10 +548,7 @@ export default function CreateCliqForm() {
                         render={({ field }) => (
                           <FormItem>
                             <FormControl>
-                              <Switch
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
+                              <Switch checked={field.value} onCheckedChange={field.onChange} />
                             </FormControl>
                           </FormItem>
                         )}
@@ -526,11 +556,12 @@ export default function CreateCliqForm() {
                     </div>
 
                     {enableCredentialGating && (
-                      <div className="space-y-4 p-4 bg-muted/30 rounded-lg border border-green-accent/20">
+                      <div className="space-y-4 rounded-lg border border-green-accent/20 bg-muted/30 p-4">
                         <p className="text-sm text-muted-foreground">
-                          A credential NFT class will be created for this CLIQ. Members must hold a credential to participate.
+                          A credential NFT class will be created for this CLIQ. Members must hold a
+                          credential to participate.
                         </p>
-                        
+
                         <div className="grid grid-cols-2 gap-4">
                           <FormField
                             control={createCliqForm.control}
@@ -539,9 +570,9 @@ export default function CreateCliqForm() {
                               <FormItem>
                                 <FormLabel>Symbol</FormLabel>
                                 <FormControl>
-                                  <Input 
-                                    placeholder="CLIQ1" 
-                                    {...field} 
+                                  <Input
+                                    placeholder="CLIQ1"
+                                    {...field}
                                     className="uppercase"
                                     onChange={(e) => field.onChange(e.target.value.toUpperCase())}
                                   />
@@ -553,7 +584,7 @@ export default function CreateCliqForm() {
                               </FormItem>
                             )}
                           />
-                          
+
                           <FormField
                             control={createCliqForm.control}
                             name="credentialConfig.className"
@@ -561,10 +592,7 @@ export default function CreateCliqForm() {
                               <FormItem>
                                 <FormLabel>Class Name</FormLabel>
                                 <FormControl>
-                                  <Input 
-                                    placeholder="Team Credential" 
-                                    {...field} 
-                                  />
+                                  <Input placeholder="Team Credential" {...field} />
                                 </FormControl>
                                 <FormDescription className="text-xs">
                                   Display name for credentials
@@ -587,10 +615,7 @@ export default function CreateCliqForm() {
                                 </FormDescription>
                               </div>
                               <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
+                                <Switch checked={field.value} onCheckedChange={field.onChange} />
                               </FormControl>
                             </FormItem>
                           )}
@@ -600,12 +625,12 @@ export default function CreateCliqForm() {
                   </div>
 
                   {/* Summary Card */}
-                  <div className="p-4 bg-muted/30 rounded-xl border border-border space-y-3">
+                  <div className="space-y-3 rounded-xl border border-border bg-muted/30 p-4">
                     <h4 className="text-sm font-semibold text-foreground">CLIQ Summary</h4>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="text-muted-foreground">Name:</span>
-                        <p className="font-medium text-foreground truncate">{watchedName || "—"}</p>
+                        <p className="truncate font-medium text-foreground">{watchedName || "—"}</p>
                       </div>
                       <div>
                         <span className="text-muted-foreground">Members:</span>
@@ -613,25 +638,29 @@ export default function CreateCliqForm() {
                       </div>
                       <div>
                         <span className="text-muted-foreground">Threshold:</span>
-                        <p className="font-medium text-foreground">{createCliqForm.watch("threshold")} of {filledMembersCount}</p>
+                        <p className="font-medium text-foreground">
+                          {createCliqForm.watch("threshold")} of {filledMembersCount}
+                        </p>
                       </div>
                       <div>
                         <span className="text-muted-foreground">Network:</span>
-                        <p className="font-medium text-foreground">{chain.chainDisplayName || chain.registryName}</p>
+                        <p className="font-medium text-foreground">
+                          {chain.chainDisplayName || chain.registryName}
+                        </p>
                       </div>
                       {enableCredentialGating && (
                         <div className="col-span-2">
                           <span className="text-muted-foreground">Credentials:</span>
-                          <p className="font-medium text-green-accent flex items-center gap-1">
+                          <p className="flex items-center gap-1 font-medium text-green-accent">
                             <Key className="h-3 w-3" /> Enabled
                           </p>
                         </div>
                       )}
                     </div>
                   </div>
-                  
+
                   {/* Navigation & Submit */}
-                  <div className="flex justify-between pt-4 border-t border-border">
+                  <div className="flex justify-between border-t border-border pt-4">
                     <Button
                       type="button"
                       variant="ghost"

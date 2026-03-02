@@ -1,12 +1,12 @@
 /**
  * Individual Policy API
- * 
+ *
  * File: pages/api/chain/[chainId]/[address]/policies/[policyId].ts
- * 
+ *
  * GET: Get a specific policy
  * PUT: Update a policy
  * DELETE: Delete a policy
- * 
+ *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards
  */
 
@@ -14,17 +14,10 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import * as localDb from "@/lib/localDb";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { chainId, address, policyId } = req.query;
 
-  if (
-    typeof chainId !== "string" ||
-    typeof address !== "string" ||
-    typeof policyId !== "string"
-  ) {
+  if (typeof chainId !== "string" || typeof address !== "string" || typeof policyId !== "string") {
     return res.status(400).json({ error: "Invalid parameters" });
   }
 
@@ -32,7 +25,7 @@ export default async function handler(
     switch (req.method) {
       case "GET": {
         const policy = localDb.getPolicyById(policyId);
-        
+
         if (!policy) {
           return res.status(404).json({ error: "Policy not found" });
         }
@@ -46,7 +39,7 @@ export default async function handler(
 
       case "PUT": {
         const policy = localDb.getPolicyById(policyId);
-        
+
         if (!policy) {
           return res.status(404).json({ error: "Policy not found" });
         }
@@ -58,7 +51,7 @@ export default async function handler(
         const { name, config, priority, enabled } = req.body;
 
         const updates: Parameters<typeof localDb.updatePolicy>[1] = {};
-        
+
         if (name !== undefined) updates.name = name;
         if (config !== undefined) {
           updates.configJSON = typeof config === "string" ? config : JSON.stringify(config);
@@ -75,7 +68,7 @@ export default async function handler(
 
       case "DELETE": {
         const policy = localDb.getPolicyById(policyId);
-        
+
         if (!policy) {
           return res.status(404).json({ error: "Policy not found" });
         }
@@ -99,9 +92,8 @@ export default async function handler(
     }
   } catch (error) {
     console.error("Policy API error:", error);
-    return res.status(500).json({ 
-      error: error instanceof Error ? error.message : "Internal server error" 
+    return res.status(500).json({
+      error: error instanceof Error ? error.message : "Internal server error",
     });
   }
 }
-

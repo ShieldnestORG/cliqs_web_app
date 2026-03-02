@@ -42,12 +42,7 @@ const VALID_TRANSITIONS: Record<ProposalState, ProposalState[]> = {
 };
 
 // Terminal states (no further transitions)
-const TERMINAL_STATES: Set<ProposalState> = new Set([
-  "EXECUTED",
-  "FAILED",
-  "REJECTED",
-  "EXPIRED",
-]);
+const TERMINAL_STATES: Set<ProposalState> = new Set(["EXECUTED", "FAILED", "REJECTED", "EXPIRED"]);
 
 // ============================================================================
 // INVARIANT ASSERTION FUNCTIONS
@@ -72,7 +67,7 @@ export function assertProposalInvariants(history: ProposalState[]): void {
     if (state === "EXECUTED" && seen.has("EXECUTED")) {
       throw new Error(
         `INVARIANT VIOLATION: Double execution detected at index ${i}. ` +
-          `History: [${history.join(" → ")}]`
+          `History: [${history.join(" → ")}]`,
       );
     }
 
@@ -80,7 +75,7 @@ export function assertProposalInvariants(history: ProposalState[]): void {
     if (lastState && TERMINAL_STATES.has(lastState) && state !== lastState) {
       throw new Error(
         `INVARIANT VIOLATION: State regression after terminal state '${lastState}' → '${state}' at index ${i}. ` +
-          `Terminal states are immutable. History: [${history.join(" → ")}]`
+          `Terminal states are immutable. History: [${history.join(" → ")}]`,
       );
     }
 
@@ -91,7 +86,7 @@ export function assertProposalInvariants(history: ProposalState[]): void {
         throw new Error(
           `INVARIANT VIOLATION: Invalid transition '${lastState}' → '${state}' at index ${i}. ` +
             `Valid transitions from '${lastState}': [${validTransitions.join(", ")}]. ` +
-            `History: [${history.join(" → ")}]`
+            `History: [${history.join(" → ")}]`,
         );
       }
     }
@@ -131,7 +126,7 @@ export function assertExecutionInvariants(ctx: ExecutionContext): void {
   if (ctx.emergencyPaused && ctx.executionSucceeded) {
     throw new Error(
       `INVARIANT VIOLATION: Execution succeeded during emergency pause. ` +
-        `Proposal: ${ctx.proposalId}. Emergency pause MUST block all executions.`
+        `Proposal: ${ctx.proposalId}. Emergency pause MUST block all executions.`,
     );
   }
 
@@ -139,7 +134,7 @@ export function assertExecutionInvariants(ctx: ExecutionContext): void {
   if (ctx.safeMode && ctx.executionSucceeded) {
     throw new Error(
       `INVARIANT VIOLATION: Execution succeeded during safe mode. ` +
-        `Proposal: ${ctx.proposalId}. Safe mode MUST block all executions.`
+        `Proposal: ${ctx.proposalId}. Safe mode MUST block all executions.`,
     );
   }
 
@@ -149,7 +144,7 @@ export function assertExecutionInvariants(ctx: ExecutionContext): void {
     throw new Error(
       `INVARIANT VIOLATION: Execution succeeded despite policy denials. ` +
         `Proposal: ${ctx.proposalId}. ` +
-        `Denied by: [${deniedPolicies.map((p) => `${p.policyName}: ${p.reason}`).join(", ")}]`
+        `Denied by: [${deniedPolicies.map((p) => `${p.policyName}: ${p.reason}`).join(", ")}]`,
     );
   }
 
@@ -162,7 +157,7 @@ export function assertExecutionInvariants(ctx: ExecutionContext): void {
           `INVARIANT VIOLATION: Spend limit exceeded. ` +
             `Proposal: ${ctx.proposalId}. ` +
             `Attempted: ${attempt.amount} ${attempt.denom}, ` +
-            `Limit: ${limit.amount} ${limit.denom}`
+            `Limit: ${limit.amount} ${limit.denom}`,
         );
       }
     }
@@ -190,7 +185,7 @@ export function assertReplayInvariants(ctx: ReplayContext): void {
   if (ctx.previousExecutions.has(ctx.txHash) && ctx.executionSucceeded) {
     throw new Error(
       `INVARIANT VIOLATION: Replay attack succeeded. ` +
-        `TxHash ${ctx.txHash} was already executed but succeeded again.`
+        `TxHash ${ctx.txHash} was already executed but succeeded again.`,
     );
   }
 }
@@ -218,7 +213,7 @@ export function assertPolicyInvariants(ctx: PolicyContext): void {
     throw new Error(
       `INVARIANT VIOLATION: Policy version mismatch allowed. ` +
         `Expected version ${ctx.expectedPolicyVersion}, got ${ctx.policyVersion}. ` +
-        `Version mismatches MUST always deny.`
+        `Version mismatches MUST always deny.`,
     );
   }
 
@@ -231,7 +226,7 @@ export function assertPolicyInvariants(ctx: PolicyContext): void {
     throw new Error(
       `INVARIANT VIOLATION: Timelock bypassed. ` +
         `Current time ${ctx.currentTimeMs}ms < unlock time ${ctx.timelockUnlockMs}ms. ` +
-        `Unexpired timelocks MUST always deny.`
+        `Unexpired timelocks MUST always deny.`,
     );
   }
 
@@ -240,7 +235,7 @@ export function assertPolicyInvariants(ctx: PolicyContext): void {
     throw new Error(
       `INVARIANT VIOLATION: Invalid credential allowed. ` +
         `Credential is invalid but evaluation returned allowed. ` +
-        `Invalid credentials MUST always deny.`
+        `Invalid credentials MUST always deny.`,
     );
   }
 }
@@ -278,7 +273,7 @@ export function assertSystemInvariants(state: SystemState): void {
     // Log warning - version drift should trigger safe behavior
     console.warn(
       `[INVARIANT WARNING] Policy version drift detected: ` +
-        `expected ${state.expectedPolicyVersion}, current ${state.policyVersion}`
+        `expected ${state.expectedPolicyVersion}, current ${state.policyVersion}`,
     );
   }
 }
@@ -303,7 +298,7 @@ export function hashTxBytes(txBytes: Uint8Array): string {
  */
 export function trackStateTransition(
   history: ProposalState[],
-  newState: ProposalState
+  newState: ProposalState,
 ): ProposalState[] {
   const updated = [...history, newState];
   assertProposalInvariants(updated); // Validate immediately
@@ -323,4 +318,3 @@ export function createEmptySystemState(): SystemState {
     expectedPolicyVersion: 1,
   };
 }
-

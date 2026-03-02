@@ -25,11 +25,9 @@ export default function ValidatorPage() {
   const { chain } = useChains();
 
   return (
-    <div className="container mx-auto px-[0.75in] py-8 max-w-[1800px]">
-      <Head 
-        title={`Validator Dashboard - ${chain.chainDisplayName || "Cosmos"}`} 
-      />
-      
+    <div className="container mx-auto max-w-[1800px] px-[0.75in] py-8">
+      <Head title={`Validator Dashboard - ${chain.chainDisplayName || "Cosmos"}`} />
+
       <div className="space-y-6">
         {/* Breadcrumb */}
         <Breadcrumb>
@@ -37,9 +35,7 @@ export default function ValidatorPage() {
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
                 {chain.registryName ? (
-                  <Link href={`/${chain.registryName}`}>
-                    {chain.chainDisplayName || "Home"}
-                  </Link>
+                  <Link href={`/${chain.registryName}`}>{chain.chainDisplayName || "Home"}</Link>
                 ) : null}
               </BreadcrumbLink>
             </BreadcrumbItem>
@@ -56,4 +52,3 @@ export default function ValidatorPage() {
     </div>
   );
 }
-

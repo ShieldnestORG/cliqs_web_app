@@ -19,13 +19,15 @@ export function getRetentionDays(): number {
 }
 
 export function getWarningDaysBefore(): number {
-  const env = process.env.DATA_WARNING_DAYS_BEFORE ?? process.env.NEXT_PUBLIC_DATA_WARNING_DAYS_BEFORE;
+  const env =
+    process.env.DATA_WARNING_DAYS_BEFORE ?? process.env.NEXT_PUBLIC_DATA_WARNING_DAYS_BEFORE;
   const parsed = Number(env);
   return parsed > 0 ? parsed : DEFAULT_WARNING_DAYS;
 }
 
 export function getMaxStorageKB(): number {
-  const env = process.env.MAX_STORAGE_PER_USER_KB ?? process.env.NEXT_PUBLIC_MAX_STORAGE_PER_USER_KB;
+  const env =
+    process.env.MAX_STORAGE_PER_USER_KB ?? process.env.NEXT_PUBLIC_MAX_STORAGE_PER_USER_KB;
   const parsed = Number(env);
   return parsed > 0 ? parsed : DEFAULT_MAX_STORAGE_KB;
 }
@@ -47,7 +49,10 @@ export function getRetentionInfo(createdAtISO: string): RetentionInfo {
   const expiresAt = new Date(createdAt.getTime() + retentionDays * 24 * 60 * 60 * 1000);
   const warningAt = new Date(expiresAt.getTime() - warningDays * 24 * 60 * 60 * 1000);
   const now = new Date();
-  const daysRemaining = Math.max(0, Math.ceil((expiresAt.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)));
+  const daysRemaining = Math.max(
+    0,
+    Math.ceil((expiresAt.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)),
+  );
 
   return {
     createdAt,

@@ -105,7 +105,9 @@ export default function ChainDigest({ chain, simplify }: ChainItemProps) {
                   key={address}
                   className="rounded-lg border border-border bg-muted/30 px-3 py-2"
                 >
-                  <code className="block truncate font-mono text-xs text-foreground">{address}</code>
+                  <code className="block truncate font-mono text-xs text-foreground">
+                    {address}
+                  </code>
                 </div>
               ))}
           </CollapsibleContent>

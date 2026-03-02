@@ -119,10 +119,7 @@ export interface ValidationResult {
  *   5. Detect duplicate addresses
  *   6. Return cleaned data or error report
  */
-export function validateImportData(
-  rawData: unknown,
-  rawSizeBytes?: number,
-): ValidationResult {
+export function validateImportData(rawData: unknown, rawSizeBytes?: number): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
@@ -191,25 +188,19 @@ export function validateImportData(
 
   // Step 4: Cross-reference integrity checks
   const multisigAddresses = new Set(data.multisigs.map((m) => m.address));
-  const transactionIds = new Set(
-    data.transactions.map((t) => t.id).filter(Boolean),
-  );
+  const transactionIds = new Set(data.transactions.map((t) => t.id).filter(Boolean));
 
   // Check that transactions reference known multisig addresses
   for (const tx of data.transactions) {
     if (tx.creatorId && !multisigAddresses.has(tx.creatorId)) {
-      warnings.push(
-        `Transaction references unknown multisig address: ${tx.creatorId}`,
-      );
+      warnings.push(`Transaction references unknown multisig address: ${tx.creatorId}`);
     }
   }
 
   // Check that signatures reference known transactions
   for (const sig of data.signatures) {
     if (sig.transactionId && !transactionIds.has(sig.transactionId)) {
-      warnings.push(
-        `Signature references unknown transaction ID: ${sig.transactionId}`,
-      );
+      warnings.push(`Signature references unknown transaction ID: ${sig.transactionId}`);
     }
   }
 
@@ -228,9 +219,7 @@ export function validateImportData(
     try {
       JSON.parse(m.pubkeyJSON);
     } catch {
-      errors.push(
-        `Multisig ${m.address} has invalid pubkeyJSON (not valid JSON)`,
-      );
+      errors.push(`Multisig ${m.address} has invalid pubkeyJSON (not valid JSON)`);
     }
   }
 
@@ -239,9 +228,7 @@ export function validateImportData(
     try {
       JSON.parse(tx.dataJSON);
     } catch {
-      errors.push(
-        `Transaction ${tx.id || "unknown"} has invalid dataJSON (not valid JSON)`,
-      );
+      errors.push(`Transaction ${tx.id || "unknown"} has invalid dataJSON (not valid JSON)`);
     }
   }
 

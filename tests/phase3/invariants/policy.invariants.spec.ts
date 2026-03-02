@@ -12,10 +12,7 @@
  * ❌ Invalid credentials always deny
  */
 
-import {
-  assertPolicyInvariants,
-  PolicyContext,
-} from "../oracle/invariantOracle";
+import { assertPolicyInvariants, PolicyContext } from "../oracle/invariantOracle";
 import {
   genPolicyCtx,
   genValidPolicyCtx,
@@ -46,9 +43,7 @@ describe("PHASE 3 INVARIANTS: Policy Evaluation", () => {
         evaluationResult: { allowed: true }, // This should never happen
       };
 
-      expect(() => assertPolicyInvariants(ctx)).toThrow(
-        /INVARIANT VIOLATION.*version mismatch/
-      );
+      expect(() => assertPolicyInvariants(ctx)).toThrow(/INVARIANT VIOLATION.*version mismatch/);
     });
 
     test("version mismatch correctly denying is valid", () => {
@@ -77,10 +72,13 @@ describe("PHASE 3 INVARIANTS: Policy Evaluation", () => {
 
     test("fuzz: version mismatches always denied by policy engine", async () => {
       for (let version = 2; version <= 10; version++) {
-        const result = await evaluatePoliciesMinimal({
-          policyVersion: version,
-          expectedPolicyVersion: 1,
-        }, 'execution');
+        const result = await evaluatePoliciesMinimal(
+          {
+            policyVersion: version,
+            expectedPolicyVersion: 1,
+          },
+          "execution",
+        );
 
         expect(result.allowed).toBe(false);
       }
@@ -103,9 +101,7 @@ describe("PHASE 3 INVARIANTS: Policy Evaluation", () => {
         evaluationResult: { allowed: true }, // This should never happen
       };
 
-      expect(() => assertPolicyInvariants(ctx)).toThrow(
-        /INVARIANT VIOLATION.*[Tt]imelock/
-      );
+      expect(() => assertPolicyInvariants(ctx)).toThrow(/INVARIANT VIOLATION.*[Tt]imelock/);
     });
 
     test("unexpired timelock correctly denying is valid", () => {
@@ -142,12 +138,15 @@ describe("PHASE 3 INVARIANTS: Policy Evaluation", () => {
       for (let i = 0; i < 100; i++) {
         const unlockOffset = Math.floor(Math.random() * 86400000) + 1000; // 1s to 1d in future
 
-        const result = await evaluatePoliciesMinimal({
-          policyVersion: 1,
-          expectedPolicyVersion: 1,
-          timelock: { unlockAtMs: now + unlockOffset },
-          nowMs: now,
-        }, 'execution');
+        const result = await evaluatePoliciesMinimal(
+          {
+            policyVersion: 1,
+            expectedPolicyVersion: 1,
+            timelock: { unlockAtMs: now + unlockOffset },
+            nowMs: now,
+          },
+          "execution",
+        );
 
         expect(result.allowed).toBe(false);
       }
@@ -168,9 +167,7 @@ describe("PHASE 3 INVARIANTS: Policy Evaluation", () => {
         evaluationResult: { allowed: true }, // This should never happen
       };
 
-      expect(() => assertPolicyInvariants(ctx)).toThrow(
-        /INVARIANT VIOLATION.*credential/
-      );
+      expect(() => assertPolicyInvariants(ctx)).toThrow(/INVARIANT VIOLATION.*credential/);
     });
 
     test("invalid credential correctly denying is valid", () => {
@@ -199,15 +196,18 @@ describe("PHASE 3 INVARIANTS: Policy Evaluation", () => {
 
     test("fuzz: invalid credentials always denied", async () => {
       for (let i = 0; i < 100; i++) {
-        const result = await evaluatePoliciesMinimal({
-          policyVersion: 1,
-          expectedPolicyVersion: 1,
-          credential: {
-            holder: `cosmos1test${i}`,
-            valid: false,
-            role: "member",
+        const result = await evaluatePoliciesMinimal(
+          {
+            policyVersion: 1,
+            expectedPolicyVersion: 1,
+            credential: {
+              holder: `cosmos1test${i}`,
+              valid: false,
+              role: "member",
+            },
           },
-        }, 'execution');
+          "execution",
+        );
 
         expect(result.allowed).toBe(false);
       }
@@ -223,15 +223,18 @@ describe("PHASE 3 INVARIANTS: Policy Evaluation", () => {
       for (let i = 0; i < 500; i++) {
         const ctx = genPolicyCtx(i);
 
-        const result = await evaluatePoliciesMinimal({
-          policyVersion: ctx.policyVersion,
-          expectedPolicyVersion: ctx.expectedPolicyVersion,
-          isPaused: ctx.emergencyPaused,
-          isSafeMode: ctx.safeMode,
-          credential: ctx.credential,
-          timelock: ctx.timelock,
-          nowMs: ctx.nowMs,
-        }, 'execution');
+        const result = await evaluatePoliciesMinimal(
+          {
+            policyVersion: ctx.policyVersion,
+            expectedPolicyVersion: ctx.expectedPolicyVersion,
+            isPaused: ctx.emergencyPaused,
+            isSafeMode: ctx.safeMode,
+            credential: ctx.credential,
+            timelock: ctx.timelock,
+            nowMs: ctx.nowMs,
+          },
+          "execution",
+        );
 
         const policyCtx: PolicyContext = {
           policyVersion: ctx.policyVersion,
@@ -252,15 +255,18 @@ describe("PHASE 3 INVARIANTS: Policy Evaluation", () => {
       for (let i = 0; i < 100; i++) {
         const ctx = genValidPolicyCtx(i);
 
-        const result = await evaluatePoliciesMinimal({
-          policyVersion: ctx.policyVersion,
-          expectedPolicyVersion: ctx.expectedPolicyVersion,
-          isPaused: false,
-          isSafeMode: false,
-          credential: ctx.credential,
-          timelock: ctx.timelock,
-          nowMs: ctx.nowMs,
-        }, 'execution');
+        const result = await evaluatePoliciesMinimal(
+          {
+            policyVersion: ctx.policyVersion,
+            expectedPolicyVersion: ctx.expectedPolicyVersion,
+            isPaused: false,
+            isSafeMode: false,
+            credential: ctx.credential,
+            timelock: ctx.timelock,
+            nowMs: ctx.nowMs,
+          },
+          "execution",
+        );
 
         expect(result.allowed).toBe(true);
       }
@@ -270,18 +276,21 @@ describe("PHASE 3 INVARIANTS: Policy Evaluation", () => {
       for (let i = 0; i < 100; i++) {
         const ctx = genHostilePolicyCtx(i);
 
-        const result = await evaluatePoliciesMinimal({
-          policyVersion: ctx.policyVersion,
-          expectedPolicyVersion: ctx.expectedPolicyVersion,
-          isPaused: ctx.emergencyPaused,
-          isSafeMode: ctx.safeMode,
-          credential: ctx.credential,
-          timelock: ctx.timelock,
-          nowMs: ctx.nowMs,
-          spend: ctx.spend,
-          signaturesRequired: ctx.signaturesRequired,
-          signaturesCollected: ctx.signaturesCollected,
-        }, 'execution');
+        const result = await evaluatePoliciesMinimal(
+          {
+            policyVersion: ctx.policyVersion,
+            expectedPolicyVersion: ctx.expectedPolicyVersion,
+            isPaused: ctx.emergencyPaused,
+            isSafeMode: ctx.safeMode,
+            credential: ctx.credential,
+            timelock: ctx.timelock,
+            nowMs: ctx.nowMs,
+            spend: ctx.spend,
+            signaturesRequired: ctx.signaturesRequired,
+            signaturesCollected: ctx.signaturesCollected,
+          },
+          "execution",
+        );
 
         expect(result.allowed).toBe(false);
       }
@@ -296,22 +305,28 @@ describe("PHASE 3 INVARIANTS: Policy Evaluation", () => {
     test("exact timelock boundary (unlock = now) should allow", async () => {
       const now = Date.now();
 
-      const result = await evaluatePoliciesMinimal({
-        policyVersion: 1,
-        expectedPolicyVersion: 1,
-        timelock: { unlockAtMs: now },
-        nowMs: now,
-      }, 'execution');
+      const result = await evaluatePoliciesMinimal(
+        {
+          policyVersion: 1,
+          expectedPolicyVersion: 1,
+          timelock: { unlockAtMs: now },
+          nowMs: now,
+        },
+        "execution",
+      );
 
       // At exact unlock time, should be allowed
       expect(result.allowed).toBe(true);
     });
 
     test("policy version 0 matches expected 0", async () => {
-      const result = await evaluatePoliciesMinimal({
-        policyVersion: 0,
-        expectedPolicyVersion: 0,
-      }, 'execution');
+      const result = await evaluatePoliciesMinimal(
+        {
+          policyVersion: 0,
+          expectedPolicyVersion: 0,
+        },
+        "execution",
+      );
 
       expect(result.allowed).toBe(true);
     });
@@ -320,16 +335,19 @@ describe("PHASE 3 INVARIANTS: Policy Evaluation", () => {
       for (let i = 0; i < 100; i++) {
         const ctx = genBoundaryPolicyCtx(i);
 
-        const result = await evaluatePoliciesMinimal({
-          policyVersion: ctx.policyVersion,
-          expectedPolicyVersion: ctx.expectedPolicyVersion,
-          isPaused: ctx.emergencyPaused,
-          isSafeMode: ctx.safeMode,
-          credential: ctx.credential,
-          timelock: ctx.timelock,
-          spend: ctx.spend,
-          nowMs: ctx.nowMs,
-        }, 'execution');
+        const result = await evaluatePoliciesMinimal(
+          {
+            policyVersion: ctx.policyVersion,
+            expectedPolicyVersion: ctx.expectedPolicyVersion,
+            isPaused: ctx.emergencyPaused,
+            isSafeMode: ctx.safeMode,
+            credential: ctx.credential,
+            timelock: ctx.timelock,
+            spend: ctx.spend,
+            nowMs: ctx.nowMs,
+          },
+          "execution",
+        );
 
         // Boundary cases should not crash and should return valid results
         expect(typeof result.allowed).toBe("boolean");
@@ -348,15 +366,18 @@ describe("PHASE 3 INVARIANTS: Policy Evaluation", () => {
       for (let i = 0; i < 5000; i++) {
         const ctx = genPolicyCtx(i);
 
-        const result = await evaluatePoliciesMinimal({
-          policyVersion: ctx.policyVersion,
-          expectedPolicyVersion: ctx.expectedPolicyVersion,
-          isPaused: ctx.emergencyPaused,
-          isSafeMode: ctx.safeMode,
-          credential: ctx.credential,
-          timelock: ctx.timelock,
-          nowMs: ctx.nowMs,
-        }, 'execution');
+        const result = await evaluatePoliciesMinimal(
+          {
+            policyVersion: ctx.policyVersion,
+            expectedPolicyVersion: ctx.expectedPolicyVersion,
+            isPaused: ctx.emergencyPaused,
+            isSafeMode: ctx.safeMode,
+            credential: ctx.credential,
+            timelock: ctx.timelock,
+            nowMs: ctx.nowMs,
+          },
+          "execution",
+        );
 
         // Check for invariant violations
         const shouldDeny =
@@ -375,4 +396,3 @@ describe("PHASE 3 INVARIANTS: Policy Evaluation", () => {
     });
   });
 });
-

@@ -1,8 +1,8 @@
 /**
  * Playbooks Module Exports
- * 
+ *
  * File: lib/playbooks/index.ts
- * 
+ *
  * Central export point for Phase 4 incident response playbooks.
  */
 
@@ -23,4 +23,3 @@ export {
   getPlaybookRunner,
   setPlaybookRunner,
 } from "./types";
-

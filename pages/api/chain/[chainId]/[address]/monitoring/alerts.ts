@@ -1,10 +1,10 @@
 /**
  * Alerts API
- * 
+ *
  * File: pages/api/chain/[chainId]/[address]/monitoring/alerts.ts
- * 
+ *
  * GET: Get recent alerts
- * 
+ *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards
  */
 
@@ -12,10 +12,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import * as localDb from "@/lib/localDb";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { chainId, address } = req.query;
 
   if (typeof chainId !== "string" || typeof address !== "string") {
@@ -34,9 +31,8 @@ export default async function handler(
     return res.status(200).json({ alerts });
   } catch (error) {
     console.error("Alerts API error:", error);
-    return res.status(500).json({ 
-      error: error instanceof Error ? error.message : "Internal server error" 
+    return res.status(500).json({
+      error: error instanceof Error ? error.message : "Internal server error",
     });
   }
 }
-

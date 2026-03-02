@@ -44,14 +44,14 @@ describe("PHASE 3 REPLAY: Stale Signature Attack", () => {
       // Create and sign first transaction
       const tx1 = await walletFlow.buildTxBytes({
         msgs: [{ type: "test", value: {} }],
-        memo: "tx1"
+        memo: "tx1",
       });
       const signed1 = await walletFlow.signTxBytes(tx1, signer);
 
       // Create second transaction (different content)
       const tx2 = await walletFlow.buildTxBytes({
         msgs: [{ type: "test", value: { different: true } }],
-        memo: "tx2"
+        memo: "tx2",
       });
 
       // Signed bytes should be different
@@ -460,4 +460,3 @@ describe("PHASE 3 REPLAY: Stale Signature Attack", () => {
     });
   });
 });
-

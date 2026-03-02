@@ -1,11 +1,11 @@
 /**
  * Address Filter Policy (Allowlist/Denylist)
- * 
+ *
  * File: lib/policies/address-filter.ts
- * 
+ *
  * Priority 5 policy - Weakest protection, most opinionated.
  * Filters recipient addresses based on allowlists and denylists.
- * 
+ *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards
  */
 
@@ -42,7 +42,7 @@ export class AddressFilterPolicy implements Policy {
   readonly name: string;
   readonly enabled: boolean;
   readonly priority: number;
-  
+
   private readonly config: AddressFilterPolicyConfig;
 
   constructor(
@@ -55,13 +55,13 @@ export class AddressFilterPolicy implements Policy {
     this.name = name;
     this.enabled = options.enabled ?? true;
     this.priority = options.priority ?? 50; // Last in policy order
-    
+
     this.config = {
       filterType: config.filterType ?? DEFAULT_CONFIG.filterType,
       allowlist: config.allowlist ?? DEFAULT_CONFIG.allowlist,
       denylist: config.denylist ?? DEFAULT_CONFIG.denylist,
     };
-    
+
     // Set type based on primary filter mode
     this.type = this.config.filterType === "allowlist" ? "allowlist" : "denylist";
   }
@@ -69,25 +69,18 @@ export class AddressFilterPolicy implements Policy {
   /**
    * Evaluate for proposal creation
    */
-  async evaluateProposal(
-    proposal: Proposal,
-    context: PolicyContext,
-  ): Promise<PolicyDecision> {
+  async evaluateProposal(proposal: Proposal, context: PolicyContext): Promise<PolicyDecision> {
     const violations: PolicyViolation[] = [];
 
     for (const recipient of context.recipientAddresses) {
       const result = this.checkAddress(recipient);
-      
+
       if (!result.allowed) {
         violations.push(
-          createViolation(
-            this.id,
-            this.type,
-            result.code,
-            result.message,
-            "high",
-            { address: recipient, reason: result.reason },
-          ),
+          createViolation(this.id, this.type, result.code, result.message, "high", {
+            address: recipient,
+            reason: result.reason,
+          }),
         );
       }
     }
@@ -102,10 +95,7 @@ export class AddressFilterPolicy implements Policy {
   /**
    * Evaluate for proposal execution
    */
-  async evaluateExecution(
-    proposal: Proposal,
-    context: PolicyContext,
-  ): Promise<PolicyDecision> {
+  async evaluateExecution(proposal: Proposal, context: PolicyContext): Promise<PolicyDecision> {
     // Re-check at execution time in case lists were updated
     return this.evaluateProposal(proposal, context);
   }
@@ -159,18 +149,14 @@ export class AddressFilterPolicy implements Policy {
    * Check if address is in denylist
    */
   private isDenied(address: string): boolean {
-    return this.config.denylist.some(
-      (entry) => entry.toLowerCase() === address,
-    );
+    return this.config.denylist.some((entry) => entry.toLowerCase() === address);
   }
 
   /**
    * Check if address is in allowlist
    */
   private isAllowed(address: string): boolean {
-    return this.config.allowlist.some(
-      (entry) => entry.toLowerCase() === address,
-    );
+    return this.config.allowlist.some((entry) => entry.toLowerCase() === address);
   }
 
   /**
@@ -234,22 +220,17 @@ export class AddressFilterPolicy implements Policy {
  */
 export function createAddressFilterPolicy(stored: StoredPolicy): AddressFilterPolicy {
   const config: AddressFilterPolicyConfig = JSON.parse(stored.configJSON);
-  
-  return new AddressFilterPolicy(
-    stored.id,
-    stored.name,
-    config,
-    { enabled: stored.enabled, priority: stored.priority },
-  );
+
+  return new AddressFilterPolicy(stored.id, stored.name, config, {
+    enabled: stored.enabled,
+    priority: stored.priority,
+  });
 }
 
 /**
  * Create an allowlist-only policy
  */
-export function createAllowlistPolicy(
-  id: string,
-  allowedAddresses: string[],
-): AddressFilterPolicy {
+export function createAllowlistPolicy(id: string, allowedAddresses: string[]): AddressFilterPolicy {
   return new AddressFilterPolicy(id, "Address Allowlist", {
     filterType: "allowlist",
     allowlist: allowedAddresses,
@@ -260,10 +241,7 @@ export function createAllowlistPolicy(
 /**
  * Create a denylist-only policy
  */
-export function createDenylistPolicy(
-  id: string,
-  deniedAddresses: string[],
-): AddressFilterPolicy {
+export function createDenylistPolicy(id: string, deniedAddresses: string[]): AddressFilterPolicy {
   return new AddressFilterPolicy(id, "Address Denylist", {
     filterType: "denylist",
     allowlist: [],
@@ -299,4 +277,3 @@ export function createTrustedAddressesPolicy(
     denylist: [],
   });
 }
-

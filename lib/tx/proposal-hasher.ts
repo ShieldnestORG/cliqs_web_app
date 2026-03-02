@@ -1,8 +1,8 @@
 /**
  * Proposal Hash Computation
- * 
+ *
  * File: lib/tx/proposal-hasher.ts
- * 
+ *
  * Provides content-addressed hashing for proposals to ensure integrity.
  * The hash uniquely identifies the proposal content and can be independently
  * reproduced by any party with the same inputs.
@@ -50,7 +50,7 @@ export interface ProposalHashResult {
 export class ProposalHasher {
   /**
    * Compute the hash of a proposal
-   * 
+   *
    * The hash is computed from a canonical JSON representation of the proposal,
    * ensuring deterministic output regardless of property order or formatting.
    */
@@ -72,19 +72,19 @@ export class ProposalHasher {
    */
   static verify(input: ProposalHashInput, expectedHash: string): boolean {
     const result = ProposalHasher.hash(input);
-    
+
     // Support both base64 and hex formats
     if (expectedHash.length === 64) {
       // Looks like hex
       return result.hashHex === expectedHash.toLowerCase();
     }
-    
+
     return result.hashBase64 === expectedHash;
   }
 
   /**
    * Convert proposal to canonical JSON representation
-   * 
+   *
    * This produces a deterministic JSON string with:
    * - Sorted object keys
    * - Normalized values (BigInt to string, Uint8Array to base64)
@@ -208,7 +208,7 @@ export class ProposalHasher {
 
 /**
  * Compute the hash of a proposal
- * 
+ *
  * @param input - Proposal content
  * @returns Base64-encoded hash
  */
@@ -218,26 +218,20 @@ export function computeProposalHash(input: ProposalHashInput): string {
 
 /**
  * Verify a proposal hash
- * 
+ *
  * @param input - Proposal content
  * @param expectedHash - Expected hash (base64 or hex)
  * @returns True if hash matches
  */
-export function verifyProposalHash(
-  input: ProposalHashInput,
-  expectedHash: string,
-): boolean {
+export function verifyProposalHash(input: ProposalHashInput, expectedHash: string): boolean {
   return ProposalHasher.verify(input, expectedHash);
 }
 
 /**
  * Get detailed hash result including canonical JSON
- * 
+ *
  * Useful for debugging and verification
  */
-export function getProposalHashDetails(
-  input: ProposalHashInput,
-): ProposalHashResult {
+export function getProposalHashDetails(input: ProposalHashInput): ProposalHashResult {
   return ProposalHasher.hash(input);
 }
-

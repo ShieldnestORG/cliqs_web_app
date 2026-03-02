@@ -7,7 +7,7 @@ import { createMultiRpcVerifier, BroadcastResult } from "@/lib/rpc";
 import { dispatchTransactionStatusChanged } from "@/lib/hooks/usePendingTransactions";
 import { toastError, toastSuccess } from "@/lib/utils";
 import { MultisigThresholdPubkey, pubkeyToAddress } from "@cosmjs/amino";
-import { fromBase64, toBase64 } from "@cosmjs/encoding";
+import { fromBase64 } from "@cosmjs/encoding";
 import { Account, StargateClient, makeMultisignedTxBytes } from "@cosmjs/stargate";
 import { assert } from "@cosmjs/utils";
 import type { GetServerSideProps } from "next";
@@ -25,7 +25,14 @@ import { useChains } from "../../../../context/ChainsContext";
 import { getHostedMultisig, isAccount } from "../../../../lib/multisigHelpers";
 import { dbTxFromJson } from "../../../../lib/txMsgHelpers";
 import { printableCoins } from "../../../../lib/displayHelpers";
-import { BentoGrid, BentoCard, BentoCardHeader, BentoCardTitle, BentoCardContent, BentoCardFooter } from "../../../../components/ui/bento-grid";
+import {
+  BentoGrid,
+  BentoCard,
+  BentoCardHeader,
+  BentoCardTitle,
+  BentoCardContent,
+  BentoCardFooter,
+} from "../../../../components/ui/bento-grid";
 import { Card, CardContent, CardLabel } from "../../../../components/ui/card";
 
 interface PageProps {
@@ -51,7 +58,9 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (context)
       txHash: tx.txHash || "",
       transactionID,
       signatures: tx.signatures ?? [],
-      status: tx.status || (tx.txHash ? "broadcast" : "pending") as "pending" | "broadcast" | "cancelled",
+      status:
+        tx.status ||
+        ((tx.txHash ? "broadcast" : "pending") as "pending" | "broadcast" | "cancelled"),
     },
   };
 };
@@ -80,7 +89,9 @@ const TransactionPage = ({
   const [sequenceVerified, setSequenceVerified] = useState(false);
   // Phase 0: Multi-RPC verification state
   const [broadcastResult, setBroadcastResult] = useState<BroadcastResult | null>(null);
-  const [verificationStatus, setVerificationStatus] = useState<"idle" | "verifying" | "verified" | "failed">("idle");
+  const [verificationStatus, setVerificationStatus] = useState<
+    "idle" | "verifying" | "verified" | "failed"
+  >("idle");
   // Memoize txInfo to prevent recalculating on every render
   const txInfo = useMemo(() => dbTxFromJson(transactionJSON), [transactionJSON]);
 
@@ -119,7 +130,6 @@ const TransactionPage = ({
           setSequenceMismatch(null);
           setSequenceVerified(true);
         }
-
       } catch (e) {
         console.error("Failed to find multisig address:", e);
         toastError({
@@ -158,8 +168,8 @@ const TransactionPage = ({
       if (currentAccountOnChain.accountNumber !== txInfo.accountNumber) {
         throw new Error(
           `Account number mismatch! Transaction was created for account #${txInfo.accountNumber}, ` +
-          `but the current on-chain account number is ${currentAccountOnChain.accountNumber}. ` +
-          `This transaction's signatures are no longer valid. Please cancel this transaction and create a new one.`
+            `but the current on-chain account number is ${currentAccountOnChain.accountNumber}. ` +
+            `This transaction's signatures are no longer valid. Please cancel this transaction and create a new one.`,
         );
       }
 
@@ -170,12 +180,12 @@ const TransactionPage = ({
           expected: txInfo.sequence,
           actual: currentAccountOnChain.sequence,
         });
-        
+
         throw new Error(
           `Sequence mismatch! Transaction was signed for sequence ${txInfo.sequence}, ` +
-          `but the current on-chain sequence is ${currentAccountOnChain.sequence}. ` +
-          `This typically means another transaction was broadcast from this multisig account. ` +
-          `The collected signatures are no longer valid. Please cancel this transaction and create a new one.`
+            `but the current on-chain sequence is ${currentAccountOnChain.sequence}. ` +
+            `This typically means another transaction was broadcast from this multisig account. ` +
+            `The collected signatures are no longer valid. Please cancel this transaction and create a new one.`,
         );
       }
 
@@ -183,30 +193,30 @@ const TransactionPage = ({
 
       // Verify all signatures have the same bodyBytes
       const allSameBodyBytes = currentSignatures.every(
-        (s) => s.bodyBytes === currentSignatures[0].bodyBytes
+        (s) => s.bodyBytes === currentSignatures[0].bodyBytes,
       );
       if (!allSameBodyBytes) {
         console.error("Signatures have different bodyBytes");
       }
 
       // Build signature map - cosmjs 0.35.0+ extracts prefix from first address automatically
-      const detectedPrefix = currentSignatures[0]?.address?.split('1')[0] || 'unknown';
-      
+      const detectedPrefix = currentSignatures[0]?.address?.split("1")[0] || "unknown";
+
       // CRITICAL: Verify pubkey -> address derivation matches signature addresses
       const derivedAddresses: string[] = [];
       pubkey.value.pubkeys.forEach((memberPubkey) => {
         const derivedAddress = pubkeyToAddress(memberPubkey, detectedPrefix);
         derivedAddresses.push(derivedAddress);
       });
-      
+
       const signatureMap = new Map<string, Uint8Array>();
       currentSignatures.forEach((s) => {
         signatureMap.set(s.address, fromBase64(s.signature));
       });
-      
+
       // Check if this transaction should use Direct mode
       const useDirectMode = shouldUseDirectMode(txInfo.msgs);
-      
+
       let signedTxBytes: Uint8Array;
       if (useDirectMode) {
         // Use SIGN_MODE_DIRECT for MsgWithdrawValidatorCommission transactions
@@ -227,42 +237,55 @@ const TransactionPage = ({
           signatureMap,
         );
       }
-      
+
       // Import SignDoc debug utilities for comprehensive comparison
       const { generateSignDocDebugInfo, logSignDocDebug } = await import("@/lib/signDocDebug");
-      const { makeDirectModeAuthInfo, makeDirectSignDoc, logDirectSignDocDebug } = await import("@/lib/multisigDirect");
+      const { makeDirectModeAuthInfo, makeDirectSignDoc, logDirectSignDocDebug } = await import(
+        "@/lib/multisigDirect"
+      );
       const { aminoConverters } = await import("@/lib/msg");
       const { makeSignDoc, serializeSignDoc } = await import("@cosmjs/amino");
       const { sha256 } = await import("@cosmjs/crypto");
       const { AminoTypes } = await import("@cosmjs/stargate");
       const { Secp256k1, Secp256k1Signature } = await import("@cosmjs/crypto");
-      
+
       let expectedHash: Uint8Array;
-      
+
       if (useDirectMode) {
         // For Direct mode, verify against Direct SignDoc hash
         const { authInfoBytes } = makeDirectModeAuthInfo(pubkey, txInfo.sequence, txInfo.fee);
-        const { signDocHash } = makeDirectSignDoc(bodyBytes, authInfoBytes, txInfo.chainId, txInfo.accountNumber);
+        const { signDocHash } = makeDirectSignDoc(
+          bodyBytes,
+          authInfoBytes,
+          txInfo.chainId,
+          txInfo.accountNumber,
+        );
         expectedHash = signDocHash;
-        
-        logDirectSignDocDebug(bodyBytes, authInfoBytes, txInfo.chainId, txInfo.accountNumber, "BROADCAST Direct SignDoc Analysis");
+
+        logDirectSignDocDebug(
+          bodyBytes,
+          authInfoBytes,
+          txInfo.chainId,
+          txInfo.accountNumber,
+          "BROADCAST Direct SignDoc Analysis",
+        );
       } else {
         // For Amino mode, use Amino SignDoc hash
         const aminoTypes = new AminoTypes(aminoConverters);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const aminoMsgs = txInfo.msgs.map((msg: any) => aminoTypes.toAmino(msg));
-        
+
         const expectedSignDoc = makeSignDoc(
           aminoMsgs,
           { amount: txInfo.fee.amount, gas: txInfo.fee.gas },
           txInfo.chainId,
           txInfo.memo,
           String(txInfo.accountNumber),
-          String(txInfo.sequence)
+          String(txInfo.sequence),
         );
         const signDocBytes = serializeSignDoc(expectedSignDoc);
         expectedHash = sha256(signDocBytes);
-        
+
         // Generate comprehensive debug info
         const debugInfo = generateSignDocDebugInfo(
           txInfo.msgs,
@@ -271,11 +294,11 @@ const TransactionPage = ({
           txInfo.memo,
           txInfo.accountNumber,
           txInfo.sequence,
-          aminoTypes
+          aminoTypes,
         );
         logSignDocDebug(debugInfo, "BROADCAST SignDoc Analysis");
       }
-      
+
       // Verify signatures against expected hash before broadcast
       for (let i = 0; i < currentSignatures.length; i++) {
         const s = currentSignatures[i];
@@ -306,9 +329,9 @@ const TransactionPage = ({
       if (!verifiedResult.success) {
         setVerificationStatus("failed");
         throw new Error(
-          verifiedResult.error || 
-          `Transaction broadcast succeeded but verification failed. ` +
-          `Only ${verifiedResult.verifications.filter(v => v.verified).length + 1} endpoints confirmed.`
+          verifiedResult.error ||
+            `Transaction broadcast succeeded but verification failed. ` +
+              `Only ${verifiedResult.verifications.filter((v) => v.verified).length + 1} endpoints confirmed.`,
         );
       }
 
@@ -320,18 +343,20 @@ const TransactionPage = ({
       await updateDbTxHash(transactionID, verifiedResult.txHash);
       toastSuccess("Transaction broadcasted and verified", verifiedResult.txHash);
       setTransactionHash(verifiedResult.txHash);
-      
+
       // Notify pending transactions hook to refresh (removes the indicator)
       dispatchTransactionStatusChanged();
     } catch (e) {
       console.error("Failed to broadcast tx:", e);
-      
+
       const errorMessage = e instanceof Error ? e.message : String(e);
-      
+
       // Check for sequence mismatch error from chain
-      if (errorMessage.includes("signature verification failed") || 
-          errorMessage.includes("sequence") ||
-          errorMessage.includes("account sequence mismatch")) {
+      if (
+        errorMessage.includes("signature verification failed") ||
+        errorMessage.includes("sequence") ||
+        errorMessage.includes("account sequence mismatch")
+      ) {
         // Re-fetch the current sequence to update UI
         try {
           const client = await StargateClient.connect(chain.nodeAddress);
@@ -349,9 +374,10 @@ const TransactionPage = ({
         } catch (fetchErr) {
           console.error("Failed to re-fetch account state:", fetchErr);
         }
-        
+
         toastError({
-          description: "Transaction rejected: the account's sequence number has changed. " +
+          description:
+            "Transaction rejected: the account's sequence number has changed. " +
             "This usually means another transaction was broadcast from this multisig. " +
             "Please cancel this transaction and create a new one.",
           fullError: e instanceof Error ? e : undefined,
@@ -384,7 +410,7 @@ const TransactionPage = ({
       await cancelDbTx(transactionID);
       setTransactionStatus("cancelled");
       toastSuccess("Transaction cancelled");
-      
+
       // Notify pending transactions hook to refresh (removes the indicator)
       dispatchTransactionStatusChanged();
     } catch (e) {
@@ -415,7 +441,7 @@ const TransactionPage = ({
       }
     >
       {/* Page Title */}
-      <h1 className="text-3xl font-heading font-bold mb-6">
+      <h1 className="mb-6 font-heading text-3xl font-bold">
         {transactionStatus === "cancelled"
           ? "Cancelled Transaction"
           : transactionHash
@@ -425,28 +451,30 @@ const TransactionPage = ({
 
       {/* Status Banners */}
       {transactionStatus === "cancelled" ? (
-        <div className="mb-6 p-4 rounded-lg border-2 border-border bg-muted/20">
+        <div className="mb-6 rounded-lg border-2 border-border bg-muted/20 p-4">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
-              <div>
-              <h3 className="text-base font-semibold mb-1 text-foreground">Transaction Cancelled</h3>
+            <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-muted-foreground" />
+            <div>
+              <h3 className="mb-1 text-base font-semibold text-foreground">
+                Transaction Cancelled
+              </h3>
               <p className="text-sm text-muted-foreground">
-                  This transaction has been cancelled and cannot be signed or broadcast.
-                </p>
-              </div>
+                This transaction has been cancelled and cannot be signed or broadcast.
+              </p>
             </div>
+          </div>
         </div>
       ) : null}
 
       {transactionHash ? (
         <div className="mb-6">
           <CompletedTransaction transactionHash={transactionHash} />
-          
+
           {/* Phase 0: Multi-RPC verification status */}
           {broadcastResult && (
             <Card className="mt-4">
               <CardContent className="pt-4">
-                <div className="flex items-center gap-2 mb-3">
+                <div className="mb-3 flex items-center gap-2">
                   {verificationStatus === "verified" ? (
                     <CheckCircle2 className="h-5 w-5 text-green-accent" />
                   ) : verificationStatus === "failed" ? (
@@ -456,33 +484,31 @@ const TransactionPage = ({
                     Multi-Endpoint Verification
                   </CardLabel>
                 </div>
-                
+
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Primary endpoint:</span>
-                    <span className="font-mono text-xs truncate max-w-[200px]">
+                    <span className="max-w-[200px] truncate font-mono text-xs">
                       {broadcastResult.broadcastEndpoint || "N/A"}
                     </span>
                   </div>
-                  
+
                   {broadcastResult.verifications.length > 0 && (
                     <>
-                      <div className="text-muted-foreground text-xs mt-2">
+                      <div className="mt-2 text-xs text-muted-foreground">
                         Secondary verifications:
                       </div>
                       {broadcastResult.verifications.map((v, i) => (
-                        <div key={i} className="flex items-center gap-2 text-xs pl-2">
+                        <div key={i} className="flex items-center gap-2 pl-2 text-xs">
                           {v.verified ? (
                             <CheckCircle2 className="h-3 w-3 text-green-accent" />
                           ) : (
                             <AlertTriangle className="h-3 w-3 text-amber-500" />
                           )}
-                          <span className="font-mono truncate max-w-[150px]">
+                          <span className="max-w-[150px] truncate font-mono">
                             {new URL(v.endpoint).hostname}
                           </span>
-                          <span className="text-muted-foreground">
-                            {v.responseTimeMs}ms
-                          </span>
+                          <span className="text-muted-foreground">{v.responseTimeMs}ms</span>
                         </div>
                       ))}
                     </>
@@ -498,22 +524,21 @@ const TransactionPage = ({
         <Card variant="institutional" className="mb-6 border-red-500/50 bg-red-500/10">
           <CardContent className="pt-6">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-red-400 mt-0.5" />
+              <AlertTriangle className="mt-0.5 h-5 w-5 text-red-400" />
               <div className="flex-1">
-                <h3 className="text-lg font-semibold mb-2 text-red-400">
+                <h3 className="mb-2 text-lg font-semibold text-red-400">
                   Sequence Mismatch Detected
                 </h3>
-                <p className="text-sm mb-2">
+                <p className="mb-2 text-sm">
                   This transaction was created with sequence{" "}
-                  <strong>{sequenceMismatch.expected}</strong>, but the account's current
-                  sequence is <strong>{sequenceMismatch.actual}</strong>.
+                  <strong>{sequenceMismatch.expected}</strong>, but the account's current sequence
+                  is <strong>{sequenceMismatch.actual}</strong>.
                 </p>
-                <p className="text-sm mb-3">
-                  This usually means another transaction was broadcast from this multisig
-                  account after this transaction was created. The signatures collected are no
-                  longer valid.
+                <p className="mb-3 text-sm">
+                  This usually means another transaction was broadcast from this multisig account
+                  after this transaction was created. The signatures collected are no longer valid.
                 </p>
-                <div className="bg-card/50 p-3 rounded-lg border border-border">
+                <div className="rounded-lg border border-border bg-card/50 p-3">
                   <p className="text-sm">
                     <strong>Solution:</strong> Cancel this transaction and create a new one with the
                     current sequence number.
@@ -527,25 +552,25 @@ const TransactionPage = ({
 
       {/* Desktop-first Horizontal Layout for In Progress Transactions */}
       {!transactionHash && transactionStatus !== "cancelled" && !sequenceMismatch && txInfo ? (
-        <div className="flex flex-col lg:flex-row gap-4 md:gap-6">
+        <div className="flex flex-col gap-4 md:gap-6 lg:flex-row">
           {/* LEFT COLUMN: Signing Status Card */}
           <div className="w-full lg:w-[380px] lg:flex-shrink-0">
-            <BentoCard variant="highlight" className="p-6 h-full flex flex-col">
+            <BentoCard variant="highlight" className="flex h-full flex-col p-6">
               <BentoCardHeader>
                 <BentoCardTitle icon={<Users className="h-5 w-5 text-foreground" />}>
                   Signing Status
                 </BentoCardTitle>
               </BentoCardHeader>
-              <BentoCardContent className="space-y-4 flex-1">
+              <BentoCardContent className="flex-1 space-y-4">
                 {pubkey ? (
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
+                    <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4">
                       <div className="flex items-center gap-3">
-                        <div className="text-3xl font-bold font-heading">
+                        <div className="font-heading text-3xl font-bold">
                           {currentSignatures.length}
                         </div>
                         <div className="text-muted-foreground">of</div>
-                        <div className="text-3xl font-bold font-heading">
+                        <div className="font-heading text-3xl font-bold">
                           {pubkey.value.threshold}
                         </div>
                         <div className="text-sm text-muted-foreground">signatures</div>
@@ -564,7 +589,7 @@ const TransactionPage = ({
                 ) : null}
 
                 <div className="space-y-2">
-                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                     Current Signers
                   </h4>
                   {currentSignatures.length > 0 ? (
@@ -572,7 +597,7 @@ const TransactionPage = ({
                       {currentSignatures.map((signature, i) => (
                         <div
                           key={`${signature.address}_${i}`}
-                          className="p-3 rounded-lg bg-muted/20 border border-border/50 font-mono text-sm break-all"
+                          className="break-all rounded-lg border border-border/50 bg-muted/20 p-3 font-mono text-sm"
                         >
                           {signature.address}
                         </div>
@@ -584,7 +609,7 @@ const TransactionPage = ({
                 </div>
               </BentoCardContent>
               {pubkey && txInfo ? (
-                <BentoCardFooter className="flex-col gap-3 mt-auto">
+                <BentoCardFooter className="mt-auto flex-col gap-3">
                   <TransactionSigning
                     tx={txInfo}
                     transactionID={transactionID}
@@ -594,7 +619,7 @@ const TransactionPage = ({
                     compact
                   />
                   {/* Integrated Actions */}
-                  <div className="flex flex-col gap-3 pt-3 border-t border-border/50 w-full">
+                  <div className="flex w-full flex-col gap-3 border-t border-border/50 pt-3">
                     {isThresholdMet && !sequenceMismatch && sequenceVerified ? (
                       <Button
                         label={isBroadcasting ? "Broadcasting..." : "Broadcast Transaction"}
@@ -603,18 +628,16 @@ const TransactionPage = ({
                         disabled={isBroadcasting}
                       />
                     ) : isThresholdMet && !sequenceMismatch && !sequenceVerified ? (
-                      <Button
-                        label="Verifying sequence..."
-                        disabled
-                      />
+                      <Button label="Verifying sequence..." disabled />
                     ) : null}
                     <Button
                       label={isCancelling ? "Cancelling..." : "Cancel Transaction"}
                       onClick={cancelTx}
                       disabled={isCancelling || isBroadcasting}
                     />
-                    <p className="text-xs text-muted-foreground text-center">
-                      Cancelling marks this transaction as invalid. It won't affect any on-chain state.
+                    <p className="text-center text-xs text-muted-foreground">
+                      Cancelling marks this transaction as invalid. It won't affect any on-chain
+                      state.
                     </p>
                   </div>
                 </BentoCardFooter>
@@ -623,7 +646,7 @@ const TransactionPage = ({
           </div>
 
           {/* RIGHT COLUMN: Transaction Details + Message stacked vertically */}
-          <div className="flex-1 flex flex-col gap-4 md:gap-6 min-w-0">
+          <div className="flex min-w-0 flex-1 flex-col gap-4 md:gap-6">
             {/* Transaction Details Card */}
             <BentoCard variant="default" className="p-6">
               <BentoCardHeader>
@@ -632,28 +655,28 @@ const TransactionPage = ({
                 </BentoCardTitle>
               </BentoCardHeader>
               <BentoCardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
                   <div className="space-y-1">
-                    <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono block">
+                    <span className="block font-mono text-xs uppercase tracking-wide text-muted-foreground">
                       Chain ID
                     </span>
                     <span className="font-mono text-sm">{txInfo.chainId}</span>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono block">
+                    <span className="block font-mono text-xs uppercase tracking-wide text-muted-foreground">
                       Account #
                     </span>
                     <span className="font-mono text-sm">{txInfo.accountNumber}</span>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono block">
+                    <span className="block font-mono text-xs uppercase tracking-wide text-muted-foreground">
                       Tx Sequence
                     </span>
                     <span className="font-mono text-sm">{txInfo.sequence}</span>
                   </div>
                   {accountOnChain?.sequence !== undefined && (
                     <div className="space-y-1">
-                      <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono block">
+                      <span className="block font-mono text-xs uppercase tracking-wide text-muted-foreground">
                         Chain Sequence
                       </span>
                       <span
@@ -671,13 +694,13 @@ const TransactionPage = ({
                   {txInfo.fee && (
                     <>
                       <div className="space-y-1">
-                        <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono block">
+                        <span className="block font-mono text-xs uppercase tracking-wide text-muted-foreground">
                           Gas
                         </span>
                         <span className="font-mono text-sm">{txInfo.fee.gas}</span>
                       </div>
                       <div className="space-y-1">
-                        <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono block">
+                        <span className="block font-mono text-xs uppercase tracking-wide text-muted-foreground">
                           Fee
                         </span>
                         <span className="font-mono text-sm">
@@ -688,8 +711,8 @@ const TransactionPage = ({
                   )}
                 </div>
                 {txInfo.memo && (
-                  <div className="mt-4 pt-4 border-t border-border/50">
-                    <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono block mb-1">
+                  <div className="mt-4 border-t border-border/50 pt-4">
+                    <span className="mb-1 block font-mono text-xs uppercase tracking-wide text-muted-foreground">
                       Memo
                     </span>
                     <span className="font-mono text-sm">{txInfo.memo}</span>
@@ -699,57 +722,80 @@ const TransactionPage = ({
             </BentoCard>
 
             {/* Message Details Card */}
-            <BentoCard variant="accent" className="p-6 flex-1">
+            <BentoCard variant="accent" className="flex-1 p-6">
               <BentoCardHeader>
                 <BentoCardTitle icon={<MessageSquare className="h-5 w-5 text-foreground" />}>
                   Message
                 </BentoCardTitle>
               </BentoCardHeader>
               <BentoCardContent>
-                <TransactionInfo tx={txInfo} currentOnChainSequence={accountOnChain?.sequence} compact />
+                <TransactionInfo
+                  tx={txInfo}
+                  currentOnChainSequence={accountOnChain?.sequence}
+                  compact
+                />
               </BentoCardContent>
             </BentoCard>
           </div>
         </div>
-        ) : null}
+      ) : null}
 
       {/* Cancelled Transaction Layout - Clean, flat design without nested cards */}
       {txInfo && transactionStatus === "cancelled" ? (
         <div className="space-y-4">
           {/* Signing Info - Compact Grid Layout */}
           <Card variant="institutional" className="p-4 md:p-5">
-            <CardLabel comment className="mb-3">Signing Info</CardLabel>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+            <CardLabel comment className="mb-3">
+              Signing Info
+            </CardLabel>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-3">
               <div className="space-y-1">
-                <div className="text-xs uppercase tracking-wide text-muted-foreground font-mono">Chain ID</div>
+                <div className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
+                  Chain ID
+                </div>
                 <div className="font-mono text-sm text-foreground">{txInfo.chainId}</div>
               </div>
               <div className="space-y-1">
-                <div className="text-xs uppercase tracking-wide text-muted-foreground font-mono">Account #</div>
+                <div className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
+                  Account #
+                </div>
                 <div className="font-mono text-sm text-foreground">{txInfo.accountNumber}</div>
               </div>
               <div className="space-y-1">
-                <div className="text-xs uppercase tracking-wide text-muted-foreground font-mono">Tx Sequence</div>
+                <div className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
+                  Tx Sequence
+                </div>
                 <div className="font-mono text-sm text-foreground">{txInfo.sequence}</div>
               </div>
               {accountOnChain?.sequence !== undefined && (
                 <div className="space-y-1">
-                  <div className="text-xs uppercase tracking-wide text-muted-foreground font-mono">Chain Sequence</div>
-                  <div className={`font-mono text-sm font-semibold ${
-                    accountOnChain.sequence === txInfo.sequence ? "text-green-400" : "text-red-400"
-                  }`}>
-                    {accountOnChain.sequence} {accountOnChain.sequence === txInfo.sequence ? "✓ OK" : "✗ MISMATCH"}
+                  <div className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
+                    Chain Sequence
+                  </div>
+                  <div
+                    className={`font-mono text-sm font-semibold ${
+                      accountOnChain.sequence === txInfo.sequence
+                        ? "text-green-400"
+                        : "text-red-400"
+                    }`}
+                  >
+                    {accountOnChain.sequence}{" "}
+                    {accountOnChain.sequence === txInfo.sequence ? "✓ OK" : "✗ MISMATCH"}
                   </div>
                 </div>
               )}
               {txInfo.fee ? (
                 <>
                   <div className="space-y-1">
-                    <div className="text-xs uppercase tracking-wide text-muted-foreground font-mono">Gas</div>
+                    <div className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
+                      Gas
+                    </div>
                     <div className="font-mono text-sm text-foreground">{txInfo.fee.gas}</div>
                   </div>
                   <div className="space-y-1">
-                    <div className="text-xs uppercase tracking-wide text-muted-foreground font-mono">Fee</div>
+                    <div className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
+                      Fee
+                    </div>
                     <div className="font-mono text-sm text-foreground">
                       {printableCoins(txInfo.fee.amount, chain) || "None"}
                     </div>
@@ -758,9 +804,11 @@ const TransactionPage = ({
               ) : null}
             </div>
             {txInfo.memo && (
-              <div className="mt-4 pt-4 border-t border-border">
-                <div className="text-xs uppercase tracking-wide text-muted-foreground font-mono mb-1">Memo</div>
-                <div className="font-mono text-sm text-foreground break-words">{txInfo.memo}</div>
+              <div className="mt-4 border-t border-border pt-4">
+                <div className="mb-1 font-mono text-xs uppercase tracking-wide text-muted-foreground">
+                  Memo
+                </div>
+                <div className="break-words font-mono text-sm text-foreground">{txInfo.memo}</div>
               </div>
             )}
           </Card>
@@ -770,21 +818,33 @@ const TransactionPage = ({
             const msgType = msg.typeUrl.split(".").pop()?.replace("Msg", "") || msg.typeUrl;
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const msgValue = msg.value as Record<string, any>;
-            
+
             // Extract key fields based on message type
             const getMessageFields = () => {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const fields: Array<{ label: string; value: any; isAddress?: boolean }> = [];
-              
+
               // Common address fields
               if (msgValue.validatorAddress) {
-                fields.push({ label: "Validator Address", value: msgValue.validatorAddress, isAddress: true });
+                fields.push({
+                  label: "Validator Address",
+                  value: msgValue.validatorAddress,
+                  isAddress: true,
+                });
               }
               if (msgValue.delegatorAddress) {
-                fields.push({ label: "Delegator Address", value: msgValue.delegatorAddress, isAddress: true });
+                fields.push({
+                  label: "Delegator Address",
+                  value: msgValue.delegatorAddress,
+                  isAddress: true,
+                });
               }
               if (msgValue.fromAddress) {
-                fields.push({ label: "From Address", value: msgValue.fromAddress, isAddress: true });
+                fields.push({
+                  label: "From Address",
+                  value: msgValue.fromAddress,
+                  isAddress: true,
+                });
               }
               if (msgValue.toAddress) {
                 fields.push({ label: "To Address", value: msgValue.toAddress, isAddress: true });
@@ -795,18 +855,23 @@ const TransactionPage = ({
               if (msgValue.receiver) {
                 fields.push({ label: "Receiver", value: msgValue.receiver, isAddress: true });
               }
-              
+
               // Amount fields
               if (msgValue.amount) {
                 if (Array.isArray(msgValue.amount)) {
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  const amounts = msgValue.amount.map((a: any) => `${a.amount} ${a.denom}`).join(", ");
+                  const amounts = msgValue.amount
+                    .map((a: any) => `${a.amount} ${a.denom}`)
+                    .join(", ");
                   fields.push({ label: "Amount", value: amounts });
                 } else if (msgValue.amount.amount) {
-                  fields.push({ label: "Amount", value: `${msgValue.amount.amount} ${msgValue.amount.denom}` });
+                  fields.push({
+                    label: "Amount",
+                    value: `${msgValue.amount.amount} ${msgValue.amount.denom}`,
+                  });
                 }
               }
-              
+
               // Other common fields
               if (msgValue.contract) {
                 fields.push({ label: "Contract", value: msgValue.contract, isAddress: true });
@@ -820,34 +885,38 @@ const TransactionPage = ({
               if (msgValue.option) {
                 fields.push({ label: "Option", value: String(msgValue.option) });
               }
-              
+
               return fields;
             };
-            
+
             const fields = getMessageFields();
-            
+
             return (
               <Card key={index} variant="institutional" className="p-4 md:p-5">
-                <CardLabel comment className="mb-3">{msgType}</CardLabel>
+                <CardLabel comment className="mb-3">
+                  {msgType}
+                </CardLabel>
                 {fields.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
                     {fields.map((field, fieldIndex) => (
                       <div key={fieldIndex} className="space-y-1">
-                        <div className="text-xs uppercase tracking-wide text-muted-foreground font-mono">
+                        <div className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
                           {field.label}
                         </div>
                         {field.isAddress ? (
-                          <div className="font-mono text-sm p-2 rounded-lg bg-muted/20 border border-border/50 break-all">
+                          <div className="break-all rounded-lg border border-border/50 bg-muted/20 p-2 font-mono text-sm">
                             <HashView hash={field.value} />
                           </div>
                         ) : (
-                          <div className="font-mono text-sm text-foreground break-words">{field.value}</div>
+                          <div className="break-words font-mono text-sm text-foreground">
+                            {field.value}
+                          </div>
                         )}
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-sm text-muted-foreground italic">No additional details</div>
+                  <div className="text-sm italic text-muted-foreground">No additional details</div>
                 )}
               </Card>
             );
@@ -857,7 +926,7 @@ const TransactionPage = ({
 
       {/* Bento Grid Layout for Completed/Sequence Mismatch Transactions - Horizontal Layout */}
       {txInfo && (transactionHash || sequenceMismatch) && transactionStatus !== "cancelled" ? (
-        <BentoGrid className="grid-cols-1 md:grid-cols-3 auto-rows-[minmax(200px,auto)] gap-4 md:gap-6">
+        <BentoGrid className="auto-rows-[minmax(200px,auto)] grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
           {/* Transaction Details Card - 1 col */}
           <BentoCard colSpan={1} variant="default" className="p-6">
             <BentoCardHeader>
@@ -867,33 +936,39 @@ const TransactionPage = ({
             </BentoCardHeader>
             <BentoCardContent>
               <div className="space-y-3">
-                <div className="flex justify-between items-center py-2 border-b border-border/50">
-                  <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono">
+                <div className="flex items-center justify-between border-b border-border/50 py-2">
+                  <span className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
                     Chain ID
                   </span>
                   <span className="font-mono text-sm">{txInfo.chainId}</span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-border/50">
-                  <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono">
+                <div className="flex items-center justify-between border-b border-border/50 py-2">
+                  <span className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
                     Account #
                   </span>
                   <span className="font-mono text-sm">{txInfo.accountNumber}</span>
                 </div>
-                <div className={`flex justify-between items-center py-2 border-b border-border/50 ${
-                  sequenceMismatch ? "bg-red-500/10 rounded px-2" : ""
-                }`}>
-                  <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono">
+                <div
+                  className={`flex items-center justify-between border-b border-border/50 py-2 ${
+                    sequenceMismatch ? "rounded bg-red-500/10 px-2" : ""
+                  }`}
+                >
+                  <span className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
                     Tx Sequence
                   </span>
-                  <span className={`font-mono text-sm ${sequenceMismatch ? "text-red-400 font-semibold" : ""}`}>
+                  <span
+                    className={`font-mono text-sm ${sequenceMismatch ? "font-semibold text-red-400" : ""}`}
+                  >
                     {txInfo.sequence}
                   </span>
                 </div>
                 {accountOnChain?.sequence !== undefined && (
-                  <div className={`flex justify-between items-center py-2 border-b border-border/50 ${
-                    sequenceMismatch ? "bg-red-500/10 rounded px-2" : ""
-                  }`}>
-                    <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono">
+                  <div
+                    className={`flex items-center justify-between border-b border-border/50 py-2 ${
+                      sequenceMismatch ? "rounded bg-red-500/10 px-2" : ""
+                    }`}
+                  >
+                    <span className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
                       Chain Sequence
                     </span>
                     <span
@@ -910,14 +985,14 @@ const TransactionPage = ({
                 )}
                 {txInfo.fee && (
                   <>
-                    <div className="flex justify-between items-center py-2 border-b border-border/50">
-                      <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono">
+                    <div className="flex items-center justify-between border-b border-border/50 py-2">
+                      <span className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
                         Gas
                       </span>
                       <span className="font-mono text-sm">{txInfo.fee.gas}</span>
                     </div>
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono">
+                    <div className="flex items-center justify-between py-2">
+                      <span className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
                         Fee
                       </span>
                       <span className="font-mono text-sm">
@@ -927,11 +1002,11 @@ const TransactionPage = ({
                   </>
                 )}
                 {txInfo.memo && (
-                  <div className="flex justify-between items-start py-2 border-t border-border/50 mt-2 pt-2">
-                    <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono">
+                  <div className="mt-2 flex items-start justify-between border-t border-border/50 py-2 pt-2">
+                    <span className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
                       Memo
                     </span>
-                    <span className="font-mono text-sm text-right">{txInfo.memo}</span>
+                    <span className="text-right font-mono text-sm">{txInfo.memo}</span>
                   </div>
                 )}
               </div>
@@ -946,7 +1021,11 @@ const TransactionPage = ({
               </BentoCardTitle>
             </BentoCardHeader>
             <BentoCardContent>
-              <TransactionInfo tx={txInfo} currentOnChainSequence={accountOnChain?.sequence} compact />
+              <TransactionInfo
+                tx={txInfo}
+                currentOnChainSequence={accountOnChain?.sequence}
+                compact
+              />
             </BentoCardContent>
           </BentoCard>
 
@@ -965,8 +1044,9 @@ const TransactionPage = ({
                     onClick={cancelTx}
                     disabled={isCancelling || isBroadcasting}
                   />
-                  <p className="text-xs text-muted-foreground text-center">
-                    Cancelling marks this transaction as invalid. It won't affect any on-chain state.
+                  <p className="text-center text-xs text-muted-foreground">
+                    Cancelling marks this transaction as invalid. It won't affect any on-chain
+                    state.
                   </p>
                 </div>
               </BentoCardContent>

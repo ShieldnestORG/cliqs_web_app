@@ -1,14 +1,14 @@
 /**
  * Indexer Module Exports
- * 
+ *
  * File: lib/indexer/index.ts
- * 
+ *
  * Three-layer indexer architecture for contract multisig:
- * 
+ *
  * Layer 1 (WebSocket): Real-time event listener for UX updates
  * Layer 2 (Sync Job): Height-based authoritative sync for correctness
  * Layer 3 (Verifier): On-demand chain verification for security
- * 
+ *
  * Phase 2: Added group event tracking for CW4 groups
  */
 
@@ -57,4 +57,3 @@ export {
   type VerifyExecuteParams,
   type VerifyMembershipParams,
 } from "./chain-verifier";
-

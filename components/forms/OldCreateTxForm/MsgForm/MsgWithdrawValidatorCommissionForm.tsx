@@ -1,6 +1,13 @@
 import SelectValidator from "@/components/SelectValidator";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardLabel, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardLabel,
+  CardTitle,
+} from "@/components/ui/card";
 import { EncodeObject } from "@cosmjs/proto-signing";
 import { toBech32, fromBech32 } from "@cosmjs/encoding";
 import { X } from "lucide-react";
@@ -59,7 +66,9 @@ const MsgWithdrawValidatorCommissionForm = ({
       }
     } catch {
       // If conversion fails, use sender address as fallback
-      console.warn("Failed to convert validator operator address to account address, using sender address");
+      console.warn(
+        "Failed to convert validator operator address to account address, using sender address",
+      );
     }
 
     const delegatorRewardMsgValue = MsgCodecs[MsgTypeUrls.WithdrawDelegatorReward].fromPartial({
@@ -100,17 +109,17 @@ const MsgWithdrawValidatorCommissionForm = ({
       >
         <X className="h-4 w-4" />
       </Button>
-      
+
       <CardHeader>
         <CardLabel comment>Transaction Type</CardLabel>
         <CardTitle className="text-xl">Withdraw Validator Commission</CardTitle>
         <CardDescription className="mt-2">
           Claim accumulated commission rewards for your validator. This creates both delegator
-          rewards and validator commission withdrawal messages in a single transaction, matching
-          the TX CLI behavior with the --commission flag.
+          rewards and validator commission withdrawal messages in a single transaction, matching the
+          TX CLI behavior with the --commission flag.
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         <div className="space-y-4">
           <SelectValidator

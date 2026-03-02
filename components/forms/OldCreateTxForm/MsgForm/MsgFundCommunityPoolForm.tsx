@@ -44,7 +44,8 @@ const MsgFundCommunityPoolForm = ({
   const selectedAsset = chain.assets?.find((a) => a.base === selectedDenomBase);
 
   // Get the denom for balance checking
-  const balanceDenom = selectedDenomBase === CUSTOM_DENOM_VALUE ? customDenom : (selectedAsset?.symbol ?? "");
+  const balanceDenom =
+    selectedDenomBase === CUSTOM_DENOM_VALUE ? customDenom : (selectedAsset?.symbol ?? "");
   const { availableBalance } = useBalance({
     address: senderAddress,
     denom: balanceDenom || chain.displayDenom,
@@ -61,12 +62,7 @@ const MsgFundCommunityPoolForm = ({
       setCustomDenomError("");
       setAmountError("");
 
-      if (
-        selectedDenomBase === CUSTOM_DENOM_VALUE &&
-        !customDenom &&
-        amount &&
-        amount !== "0"
-      ) {
+      if (selectedDenomBase === CUSTOM_DENOM_VALUE && !customDenom && amount && amount !== "0") {
         setCustomDenomError("Custom denom must be set because of selection above");
         return false;
       }
@@ -87,12 +83,12 @@ const MsgFundCommunityPoolForm = ({
           const userAmountCoin = displayCoinToBaseCoin({ denom, amount }, chain.assets);
           const userAmountDecimal = Decimal.fromAtomics(userAmountCoin.amount, 0);
           const availableAmountDecimal = Decimal.fromAtomics(availableBalance.amount, 0);
-          
+
           if (userAmountDecimal.isGreaterThan(availableAmountDecimal)) {
             setAmountError(`Amount exceeds available balance`);
             return false;
           }
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (_: unknown) {
           // If conversion fails, continue with other validation
         }
@@ -132,27 +128,30 @@ const MsgFundCommunityPoolForm = ({
 
     setMsgGetter({ isMsgValid, msg });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chain.assets, selectedDenomBase, selectedAsset, senderAddress, trimmedInputs, balanceDenom, availableBalance]);
+  }, [
+    chain.assets,
+    selectedDenomBase,
+    selectedAsset,
+    senderAddress,
+    trimmedInputs,
+    balanceDenom,
+    availableBalance,
+  ]);
   // Note: setMsgGetter intentionally excluded - it's a stable setter that shouldn't trigger re-runs
 
   return (
-    <StackableContainer 
-      variant="institutional" 
-      lessPadding 
-      lessMargin
-      accent={categoryInfo.accent}
-    >
+    <StackableContainer variant="institutional" lessPadding lessMargin accent={categoryInfo.accent}>
       <Button
         variant="ghost"
         size="icon-sm"
         onClick={() => deleteMsg()}
-        className="absolute right-4 top-4 h-8 w-8 text-muted-foreground hover:text-foreground z-10"
+        className="absolute right-4 top-4 z-10 h-8 w-8 text-muted-foreground hover:text-foreground"
       >
         <X className="h-4 w-4" />
       </Button>
       <div className="mb-4">
         <CardLabel comment>{categoryInfo.label}</CardLabel>
-        <h2 className="text-xl font-heading font-semibold">MsgFundCommunityPool</h2>
+        <h2 className="font-heading text-xl font-semibold">MsgFundCommunityPool</h2>
       </div>
       <div className="space-y-4">
         {balanceDenom && (

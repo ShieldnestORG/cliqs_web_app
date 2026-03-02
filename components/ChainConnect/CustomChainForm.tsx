@@ -107,7 +107,7 @@ export default function CustomChainForm() {
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Tag className="h-4 w-4 text-muted-foreground" />
-            <span className="text-label text-label-comment text-[10px]">Basic Information</span>
+            <span className="text-label-comment text-[10px] text-label">Basic Information</span>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <FormField
@@ -170,7 +170,7 @@ export default function CustomChainForm() {
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Coins className="h-4 w-4 text-muted-foreground" />
-            <span className="text-label text-label-comment text-[10px]">Token Configuration</span>
+            <span className="text-label-comment text-[10px] text-label">Token Configuration</span>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <FormField
@@ -246,7 +246,7 @@ export default function CustomChainForm() {
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Wallet className="h-4 w-4 text-muted-foreground" />
-            <span className="text-label text-label-comment text-[10px]">Network Settings</span>
+            <span className="text-label-comment text-[10px] text-label">Network Settings</span>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormField
@@ -293,7 +293,7 @@ export default function CustomChainForm() {
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Server className="h-4 w-4 text-muted-foreground" />
-            <span className="text-label text-label-comment text-[10px]">Endpoints & Explorer</span>
+            <span className="text-label-comment text-[10px] text-label">Endpoints & Explorer</span>
           </div>
           <FormField
             name="rpcNodes"
@@ -367,7 +367,9 @@ export default function CustomChainForm() {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Hash className="h-4 w-4 text-muted-foreground" />
-              <span className="text-label text-label-comment text-[10px]">Assets Configuration</span>
+              <span className="text-label-comment text-[10px] text-label">
+                Assets Configuration
+              </span>
             </div>
             <FormField
               name="assets"

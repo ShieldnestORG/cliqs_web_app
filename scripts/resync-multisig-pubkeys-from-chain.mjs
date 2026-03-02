@@ -130,9 +130,7 @@ async function main() {
     try {
       let stargateClient = clientsByChain.get(chainId);
       if (!stargateClient) {
-        stargateClient = await StargateClient.connect(
-          ensureProtocol(cfg.nodeAddress)
-        );
+        stargateClient = await StargateClient.connect(ensureProtocol(cfg.nodeAddress));
         clientsByChain.set(chainId, stargateClient);
       }
 
@@ -148,9 +146,7 @@ async function main() {
         continue;
       }
       if (!isMultisigThresholdPubkey(account.pubkey)) {
-        console.warn(
-          `  SKIP (not multisig threshold): ${address} (${chainId})`
-        );
+        console.warn(`  SKIP (not multisig threshold): ${address} (${chainId})`);
         skippedNotMultisig++;
         continue;
       }
@@ -162,10 +158,7 @@ async function main() {
       }));
       const threshold = Number(account.pubkey.value.threshold);
       const multisigPubkey = createMultisigThresholdPubkey(pubkeys, threshold);
-      const derivedAddress = pubkeyToAddress(
-        multisigPubkey,
-        cfg.addressPrefix
-      );
+      const derivedAddress = pubkeyToAddress(multisigPubkey, cfg.addressPrefix);
       const now = new Date().toISOString();
 
       const updateFields = {
@@ -176,10 +169,7 @@ async function main() {
         updateFields.address = derivedAddress;
       }
 
-      await col.updateOne(
-        { chainId, address },
-        { $set: updateFields }
-      );
+      await col.updateOne({ chainId, address }, { $set: updateFields });
       updated++;
       console.log(`  UPDATED: ${address} (${chainId})`);
     } catch (e) {

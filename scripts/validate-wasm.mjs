@@ -18,11 +18,7 @@ import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const WASM_DIR = join(__dirname, "..", "public", "wasm");
 const MANIFEST_PATH = join(WASM_DIR, "manifest.json");
-const REQUIRED_CONTRACTS = [
-  "cw3_fixed_multisig",
-  "cw3_flex_multisig",
-  "cw4_group",
-];
+const REQUIRED_CONTRACTS = ["cw3_fixed_multisig", "cw3_flex_multisig", "cw4_group"];
 
 const strict = process.argv.includes("--strict");
 let hasErrors = false;

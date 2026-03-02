@@ -72,7 +72,7 @@ function ContractProposalForm({
     setIsSubmitting(true);
 
     try {
-      const signer = await getDirectSigner() || await getAminoSigner();
+      const signer = (await getDirectSigner()) || (await getAminoSigner());
       if (!signer) {
         toast.error("Failed to get wallet signer");
         return;
@@ -107,7 +107,9 @@ function ContractProposalForm({
 
         const baseAmount = Math.floor(parsedAmount * Math.pow(10, chain.displayDenomExponent));
         if (baseAmount < 1) {
-          toast.error(`Amount too small — minimum is ${Math.pow(10, -chain.displayDenomExponent)} ${chain.displayDenom}`);
+          toast.error(
+            `Amount too small — minimum is ${Math.pow(10, -chain.displayDenomExponent)} ${chain.displayDenom}`,
+          );
           setIsSubmitting(false);
           return;
         }
@@ -206,7 +208,7 @@ function ContractProposalForm({
               placeholder="Describe what this proposal does and why"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="resize-none h-20"
+              className="h-20 resize-none"
             />
           </div>
         </CardContent>
@@ -223,7 +225,7 @@ function ContractProposalForm({
               type="button"
               variant={msgType === "bank_send" ? "default" : "outline"}
               onClick={() => setMsgType("bank_send")}
-              className="gap-2 flex-1"
+              className="flex-1 gap-2"
             >
               <Coins className="h-4 w-4" />
               Send Tokens
@@ -232,7 +234,7 @@ function ContractProposalForm({
               type="button"
               variant={msgType === "custom" ? "default" : "outline"}
               onClick={() => setMsgType("custom")}
-              className="gap-2 flex-1"
+              className="flex-1 gap-2"
             >
               <FileCode2 className="h-4 w-4" />
               Custom JSON
@@ -267,15 +269,13 @@ function ContractProposalForm({
 
           {msgType === "custom" && (
             <div className="space-y-2 pt-2">
-              <Label htmlFor="customJson">
-                CosmosMsg JSON (array or single object)
-              </Label>
+              <Label htmlFor="customJson">CosmosMsg JSON (array or single object)</Label>
               <Textarea
                 id="customJson"
                 placeholder={`[\n  {\n    "bank": {\n      "send": {\n        "to_address": "...",\n        "amount": [{ "denom": "${chain.denom}", "amount": "1000000" }]\n      }\n    }\n  }\n]`}
                 value={customJson}
                 onChange={(e) => setCustomJson(e.target.value)}
-                className="font-mono text-sm h-40"
+                className="h-40 font-mono text-sm"
               />
               <p className="text-xs text-muted-foreground">
                 Supports bank, staking, distribution, wasm, ibc, and gov messages.
@@ -293,7 +293,11 @@ function ContractProposalForm({
         >
           Cancel
         </Button>
-        <Button type="submit" disabled={isSubmitting || !walletInfo || !title.trim()} className="gap-2">
+        <Button
+          type="submit"
+          disabled={isSubmitting || !walletInfo || !title.trim()}
+          className="gap-2"
+        >
           {isSubmitting ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -410,7 +414,7 @@ export default function CreateTxPage() {
   // Loading — detecting multisig type
   if (multisigTypeResult.isLoading) {
     return (
-      <div className="container mx-auto px-[0.75in] py-8 max-w-[1800px]">
+      <div className="container mx-auto max-w-[1800px] px-[0.75in] py-8">
         <Head title={`New Transaction - ${chain.chainDisplayName || "Cosmos Hub"}`} />
         <div className="flex items-center justify-center py-24">
           <div className="flex flex-col items-center gap-4">
@@ -425,7 +429,7 @@ export default function CreateTxPage() {
   // Contract Multisig — show CW3 proposal form
   if (isContractMultisig && multisigAddress) {
     return (
-      <div className="container mx-auto px-[0.75in] py-8 max-w-3xl">
+      <div className="container mx-auto max-w-3xl px-[0.75in] py-8">
         <Head title={`New Proposal - ${chain.chainDisplayName || "Cosmos Hub"}`} />
         <div className="space-y-6">
           <div className="flex items-center gap-4">
@@ -453,9 +457,9 @@ export default function CreateTxPage() {
 
   // PubKey Multisig — existing form
   return showOldForm ? (
-    <div className="container mx-auto px-[0.75in] py-8 max-w-[1800px]">
+    <div className="container mx-auto max-w-[1800px] px-[0.75in] py-8">
       <Head title={`New Transaction - ${chain.chainDisplayName || "Cosmos Hub"}`} />
-      
+
       <div className="space-y-6">
         {/* Back Button */}
         <div className="flex items-center gap-4">
@@ -479,13 +483,13 @@ export default function CreateTxPage() {
             <AlertTitle>Multisig Not Available</AlertTitle>
             <AlertDescription className="mt-2 space-y-2">
               <p>
-                This multisig address&apos;s pubkeys are not available, and so it cannot be used with
-                this tool.
+                This multisig address&apos;s pubkeys are not available, and so it cannot be used
+                with this tool.
               </p>
               <p>
-                You can recreate it with this tool here, or sign and broadcast a transaction
-                with the tool you used to create it. Either option will make the pubkeys
-                accessible and will allow this tool to use this multisig fully.
+                You can recreate it with this tool here, or sign and broadcast a transaction with
+                the tool you used to create it. Either option will make the pubkeys accessible and
+                will allow this tool to use this multisig fully.
               </p>
             </AlertDescription>
           </Alert>
@@ -507,12 +511,14 @@ export default function CreateTxPage() {
           <Alert className="border-yellow-500/50 bg-yellow-500/10">
             <Clock className="h-4 w-4 text-yellow-500" />
             <AlertTitle className="text-yellow-500">
-              {pendingTransactions.length} Pending Transaction{pendingTransactions.length > 1 ? "s" : ""}
+              {pendingTransactions.length} Pending Transaction
+              {pendingTransactions.length > 1 ? "s" : ""}
             </AlertTitle>
             <AlertDescription className="mt-2 space-y-3">
               <p>
-                You have pending transaction{pendingTransactions.length > 1 ? "s" : ""} that need to be completed or cancelled first.
-                Creating a new transaction with the same sequence number will make only one of them broadcastable.
+                You have pending transaction{pendingTransactions.length > 1 ? "s" : ""} that need to
+                be completed or cancelled first. Creating a new transaction with the same sequence
+                number will make only one of them broadcastable.
               </p>
               <div className="space-y-2">
                 {pendingTransactions.map((tx) => (
@@ -521,13 +527,10 @@ export default function CreateTxPage() {
                     className="flex items-center justify-between rounded-md bg-background/50 p-2"
                   >
                     <span className="text-sm">
-                      Transaction {tx.id.substring(0, 8)}... ({tx.signatures?.length || 0} signature{tx.signatures?.length !== 1 ? "s" : ""})
+                      Transaction {tx.id.substring(0, 8)}... ({tx.signatures?.length || 0} signature
+                      {tx.signatures?.length !== 1 ? "s" : ""})
                     </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      asChild
-                    >
+                    <Button variant="outline" size="sm" asChild>
                       <Link href={`/${chain.registryName}/${multisigAddress}/transaction/${tx.id}`}>
                         View
                       </Link>
@@ -536,7 +539,8 @@ export default function CreateTxPage() {
                 ))}
               </div>
               <p className="text-sm text-muted-foreground">
-                <strong>Tip:</strong> Complete pending transactions first, or cancel them if they're no longer needed.
+                <strong>Tip:</strong> Complete pending transactions first, or cancel them if they're
+                no longer needed.
               </p>
             </AlertDescription>
           </Alert>
@@ -549,9 +553,9 @@ export default function CreateTxPage() {
       </div>
     </div>
   ) : (
-    <div className="container mx-auto px-[0.75in] py-8 max-w-2xl">
+    <div className="container mx-auto max-w-2xl px-[0.75in] py-8">
       <Head title={`New Transaction - ${chain.chainDisplayName || "Cosmos Hub"}`} />
-      
+
       <div className="space-y-6">
         {breadcrumb}
         <CreateTxForm />

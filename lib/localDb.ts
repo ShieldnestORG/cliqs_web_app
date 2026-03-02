@@ -1,9 +1,9 @@
 /**
  * Local JSON file-based database replacement for DGraph
  * This stores data in a local JSON file for development purposes
- * 
+ *
  * File: lib/localDb.ts
- * 
+ *
  * Supports Cliq (multisig) storage with name, description, and versioning.
  */
 
@@ -222,11 +222,11 @@ interface DbGroupEvent {
  */
 interface DbCredentialClass {
   id: string;
-  teamAddress: string;        // Contract multisig address
+  teamAddress: string; // Contract multisig address
   chainId: string;
-  classId: string;            // TX assetnft class ID
-  issuer: string;             // Class issuer (admin)
-  features: string[];         // ["soulbound", "burning", ...]
+  classId: string; // TX assetnft class ID
+  issuer: string; // Class issuer (admin)
+  features: string[]; // ["soulbound", "burning", ...]
   createdAt: string;
   updatedAt: string;
 }
@@ -241,7 +241,7 @@ interface DbCredential {
   ownerAddress: string;
   teamAddress: string;
   chainId: string;
-  role: string;               // "member" | "admin" | "proposer" | "executor"
+  role: string; // "member" | "admin" | "proposer" | "executor"
   version: number;
   status: "active" | "revoked" | "expired";
   issuedAt: string;
@@ -521,7 +521,7 @@ const initDb = (): void => {
     const data = fs.readFileSync(dbFilePath, "utf-8");
     const db = JSON.parse(data);
     let needsWrite = false;
-    
+
     // Phase 1 migrations
     if (!db.contractMultisigs) {
       db.contractMultisigs = [];
@@ -543,7 +543,7 @@ const initDb = (): void => {
       db.websocketEvents = [];
       needsWrite = true;
     }
-    
+
     // Phase 2 migrations
     if (!db.groups) {
       db.groups = [];
@@ -561,7 +561,7 @@ const initDb = (): void => {
       db.groupEvents = [];
       needsWrite = true;
     }
-    
+
     // Phase 3 migrations
     if (!db.credentialClasses) {
       db.credentialClasses = [];
@@ -617,7 +617,7 @@ const initDb = (): void => {
         needsWrite = true;
       }
     }
-    
+
     if (needsWrite) {
       fs.writeFileSync(dbFilePath, JSON.stringify(db, null, 2));
     }
@@ -649,12 +649,10 @@ const generateId = (): string => {
 // Multisig operations
 export const getMultisig = (chainId: string, address: string): DbMultisig | null => {
   const db = readDb();
-  const results = db.multisigs.filter(
-    (m) => m.chainId === chainId && m.address === address
-  );
-  
+  const results = db.multisigs.filter((m) => m.chainId === chainId && m.address === address);
+
   if (results.length === 0) return null;
-  
+
   // Prefer multisig with creator
   const withCreator = results.find((m) => m.creator);
   return withCreator || results[0];
@@ -667,10 +665,8 @@ export const getMultisigById = (id: string): DbMultisig | null => {
 
 export const getCreatedMultisigs = (chainId: string, creatorAddress: string): DbMultisig[] => {
   const db = readDb();
-  const results = db.multisigs.filter(
-    (m) => m.chainId === chainId && m.creator === creatorAddress
-  );
-  
+  const results = db.multisigs.filter((m) => m.chainId === chainId && m.creator === creatorAddress);
+
   // Remove duplicates, prefer with creator
   const uniqueMap = new Map<string, DbMultisig>();
   for (const multisig of results) {
@@ -680,7 +676,7 @@ export const getCreatedMultisigs = (chainId: string, creatorAddress: string): Db
       uniqueMap.set(multisig.address, multisig);
     }
   }
-  
+
   return Array.from(uniqueMap.values());
 };
 
@@ -695,15 +691,13 @@ export const getBelongedMultisigs = (chainId: string, memberPubkey: string): DbM
       const parsed = JSON.parse(m.pubkeyJSON);
       const pubkeys: { value?: string; key?: string }[] =
         parsed?.value?.pubkeys || parsed?.pubkeys || [];
-      return pubkeys.some(
-        (pk) => pk.value === memberPubkey || pk.key === memberPubkey,
-      );
+      return pubkeys.some((pk) => pk.value === memberPubkey || pk.key === memberPubkey);
     } catch {
       // Fallback to string search if JSON parsing fails
       return m.pubkeyJSON.includes(memberPubkey);
     }
   });
-  
+
   // Remove duplicates, prefer with creator
   const uniqueMap = new Map<string, DbMultisig>();
   for (const multisig of results) {
@@ -713,7 +707,7 @@ export const getBelongedMultisigs = (chainId: string, memberPubkey: string): DbM
       uniqueMap.set(multisig.address, multisig);
     }
   }
-  
+
   return Array.from(uniqueMap.values());
 };
 
@@ -730,12 +724,12 @@ export const createMultisig = (multisig: {
 }): string => {
   const db = readDb();
   const now = new Date().toISOString();
-  
+
   // Check if multisig exists
   const existing = db.multisigs.find(
-    (m) => m.chainId === multisig.chainId && m.address === multisig.address
+    (m) => m.chainId === multisig.chainId && m.address === multisig.address,
   );
-  
+
   if (existing) {
     // If provided multisig has creator and existing doesn't, update it
     if (multisig.creator && !existing.creator) {
@@ -747,11 +741,9 @@ export const createMultisig = (multisig: {
       writeDb(db);
       return existing.address;
     }
-    throw new Error(
-      `Cliq already exists on ${multisig.chainId} with address ${multisig.address}`
-    );
+    throw new Error(`Cliq already exists on ${multisig.chainId} with address ${multisig.address}`);
   }
-  
+
   // Create new cliq (multisig)
   const newMultisig: DbMultisig = {
     id: generateId(),
@@ -765,10 +757,10 @@ export const createMultisig = (multisig: {
     createdAt: now,
     updatedAt: now,
   };
-  
+
   db.multisigs.push(newMultisig);
   writeDb(db);
-  
+
   return newMultisig.address;
 };
 
@@ -783,9 +775,7 @@ export const getTransactionsByCreator = (creatorId: string): DbTransaction[] => 
   return db.transactions.filter((t) => t.creatorId === creatorId);
 };
 
-export const createTransaction = (
-  transaction: Omit<DbTransaction, "id">
-): string => {
+export const createTransaction = (transaction: Omit<DbTransaction, "id">): string => {
   console.log("DEBUG: localDb.createTransaction called", {
     dataJSON: transaction.dataJSON.substring(0, 100) + "...",
     creatorId: transaction.creatorId,
@@ -818,11 +808,11 @@ export const updateTransactionPayloadHash = (
 ): void => {
   const db = readDb();
   const transaction = db.transactions.find((t) => t.id === transactionId);
-  
+
   if (!transaction) {
     throw new Error(`Transaction with id ${transactionId} not found`);
   }
-  
+
   transaction.payloadHash = payloadHash;
   if (signDocHash) {
     transaction.signDocHash = signDocHash;
@@ -830,17 +820,14 @@ export const updateTransactionPayloadHash = (
   writeDb(db);
 };
 
-export const updateTransactionHash = (
-  transactionId: string,
-  txHash: string
-): void => {
+export const updateTransactionHash = (transactionId: string, txHash: string): void => {
   const db = readDb();
   const transaction = db.transactions.find((t) => t.id === transactionId);
-  
+
   if (!transaction) {
     throw new Error(`Transaction with id ${transactionId} not found`);
   }
-  
+
   transaction.txHash = txHash;
   transaction.status = "broadcast";
   writeDb(db);
@@ -849,15 +836,15 @@ export const updateTransactionHash = (
 export const cancelTransaction = (transactionId: string): void => {
   const db = readDb();
   const transaction = db.transactions.find((t) => t.id === transactionId);
-  
+
   if (!transaction) {
     throw new Error(`Transaction with id ${transactionId} not found`);
   }
-  
+
   if (transaction.txHash) {
     throw new Error(`Cannot cancel a transaction that has already been broadcast`);
   }
-  
+
   transaction.status = "cancelled";
   writeDb(db);
 };
@@ -865,67 +852,51 @@ export const cancelTransaction = (transactionId: string): void => {
 export const getPendingTransactionsByCreator = (creatorId: string): DbTransaction[] => {
   const db = readDb();
   return db.transactions.filter(
-    (t) => t.creatorId === creatorId && !t.txHash && t.status !== "cancelled"
+    (t) => t.creatorId === creatorId && !t.txHash && t.status !== "cancelled",
   );
 };
 
 // Signature operations
-export const getSignaturesByTransaction = (
-  transactionId: string
-): DbSignature[] => {
+export const getSignaturesByTransaction = (transactionId: string): DbSignature[] => {
   const db = readDb();
   return db.signatures.filter((s) => s.transactionId === transactionId);
 };
 
-export const createSignature = (
-  signature: Omit<DbSignature, "id">
-): string => {
+export const createSignature = (signature: Omit<DbSignature, "id">): string => {
   const db = readDb();
-  
+
   // Check if signature already exists for this transaction and address
   const existing = db.signatures.find(
-    (s) =>
-      s.transactionId === signature.transactionId &&
-      s.address === signature.address
+    (s) => s.transactionId === signature.transactionId && s.address === signature.address,
   );
-  
+
   if (existing) {
     throw new Error(
-      `Signature already exists for transaction ${signature.transactionId} and address ${signature.address}`
+      `Signature already exists for transaction ${signature.transactionId} and address ${signature.address}`,
     );
   }
-  
+
   const newSignature: DbSignature = {
     id: generateId(),
     ...signature,
   };
-  
+
   db.signatures.push(newSignature);
   writeDb(db);
-  
+
   return newSignature.id;
 };
 
 // Nonce operations
 export const getNonce = (chainId: string, address: string): DbNonce | null => {
   const db = readDb();
-  return (
-    db.nonces.find(
-      (n) => n.chainId === chainId && n.address === address
-    ) || null
-  );
+  return db.nonces.find((n) => n.chainId === chainId && n.address === address) || null;
 };
 
-export const createOrUpdateNonce = (
-  chainId: string,
-  address: string,
-  nonce: number
-): void => {
+export const createOrUpdateNonce = (chainId: string, address: string, nonce: number): void => {
   const db = readDb();
-  const existing = db.nonces.find(
-    (n) => n.chainId === chainId && n.address === address
-  );
-  
+  const existing = db.nonces.find((n) => n.chainId === chainId && n.address === address);
+
   if (existing) {
     existing.nonce = nonce;
   } else {
@@ -936,7 +907,7 @@ export const createOrUpdateNonce = (
       nonce,
     });
   }
-  
+
   writeDb(db);
 };
 
@@ -949,12 +920,14 @@ export const createOrUpdateNonce = (
  */
 export const getContractMultisig = (
   chainId: string,
-  contractAddress: string
+  contractAddress: string,
 ): DbContractMultisig | null => {
   const db = readDb();
-  return db.contractMultisigs.find(
-    (m) => m.chainId === chainId && m.contractAddress === contractAddress
-  ) || null;
+  return (
+    db.contractMultisigs.find(
+      (m) => m.chainId === chainId && m.contractAddress === contractAddress,
+    ) || null
+  );
 };
 
 /**
@@ -962,12 +935,11 @@ export const getContractMultisig = (
  */
 export const getContractMultisigsByMember = (
   chainId: string,
-  memberAddress: string
+  memberAddress: string,
 ): DbContractMultisig[] => {
   const db = readDb();
   return db.contractMultisigs.filter(
-    (m) => m.chainId === chainId && 
-           m.members.some((member) => member.addr === memberAddress)
+    (m) => m.chainId === chainId && m.members.some((member) => member.addr === memberAddress),
   );
 };
 
@@ -976,44 +948,41 @@ export const getContractMultisigsByMember = (
  */
 export const getContractMultisigsByCreator = (
   chainId: string,
-  creatorAddress: string
+  creatorAddress: string,
 ): DbContractMultisig[] => {
   const db = readDb();
-  return db.contractMultisigs.filter(
-    (m) => m.chainId === chainId && m.creator === creatorAddress
-  );
+  return db.contractMultisigs.filter((m) => m.chainId === chainId && m.creator === creatorAddress);
 };
 
 /**
  * Create a new contract multisig record
  */
 export const createContractMultisig = (
-  multisig: Omit<DbContractMultisig, "id" | "createdAt" | "updatedAt">
+  multisig: Omit<DbContractMultisig, "id" | "createdAt" | "updatedAt">,
 ): string => {
   const db = readDb();
   const now = new Date().toISOString();
-  
+
   const existing = db.contractMultisigs.find(
-    (m) => m.chainId === multisig.chainId && 
-           m.contractAddress === multisig.contractAddress
+    (m) => m.chainId === multisig.chainId && m.contractAddress === multisig.contractAddress,
   );
-  
+
   if (existing) {
     throw new Error(
-      `Contract multisig already exists on ${multisig.chainId} with address ${multisig.contractAddress}`
+      `Contract multisig already exists on ${multisig.chainId} with address ${multisig.contractAddress}`,
     );
   }
-  
+
   const newMultisig: DbContractMultisig = {
     id: generateId(),
     ...multisig,
     createdAt: now,
     updatedAt: now,
   };
-  
+
   db.contractMultisigs.push(newMultisig);
   writeDb(db);
-  
+
   return newMultisig.contractAddress;
 };
 
@@ -1023,17 +992,22 @@ export const createContractMultisig = (
 export const updateContractMultisig = (
   chainId: string,
   contractAddress: string,
-  updates: Partial<Pick<DbContractMultisig, "threshold" | "maxVotingPeriodSeconds" | "members" | "lastSyncHeight" | "name" | "description">>
+  updates: Partial<
+    Pick<
+      DbContractMultisig,
+      "threshold" | "maxVotingPeriodSeconds" | "members" | "lastSyncHeight" | "name" | "description"
+    >
+  >,
 ): void => {
   const db = readDb();
   const multisig = db.contractMultisigs.find(
-    (m) => m.chainId === chainId && m.contractAddress === contractAddress
+    (m) => m.chainId === chainId && m.contractAddress === contractAddress,
   );
-  
+
   if (!multisig) {
     throw new Error(`Contract multisig not found: ${contractAddress}`);
   }
-  
+
   Object.assign(multisig, updates, { updatedAt: new Date().toISOString() });
   writeDb(db);
 };
@@ -1047,12 +1021,14 @@ export const updateContractMultisig = (
  */
 export const getContractProposal = (
   contractAddress: string,
-  proposalId: number
+  proposalId: number,
 ): DbContractProposal | null => {
   const db = readDb();
-  return db.contractProposals.find(
-    (p) => p.contractAddress === contractAddress && p.proposalId === proposalId
-  ) || null;
+  return (
+    db.contractProposals.find(
+      (p) => p.contractAddress === contractAddress && p.proposalId === proposalId,
+    ) || null
+  );
 };
 
 /**
@@ -1060,17 +1036,15 @@ export const getContractProposal = (
  */
 export const getContractProposals = (
   contractAddress: string,
-  status?: string
+  status?: string,
 ): DbContractProposal[] => {
   const db = readDb();
-  let proposals = db.contractProposals.filter(
-    (p) => p.contractAddress === contractAddress
-  );
-  
+  let proposals = db.contractProposals.filter((p) => p.contractAddress === contractAddress);
+
   if (status) {
     proposals = proposals.filter((p) => p.status === status);
   }
-  
+
   return proposals.sort((a, b) => b.proposalId - a.proposalId);
 };
 
@@ -1078,23 +1052,22 @@ export const getContractProposals = (
  * Create or update a contract proposal (for indexer)
  */
 export const upsertContractProposal = (
-  proposal: Omit<DbContractProposal, "id" | "createdAt" | "updatedAt">
+  proposal: Omit<DbContractProposal, "id" | "createdAt" | "updatedAt">,
 ): string => {
   const db = readDb();
   const now = new Date().toISOString();
-  
+
   const existing = db.contractProposals.find(
-    (p) => p.contractAddress === proposal.contractAddress && 
-           p.proposalId === proposal.proposalId
+    (p) => p.contractAddress === proposal.contractAddress && p.proposalId === proposal.proposalId,
   );
-  
+
   if (existing) {
     // Update existing
     Object.assign(existing, proposal, { updatedAt: now });
     writeDb(db);
     return existing.id;
   }
-  
+
   // Create new
   const newProposal: DbContractProposal = {
     id: generateId(),
@@ -1102,10 +1075,10 @@ export const upsertContractProposal = (
     createdAt: now,
     updatedAt: now,
   };
-  
+
   db.contractProposals.push(newProposal);
   writeDb(db);
-  
+
   return newProposal.id;
 };
 
@@ -1116,17 +1089,17 @@ export const updateContractProposalStatus = (
   contractAddress: string,
   proposalId: number,
   status: DbContractProposal["status"],
-  isConfirmed: boolean = true
+  isConfirmed: boolean = true,
 ): void => {
   const db = readDb();
   const proposal = db.contractProposals.find(
-    (p) => p.contractAddress === contractAddress && p.proposalId === proposalId
+    (p) => p.contractAddress === contractAddress && p.proposalId === proposalId,
   );
-  
+
   if (!proposal) {
     throw new Error(`Contract proposal not found: ${proposalId}`);
   }
-  
+
   proposal.status = status;
   proposal.isConfirmed = isConfirmed;
   proposal.updatedAt = new Date().toISOString();
@@ -1141,60 +1114,51 @@ export const updateContractProposalStatus = (
 /**
  * Get votes for a proposal
  */
-export const getContractVotes = (
-  contractAddress: string,
-  proposalId: number
-): DbContractVote[] => {
+export const getContractVotes = (contractAddress: string, proposalId: number): DbContractVote[] => {
   const db = readDb();
   return db.contractVotes.filter(
-    (v) => v.contractAddress === contractAddress && v.proposalId === proposalId
+    (v) => v.contractAddress === contractAddress && v.proposalId === proposalId,
   );
 };
 
 /**
  * Create or update a vote (for indexer)
  */
-export const upsertContractVote = (
-  vote: Omit<DbContractVote, "id" | "createdAt">
-): string => {
+export const upsertContractVote = (vote: Omit<DbContractVote, "id" | "createdAt">): string => {
   const db = readDb();
   const now = new Date().toISOString();
-  
+
   const existing = db.contractVotes.find(
-    (v) => v.contractAddress === vote.contractAddress && 
-           v.proposalId === vote.proposalId &&
-           v.voter === vote.voter
+    (v) =>
+      v.contractAddress === vote.contractAddress &&
+      v.proposalId === vote.proposalId &&
+      v.voter === vote.voter,
   );
-  
+
   if (existing) {
     Object.assign(existing, vote);
     writeDb(db);
     return existing.id;
   }
-  
+
   const newVote: DbContractVote = {
     id: generateId(),
     ...vote,
     createdAt: now,
   };
-  
+
   db.contractVotes.push(newVote);
   writeDb(db);
-  
+
   return newVote.id;
 };
 
 /**
  * Get total yes weight for a proposal
  */
-export const getProposalYesWeight = (
-  contractAddress: string,
-  proposalId: number
-): number => {
+export const getProposalYesWeight = (contractAddress: string, proposalId: number): number => {
   const votes = getContractVotes(contractAddress, proposalId);
-  return votes
-    .filter((v) => v.vote === "yes")
-    .reduce((sum, v) => sum + v.weight, 0);
+  return votes.filter((v) => v.vote === "yes").reduce((sum, v) => sum + v.weight, 0);
 };
 
 // ============================================================================
@@ -1204,14 +1168,12 @@ export const getProposalYesWeight = (
 /**
  * Get sync state for a contract
  */
-export const getSyncState = (
-  chainId: string,
-  contractAddress: string
-): DbSyncState | null => {
+export const getSyncState = (chainId: string, contractAddress: string): DbSyncState | null => {
   const db = readDb();
-  return db.syncStates.find(
-    (s) => s.chainId === chainId && s.contractAddress === contractAddress
-  ) || null;
+  return (
+    db.syncStates.find((s) => s.chainId === chainId && s.contractAddress === contractAddress) ||
+    null
+  );
 };
 
 /**
@@ -1222,15 +1184,15 @@ export const updateSyncState = (
   contractAddress: string,
   height: number,
   status: DbSyncState["status"] = "synced",
-  errorMessage: string | null = null
+  errorMessage: string | null = null,
 ): void => {
   const db = readDb();
   const now = new Date().toISOString();
-  
+
   const existing = db.syncStates.find(
-    (s) => s.chainId === chainId && s.contractAddress === contractAddress
+    (s) => s.chainId === chainId && s.contractAddress === contractAddress,
   );
-  
+
   if (existing) {
     existing.lastFinalizedHeight = height;
     existing.lastSyncedAt = now;
@@ -1247,7 +1209,7 @@ export const updateSyncState = (
       errorMessage,
     });
   }
-  
+
   writeDb(db);
 };
 
@@ -1259,33 +1221,29 @@ export const updateSyncState = (
  * Record a websocket event
  */
 export const recordWebSocketEvent = (
-  event: Omit<DbWebSocketEvent, "id" | "receivedAt" | "processed">
+  event: Omit<DbWebSocketEvent, "id" | "receivedAt" | "processed">,
 ): string => {
   const db = readDb();
-  
+
   const newEvent: DbWebSocketEvent = {
     id: generateId(),
     ...event,
     receivedAt: new Date().toISOString(),
     processed: false,
   };
-  
+
   db.websocketEvents.push(newEvent);
   writeDb(db);
-  
+
   return newEvent.id;
 };
 
 /**
  * Get unprocessed websocket events for a contract
  */
-export const getUnprocessedEvents = (
-  contractAddress: string
-): DbWebSocketEvent[] => {
+export const getUnprocessedEvents = (contractAddress: string): DbWebSocketEvent[] => {
   const db = readDb();
-  return db.websocketEvents.filter(
-    (e) => e.contractAddress === contractAddress && !e.processed
-  );
+  return db.websocketEvents.filter((e) => e.contractAddress === contractAddress && !e.processed);
 };
 
 /**
@@ -1293,13 +1251,13 @@ export const getUnprocessedEvents = (
  */
 export const markEventsProcessed = (eventIds: string[]): void => {
   const db = readDb();
-  
+
   for (const event of db.websocketEvents) {
     if (eventIds.includes(event.id)) {
       event.processed = true;
     }
   }
-  
+
   writeDb(db);
 };
 
@@ -1309,19 +1267,19 @@ export const markEventsProcessed = (eventIds: string[]): void => {
 export const cleanupOldEvents = (): number => {
   const db = readDb();
   const cutoffTime = Date.now() - 7 * 24 * 60 * 60 * 1000; // 7 days ago
-  
+
   const initialCount = db.websocketEvents.length;
   db.websocketEvents = db.websocketEvents.filter((e) => {
     if (!e.processed) return true;
     const eventTime = new Date(e.receivedAt).getTime();
     return eventTime > cutoffTime;
   });
-  
+
   const removedCount = initialCount - db.websocketEvents.length;
   if (removedCount > 0) {
     writeDb(db);
   }
-  
+
   return removedCount;
 };
 
@@ -1332,27 +1290,19 @@ export const cleanupOldEvents = (): number => {
 /**
  * Get a group by address
  */
-export const getGroup = (
-  chainId: string,
-  groupAddress: string
-): DbGroup | null => {
+export const getGroup = (chainId: string, groupAddress: string): DbGroup | null => {
   const db = readDb();
-  return db.groups.find(
-    (g) => g.chainId === chainId && g.groupAddress === groupAddress
-  ) || null;
+  return db.groups.find((g) => g.chainId === chainId && g.groupAddress === groupAddress) || null;
 };
 
 /**
  * Get groups by multisig address
  */
-export const getGroupByMultisig = (
-  chainId: string,
-  multisigAddress: string
-): DbGroup | null => {
+export const getGroupByMultisig = (chainId: string, multisigAddress: string): DbGroup | null => {
   const db = readDb();
-  return db.groups.find(
-    (g) => g.chainId === chainId && g.multisigAddress === multisigAddress
-  ) || null;
+  return (
+    db.groups.find((g) => g.chainId === chainId && g.multisigAddress === multisigAddress) || null
+  );
 };
 
 /**
@@ -1366,32 +1316,28 @@ export const getGroups = (chainId: string): DbGroup[] => {
 /**
  * Create a new group record
  */
-export const createGroup = (
-  group: Omit<DbGroup, "id" | "createdAt" | "updatedAt">
-): string => {
+export const createGroup = (group: Omit<DbGroup, "id" | "createdAt" | "updatedAt">): string => {
   const db = readDb();
   const now = new Date().toISOString();
-  
+
   const existing = db.groups.find(
-    (g) => g.chainId === group.chainId && g.groupAddress === group.groupAddress
+    (g) => g.chainId === group.chainId && g.groupAddress === group.groupAddress,
   );
-  
+
   if (existing) {
-    throw new Error(
-      `Group already exists on ${group.chainId} with address ${group.groupAddress}`
-    );
+    throw new Error(`Group already exists on ${group.chainId} with address ${group.groupAddress}`);
   }
-  
+
   const newGroup: DbGroup = {
     id: generateId(),
     ...group,
     createdAt: now,
     updatedAt: now,
   };
-  
+
   db.groups.push(newGroup);
   writeDb(db);
-  
+
   return newGroup.groupAddress;
 };
 
@@ -1401,17 +1347,17 @@ export const createGroup = (
 export const updateGroup = (
   chainId: string,
   groupAddress: string,
-  updates: Partial<Pick<DbGroup, "admin" | "totalWeight" | "memberCount" | "lastSyncHeight" | "label">>
+  updates: Partial<
+    Pick<DbGroup, "admin" | "totalWeight" | "memberCount" | "lastSyncHeight" | "label">
+  >,
 ): void => {
   const db = readDb();
-  const group = db.groups.find(
-    (g) => g.chainId === chainId && g.groupAddress === groupAddress
-  );
-  
+  const group = db.groups.find((g) => g.chainId === chainId && g.groupAddress === groupAddress);
+
   if (!group) {
     throw new Error(`Group not found: ${groupAddress}`);
   }
-  
+
   Object.assign(group, updates, { updatedAt: new Date().toISOString() });
   writeDb(db);
 };
@@ -1425,57 +1371,54 @@ export const updateGroup = (
  */
 export const getMemberSnapshot = (
   contractAddress: string,
-  proposalId: number
+  proposalId: number,
 ): DbMemberSnapshot | null => {
   const db = readDb();
-  return db.memberSnapshots.find(
-    (s) => s.contractAddress === contractAddress && s.proposalId === proposalId
-  ) || null;
+  return (
+    db.memberSnapshots.find(
+      (s) => s.contractAddress === contractAddress && s.proposalId === proposalId,
+    ) || null
+  );
 };
 
 /**
  * Get all member snapshots for a contract
  */
-export const getMemberSnapshots = (
-  contractAddress: string
-): DbMemberSnapshot[] => {
+export const getMemberSnapshots = (contractAddress: string): DbMemberSnapshot[] => {
   const db = readDb();
-  return db.memberSnapshots.filter(
-    (s) => s.contractAddress === contractAddress
-  );
+  return db.memberSnapshots.filter((s) => s.contractAddress === contractAddress);
 };
 
 /**
  * Create a member snapshot
  */
 export const createMemberSnapshot = (
-  snapshot: Omit<DbMemberSnapshot, "id" | "createdAt">
+  snapshot: Omit<DbMemberSnapshot, "id" | "createdAt">,
 ): string => {
   const db = readDb();
   const now = new Date().toISOString();
-  
+
   // Check if snapshot already exists for this proposal
   const existing = db.memberSnapshots.find(
-    (s) => s.contractAddress === snapshot.contractAddress && 
-           s.proposalId === snapshot.proposalId
+    (s) => s.contractAddress === snapshot.contractAddress && s.proposalId === snapshot.proposalId,
   );
-  
+
   if (existing) {
     // Update existing snapshot
     Object.assign(existing, snapshot);
     writeDb(db);
     return existing.id;
   }
-  
+
   const newSnapshot: DbMemberSnapshot = {
     id: generateId(),
     ...snapshot,
     createdAt: now,
   };
-  
+
   db.memberSnapshots.push(newSnapshot);
   writeDb(db);
-  
+
   return newSnapshot.id;
 };
 
@@ -1483,7 +1426,7 @@ export const createMemberSnapshot = (
  * Parse members from a snapshot
  */
 export const parseMemberSnapshotMembers = (
-  snapshot: DbMemberSnapshot
+  snapshot: DbMemberSnapshot,
 ): { addr: string; weight: number }[] => {
   try {
     return JSON.parse(snapshot.membersJSON);
@@ -1502,61 +1445,58 @@ export const parseMemberSnapshotMembers = (
 export const getVoteSnapshot = (
   contractAddress: string,
   proposalId: number,
-  voter: string
+  voter: string,
 ): DbVoteSnapshot | null => {
   const db = readDb();
-  return db.voteSnapshots.find(
-    (s) => s.contractAddress === contractAddress && 
-           s.proposalId === proposalId &&
-           s.voter === voter
-  ) || null;
+  return (
+    db.voteSnapshots.find(
+      (s) =>
+        s.contractAddress === contractAddress && s.proposalId === proposalId && s.voter === voter,
+    ) || null
+  );
 };
 
 /**
  * Get all vote snapshots for a proposal
  */
-export const getVoteSnapshots = (
-  contractAddress: string,
-  proposalId: number
-): DbVoteSnapshot[] => {
+export const getVoteSnapshots = (contractAddress: string, proposalId: number): DbVoteSnapshot[] => {
   const db = readDb();
   return db.voteSnapshots.filter(
-    (s) => s.contractAddress === contractAddress && s.proposalId === proposalId
+    (s) => s.contractAddress === contractAddress && s.proposalId === proposalId,
   );
 };
 
 /**
  * Create a vote snapshot
  */
-export const createVoteSnapshot = (
-  snapshot: Omit<DbVoteSnapshot, "id" | "createdAt">
-): string => {
+export const createVoteSnapshot = (snapshot: Omit<DbVoteSnapshot, "id" | "createdAt">): string => {
   const db = readDb();
   const now = new Date().toISOString();
-  
+
   // Check if snapshot already exists for this vote
   const existing = db.voteSnapshots.find(
-    (s) => s.contractAddress === snapshot.contractAddress && 
-           s.proposalId === snapshot.proposalId &&
-           s.voter === snapshot.voter
+    (s) =>
+      s.contractAddress === snapshot.contractAddress &&
+      s.proposalId === snapshot.proposalId &&
+      s.voter === snapshot.voter,
   );
-  
+
   if (existing) {
     // Update existing snapshot
     Object.assign(existing, snapshot);
     writeDb(db);
     return existing.id;
   }
-  
+
   const newSnapshot: DbVoteSnapshot = {
     id: generateId(),
     ...snapshot,
     createdAt: now,
   };
-  
+
   db.voteSnapshots.push(newSnapshot);
   writeDb(db);
-  
+
   return newSnapshot.id;
 };
 
@@ -1565,18 +1505,18 @@ export const createVoteSnapshot = (
  */
 export const getProposalVoteWeightFromSnapshots = (
   contractAddress: string,
-  proposalId: number
+  proposalId: number,
 ): { yes: number; no: number; abstain: number; veto: number } => {
   const votes = getContractVotes(contractAddress, proposalId);
   const snapshots = getVoteSnapshots(contractAddress, proposalId);
-  
+
   const result = { yes: 0, no: 0, abstain: 0, veto: 0 };
-  
+
   for (const vote of votes) {
     // Find the snapshot for this vote
     const snapshot = snapshots.find((s) => s.voter === vote.voter);
     const weight = snapshot?.weightAtVote ?? vote.weight;
-    
+
     switch (vote.vote) {
       case "yes":
         result.yes += weight;
@@ -1592,7 +1532,7 @@ export const getProposalVoteWeightFromSnapshots = (
         break;
     }
   }
-  
+
   return result;
 };
 
@@ -1604,33 +1544,29 @@ export const getProposalVoteWeightFromSnapshots = (
  * Record a group event
  */
 export const recordGroupEvent = (
-  event: Omit<DbGroupEvent, "id" | "receivedAt" | "processed">
+  event: Omit<DbGroupEvent, "id" | "receivedAt" | "processed">,
 ): string => {
   const db = readDb();
-  
+
   const newEvent: DbGroupEvent = {
     id: generateId(),
     ...event,
     receivedAt: new Date().toISOString(),
     processed: false,
   };
-  
+
   db.groupEvents.push(newEvent);
   writeDb(db);
-  
+
   return newEvent.id;
 };
 
 /**
  * Get unprocessed group events
  */
-export const getUnprocessedGroupEvents = (
-  groupAddress: string
-): DbGroupEvent[] => {
+export const getUnprocessedGroupEvents = (groupAddress: string): DbGroupEvent[] => {
   const db = readDb();
-  return db.groupEvents.filter(
-    (e) => e.groupAddress === groupAddress && !e.processed
-  );
+  return db.groupEvents.filter((e) => e.groupAddress === groupAddress && !e.processed);
 };
 
 /**
@@ -1638,13 +1574,13 @@ export const getUnprocessedGroupEvents = (
  */
 export const markGroupEventsProcessed = (eventIds: string[]): void => {
   const db = readDb();
-  
+
   for (const event of db.groupEvents) {
     if (eventIds.includes(event.id)) {
       event.processed = true;
     }
   }
-  
+
   writeDb(db);
 };
 
@@ -1653,12 +1589,10 @@ export const markGroupEventsProcessed = (eventIds: string[]): void => {
  */
 export const getGroupEventsByType = (
   groupAddress: string,
-  eventType: DbGroupEvent["eventType"]
+  eventType: DbGroupEvent["eventType"],
 ): DbGroupEvent[] => {
   const db = readDb();
-  return db.groupEvents.filter(
-    (e) => e.groupAddress === groupAddress && e.eventType === eventType
-  );
+  return db.groupEvents.filter((e) => e.groupAddress === groupAddress && e.eventType === eventType);
 };
 
 // ============================================================================
@@ -1670,12 +1604,12 @@ export const getGroupEventsByType = (
  */
 export const getCredentialClass = (
   chainId: string,
-  teamAddress: string
+  teamAddress: string,
 ): DbCredentialClass | null => {
   const db = readDb();
-  return db.credentialClasses.find(
-    (c) => c.chainId === chainId && c.teamAddress === teamAddress
-  ) || null;
+  return (
+    db.credentialClasses.find((c) => c.chainId === chainId && c.teamAddress === teamAddress) || null
+  );
 };
 
 /**
@@ -1683,44 +1617,42 @@ export const getCredentialClass = (
  */
 export const getCredentialClassById = (
   chainId: string,
-  classId: string
+  classId: string,
 ): DbCredentialClass | null => {
   const db = readDb();
-  return db.credentialClasses.find(
-    (c) => c.chainId === chainId && c.classId === classId
-  ) || null;
+  return db.credentialClasses.find((c) => c.chainId === chainId && c.classId === classId) || null;
 };
 
 /**
  * Create a new credential class
  */
 export const createCredentialClass = (
-  data: Omit<DbCredentialClass, "id" | "createdAt" | "updatedAt">
+  data: Omit<DbCredentialClass, "id" | "createdAt" | "updatedAt">,
 ): string => {
   const db = readDb();
   const now = new Date().toISOString();
-  
+
   const existing = db.credentialClasses.find(
-    (c) => c.chainId === data.chainId && c.teamAddress === data.teamAddress
+    (c) => c.chainId === data.chainId && c.teamAddress === data.teamAddress,
   );
-  
+
   if (existing) {
     // Update existing
     Object.assign(existing, data, { updatedAt: now });
     writeDb(db);
     return existing.id;
   }
-  
+
   const newClass: DbCredentialClass = {
     id: generateId(),
     ...data,
     createdAt: now,
     updatedAt: now,
   };
-  
+
   db.credentialClasses.push(newClass);
   writeDb(db);
-  
+
   return newClass.id;
 };
 
@@ -1730,17 +1662,17 @@ export const createCredentialClass = (
 export const updateCredentialClass = (
   chainId: string,
   teamAddress: string,
-  updates: Partial<Pick<DbCredentialClass, "issuer" | "features">>
+  updates: Partial<Pick<DbCredentialClass, "issuer" | "features">>,
 ): void => {
   const db = readDb();
   const credClass = db.credentialClasses.find(
-    (c) => c.chainId === chainId && c.teamAddress === teamAddress
+    (c) => c.chainId === chainId && c.teamAddress === teamAddress,
   );
-  
+
   if (!credClass) {
     throw new Error(`Credential class not found for team: ${teamAddress}`);
   }
-  
+
   Object.assign(credClass, updates, { updatedAt: new Date().toISOString() });
   writeDb(db);
 };
@@ -1752,14 +1684,9 @@ export const updateCredentialClass = (
 /**
  * Get a credential by class ID and token ID
  */
-export const getCredential = (
-  classId: string,
-  tokenId: string
-): DbCredential | null => {
+export const getCredential = (classId: string, tokenId: string): DbCredential | null => {
   const db = readDb();
-  return db.credentials.find(
-    (c) => c.classId === classId && c.tokenId === tokenId
-  ) || null;
+  return db.credentials.find((c) => c.classId === classId && c.tokenId === tokenId) || null;
 };
 
 /**
@@ -1768,52 +1695,45 @@ export const getCredential = (
 export const getCredentialByOwner = (
   chainId: string,
   teamAddress: string,
-  ownerAddress: string
+  ownerAddress: string,
 ): DbCredential | null => {
   const db = readDb();
-  return db.credentials.find(
-    (c) => c.chainId === chainId && 
-           c.teamAddress === teamAddress && 
-           c.ownerAddress === ownerAddress &&
-           c.status === "active"
-  ) || null;
+  return (
+    db.credentials.find(
+      (c) =>
+        c.chainId === chainId &&
+        c.teamAddress === teamAddress &&
+        c.ownerAddress === ownerAddress &&
+        c.status === "active",
+    ) || null
+  );
 };
 
 /**
  * Get all credentials for a team
  */
-export const getCredentialsByTeam = (
-  chainId: string,
-  teamAddress: string
-): DbCredential[] => {
+export const getCredentialsByTeam = (chainId: string, teamAddress: string): DbCredential[] => {
   const db = readDb();
-  return db.credentials.filter(
-    (c) => c.chainId === chainId && c.teamAddress === teamAddress
-  );
+  return db.credentials.filter((c) => c.chainId === chainId && c.teamAddress === teamAddress);
 };
 
 /**
  * Get all credentials owned by an address
  */
-export const getCredentialsByOwner = (
-  chainId: string,
-  ownerAddress: string
-): DbCredential[] => {
+export const getCredentialsByOwner = (chainId: string, ownerAddress: string): DbCredential[] => {
   const db = readDb();
-  return db.credentials.filter(
-    (c) => c.chainId === chainId && c.ownerAddress === ownerAddress
-  );
+  return db.credentials.filter((c) => c.chainId === chainId && c.ownerAddress === ownerAddress);
 };
 
 /**
  * Create a new credential
  */
 export const createCredential = (
-  data: Omit<DbCredential, "id" | "revokedAt" | "createdAt" | "updatedAt">
+  data: Omit<DbCredential, "id" | "revokedAt" | "createdAt" | "updatedAt">,
 ): string => {
   const db = readDb();
   const now = new Date().toISOString();
-  
+
   const newCredential: DbCredential = {
     id: generateId(),
     ...data,
@@ -1821,10 +1741,10 @@ export const createCredential = (
     createdAt: now,
     updatedAt: now,
   };
-  
+
   db.credentials.push(newCredential);
   writeDb(db);
-  
+
   return newCredential.id;
 };
 
@@ -1835,17 +1755,15 @@ export const updateCredentialStatus = (
   classId: string,
   tokenId: string,
   status: DbCredential["status"],
-  revokedAt?: string
+  revokedAt?: string,
 ): void => {
   const db = readDb();
-  const credential = db.credentials.find(
-    (c) => c.classId === classId && c.tokenId === tokenId
-  );
-  
+  const credential = db.credentials.find((c) => c.classId === classId && c.tokenId === tokenId);
+
   if (!credential) {
     throw new Error(`Credential not found: ${classId}:${tokenId}`);
   }
-  
+
   credential.status = status;
   if (revokedAt) {
     credential.revokedAt = revokedAt;
@@ -1868,7 +1786,7 @@ export const listCredentials = (options: {
 }): DbCredential[] => {
   const db = readDb();
   let results = db.credentials.filter((c) => c.chainId === options.chainId);
-  
+
   if (options.classId) {
     results = results.filter((c) => c.classId === options.classId);
   }
@@ -1887,7 +1805,7 @@ export const listCredentials = (options: {
   if (options.limit) {
     results = results.slice(0, options.limit);
   }
-  
+
   return results;
 };
 
@@ -1899,28 +1817,26 @@ export const listCredentials = (options: {
  * Record a credential event
  */
 export const recordCredentialEvent = (
-  event: Omit<DbCredentialEvent, "id" | "createdAt">
+  event: Omit<DbCredentialEvent, "id" | "createdAt">,
 ): string => {
   const db = readDb();
-  
+
   const newEvent: DbCredentialEvent = {
     id: generateId(),
     ...event,
     createdAt: new Date().toISOString(),
   };
-  
+
   db.credentialEvents.push(newEvent);
   writeDb(db);
-  
+
   return newEvent.id;
 };
 
 /**
  * Get credential events by class ID
  */
-export const getCredentialEventsByClass = (
-  classId: string
-): DbCredentialEvent[] => {
+export const getCredentialEventsByClass = (classId: string): DbCredentialEvent[] => {
   const db = readDb();
   return db.credentialEvents.filter((e) => e.classId === classId);
 };
@@ -1930,12 +1846,10 @@ export const getCredentialEventsByClass = (
  */
 export const getCredentialEventsByToken = (
   classId: string,
-  tokenId: string
+  tokenId: string,
 ): DbCredentialEvent[] => {
   const db = readDb();
-  return db.credentialEvents.filter(
-    (e) => e.classId === classId && e.tokenId === tokenId
-  );
+  return db.credentialEvents.filter((e) => e.classId === classId && e.tokenId === tokenId);
 };
 
 /**
@@ -1943,12 +1857,10 @@ export const getCredentialEventsByToken = (
  */
 export const getCredentialEventsByType = (
   chainId: string,
-  eventType: DbCredentialEvent["eventType"]
+  eventType: DbCredentialEvent["eventType"],
 ): DbCredentialEvent[] => {
   const db = readDb();
-  return db.credentialEvents.filter(
-    (e) => e.chainId === chainId && e.eventType === eventType
-  );
+  return db.credentialEvents.filter((e) => e.chainId === chainId && e.eventType === eventType);
 };
 
 // ============================================================================
@@ -1958,44 +1870,40 @@ export const getCredentialEventsByType = (
 /**
  * Create or update a policy
  */
-export const upsertPolicy = (
-  data: Omit<DbPolicy, "id" | "createdAt" | "updatedAt">
-): string => {
+export const upsertPolicy = (data: Omit<DbPolicy, "id" | "createdAt" | "updatedAt">): string => {
   const db = readDb();
   const now = new Date().toISOString();
-  
+
   const existing = db.policies.find(
-    (p) => p.multisigAddress === data.multisigAddress && 
-           p.chainId === data.chainId &&
-           p.name === data.name
+    (p) =>
+      p.multisigAddress === data.multisigAddress &&
+      p.chainId === data.chainId &&
+      p.name === data.name,
   );
-  
+
   if (existing) {
     Object.assign(existing, data, { updatedAt: now });
     writeDb(db);
     return existing.id;
   }
-  
+
   const newPolicy: DbPolicy = {
     id: generateId(),
     ...data,
     createdAt: now,
     updatedAt: now,
   };
-  
+
   db.policies.push(newPolicy);
   writeDb(db);
-  
+
   return newPolicy.id;
 };
 
 /**
  * Get policies for a multisig
  */
-export const getPolicies = (
-  multisigAddress: string,
-  chainId: string
-): DbPolicy[] => {
+export const getPolicies = (multisigAddress: string, chainId: string): DbPolicy[] => {
   const db = readDb();
   return db.policies
     .filter((p) => p.multisigAddress === multisigAddress && p.chainId === chainId)
@@ -2015,15 +1923,15 @@ export const getPolicyById = (id: string): DbPolicy | null => {
  */
 export const updatePolicy = (
   id: string,
-  updates: Partial<Pick<DbPolicy, "configJSON" | "enabled" | "priority" | "name">>
+  updates: Partial<Pick<DbPolicy, "configJSON" | "enabled" | "priority" | "name">>,
 ): void => {
   const db = readDb();
   const policy = db.policies.find((p) => p.id === id);
-  
+
   if (!policy) {
     throw new Error(`Policy not found: ${id}`);
   }
-  
+
   Object.assign(policy, updates, { updatedAt: new Date().toISOString() });
   writeDb(db);
 };
@@ -2034,11 +1942,11 @@ export const updatePolicy = (
 export const deletePolicy = (id: string): boolean => {
   const db = readDb();
   const index = db.policies.findIndex((p) => p.id === id);
-  
+
   if (index === -1) {
     return false;
   }
-  
+
   db.policies.splice(index, 1);
   writeDb(db);
   return true;
@@ -2048,19 +1956,19 @@ export const deletePolicy = (id: string): boolean => {
  * Record a policy violation
  */
 export const recordPolicyViolation = (
-  data: Omit<DbPolicyViolation, "id" | "timestamp">
+  data: Omit<DbPolicyViolation, "id" | "timestamp">,
 ): string => {
   const db = readDb();
-  
+
   const violation: DbPolicyViolation = {
     id: generateId(),
     ...data,
     timestamp: new Date().toISOString(),
   };
-  
+
   db.policyViolations.push(violation);
   writeDb(db);
-  
+
   return violation.id;
 };
 
@@ -2069,7 +1977,7 @@ export const recordPolicyViolation = (
  */
 export const getPolicyViolations = (
   multisigAddress: string,
-  limit: number = 100
+  limit: number = 100,
 ): DbPolicyViolation[] => {
   const db = readDb();
   return db.policyViolations
@@ -2087,12 +1995,14 @@ export const getPolicyViolations = (
  */
 export const getEmergencyState = (
   multisigAddress: string,
-  chainId: string
+  chainId: string,
 ): DbEmergencyState | null => {
   const db = readDb();
-  return db.emergencyStates.find(
-    (s) => s.multisigAddress === multisigAddress && s.chainId === chainId
-  ) || null;
+  return (
+    db.emergencyStates.find(
+      (s) => s.multisigAddress === multisigAddress && s.chainId === chainId,
+    ) || null
+  );
 };
 
 /**
@@ -2101,15 +2011,15 @@ export const getEmergencyState = (
 export const updateEmergencyState = (
   multisigAddress: string,
   chainId: string,
-  updates: Partial<Omit<DbEmergencyState, "id" | "multisigAddress" | "chainId">>
+  updates: Partial<Omit<DbEmergencyState, "id" | "multisigAddress" | "chainId">>,
 ): void => {
   const db = readDb();
   const now = new Date().toISOString();
-  
+
   let state = db.emergencyStates.find(
-    (s) => s.multisigAddress === multisigAddress && s.chainId === chainId
+    (s) => s.multisigAddress === multisigAddress && s.chainId === chainId,
   );
-  
+
   if (!state) {
     state = {
       id: generateId(),
@@ -2127,7 +2037,7 @@ export const updateEmergencyState = (
     };
     db.emergencyStates.push(state);
   }
-  
+
   Object.assign(state, updates, { updatedAt: now });
   writeDb(db);
 };
@@ -2135,20 +2045,18 @@ export const updateEmergencyState = (
 /**
  * Record an emergency event
  */
-export const recordEmergencyEvent = (
-  data: Omit<DbEmergencyEvent, "id" | "timestamp">
-): string => {
+export const recordEmergencyEvent = (data: Omit<DbEmergencyEvent, "id" | "timestamp">): string => {
   const db = readDb();
-  
+
   const event: DbEmergencyEvent = {
     id: generateId(),
     ...data,
     timestamp: new Date().toISOString(),
   };
-  
+
   db.emergencyEvents.push(event);
   writeDb(db);
-  
+
   return event.id;
 };
 
@@ -2157,7 +2065,7 @@ export const recordEmergencyEvent = (
  */
 export const getEmergencyEvents = (
   multisigAddress: string,
-  limit: number = 50
+  limit: number = 50,
 ): DbEmergencyEvent[] => {
   const db = readDb();
   return db.emergencyEvents
@@ -2174,10 +2082,13 @@ export const getEmergencyEvents = (
  * Create an incident
  */
 export const createIncident = (
-  data: Omit<DbIncident, "id" | "createdAt" | "acknowledgedAt" | "acknowledgedBy" | "resolvedAt" | "resolvedBy">
+  data: Omit<
+    DbIncident,
+    "id" | "createdAt" | "acknowledgedAt" | "acknowledgedBy" | "resolvedAt" | "resolvedBy"
+  >,
 ): string => {
   const db = readDb();
-  
+
   const incident: DbIncident = {
     id: generateId(),
     ...data,
@@ -2187,10 +2098,10 @@ export const createIncident = (
     resolvedAt: null,
     resolvedBy: null,
   };
-  
+
   db.incidents.push(incident);
   writeDb(db);
-  
+
   return incident.id;
 };
 
@@ -2199,7 +2110,7 @@ export const createIncident = (
  */
 export const getIncidents = (
   multisigAddress: string,
-  status?: DbIncident["status"]
+  status?: DbIncident["status"],
 ): DbIncident[] => {
   const db = readDb();
   return db.incidents
@@ -2212,15 +2123,25 @@ export const getIncidents = (
  */
 export const updateIncident = (
   id: string,
-  updates: Partial<Pick<DbIncident, "status" | "playbookStatus" | "acknowledgedAt" | "acknowledgedBy" | "resolvedAt" | "resolvedBy">>
+  updates: Partial<
+    Pick<
+      DbIncident,
+      | "status"
+      | "playbookStatus"
+      | "acknowledgedAt"
+      | "acknowledgedBy"
+      | "resolvedAt"
+      | "resolvedBy"
+    >
+  >,
 ): void => {
   const db = readDb();
   const incident = db.incidents.find((i) => i.id === id);
-  
+
   if (!incident) {
     throw new Error(`Incident not found: ${id}`);
   }
-  
+
   Object.assign(incident, updates);
   writeDb(db);
 };
@@ -2233,23 +2154,24 @@ export const updateIncident = (
  * Create or update an alert rule
  */
 export const upsertAlertRule = (
-  data: Omit<DbAlertRule, "id" | "createdAt" | "updatedAt" | "lastTriggeredAt">
+  data: Omit<DbAlertRule, "id" | "createdAt" | "updatedAt" | "lastTriggeredAt">,
 ): string => {
   const db = readDb();
   const now = new Date().toISOString();
-  
+
   const existing = db.alertRules.find(
-    (r) => r.multisigAddress === data.multisigAddress && 
-           r.chainId === data.chainId &&
-           r.name === data.name
+    (r) =>
+      r.multisigAddress === data.multisigAddress &&
+      r.chainId === data.chainId &&
+      r.name === data.name,
   );
-  
+
   if (existing) {
     Object.assign(existing, data, { updatedAt: now });
     writeDb(db);
     return existing.id;
   }
-  
+
   const newRule: DbAlertRule = {
     id: generateId(),
     ...data,
@@ -2257,23 +2179,20 @@ export const upsertAlertRule = (
     createdAt: now,
     updatedAt: now,
   };
-  
+
   db.alertRules.push(newRule);
   writeDb(db);
-  
+
   return newRule.id;
 };
 
 /**
  * Get alert rules for a multisig
  */
-export const getAlertRules = (
-  multisigAddress: string,
-  chainId: string
-): DbAlertRule[] => {
+export const getAlertRules = (multisigAddress: string, chainId: string): DbAlertRule[] => {
   const db = readDb();
   return db.alertRules.filter(
-    (r) => r.multisigAddress === multisigAddress && r.chainId === chainId
+    (r) => r.multisigAddress === multisigAddress && r.chainId === chainId,
   );
 };
 
@@ -2283,7 +2202,7 @@ export const getAlertRules = (
 export const updateAlertRuleLastTriggered = (id: string): void => {
   const db = readDb();
   const rule = db.alertRules.find((r) => r.id === id);
-  
+
   if (rule) {
     rule.lastTriggeredAt = new Date().toISOString();
     writeDb(db);
@@ -2294,10 +2213,10 @@ export const updateAlertRuleLastTriggered = (id: string): void => {
  * Record a sent alert
  */
 export const recordAlert = (
-  data: Omit<DbAlert, "id" | "sentAt" | "acknowledged" | "acknowledgedAt">
+  data: Omit<DbAlert, "id" | "sentAt" | "acknowledged" | "acknowledgedAt">,
 ): string => {
   const db = readDb();
-  
+
   const alert: DbAlert = {
     id: generateId(),
     ...data,
@@ -2305,20 +2224,17 @@ export const recordAlert = (
     acknowledged: false,
     acknowledgedAt: null,
   };
-  
+
   db.alerts.push(alert);
   writeDb(db);
-  
+
   return alert.id;
 };
 
 /**
  * Get alerts for a multisig
  */
-export const getAlerts = (
-  multisigAddress: string,
-  limit: number = 100
-): DbAlert[] => {
+export const getAlerts = (multisigAddress: string, limit: number = 100): DbAlert[] => {
   const db = readDb();
   return db.alerts
     .filter((a) => a.multisigAddress === multisigAddress)
@@ -2333,19 +2249,17 @@ export const getAlerts = (
 /**
  * Record a spend
  */
-export const recordSpend = (
-  data: Omit<DbSpendRecord, "id">
-): string => {
+export const recordSpend = (data: Omit<DbSpendRecord, "id">): string => {
   const db = readDb();
-  
+
   const record: DbSpendRecord = {
     id: generateId(),
     ...data,
   };
-  
+
   db.spendRecords.push(record);
   writeDb(db);
-  
+
   return record.id;
 };
 
@@ -2355,16 +2269,16 @@ export const recordSpend = (
 export const getSpendRecordsInWindow = (
   multisigAddress: string,
   chainId: string,
-  windowStartTimestamp: string
+  windowStartTimestamp: string,
 ): DbSpendRecord[] => {
   const db = readDb();
   const startTime = new Date(windowStartTimestamp).getTime();
-  
+
   return db.spendRecords.filter(
-    (r) => 
-      r.multisigAddress === multisigAddress && 
+    (r) =>
+      r.multisigAddress === multisigAddress &&
       r.chainId === chainId &&
-      new Date(r.executedAt).getTime() >= startTime
+      new Date(r.executedAt).getTime() >= startTime,
   );
 };
 
@@ -2374,16 +2288,16 @@ export const getSpendRecordsInWindow = (
 export const getTotalSpentInWindow = (
   multisigAddress: string,
   chainId: string,
-  windowStartTimestamp: string
+  windowStartTimestamp: string,
 ): Map<string, bigint> => {
   const records = getSpendRecordsInWindow(multisigAddress, chainId, windowStartTimestamp);
   const totals = new Map<string, bigint>();
-  
+
   for (const record of records) {
     const current = totals.get(record.denom) ?? BigInt(0);
     totals.set(record.denom, current + BigInt(record.amount));
   }
-  
+
   return totals;
 };
 
@@ -2420,4 +2334,3 @@ export type {
   DbAlert,
   DbSpendRecord,
 };
-

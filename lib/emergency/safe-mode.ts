@@ -1,22 +1,21 @@
 /**
  * Safe Mode Controller - Elevated Threshold Emergency Mode
- * 
+ *
  * File: lib/emergency/safe-mode.ts
- * 
+ *
  * Implements safe mode which elevates the threshold temporarily
  * without requiring contract redeployment.
- * 
+ *
  * Safe mode provides:
  * - Temporary threshold elevation
  * - Configurable trigger conditions
  * - Auto-disable timer
- * 
+ *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards
  */
 
 import * as localDb from "@/lib/localDb";
 import {
-  EmergencyState,
   SafeModeActivateInput,
   SafeModeActivateResult,
   SafeModeDeactivateInput,
@@ -24,7 +23,6 @@ import {
   SafeModeTrigger,
   EmergencyEvent,
   EmergencyError,
-  DEFAULT_EMERGENCY_STATE,
 } from "./types";
 
 // ============================================================================
@@ -71,14 +69,17 @@ export class SafeModeController {
   /**
    * Get current safe mode state for a multisig
    */
-  getState(multisigAddress: string, chainId: string): {
+  getState(
+    multisigAddress: string,
+    chainId: string,
+  ): {
     isSafeMode: boolean;
     threshold: number | null;
     activatedAt: number | null;
     autoDisableAt: number | null;
   } {
     const dbState = localDb.getEmergencyState(multisigAddress, chainId);
-    
+
     if (!dbState) {
       return {
         isSafeMode: false,
@@ -97,8 +98,8 @@ export class SafeModeController {
     return {
       isSafeMode: dbState.isSafeMode,
       threshold: dbState.safeModeThreshold,
-      activatedAt: dbState.safeModeActivatedAt 
-        ? new Date(dbState.safeModeActivatedAt).getTime() / 1000 
+      activatedAt: dbState.safeModeActivatedAt
+        ? new Date(dbState.safeModeActivatedAt).getTime() / 1000
         : null,
       autoDisableAt: null, // Would need to be stored in DB
     };
@@ -114,17 +115,13 @@ export class SafeModeController {
   /**
    * Get the effective threshold (elevated if in safe mode)
    */
-  getEffectiveThreshold(
-    multisigAddress: string,
-    chainId: string,
-    normalThreshold: number,
-  ): number {
+  getEffectiveThreshold(multisigAddress: string, chainId: string, normalThreshold: number): number {
     const state = this.getState(multisigAddress, chainId);
-    
+
     if (state.isSafeMode && state.threshold !== null) {
       return state.threshold;
     }
-    
+
     return normalThreshold;
   }
 
@@ -134,7 +131,7 @@ export class SafeModeController {
 
   /**
    * Activate safe mode for a multisig
-   * 
+   *
    * Safe mode elevates the threshold without contract redeployment.
    * This provides an extra layer of security during uncertain conditions.
    */
@@ -145,17 +142,13 @@ export class SafeModeController {
     input: SafeModeActivateInput,
   ): Promise<SafeModeActivateResult> {
     const currentState = this.getState(multisigAddress, chainId);
-    
+
     // Check if already in safe mode
     if (currentState.isSafeMode) {
-      throw new EmergencyError(
-        "Safe mode is already active",
-        "ALREADY_IN_SAFE_MODE",
-        { 
-          currentThreshold: currentState.threshold,
-          activatedAt: currentState.activatedAt,
-        },
-      );
+      throw new EmergencyError("Safe mode is already active", "ALREADY_IN_SAFE_MODE", {
+        currentThreshold: currentState.threshold,
+        activatedAt: currentState.activatedAt,
+      });
     }
 
     // Validate threshold
@@ -181,10 +174,7 @@ export class SafeModeController {
     // Calculate auto-disable time
     let autoDisableAt: number | null = null;
     if (input.autoDisableAfterSeconds !== undefined) {
-      const duration = Math.min(
-        input.autoDisableAfterSeconds,
-        this.config.maxAutoDisableSeconds,
-      );
+      const duration = Math.min(input.autoDisableAfterSeconds, this.config.maxAutoDisableSeconds);
       autoDisableAt = now + duration;
     }
 
@@ -242,13 +232,10 @@ export class SafeModeController {
     input: SafeModeDeactivateInput,
   ): Promise<SafeModeDeactivateResult> {
     const currentState = this.getState(multisigAddress, chainId);
-    
+
     // Check if not in safe mode
     if (!currentState.isSafeMode) {
-      throw new EmergencyError(
-        "Safe mode is not active",
-        "NOT_IN_SAFE_MODE",
-      );
+      throw new EmergencyError("Safe mode is not active", "NOT_IN_SAFE_MODE");
     }
 
     const now = Math.floor(Date.now() / 1000);
@@ -313,7 +300,7 @@ export class SafeModeController {
     normalThreshold: number,
     trigger: SafeModeTrigger,
     actor: string,
-    details?: Record<string, unknown>,
+    _details?: Record<string, unknown>,
   ): Promise<SafeModeActivateResult | null> {
     if (!this.shouldAutoActivate(trigger)) {
       return null;
@@ -350,7 +337,7 @@ export class SafeModeController {
     severity: "low" | "medium" | "high" | "critical",
   ): number {
     let increase: number;
-    
+
     switch (severity) {
       case "critical":
         increase = Math.ceil(totalWeight * 0.5); // Require 50% more
@@ -365,7 +352,7 @@ export class SafeModeController {
       default:
         increase = this.config.defaultThresholdIncrease;
     }
-    
+
     const elevated = normalThreshold + increase;
     return Math.min(elevated, totalWeight);
   }
@@ -427,9 +414,7 @@ export class SafeModeController {
 /**
  * Create a new safe mode controller
  */
-export function createSafeModeController(
-  config?: Partial<SafeModeConfig>,
-): SafeModeController {
+export function createSafeModeController(config?: Partial<SafeModeConfig>): SafeModeController {
   return new SafeModeController(config);
 }
 
@@ -455,4 +440,3 @@ export function getSafeModeController(): SafeModeController {
 export function setSafeModeController(controller: SafeModeController): void {
   globalSafeModeController = controller;
 }
-

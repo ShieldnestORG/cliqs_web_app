@@ -20,26 +20,26 @@ console.log("maxRateAtomics:", maxRateAtomics, typeof maxRateAtomics);
 console.log("maxChangeRateAtomics:", maxChangeRateAtomics, typeof maxChangeRateAtomics);
 // Test creating protobuf message
 const msgValue = tx_1.MsgCreateValidator.fromPartial({
-    description: {
-        moniker: "Test",
-        identity: "",
-        website: "",
-        securityContact: "",
-        details: ""
-    },
-    commission: {
-        rate: rateAtomics,
-        maxRate: maxRateAtomics,
-        maxChangeRate: maxChangeRateAtomics
-    },
-    minSelfDelegation: "20000000000",
-    delegatorAddress: "test",
-    validatorAddress: "test",
-    pubkey: {
-        type: "/cosmos.crypto.ed25519.PubKey",
-        key: new Uint8Array()
-    },
-    value: { denom: "ucore", amount: "20300000000" }
+  description: {
+    moniker: "Test",
+    identity: "",
+    website: "",
+    securityContact: "",
+    details: "",
+  },
+  commission: {
+    rate: rateAtomics,
+    maxRate: maxRateAtomics,
+    maxChangeRate: maxChangeRateAtomics,
+  },
+  minSelfDelegation: "20000000000",
+  delegatorAddress: "test",
+  validatorAddress: "test",
+  pubkey: {
+    type: "/cosmos.crypto.ed25519.PubKey",
+    key: new Uint8Array(),
+  },
+  value: { denom: "ucore", amount: "20300000000" },
 });
 console.log("\nProtobuf message created");
 console.log("msgValue.commission:", msgValue.commission);
@@ -52,29 +52,27 @@ console.log("jsonValue.commission.maxRate type:", typeof jsonValue.commission.ma
 console.log("jsonValue.commission.maxChangeRate type:", typeof jsonValue.commission.maxChangeRate);
 // Test parsing back from JSON
 try {
-    const parsedValue = tx_1.MsgCreateValidator.fromJSON(jsonValue);
-    console.log("\n✅ Parsed back from JSON successfully");
-    console.log("parsedValue.commission:", parsedValue.commission);
-}
-catch (error) {
-    console.error("\n❌ Error parsing back from JSON:", error);
+  const parsedValue = tx_1.MsgCreateValidator.fromJSON(jsonValue);
+  console.log("\n✅ Parsed back from JSON successfully");
+  console.log("parsedValue.commission:", parsedValue.commission);
+} catch (error) {
+  console.error("\n❌ Error parsing back from JSON:", error);
 }
 // Test the specific values that might be causing issues
 console.log("\nTesting individual commission values:");
 const testValues = [
-    { name: "rate", value: jsonValue.commission.rate },
-    { name: "maxRate", value: jsonValue.commission.maxRate },
-    { name: "maxChangeRate", value: jsonValue.commission.maxChangeRate }
+  { name: "rate", value: jsonValue.commission.rate },
+  { name: "maxRate", value: jsonValue.commission.maxRate },
+  { name: "maxChangeRate", value: jsonValue.commission.maxChangeRate },
 ];
 testValues.forEach(({ name, value }) => {
-    try {
-        console.log(`\nTesting ${name}:`);
-        console.log(`  Raw value: ${value}`);
-        console.log(`  Type: ${typeof value}`);
-        const testDecimal = math_1.Decimal.fromAtomics(value, 18);
-        console.log(`  ✅ fromAtomics success: ${testDecimal.toString()}`);
-    }
-    catch (error) {
-        console.error(`  ❌ ${name} fromAtomics error:`, error);
-    }
+  try {
+    console.log(`\nTesting ${name}:`);
+    console.log(`  Raw value: ${value}`);
+    console.log(`  Type: ${typeof value}`);
+    const testDecimal = math_1.Decimal.fromAtomics(value, 18);
+    console.log(`  ✅ fromAtomics success: ${testDecimal.toString()}`);
+  } catch (error) {
+    console.error(`  ❌ ${name} fromAtomics error:`, error);
+  }
 });

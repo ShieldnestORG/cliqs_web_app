@@ -1,6 +1,6 @@
 /**
  * Token Metadata Service
- * 
+ *
  * Provides proper symbols, logos, and decimals for tokens,
  * especially bridged assets on Coreum (TX) chain.
  */
@@ -164,18 +164,18 @@ export function getStaticTokenMetadata(denom: string): TokenMetadata | null {
   if (COREUM_BRIDGED_TOKENS[denom]) {
     return COREUM_BRIDGED_TOKENS[denom];
   }
-  
+
   if (IBC_TOKENS[denom]) {
     return IBC_TOKENS[denom];
   }
-  
+
   // Check patterns
   for (const { pattern, getMetadata } of COREUM_SMART_TOKEN_PATTERNS) {
     if (pattern.test(denom)) {
       return getMetadata(denom);
     }
   }
-  
+
   return null;
 }
 
@@ -184,7 +184,7 @@ export function getStaticTokenMetadata(denom: string): TokenMetadata | null {
  */
 export async function queryTokenMetadata(
   restEndpoint: string,
-  denom: string
+  denom: string,
 ): Promise<TokenMetadata | null> {
   try {
     // Try Coreum asset FT query first (for smart tokens)
@@ -192,9 +192,9 @@ export async function queryTokenMetadata(
       try {
         const response = await fetch(
           `${restEndpoint}/coreum/asset/ft/v1/token?denom=${encodeURIComponent(denom)}`,
-          { signal: AbortSignal.timeout(5000) }
+          { signal: AbortSignal.timeout(5000) },
         );
-        
+
         if (response.ok) {
           const data = await response.json();
           if (data.token) {
@@ -210,19 +210,19 @@ export async function queryTokenMetadata(
         // Coreum FT query failed, try other methods
       }
     }
-    
+
     // Try bank denom metadata query (standard Cosmos SDK)
     try {
       const metadataResponse = await fetch(
         `${restEndpoint}/cosmos/bank/v1beta1/denoms_metadata/${encodeURIComponent(denom)}`,
-        { signal: AbortSignal.timeout(5000) }
+        { signal: AbortSignal.timeout(5000) },
       );
-      
+
       if (metadataResponse.ok) {
         const data = await metadataResponse.json();
         if (data.metadata) {
           const displayUnit = data.metadata.denom_units?.find(
-            (u: { denom: string; exponent: number }) => u.denom === data.metadata.display
+            (u: { denom: string; exponent: number }) => u.denom === data.metadata.display,
           );
           return {
             symbol: data.metadata.symbol || data.metadata.display || "TOKEN",
@@ -235,14 +235,14 @@ export async function queryTokenMetadata(
     } catch {
       // Bank metadata query failed
     }
-    
+
     // Try bank supply query to at least confirm token exists
     try {
       const supplyResponse = await fetch(
         `${restEndpoint}/cosmos/bank/v1beta1/supply/by_denom?denom=${encodeURIComponent(denom)}`,
-        { signal: AbortSignal.timeout(5000) }
+        { signal: AbortSignal.timeout(5000) },
       );
-      
+
       if (supplyResponse.ok) {
         const data = await supplyResponse.json();
         if (data.amount && data.amount.amount !== "0") {
@@ -260,7 +260,7 @@ export async function queryTokenMetadata(
   } catch (error) {
     console.debug("Failed to query token metadata:", error);
   }
-  
+
   return null;
 }
 
@@ -270,29 +270,29 @@ export async function queryTokenMetadata(
  */
 export async function queryMintscanMetadata(
   chainName: string,
-  denom: string
+  denom: string,
 ): Promise<TokenMetadata | null> {
   try {
     // Mintscan API endpoint pattern
     const mintscanApi = `https://api.mintscan.io/v1/${chainName}/assets`;
-    
+
     const response = await fetch(mintscanApi, {
       signal: AbortSignal.timeout(5000),
       headers: {
-        'Accept': 'application/json',
+        Accept: "application/json",
       },
     });
-    
+
     if (response.ok) {
       const data = await response.json();
       const assets = data.assets || data;
-      
+
       if (Array.isArray(assets)) {
         const asset = assets.find(
-          (a: { denom?: string; base_denom?: string }) => 
-            a.denom === denom || a.base_denom === denom
+          (a: { denom?: string; base_denom?: string }) =>
+            a.denom === denom || a.base_denom === denom,
         );
-        
+
         if (asset) {
           return {
             symbol: asset.symbol || asset.ticker || "TOKEN",
@@ -308,7 +308,7 @@ export async function queryMintscanMetadata(
   } catch (error) {
     console.debug("Mintscan query failed:", error);
   }
-  
+
   return null;
 }
 
@@ -317,26 +317,26 @@ export async function queryMintscanMetadata(
  */
 export function isLPToken(denom: string): boolean {
   const lowerDenom = denom.toLowerCase();
-  
+
   // Quick checks for common patterns
   if (lowerDenom.startsWith("ulp-")) return true;
   if (lowerDenom.startsWith("gamm/pool")) return true;
   if (lowerDenom.includes("/pool")) return true;
   if (lowerDenom.endsWith("-lp")) return true;
   if (lowerDenom.startsWith("lp-") || lowerDenom.startsWith("lp_")) return true;
-  
+
   // Pattern-based checks
   const lpPatterns = [
-    /^ulp[_-]/i,                    // LP shares (ulp-core1..., ulp_xxx)
-    /^gamm\/pool/i,                 // Osmosis GAMM pools
-    /pool[0-9]+/i,                  // Pool with numbers (pool1, pool123)
-    /^factory\/.*\/(.*lp|lp.*)$/i,  // Factory LP tokens
-    /share$/i,                      // Share tokens
-    /liquidity/i,                   // Liquidity tokens
-    /-share$/i,                     // Share suffix
-    /^cl\/pool/i,                   // Concentrated liquidity pools
+    /^ulp[_-]/i, // LP shares (ulp-core1..., ulp_xxx)
+    /^gamm\/pool/i, // Osmosis GAMM pools
+    /pool[0-9]+/i, // Pool with numbers (pool1, pool123)
+    /^factory\/.*\/(.*lp|lp.*)$/i, // Factory LP tokens
+    /share$/i, // Share tokens
+    /liquidity/i, // Liquidity tokens
+    /-share$/i, // Share suffix
+    /^cl\/pool/i, // Concentrated liquidity pools
   ];
-  
+
   return lpPatterns.some((pattern) => pattern.test(denom));
 }
 
@@ -348,7 +348,7 @@ export function getTokenColor(symbol: string): string {
   for (let i = 0; i < symbol.length; i++) {
     hash = symbol.charCodeAt(i) + ((hash << 5) - hash);
   }
-  
+
   const hue = Math.abs(hash) % 360;
   return `hsl(${hue}, 70%, 50%)`;
 }
@@ -361,13 +361,13 @@ export function formatTokenAmount(
   options?: {
     maxDecimals?: number;
     compactLarge?: boolean;
-  }
+  },
 ): string {
   const { maxDecimals = 6, compactLarge = true } = options || {};
   const num = typeof amount === "string" ? parseFloat(amount) : amount;
-  
+
   if (isNaN(num)) return "0";
-  
+
   if (compactLarge) {
     if (num >= 1_000_000_000) {
       return `${(num / 1_000_000_000).toFixed(2)}B`;
@@ -379,12 +379,12 @@ export function formatTokenAmount(
       return `${(num / 1_000).toFixed(2)}K`;
     }
   }
-  
+
   // For small numbers, show more precision
   if (num < 0.0001 && num > 0) {
     return num.toExponential(2);
   }
-  
+
   // Regular formatting
   const formatted = num.toFixed(maxDecimals);
   // Remove trailing zeros

@@ -147,7 +147,7 @@ const MsgMigrateContractForm = ({
       >
         <X className="h-4 w-4" />
       </Button>
-      <h2 className="text-xl font-heading font-semibold mb-4">MsgMigrateContract</h2>
+      <h2 className="mb-4 font-heading text-xl font-semibold">MsgMigrateContract</h2>
 
       <div className="mb-4 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-200">
         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
@@ -157,8 +157,8 @@ const MsgMigrateContractForm = ({
             <li>The contract must have an admin set (only the admin can migrate).</li>
             <li>
               The <strong>new</strong> code (target Code ID) must export a{" "}
-              <code className="rounded bg-amber-900/40 px-1">migrate</code> entry point. If it
-              does not, the chain will reject with &ldquo;Missing export migrate&rdquo;.
+              <code className="rounded bg-amber-900/40 px-1">migrate</code> entry point. If it does
+              not, the chain will reject with &ldquo;Missing export migrate&rdquo;.
             </li>
             <li>The migrate JSON message must match what the new code expects.</li>
           </ul>

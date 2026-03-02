@@ -17,12 +17,12 @@ export function installChaosPatches() {
     typeof proto.evaluateProposal === "function"
       ? "evaluateProposal"
       : typeof proto.evaluateExecution === "function"
-      ? "evaluateExecution"
-      : null;
+        ? "evaluateExecution"
+        : null;
 
   if (!evalName) {
     throw new Error(
-      "Chaos patch: could not find PolicyRegistry.evaluateProposal or evaluateExecution"
+      "Chaos patch: could not find PolicyRegistry.evaluateProposal or evaluateExecution",
     );
   }
 
@@ -32,8 +32,7 @@ export function installChaosPatches() {
     // allow tests to mutate "reality" without knowing your ctx structure
     const injected = {
       ...ctx,
-      emergencyPaused:
-        ctx?.emergencyPaused ?? faultController.state.emergencyPaused,
+      emergencyPaused: ctx?.emergencyPaused ?? faultController.state.emergencyPaused,
       safeMode: ctx?.safeMode ?? faultController.state.safeMode,
       policyVersion: ctx?.policyVersion ?? faultController.state.policyVersion,
       expectedPolicyVersion:

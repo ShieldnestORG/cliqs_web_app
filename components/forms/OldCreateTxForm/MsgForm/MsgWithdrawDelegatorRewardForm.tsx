@@ -66,23 +66,18 @@ const MsgWithdrawDelegatorRewardForm = ({
   const categoryInfo = getMessageCategory(MsgTypeUrls.WithdrawDelegatorReward);
 
   return (
-    <StackableContainer 
-      variant="institutional" 
-      lessPadding 
-      lessMargin
-      accent={categoryInfo.accent}
-    >
+    <StackableContainer variant="institutional" lessPadding lessMargin accent={categoryInfo.accent}>
       <Button
         variant="ghost"
         size="icon-sm"
         onClick={() => deleteMsg()}
-        className="absolute right-4 top-4 h-8 w-8 text-muted-foreground hover:text-foreground z-10"
+        className="absolute right-4 top-4 z-10 h-8 w-8 text-muted-foreground hover:text-foreground"
       >
         <X className="h-4 w-4" />
       </Button>
       <div className="mb-4">
         <CardLabel comment>{categoryInfo.label}</CardLabel>
-        <h2 className="text-xl font-heading font-semibold">MsgWithdrawDelegatorReward</h2>
+        <h2 className="font-heading text-xl font-semibold">MsgWithdrawDelegatorReward</h2>
       </div>
       <div className="space-y-4">
         <SelectValidator

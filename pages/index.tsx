@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
-import { useRouter } from 'next/router';
-import { useChains } from '@/context/ChainsContext';
+import { useEffect } from "react";
+import { useRouter } from "next/router";
+import { useChains } from "@/context/ChainsContext";
 
 export default function Home() {
   const router = useRouter();
@@ -12,7 +12,7 @@ export default function Home() {
       router.replace(`/${chain.registryName}/dashboard`);
     } else {
       // Fallback to cosmoshub dashboard as the default entry point
-      router.replace('/cosmoshub/dashboard');
+      router.replace("/cosmoshub/dashboard");
     }
   }, [chain, router]);
 

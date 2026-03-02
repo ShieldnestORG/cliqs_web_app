@@ -101,7 +101,11 @@ const getKeplrVerifyData = (chainDisplayName: string, nonce: number) =>
     nonce,
   });
 
-export const verifyKeplrSignature = async (signature: StdSignature, chain: ChainInfo, nonce: number) => {
+export const verifyKeplrSignature = async (
+  signature: StdSignature,
+  chain: ChainInfo,
+  nonce: number,
+) => {
   const signer = pubkeyToAddress(signature.pub_key, chain.addressPrefix);
   const data = getKeplrVerifyData(chain.chainDisplayName, nonce);
   const { pubkey: decodedPubKey, signature: decodedSignature } = decodeSignature(signature);

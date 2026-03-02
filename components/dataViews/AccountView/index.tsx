@@ -4,7 +4,6 @@ import { explorerLinkAccount } from "@/lib/displayHelpers";
 import { cn } from "@/lib/utils";
 import { ArrowUpRightSquare, Loader2, Unplug } from "lucide-react";
 import Image from "next/image";
-import { toast } from "sonner";
 import { useChains } from "../../../context/ChainsContext";
 import { Button } from "../../ui/button";
 import BalancesTable from "../BalancesTable";
@@ -34,7 +33,7 @@ export default function AccountView() {
             {walletInfo?.type ? `Connected to ${walletInfo.type}` : "Connect to a wallet"}
           </CardTitle>
           <CardDescription>
-            {walletInfo 
+            {walletInfo
               ? "Your wallet is connected. You can view your account details below."
               : "Choose between Keplr or Ledger to show its account info"}
           </CardDescription>
@@ -47,9 +46,9 @@ export default function AccountView() {
             </Button>
           ) : (
             <div className="grid grid-cols-2 gap-6">
-              <Button 
-                onClick={connectKeplr} 
-                disabled={loading.keplr || loading.ledger} 
+              <Button
+                onClick={connectKeplr}
+                disabled={loading.keplr || loading.ledger}
                 variant="outline"
               >
                 {loading.keplr ? (
@@ -65,9 +64,9 @@ export default function AccountView() {
                 )}
                 Connect Keplr
               </Button>
-              <Button 
-                onClick={connectLedger} 
-                disabled={loading.keplr || loading.ledger} 
+              <Button
+                onClick={connectLedger}
+                disabled={loading.keplr || loading.ledger}
                 variant="outline"
               >
                 {loading.ledger ? (
@@ -93,28 +92,24 @@ export default function AccountView() {
             <CardTitle>Account info</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-5">
-          {walletInfo ? (
-            <div
-              className="flex items-center space-x-4 rounded-md border p-4 transition-colors bg-muted/30"
-            >
-              <CopyButton value={walletInfo.address} copyLabel="address" />
-              <div className="flex-1 space-y-1">
-                <p className="text-sm font-medium leading-none">Address</p>
-                <p className="text-sm text-muted-foreground">{walletInfo.address}</p>
+            {walletInfo ? (
+              <div className="flex items-center space-x-4 rounded-md border bg-muted/30 p-4 transition-colors">
+                <CopyButton value={walletInfo.address} copyLabel="address" />
+                <div className="flex-1 space-y-1">
+                  <p className="text-sm font-medium leading-none">Address</p>
+                  <p className="text-sm text-muted-foreground">{walletInfo.address}</p>
+                </div>
               </div>
-            </div>
-          ) : null}
-          {walletInfo ? (
-            <div
-              className="flex items-center space-x-4 rounded-md border p-4 transition-colors bg-muted/30"
-            >
-              <CopyButton value={walletInfo.pubKey} copyLabel="public key" />
-              <div className="flex-1 space-y-1">
-                <p className="text-sm font-medium leading-none">Public key</p>
-                <p className="text-sm text-muted-foreground">{walletInfo.pubKey}</p>
+            ) : null}
+            {walletInfo ? (
+              <div className="flex items-center space-x-4 rounded-md border bg-muted/30 p-4 transition-colors">
+                <CopyButton value={walletInfo.pubKey} copyLabel="public key" />
+                <div className="flex-1 space-y-1">
+                  <p className="text-sm font-medium leading-none">Public key</p>
+                  <p className="text-sm text-muted-foreground">{walletInfo.pubKey}</p>
+                </div>
               </div>
-            </div>
-          ) : null}
+            ) : null}
             {explorerLink ? (
               <Button asChild variant="secondary">
                 <a href={explorerLink} target="_blank">

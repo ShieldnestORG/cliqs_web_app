@@ -1,17 +1,17 @@
 /**
  * CW4 Group Contract Client
- * 
+ *
  * File: lib/contract/cw4-client.ts
- * 
+ *
  * Wrapper for CW4-group contract queries and executes.
  * This client handles all interactions with CW4-group style contracts
  * for managing group membership in CW3-Flex multisigs.
- * 
+ *
  * CW4 is the standard CosmWasm group contract that provides:
  * - Member management with weights
  * - Admin-controlled updates
  * - Hook system for extensions
- * 
+ *
  * Phase 2: Group-Backed Multisig
  */
 
@@ -172,11 +172,7 @@ export class CW4Client {
   private _senderAddress: string | null = null;
   private _gasMultiplier: "auto" | number = "auto";
 
-  constructor(
-    nodeAddress: string,
-    contractAddress: string,
-    chainId: string,
-  ) {
+  constructor(nodeAddress: string, contractAddress: string, chainId: string) {
     this.nodeAddress = nodeAddress;
     this.contractAddress = contractAddress;
     this.chainId = chainId;
@@ -246,10 +242,9 @@ export class CW4Client {
   async queryAdmin(): Promise<string | null> {
     try {
       const client = await this.getClient();
-      const response = await client.queryContractSmart(
-        this.contractAddress,
-        { admin: {} },
-      ) as { admin: string | null };
+      const response = (await client.queryContractSmart(this.contractAddress, { admin: {} })) as {
+        admin: string | null;
+      };
       return response.admin;
     } catch {
       return null;
@@ -258,7 +253,7 @@ export class CW4Client {
 
   /**
    * Query total weight of all members
-   * 
+   *
    * @param atHeight - Optional: query at specific block height
    */
   async queryTotalWeight(atHeight?: number): Promise<number> {
@@ -266,18 +261,18 @@ export class CW4Client {
     const query: CW4QueryMsg = {
       total_weight: atHeight ? { at_height: atHeight } : {},
     };
-    
-    const response = await client.queryContractSmart(
+
+    const response = (await client.queryContractSmart(
       this.contractAddress,
       query,
-    ) as TotalWeightResponse;
-    
+    )) as TotalWeightResponse;
+
     return response.weight;
   }
 
   /**
    * Query a specific member's weight
-   * 
+   *
    * @param address - Member address
    * @param atHeight - Optional: query at specific block height
    */
@@ -290,12 +285,12 @@ export class CW4Client {
           at_height: atHeight,
         },
       };
-      
-      const response = await client.queryContractSmart(
+
+      const response = (await client.queryContractSmart(
         this.contractAddress,
         query,
-      ) as MemberResponse;
-      
+      )) as MemberResponse;
+
       return response.weight;
     } catch {
       return null;
@@ -304,14 +299,11 @@ export class CW4Client {
 
   /**
    * List all members with pagination
-   * 
+   *
    * @param startAfter - Optional: start after this address
    * @param limit - Maximum number to return (default 30)
    */
-  async queryListMembers(
-    startAfter?: string,
-    limit: number = 30,
-  ): Promise<CW4Member[]> {
+  async queryListMembers(startAfter?: string, limit: number = 30): Promise<CW4Member[]> {
     const client = await this.getClient();
     const query: CW4QueryMsg = {
       list_members: {
@@ -320,10 +312,10 @@ export class CW4Client {
       },
     };
 
-    const response = await client.queryContractSmart(
+    const response = (await client.queryContractSmart(
       this.contractAddress,
       query,
-    ) as MemberListResponse;
+    )) as MemberListResponse;
 
     return response.members;
   }
@@ -338,17 +330,17 @@ export class CW4Client {
 
     while (true) {
       const batch = await this.queryListMembers(startAfter, limit);
-      
+
       if (batch.length === 0) {
         break;
       }
-      
+
       allMembers.push(...batch);
-      
+
       if (batch.length < limit) {
         break;
       }
-      
+
       startAfter = batch[batch.length - 1].addr;
     }
 
@@ -361,10 +353,9 @@ export class CW4Client {
   async queryHooks(): Promise<string[]> {
     try {
       const client = await this.getClient();
-      const response = await client.queryContractSmart(
-        this.contractAddress,
-        { hooks: {} },
-      ) as HooksResponse;
+      const response = (await client.queryContractSmart(this.contractAddress, {
+        hooks: {},
+      })) as HooksResponse;
       return response.hooks;
     } catch {
       return [];
@@ -385,7 +376,7 @@ export class CW4Client {
 
   /**
    * Update members (add, remove, or change weights)
-   * 
+   *
    * @param diff - Members to add/update and addresses to remove
    */
   async updateMembers(diff: CW4MemberDiff): Promise<CW4ExecuteResult> {
@@ -422,7 +413,7 @@ export class CW4Client {
 
   /**
    * Add members
-   * 
+   *
    * @param members - Members to add
    */
   async addMembers(members: CW4Member[]): Promise<CW4ExecuteResult> {
@@ -431,7 +422,7 @@ export class CW4Client {
 
   /**
    * Remove members
-   * 
+   *
    * @param addresses - Addresses to remove
    */
   async removeMembers(addresses: string[]): Promise<CW4ExecuteResult> {
@@ -440,7 +431,7 @@ export class CW4Client {
 
   /**
    * Update admin
-   * 
+   *
    * @param newAdmin - New admin address (or null to remove)
    */
   async updateAdmin(newAdmin: string | null): Promise<CW4ExecuteResult> {
@@ -477,7 +468,7 @@ export class CW4Client {
 
   /**
    * Add a hook
-   * 
+   *
    * @param hookAddress - Hook contract address
    */
   async addHook(hookAddress: string): Promise<CW4ExecuteResult> {
@@ -514,7 +505,7 @@ export class CW4Client {
 
   /**
    * Remove a hook
-   * 
+   *
    * @param hookAddress - Hook contract address
    */
   async removeHook(hookAddress: string): Promise<CW4ExecuteResult> {
@@ -758,11 +749,9 @@ export async function createSigningCW4ClientFromSigner(
     throw new Error("Signer has no accounts");
   }
 
-  const signingClient = await SigningCosmWasmClient.connectWithSigner(
-    nodeAddress,
-    signer,
-    { gasPrice: GasPrice.fromString(gasPrice) },
-  );
+  const signingClient = await SigningCosmWasmClient.connectWithSigner(nodeAddress, signer, {
+    gasPrice: GasPrice.fromString(gasPrice),
+  });
   const client = new CW4Client(nodeAddress, contractAddress, chainId);
   client.setSigningClient(signingClient, senderAddress, gasMultiplier);
   return client;
@@ -777,17 +766,16 @@ export async function isCW4GroupContract(
 ): Promise<boolean> {
   try {
     const client = new CW4Client(nodeAddress, contractAddress, "");
-    
+
     // Try to query total_weight - this is a CW4-specific query
     await client.queryTotalWeight();
-    
+
     // Try to list members
     const members = await client.queryListMembers(undefined, 1);
-    
+
     // If both succeed, it's likely a CW4 contract
     return members !== undefined;
   } catch {
     return false;
   }
 }
-

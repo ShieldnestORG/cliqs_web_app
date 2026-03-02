@@ -1,12 +1,12 @@
 import { MsgTypeUrl, MsgTypeUrls } from "@/types/txMsg";
 
-export type MessageCategory = 
-  | "Bank" 
-  | "Staking" 
-  | "Distribution" 
-  | "Vesting" 
-  | "Governance" 
-  | "IBC" 
+export type MessageCategory =
+  | "Bank"
+  | "Staking"
+  | "Distribution"
+  | "Vesting"
+  | "Governance"
+  | "IBC"
   | "CosmWasm";
 
 export interface MessageCategoryInfo {
@@ -123,4 +123,3 @@ export const getMessageName = (typeUrl: MsgTypeUrl): string => {
   const entry = entries.find(([, url]) => url === typeUrl);
   return entry ? entry[0] : "Unknown";
 };
-

@@ -1,6 +1,6 @@
 /**
  * Transaction Module Exports
- * 
+ *
  * File: lib/tx/index.ts
  */
 
@@ -21,4 +21,3 @@ export {
   ProposalHasher,
   type ProposalHashInput,
 } from "./proposal-hasher";
-

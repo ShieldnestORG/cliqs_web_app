@@ -1,8 +1,8 @@
 /**
  * PubKeyMultisigEngine Implementation
- * 
+ *
  * File: lib/multisig/pubkey-engine.ts
- * 
+ *
  * This implementation wraps the existing Cosmos SDK pubkey-derived multisig logic.
  * It provides a unified interface for creating proposals, collecting signatures,
  * and broadcasting transactions.
@@ -15,12 +15,7 @@ import { fromBase64, toBase64 } from "@cosmjs/encoding";
 import { Registry, TxBodyEncodeObject, EncodeObject } from "@cosmjs/proto-signing";
 import { defaultRegistryTypes, StargateClient } from "@cosmjs/stargate";
 
-import {
-  MultisigEngine,
-  SignBytesResult,
-  ActionSummary,
-  EngineConfig,
-} from "./engine";
+import { MultisigEngine, SignBytesResult, ActionSummary, EngineConfig } from "./engine";
 import {
   ApprovalReceipt,
   Member,
@@ -60,10 +55,7 @@ export class PubKeyMultisigEngine implements MultisigEngine {
   // In-memory proposal storage (will be replaced by DB calls)
   private proposals: Map<string, ProposalState> = new Map();
 
-  constructor(
-    config: EngineConfig,
-    multisigPubkey: MultisigThresholdPubkey,
-  ) {
+  constructor(config: EngineConfig, multisigPubkey: MultisigThresholdPubkey) {
     this.chainId = config.chainId;
     this.multisigAddress = config.multisigAddress;
     this.nodeAddress = config.nodeAddress;
@@ -124,10 +116,7 @@ export class PubKeyMultisigEngine implements MultisigEngine {
   ): Promise<ApprovalReceipt> {
     const proposal = this.proposals.get(proposalId);
     if (!proposal) {
-      throw new MultisigEngineError(
-        `Proposal ${proposalId} not found`,
-        "PROPOSAL_NOT_FOUND",
-      );
+      throw new MultisigEngineError(`Proposal ${proposalId} not found`, "PROPOSAL_NOT_FOUND");
     }
 
     if (proposal.status !== "pending" && proposal.status !== "signing") {
@@ -194,21 +183,13 @@ export class PubKeyMultisigEngine implements MultisigEngine {
     };
   }
 
-  async revokeApproval(
-    proposalId: string,
-    signer: SignerInfo,
-  ): Promise<RevokeReceipt> {
+  async revokeApproval(proposalId: string, signer: SignerInfo): Promise<RevokeReceipt> {
     const proposal = this.proposals.get(proposalId);
     if (!proposal) {
-      throw new MultisigEngineError(
-        `Proposal ${proposalId} not found`,
-        "PROPOSAL_NOT_FOUND",
-      );
+      throw new MultisigEngineError(`Proposal ${proposalId} not found`, "PROPOSAL_NOT_FOUND");
     }
 
-    const sigIndex = proposal.signatures.findIndex(
-      (s) => s.signerAddress === signer.address,
-    );
+    const sigIndex = proposal.signatures.findIndex((s) => s.signerAddress === signer.address);
     if (sigIndex === -1) {
       throw new MultisigEngineError(
         `No signature found for ${signer.address}`,
@@ -244,10 +225,7 @@ export class PubKeyMultisigEngine implements MultisigEngine {
   async executeProposal(proposalId: string): Promise<TxResult> {
     const proposal = this.proposals.get(proposalId);
     if (!proposal) {
-      throw new MultisigEngineError(
-        `Proposal ${proposalId} not found`,
-        "PROPOSAL_NOT_FOUND",
-      );
+      throw new MultisigEngineError(`Proposal ${proposalId} not found`, "PROPOSAL_NOT_FOUND");
     }
 
     if (!proposal.isReady) {
@@ -289,10 +267,7 @@ export class PubKeyMultisigEngine implements MultisigEngine {
   async cancelProposal(proposalId: string): Promise<void> {
     const proposal = this.proposals.get(proposalId);
     if (!proposal) {
-      throw new MultisigEngineError(
-        `Proposal ${proposalId} not found`,
-        "PROPOSAL_NOT_FOUND",
-      );
+      throw new MultisigEngineError(`Proposal ${proposalId} not found`, "PROPOSAL_NOT_FOUND");
     }
 
     const updatedProposal: ProposalState = {
@@ -310,10 +285,7 @@ export class PubKeyMultisigEngine implements MultisigEngine {
   async getProposal(proposalId: string): Promise<ProposalState> {
     const proposal = this.proposals.get(proposalId);
     if (!proposal) {
-      throw new MultisigEngineError(
-        `Proposal ${proposalId} not found`,
-        "PROPOSAL_NOT_FOUND",
-      );
+      throw new MultisigEngineError(`Proposal ${proposalId} not found`, "PROPOSAL_NOT_FOUND");
     }
     return proposal;
   }
@@ -349,10 +321,7 @@ export class PubKeyMultisigEngine implements MultisigEngine {
   // Signing Helpers
   // ============================================================================
 
-  async getSignBytes(
-    proposalId: string,
-    signMode: SignMode,
-  ): Promise<SignBytesResult> {
+  async getSignBytes(proposalId: string, signMode: SignMode): Promise<SignBytesResult> {
     const proposal = await this.getProposal(proposalId);
     const { content } = proposal;
 
@@ -399,18 +368,13 @@ export class PubKeyMultisigEngine implements MultisigEngine {
     signDocHash: string,
   ): Promise<boolean> {
     const proposal = await this.getProposal(proposalId);
-    const signature = proposal.signatures.find(
-      (s) => s.signerAddress === signerAddress,
-    );
+    const signature = proposal.signatures.find((s) => s.signerAddress === signerAddress);
 
     if (!signature) {
       return false;
     }
 
-    return (
-      signature.signatureBytes === signatureBytes &&
-      signature.signDocHash === signDocHash
-    );
+    return signature.signatureBytes === signatureBytes && signature.signDocHash === signDocHash;
   }
 
   // ============================================================================
@@ -453,13 +417,9 @@ export class PubKeyMultisigEngine implements MultisigEngine {
 
   private detectSignMode(msgs: readonly EncodeObject[]): SignMode {
     // MsgWithdrawValidatorCommission requires Direct mode on TX
-    const directModeRequiredTypes = [
-      "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission",
-    ];
+    const directModeRequiredTypes = ["/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission"];
 
-    const requiresDirect = msgs.some((m) =>
-      directModeRequiredTypes.includes(m.typeUrl),
-    );
+    const requiresDirect = msgs.some((m) => directModeRequiredTypes.includes(m.typeUrl));
 
     return requiresDirect ? "direct" : "amino";
   }
@@ -524,9 +484,7 @@ export class PubKeyMultisigEngine implements MultisigEngine {
       };
     });
 
-    const feeAmount = content.fee.amount
-      .map((c) => `${c.amount} ${c.denom}`)
-      .join(", ");
+    const feeAmount = content.fee.amount.map((c) => `${c.amount} ${c.denom}`).join(", ");
 
     return {
       actions,
@@ -601,4 +559,3 @@ export async function createPubKeyMultisigEngine(
 ): Promise<PubKeyMultisigEngine> {
   return new PubKeyMultisigEngine(config, multisigPubkey);
 }
-

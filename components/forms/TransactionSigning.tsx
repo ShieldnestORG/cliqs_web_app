@@ -3,7 +3,12 @@ import { createDbSignature } from "@/lib/api";
 import { getKeplr } from "@/lib/keplr";
 import { useWallet } from "@/context/WalletContext";
 import { aminoConverters } from "@/lib/msg";
-import { makeDirectModeAuthInfo, makeDirectSignDoc, logDirectSignDocDebug, shouldUseDirectMode } from "@/lib/multisigDirect";
+import {
+  makeDirectModeAuthInfo,
+  makeDirectSignDoc,
+  logDirectSignDocDebug,
+  shouldUseDirectMode,
+} from "@/lib/multisigDirect";
 import { generateSignDocDebugInfo, logSignDocDebug } from "@/lib/signDocDebug";
 import { toastError, toastSuccess } from "@/lib/utils";
 import { SigningStatus } from "@/types/signing";
@@ -41,7 +46,7 @@ const TransactionSigning = (props: TransactionSigningProps) => {
   const { walletInfo, loading, connectKeplr, connectLedger, getAminoSigner } = useWallet();
   const [signing, setSigning] = useState<SigningStatus>("not_signed");
   const [signingInProgress, setSigningInProgress] = useState(false);
-  
+
   // Phase 0: Intent verification state
   const [intentVerified, setIntentVerified] = useState(false);
   const [showIntentView, setShowIntentView] = useState(false);
@@ -55,7 +60,7 @@ const TransactionSigning = (props: TransactionSigningProps) => {
   // members will sign. This works for N-of-N multisigs where all members sign.
   // For partial signing (e.g., 2-of-3), Amino mode is required.
   const requiresDirectMode = shouldUseDirectMode(props.tx.msgs);
-  
+
   // Auto-select the appropriate sign mode based on transaction content
   const signMode: TxSignMode = requiresDirectMode ? "direct" : "amino";
 
@@ -93,7 +98,7 @@ const TransactionSigning = (props: TransactionSigningProps) => {
       if (props.tx.chainId && props.tx.chainId !== chain.chainId) {
         throw new Error(
           `Chain ID mismatch! Transaction was created for chain "${props.tx.chainId}" ` +
-          `but you're connected to "${chain.chainId}". Please switch to the correct chain.`
+            `but you're connected to "${chain.chainId}". Please switch to the correct chain.`,
         );
       }
 
@@ -105,7 +110,7 @@ const TransactionSigning = (props: TransactionSigningProps) => {
         // This is different from Amino - we construct the SignDoc for the MULTISIG account,
         // not for the individual signer
         const registry = new Registry([...defaultRegistryTypes, ...wasmTypes]);
-        
+
         // 1. Construct bodyBytes (same as Amino)
         const txBodyEncodeObject: TxBodyEncodeObject = {
           typeUrl: "/cosmos.tx.v1beta1.TxBody",
@@ -124,7 +129,7 @@ const TransactionSigning = (props: TransactionSigningProps) => {
         );
 
         // 3. Construct the Direct SignDoc for the multisig
-        const { signDocHash } = makeDirectSignDoc(
+        const { signDocHash: _signDocHash } = makeDirectSignDoc(
           bodyBytes,
           authInfoBytes,
           props.tx.chainId,
@@ -137,7 +142,7 @@ const TransactionSigning = (props: TransactionSigningProps) => {
           authInfoBytes,
           props.tx.chainId,
           props.tx.accountNumber,
-          "SIGNING Direct SignDoc (MULTISIG)"
+          "SIGNING Direct SignDoc (MULTISIG)",
         );
 
         // 4. Get configured Keplr (sets defaultOptions before enable to avoid double popup)
@@ -151,11 +156,7 @@ const TransactionSigning = (props: TransactionSigningProps) => {
           accountNumber: Long.fromNumber(props.tx.accountNumber),
         };
 
-        const signResponse = await keplr.signDirect(
-          props.tx.chainId,
-          signerAddress,
-          signDoc,
-        );
+        const signResponse = await keplr.signDirect(props.tx.chainId, signerAddress, signDoc);
 
         signatureBytes = fromBase64(signResponse.signature.signature);
       } else {
@@ -186,7 +187,7 @@ const TransactionSigning = (props: TransactionSigningProps) => {
           props.tx.memo,
           props.tx.accountNumber,
           props.tx.sequence,
-          aminoTypesForDebug
+          aminoTypesForDebug,
         );
         logSignDocDebug(signTimeDebugInfo, "SIGNING SignDoc (AMINO mode)");
 
@@ -240,36 +241,36 @@ const TransactionSigning = (props: TransactionSigningProps) => {
     return (
       <div className="space-y-3">
         {signing === "signed" ? (
-          <div className="flex items-center gap-2 p-3 rounded-lg bg-green-accent/10 border border-green-accent/30">
+          <div className="flex items-center gap-2 rounded-lg border border-green-accent/30 bg-green-accent/10 p-3">
             <CheckCircle2 className="h-4 w-4 text-green-accent" />
-            <p className="text-sm text-green-accent m-0">You've signed this transaction</p>
+            <p className="m-0 text-sm text-green-accent">You've signed this transaction</p>
           </div>
         ) : null}
         {signing === "not_a_member" ? (
-          <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30">
-            <p className="text-sm text-red-400 m-0">You don't belong to this multisig</p>
+          <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3">
+            <p className="m-0 text-sm text-red-400">You don't belong to this multisig</p>
           </div>
         ) : null}
         {signing === "not_signed" ? (
           <>
             {walletInfo ? (
               <div className="space-y-2">
-                <p className="text-xs text-muted-foreground m-0">
+                <p className="m-0 text-xs text-muted-foreground">
                   Sign with {walletInfo.address.slice(0, 6)}...{walletInfo.address.slice(-6)}
                 </p>
                 {/* Info banner when Direct mode is auto-selected */}
                 {requiresDirectMode && (
-                  <div className="p-2 rounded bg-blue-500/10 border border-blue-500/30 mb-2">
+                  <div className="mb-2 rounded border border-blue-500/30 bg-blue-500/10 p-2">
                     <div className="flex items-center gap-1">
                       <CheckCircle2 className="h-3 w-3 text-blue-400" />
                       <span className="text-xs text-blue-400">Using Direct signing mode</span>
                     </div>
-                    <p className="text-xs text-muted-foreground m-0 mt-1">
+                    <p className="m-0 mt-1 text-xs text-muted-foreground">
                       Required for validator commission withdrawal
                     </p>
                   </div>
                 )}
-                
+
                 {/* Phase 0: Intent verification (compact) */}
                 {!intentVerified && (
                   <ProposalIntentView
@@ -285,7 +286,7 @@ const TransactionSigning = (props: TransactionSigningProps) => {
                     signMode={signMode}
                   />
                 )}
-                
+
                 <Button
                   label="Sign transaction"
                   onClick={() => signTransaction(signMode)}
@@ -295,14 +296,10 @@ const TransactionSigning = (props: TransactionSigningProps) => {
               </div>
             ) : (
               <div className="space-y-2">
-                <p className="text-xs text-muted-foreground m-0 mb-2">Connect wallet to sign</p>
+                <p className="m-0 mb-2 text-xs text-muted-foreground">Connect wallet to sign</p>
                 <div className="flex flex-col gap-2">
                   <Button label="Connect Keplr" onClick={connectKeplr} loading={loading.keplr} />
-                  <Button
-                    label="Connect Ledger"
-                    onClick={connectLedger}
-                    loading={loading.ledger}
-                  />
+                  <Button label="Connect Ledger" onClick={connectLedger} loading={loading.ledger} />
                 </div>
               </div>
             )}
@@ -343,19 +340,28 @@ const TransactionSigning = (props: TransactionSigningProps) => {
             {walletInfo ? (
               <>
                 <p>
-                  You can sign this transaction with {walletInfo.address.slice(0, 6)}...{walletInfo.address.slice(-6)} (
-                  {walletInfo.type ?? "Unknown wallet type"})
+                  You can sign this transaction with {walletInfo.address.slice(0, 6)}...
+                  {walletInfo.address.slice(-6)} ({walletInfo.type ?? "Unknown wallet type"})
                 </p>
                 {/* Info banner when Direct mode is auto-selected */}
                 {requiresDirectMode && (
-                  <div style={{ 
-                    padding: "12px", 
-                    borderRadius: "8px", 
-                    background: "rgba(59, 130, 246, 0.1)", 
-                    border: "1px solid rgba(59, 130, 246, 0.3)", 
-                    marginBottom: "12px" 
-                  }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                  <div
+                    style={{
+                      padding: "12px",
+                      borderRadius: "8px",
+                      background: "rgba(59, 130, 246, 0.1)",
+                      border: "1px solid rgba(59, 130, 246, 0.3)",
+                      marginBottom: "12px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        marginBottom: "4px",
+                      }}
+                    >
                       <CheckCircle2 size={14} color="#3b82f6" />
                       <span style={{ fontSize: "13px", color: "#3b82f6", fontWeight: 500 }}>
                         Using Direct signing mode
@@ -366,7 +372,7 @@ const TransactionSigning = (props: TransactionSigningProps) => {
                     </p>
                   </div>
                 )}
-                
+
                 {/* Phase 0: Intent verification toggle */}
                 {!showIntentView && !intentVerified && (
                   <Button
@@ -374,7 +380,7 @@ const TransactionSigning = (props: TransactionSigningProps) => {
                     onClick={() => setShowIntentView(true)}
                   />
                 )}
-                
+
                 {/* Phase 0: Intent verification view */}
                 {showIntentView && !intentVerified && (
                   <div style={{ marginBottom: "16px" }}>
@@ -392,29 +398,33 @@ const TransactionSigning = (props: TransactionSigningProps) => {
                     />
                   </div>
                 )}
-                
+
                 {/* Show verified badge when verified */}
                 {intentVerified && (
-                  <div style={{ 
-                    display: "flex", 
-                    alignItems: "center", 
-                    gap: "8px", 
-                    padding: "8px 12px",
-                    borderRadius: "8px",
-                    background: "hsl(var(--accent-green) / 0.1)",
-                    border: "1px solid hsl(var(--accent-green) / 0.3)",
-                    marginBottom: "12px"
-                  }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "8px 12px",
+                      borderRadius: "8px",
+                      background: "hsl(var(--accent-green) / 0.1)",
+                      border: "1px solid hsl(var(--accent-green) / 0.3)",
+                      marginBottom: "12px",
+                    }}
+                  >
                     <Shield size={16} color="hsl(var(--accent-green))" />
                     <span style={{ fontSize: "13px", color: "hsl(var(--accent-green))" }}>
                       Transaction intent verified
                     </span>
                   </div>
                 )}
-                
+
                 <Button
                   label={intentVerified ? "Sign transaction" : "Verify intent to sign"}
-                  onClick={() => intentVerified ? signTransaction(signMode) : setShowIntentView(true)}
+                  onClick={() =>
+                    intentVerified ? signTransaction(signMode) : setShowIntentView(true)
+                  }
                   loading={signingInProgress}
                 />
               </>

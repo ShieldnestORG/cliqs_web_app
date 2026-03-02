@@ -1,8 +1,8 @@
 /**
  * Policy Enforcement Tests
- * 
+ *
  * File: __tests__/policies/policy-enforcement.test.ts
- * 
+ *
  * Tests for Phase 4 policy enforcement system
  */
 
@@ -92,9 +92,9 @@ describe("TimelockPolicy", () => {
     it("allows proposal creation", async () => {
       const proposal = createTestProposal();
       const context = createTestContext();
-      
+
       const result = await policy.evaluateProposal(proposal, context);
-      
+
       expect(result.allowed).toBe(true);
     });
   });
@@ -103,9 +103,9 @@ describe("TimelockPolicy", () => {
     it("blocks execution when paused", async () => {
       const proposal = createTestProposal();
       const context = createTestContext({ isPaused: true });
-      
+
       const result = await policy.evaluateExecution(proposal, context);
-      
+
       expect(result.allowed).toBe(false);
       if (!result.allowed) {
         expect(result.violations[0].code).toBe("OPERATIONS_PAUSED");
@@ -115,9 +115,9 @@ describe("TimelockPolicy", () => {
     it("requires queue before execution", async () => {
       const proposal = createTestProposal();
       const context = createTestContext({ queuedAt: null });
-      
+
       const result = await policy.evaluateExecution(proposal, context);
-      
+
       expect(result.allowed).toBe(false);
       if (!result.allowed) {
         expect(result.violations[0].code).toBe("QUEUE_REQUIRED");
@@ -131,9 +131,9 @@ describe("TimelockPolicy", () => {
         queuedAt: now - 1800, // 30 minutes ago
         timeSinceQueue: 1800,
       });
-      
+
       const result = await policy.evaluateExecution(proposal, context);
-      
+
       expect(result.allowed).toBe(false);
       if (!result.allowed) {
         expect(result.violations[0].code).toBe("TIMELOCK_NOT_MET");
@@ -147,9 +147,9 @@ describe("TimelockPolicy", () => {
         queuedAt: now - 7200, // 2 hours ago
         timeSinceQueue: 7200,
       });
-      
+
       const result = await policy.evaluateExecution(proposal, context);
-      
+
       expect(result.allowed).toBe(true);
     });
 
@@ -160,9 +160,9 @@ describe("TimelockPolicy", () => {
         queuedAt: now - 700000, // > 7 days ago
         timeSinceQueue: 700000,
       });
-      
+
       const result = await policy.evaluateExecution(proposal, context);
-      
+
       expect(result.allowed).toBe(false);
       if (!result.allowed) {
         expect(result.violations[0].code).toBe("TIMELOCK_EXPIRED");
@@ -180,9 +180,7 @@ describe("MsgTypePolicy", () => {
     const policy = new MsgTypePolicy("msgtype-1", "Test MsgType", {
       allowedMsgTypes: [],
       blockedMsgTypes: [MsgTypeUrls.MigrateContract],
-      requiresHigherThreshold: new Map([
-        [MsgTypeUrls.UpdateAdmin, 3],
-      ]),
+      requiresHigherThreshold: new Map([[MsgTypeUrls.UpdateAdmin, 3]]),
     });
 
     it("allows normal messages", async () => {
@@ -192,22 +190,20 @@ describe("MsgTypePolicy", () => {
       const context = createTestContext({
         messageTypes: [MsgTypeUrls.Send],
       });
-      
+
       const result = await policy.evaluateProposal(proposal, context);
-      
+
       expect(result.allowed).toBe(true);
     });
 
     it("blocks blocked message types", async () => {
-      const proposal = createTestProposal([
-        { typeUrl: MsgTypeUrls.MigrateContract, value: {} },
-      ]);
+      const proposal = createTestProposal([{ typeUrl: MsgTypeUrls.MigrateContract, value: {} }]);
       const context = createTestContext({
         messageTypes: [MsgTypeUrls.MigrateContract],
       });
-      
+
       const result = await policy.evaluateProposal(proposal, context);
-      
+
       expect(result.allowed).toBe(false);
       if (!result.allowed) {
         expect(result.violations[0].code).toBe("MSG_TYPE_BLOCKED");
@@ -215,16 +211,14 @@ describe("MsgTypePolicy", () => {
     });
 
     it("warns about higher threshold requirements", async () => {
-      const proposal = createTestProposal([
-        { typeUrl: MsgTypeUrls.UpdateAdmin, value: {} },
-      ]);
+      const proposal = createTestProposal([{ typeUrl: MsgTypeUrls.UpdateAdmin, value: {} }]);
       const context = createTestContext({
         messageTypes: [MsgTypeUrls.UpdateAdmin],
         normalThreshold: 2,
       });
-      
+
       const result = await policy.evaluateProposal(proposal, context);
-      
+
       expect(result.allowed).toBe(false);
       if (!result.allowed) {
         expect(result.violations[0].code).toBe("MSG_TYPE_REQUIRES_HIGHER_THRESHOLD");
@@ -240,28 +234,24 @@ describe("MsgTypePolicy", () => {
     });
 
     it("allows messages in allowlist", async () => {
-      const proposal = createTestProposal([
-        { typeUrl: MsgTypeUrls.Send, value: {} },
-      ]);
+      const proposal = createTestProposal([{ typeUrl: MsgTypeUrls.Send, value: {} }]);
       const context = createTestContext({
         messageTypes: [MsgTypeUrls.Send],
       });
-      
+
       const result = await policy.evaluateProposal(proposal, context);
-      
+
       expect(result.allowed).toBe(true);
     });
 
     it("blocks messages not in allowlist", async () => {
-      const proposal = createTestProposal([
-        { typeUrl: MsgTypeUrls.ExecuteContract, value: {} },
-      ]);
+      const proposal = createTestProposal([{ typeUrl: MsgTypeUrls.ExecuteContract, value: {} }]);
       const context = createTestContext({
         messageTypes: [MsgTypeUrls.ExecuteContract],
       });
-      
+
       const result = await policy.evaluateProposal(proposal, context);
-      
+
       expect(result.allowed).toBe(false);
       if (!result.allowed) {
         expect(result.violations[0].code).toBe("MSG_TYPE_NOT_ALLOWED");
@@ -284,33 +274,33 @@ describe("SpendLimitPolicy", () => {
 
   it("allows transactions under limit", async () => {
     const proposal = createTestProposal([
-      { 
-        typeUrl: MsgTypeUrls.Send, 
+      {
+        typeUrl: MsgTypeUrls.Send,
         value: { amount: [{ denom: "uatom", amount: "500000" }] },
       },
     ]);
     const context = createTestContext({
       proposalValue: [{ denom: "uatom", amount: "500000" }],
     });
-    
+
     const result = await policy.evaluateProposal(proposal, context);
-    
+
     expect(result.allowed).toBe(true);
   });
 
   it("blocks transactions exceeding per-tx limit", async () => {
     const proposal = createTestProposal([
-      { 
-        typeUrl: MsgTypeUrls.Send, 
+      {
+        typeUrl: MsgTypeUrls.Send,
         value: { amount: [{ denom: "uatom", amount: "2000000" }] },
       },
     ]);
     const context = createTestContext({
       proposalValue: [{ denom: "uatom", amount: "2000000" }],
     });
-    
+
     const result = await policy.evaluateProposal(proposal, context);
-    
+
     expect(result.allowed).toBe(false);
     if (!result.allowed) {
       expect(result.violations[0].code).toBe("EXCEEDS_PER_TX_LIMIT");
@@ -319,21 +309,21 @@ describe("SpendLimitPolicy", () => {
 
   it("blocks transactions exceeding daily limit", async () => {
     const proposal = createTestProposal([
-      { 
-        typeUrl: MsgTypeUrls.Send, 
+      {
+        typeUrl: MsgTypeUrls.Send,
         value: { amount: [{ denom: "uatom", amount: "500000" }] },
       },
     ]);
     const spentInWindow = new Map<string, Coin>();
     spentInWindow.set("uatom", { denom: "uatom", amount: "9800000" }); // Already spent 9.8 ATOM
-    
+
     const context = createTestContext({
       proposalValue: [{ denom: "uatom", amount: "500000" }],
       spentInWindow,
     });
-    
+
     const result = await policy.evaluateProposal(proposal, context);
-    
+
     expect(result.allowed).toBe(false);
     if (!result.allowed) {
       expect(result.violations[0].code).toBe("EXCEEDS_DAILY_LIMIT");
@@ -358,9 +348,9 @@ describe("AddressFilterPolicy", () => {
       const context = createTestContext({
         recipientAddresses: ["cosmos1normal..."],
       });
-      
+
       const result = await policy.evaluateProposal(proposal, context);
-      
+
       expect(result.allowed).toBe(true);
     });
 
@@ -369,9 +359,9 @@ describe("AddressFilterPolicy", () => {
       const context = createTestContext({
         recipientAddresses: ["cosmos1blocked..."],
       });
-      
+
       const result = await policy.evaluateProposal(proposal, context);
-      
+
       expect(result.allowed).toBe(false);
       if (!result.allowed) {
         expect(result.violations[0].code).toBe("RECIPIENT_IN_DENYLIST");
@@ -391,9 +381,9 @@ describe("AddressFilterPolicy", () => {
       const context = createTestContext({
         recipientAddresses: ["cosmos1trusted1..."],
       });
-      
+
       const result = await policy.evaluateProposal(proposal, context);
-      
+
       expect(result.allowed).toBe(true);
     });
 
@@ -402,9 +392,9 @@ describe("AddressFilterPolicy", () => {
       const context = createTestContext({
         recipientAddresses: ["cosmos1random..."],
       });
-      
+
       const result = await policy.evaluateProposal(proposal, context);
-      
+
       expect(result.allowed).toBe(false);
       if (!result.allowed) {
         expect(result.violations[0].code).toBe("RECIPIENT_NOT_IN_ALLOWLIST");
@@ -426,9 +416,9 @@ describe("PolicyRegistry", () => {
 
   it("registers and retrieves policies", () => {
     const policy = new TimelockPolicy("test-timelock", "Test", {});
-    
+
     registry.registerPolicy("cosmos1multisig...", policy);
-    
+
     const policies = registry.getPolicies("cosmos1multisig...");
     expect(policies).toHaveLength(1);
     expect(policies[0].id).toBe("test-timelock");
@@ -445,9 +435,7 @@ describe("PolicyRegistry", () => {
     registry.registerPolicy("cosmos1multisig...", timelockPolicy);
     registry.registerPolicy("cosmos1multisig...", msgTypePolicy);
 
-    const proposal = createTestProposal([
-      { typeUrl: MsgTypeUrls.MigrateContract, value: {} },
-    ]);
+    const proposal = createTestProposal([{ typeUrl: MsgTypeUrls.MigrateContract, value: {} }]);
     const context = createTestContext({
       messageTypes: [MsgTypeUrls.MigrateContract],
     });
@@ -494,9 +482,9 @@ describe("Policy Helper Functions", () => {
       "Test message",
       "high",
     );
-    
+
     const decision = denied([violation]);
-    
+
     expect(decision.allowed).toBe(false);
     if (!decision.allowed) {
       expect(decision.violations).toHaveLength(1);
@@ -504,4 +492,3 @@ describe("Policy Helper Functions", () => {
     }
   });
 });
-

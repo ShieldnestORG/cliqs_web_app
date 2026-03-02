@@ -19,7 +19,11 @@ import {
 } from "@cosmjs/stargate";
 import { connectComet } from "@cosmjs/tendermint-rpc";
 import { fromBech32, toBech32 } from "@cosmjs/encoding";
-import { Validator, DelegationResponse, UnbondingDelegation } from "cosmjs-types/cosmos/staking/v1beta1/staking";
+import {
+  Validator,
+  DelegationResponse,
+  UnbondingDelegation,
+} from "cosmjs-types/cosmos/staking/v1beta1/staking";
 import { DecCoin } from "cosmjs-types/cosmos/base/v1beta1/coin";
 import { Proposal, Vote, ProposalStatus } from "cosmjs-types/cosmos/gov/v1beta1/gov";
 
@@ -34,15 +38,13 @@ export type ValidatorQueryClient = QueryClient &
 /**
  * Create a query client with staking, distribution and gov extensions
  */
-export async function createValidatorQueryClient(
-  rpcUrl: string
-): Promise<ValidatorQueryClient> {
+export async function createValidatorQueryClient(rpcUrl: string): Promise<ValidatorQueryClient> {
   const cometClient = await connectComet(rpcUrl);
   return QueryClient.withExtensions(
     cometClient,
     setupStakingExtension,
     setupDistributionExtension,
-    setupGovExtension
+    setupGovExtension,
   );
 }
 
@@ -52,7 +54,7 @@ export async function createValidatorQueryClient(
  */
 export function delegatorToValidatorAddress(
   delegatorAddress: string,
-  addressPrefix: string
+  addressPrefix: string,
 ): string {
   try {
     const decoded = fromBech32(delegatorAddress);
@@ -62,7 +64,7 @@ export function delegatorToValidatorAddress(
     return toBech32(validatorPrefix, decoded.data);
   } catch (e) {
     throw new Error(
-      `Failed to convert to validator address: ${e instanceof Error ? e.message : "Unknown error"}`
+      `Failed to convert to validator address: ${e instanceof Error ? e.message : "Unknown error"}`,
     );
   }
 }
@@ -73,14 +75,14 @@ export function delegatorToValidatorAddress(
  */
 export function validatorToDelegatorAddress(
   validatorAddress: string,
-  addressPrefix: string
+  addressPrefix: string,
 ): string {
   try {
     const decoded = fromBech32(validatorAddress);
     return toBech32(addressPrefix, decoded.data);
   } catch (e) {
     throw new Error(
-      `Failed to convert to delegator address: ${e instanceof Error ? e.message : "Unknown error"}`
+      `Failed to convert to delegator address: ${e instanceof Error ? e.message : "Unknown error"}`,
     );
   }
 }
@@ -91,7 +93,7 @@ export function validatorToDelegatorAddress(
  */
 export function validatorToConsensusAddress(
   validatorAddress: string,
-  addressPrefix: string
+  addressPrefix: string,
 ): string {
   try {
     const decoded = fromBech32(validatorAddress);
@@ -99,7 +101,7 @@ export function validatorToConsensusAddress(
     return toBech32(consensusPrefix, decoded.data);
   } catch (e) {
     throw new Error(
-      `Failed to convert to consensus address: ${e instanceof Error ? e.message : "Unknown error"}`
+      `Failed to convert to consensus address: ${e instanceof Error ? e.message : "Unknown error"}`,
     );
   }
 }
@@ -140,9 +142,7 @@ export interface ValidatorInfo {
 /**
  * Parse validator status from numeric enum
  */
-function parseValidatorStatus(
-  status: number
-): "BONDED" | "UNBONDING" | "UNBONDED" {
+function parseValidatorStatus(status: number): "BONDED" | "UNBONDING" | "UNBONDED" {
   switch (status) {
     case 3:
       return "BONDED";
@@ -156,15 +156,9 @@ function parseValidatorStatus(
 /**
  * Parse validator from protobuf to our interface
  */
-export function parseValidator(
-  validator: Validator,
-  addressPrefix: string
-): ValidatorInfo {
+export function parseValidator(validator: Validator, addressPrefix: string): ValidatorInfo {
   const operatorAddress = validator.operatorAddress;
-  const delegatorAddress = validatorToDelegatorAddress(
-    operatorAddress,
-    addressPrefix
-  );
+  const delegatorAddress = validatorToDelegatorAddress(operatorAddress, addressPrefix);
 
   return {
     operatorAddress,
@@ -176,8 +170,7 @@ export function parseValidator(
     details: validator.description?.details || "",
     commissionRate: validator.commission?.commissionRates?.rate || "0",
     maxCommissionRate: validator.commission?.commissionRates?.maxRate || "0",
-    maxCommissionChangeRate:
-      validator.commission?.commissionRates?.maxChangeRate || "0",
+    maxCommissionChangeRate: validator.commission?.commissionRates?.maxChangeRate || "0",
     minSelfDelegation: validator.minSelfDelegation,
     jailed: validator.jailed,
     status: parseValidatorStatus(validator.status),
@@ -192,7 +185,7 @@ export function parseValidator(
 export async function getValidatorInfo(
   queryClient: ValidatorQueryClient,
   validatorAddress: string,
-  addressPrefix: string
+  addressPrefix: string,
 ): Promise<ValidatorInfo | null> {
   try {
     const response = await queryClient.staking.validator(validatorAddress);
@@ -217,12 +210,9 @@ export async function getValidatorInfo(
 export async function getValidatorForDelegator(
   queryClient: ValidatorQueryClient,
   delegatorAddress: string,
-  addressPrefix: string
+  addressPrefix: string,
 ): Promise<ValidatorInfo | null> {
-  const validatorAddress = delegatorToValidatorAddress(
-    delegatorAddress,
-    addressPrefix
-  );
+  const validatorAddress = delegatorToValidatorAddress(delegatorAddress, addressPrefix);
   return getValidatorInfo(queryClient, validatorAddress, addressPrefix);
 }
 
@@ -238,11 +228,10 @@ export interface ValidatorCommission {
  */
 export async function getValidatorCommission(
   queryClient: ValidatorQueryClient,
-  validatorAddress: string
+  validatorAddress: string,
 ): Promise<ValidatorCommission> {
   try {
-    const response =
-      await queryClient.distribution.validatorCommission(validatorAddress);
+    const response = await queryClient.distribution.validatorCommission(validatorAddress);
     return {
       commission: response.commission?.commission || [],
     };
@@ -258,12 +247,12 @@ export async function getValidatorCommission(
 export async function getSelfDelegationRewards(
   queryClient: ValidatorQueryClient,
   delegatorAddress: string,
-  validatorAddress: string
+  validatorAddress: string,
 ): Promise<readonly DecCoin[]> {
   try {
     const response = await queryClient.distribution.delegationRewards(
       delegatorAddress,
-      validatorAddress
+      validatorAddress,
     );
     return response.rewards || [];
   } catch (e) {
@@ -277,11 +266,10 @@ export async function getSelfDelegationRewards(
  */
 export async function getWithdrawAddress(
   queryClient: ValidatorQueryClient,
-  delegatorAddress: string
+  delegatorAddress: string,
 ): Promise<string> {
   try {
-    const response =
-      await queryClient.distribution.delegatorWithdrawAddress(delegatorAddress);
+    const response = await queryClient.distribution.delegatorWithdrawAddress(delegatorAddress);
     return response.withdrawAddress || delegatorAddress;
   } catch (e) {
     console.error("Failed to get withdraw address:", e);
@@ -306,7 +294,7 @@ export interface ValidatorSigningInfo {
  */
 export async function getValidatorSigningInfo(
   _queryClient: ValidatorQueryClient,
-  _consensusAddress: string
+  _consensusAddress: string,
 ): Promise<ValidatorSigningInfo | null> {
   // This query requires the validator's consensus pubkey-derived address
   // which isn't directly available from the operator address
@@ -319,7 +307,7 @@ export async function getValidatorSigningInfo(
  */
 export async function getValidatorDelegatorsCount(
   queryClient: ValidatorQueryClient,
-  validatorAddress: string
+  validatorAddress: string,
 ): Promise<number> {
   try {
     let count = 0;
@@ -328,7 +316,7 @@ export async function getValidatorDelegatorsCount(
     do {
       const response = await queryClient.staking.validatorDelegations(
         validatorAddress,
-        paginationKey
+        paginationKey,
       );
       count += response.delegationResponses.length;
       paginationKey = response.pagination?.nextKey;
@@ -347,13 +335,10 @@ export async function getValidatorDelegatorsCount(
 export async function getSelfDelegation(
   queryClient: ValidatorQueryClient,
   delegatorAddress: string,
-  validatorAddress: string
+  validatorAddress: string,
 ): Promise<Coin | null> {
   try {
-    const response = await queryClient.staking.delegation(
-      delegatorAddress,
-      validatorAddress
-    );
+    const response = await queryClient.staking.delegation(delegatorAddress, validatorAddress);
     return response.delegationResponse?.balance || null;
   } catch {
     // No delegation found is not an error
@@ -388,10 +373,7 @@ export function decCoinToCoin(decCoin: DecCoin): Coin {
 /**
  * Format DecCoin amount for display (with decimals)
  */
-export function formatDecCoinAmount(
-  amount: string,
-  decimals: number = 6
-): string {
+export function formatDecCoinAmount(amount: string, decimals: number = 6): string {
   // DecCoin amounts are in base units * 10^18
   if (!amount || amount === "0") return "0";
 
@@ -438,24 +420,18 @@ export function sumDecCoins(coins: readonly DecCoin[]): Map<string, string> {
  */
 export async function getValidatorRanking(
   rpcUrl: string,
-  validatorAddress: string
+  validatorAddress: string,
 ): Promise<number | null> {
   try {
     const cometClient = await connectComet(rpcUrl);
-    const queryClient = QueryClient.withExtensions(
-      cometClient,
-      setupStakingExtension
-    );
+    const queryClient = QueryClient.withExtensions(cometClient, setupStakingExtension);
 
     // Get all bonded validators
     const validators: Validator[] = [];
     let paginationKey: Uint8Array | undefined;
 
     do {
-      const response = await queryClient.staking.validators(
-        "BOND_STATUS_BONDED",
-        paginationKey
-      );
+      const response = await queryClient.staking.validators("BOND_STATUS_BONDED", paginationKey);
       validators.push(...response.validators);
       paginationKey = response.pagination?.nextKey;
     } while (paginationKey?.length);
@@ -470,9 +446,7 @@ export async function getValidatorRanking(
     });
 
     // Find the validator's position
-    const index = validators.findIndex(
-      (v) => v.operatorAddress === validatorAddress
-    );
+    const index = validators.findIndex((v) => v.operatorAddress === validatorAddress);
     return index >= 0 ? index + 1 : null;
   } catch (e) {
     console.error("Failed to get validator ranking:", e);
@@ -485,14 +459,11 @@ export async function getValidatorRanking(
  */
 export async function getVotingPowerPercentage(
   rpcUrl: string,
-  validatorTokens: string
+  validatorTokens: string,
 ): Promise<string> {
   try {
     const cometClient = await connectComet(rpcUrl);
-    const queryClient = QueryClient.withExtensions(
-      cometClient,
-      setupStakingExtension
-    );
+    const queryClient = QueryClient.withExtensions(cometClient, setupStakingExtension);
 
     // Get total bonded tokens from staking pool
     const pool = await queryClient.staking.pool();
@@ -501,8 +472,7 @@ export async function getVotingPowerPercentage(
 
     if (bondedTokens === BigInt(0)) return "0";
 
-    const percentage =
-      (validatorTokensBigInt * BigInt(10000)) / bondedTokens;
+    const percentage = (validatorTokensBigInt * BigInt(10000)) / bondedTokens;
     const percentageNum = Number(percentage) / 100;
 
     return percentageNum.toFixed(2);
@@ -517,7 +487,7 @@ export async function getVotingPowerPercentage(
  */
 export async function getValidatorDelegations(
   queryClient: ValidatorQueryClient,
-  validatorAddress: string
+  validatorAddress: string,
 ): Promise<DelegationResponse[]> {
   try {
     const delegations: DelegationResponse[] = [];
@@ -526,7 +496,7 @@ export async function getValidatorDelegations(
     do {
       const response = await queryClient.staking.validatorDelegations(
         validatorAddress,
-        paginationKey
+        paginationKey,
       );
       delegations.push(...response.delegationResponses);
       paginationKey = response.pagination?.nextKey;
@@ -551,7 +521,7 @@ export async function getValidatorDelegations(
  */
 export async function getValidatorUnbondingDelegations(
   queryClient: ValidatorQueryClient,
-  validatorAddress: string
+  validatorAddress: string,
 ): Promise<UnbondingDelegation[]> {
   try {
     const unbondings: UnbondingDelegation[] = [];
@@ -560,7 +530,7 @@ export async function getValidatorUnbondingDelegations(
     do {
       const response = await queryClient.staking.validatorUnbondingDelegations(
         validatorAddress,
-        paginationKey
+        paginationKey,
       );
       unbondings.push(...response.unbondingResponses);
       paginationKey = response.pagination?.nextKey;
@@ -637,22 +607,32 @@ function convertV1ToV1Beta1Proposal(v1: GovV1Proposal): Proposal {
   return {
     proposalId: BigInt(v1.id),
     status: statusMap[v1.status] ?? 2,
-    finalTallyResult: v1.final_tally_result ? {
-      yes: v1.final_tally_result.yes_count || "0",
-      abstain: v1.final_tally_result.abstain_count || "0",
-      no: v1.final_tally_result.no_count || "0",
-      noWithVeto: v1.final_tally_result.no_with_veto_count || "0",
-    } : {
-      yes: "0",
-      abstain: "0",
-      no: "0",
-      noWithVeto: "0",
-    },
-    submitTime: v1.submit_time ? { seconds: BigInt(Math.floor(new Date(v1.submit_time).getTime() / 1000)), nanos: 0 } : { seconds: 0n, nanos: 0 },
-    depositEndTime: v1.deposit_end_time ? { seconds: BigInt(Math.floor(new Date(v1.deposit_end_time).getTime() / 1000)), nanos: 0 } : { seconds: 0n, nanos: 0 },
-    totalDeposit: v1.total_deposit?.map(d => ({ denom: d.denom, amount: d.amount })) || [],
-    votingStartTime: v1.voting_start_time ? { seconds: BigInt(Math.floor(new Date(v1.voting_start_time).getTime() / 1000)), nanos: 0 } : { seconds: 0n, nanos: 0 },
-    votingEndTime: v1.voting_end_time ? { seconds: BigInt(Math.floor(new Date(v1.voting_end_time).getTime() / 1000)), nanos: 0 } : { seconds: 0n, nanos: 0 },
+    finalTallyResult: v1.final_tally_result
+      ? {
+          yes: v1.final_tally_result.yes_count || "0",
+          abstain: v1.final_tally_result.abstain_count || "0",
+          no: v1.final_tally_result.no_count || "0",
+          noWithVeto: v1.final_tally_result.no_with_veto_count || "0",
+        }
+      : {
+          yes: "0",
+          abstain: "0",
+          no: "0",
+          noWithVeto: "0",
+        },
+    submitTime: v1.submit_time
+      ? { seconds: BigInt(Math.floor(new Date(v1.submit_time).getTime() / 1000)), nanos: 0 }
+      : { seconds: 0n, nanos: 0 },
+    depositEndTime: v1.deposit_end_time
+      ? { seconds: BigInt(Math.floor(new Date(v1.deposit_end_time).getTime() / 1000)), nanos: 0 }
+      : { seconds: 0n, nanos: 0 },
+    totalDeposit: v1.total_deposit?.map((d) => ({ denom: d.denom, amount: d.amount })) || [],
+    votingStartTime: v1.voting_start_time
+      ? { seconds: BigInt(Math.floor(new Date(v1.voting_start_time).getTime() / 1000)), nanos: 0 }
+      : { seconds: 0n, nanos: 0 },
+    votingEndTime: v1.voting_end_time
+      ? { seconds: BigInt(Math.floor(new Date(v1.voting_end_time).getTime() / 1000)), nanos: 0 }
+      : { seconds: 0n, nanos: 0 },
     content: {
       typeUrl: "/cosmos.gov.v1.MsgExecLegacyContent",
       value: new Uint8Array(),
@@ -667,16 +647,15 @@ function convertV1ToV1Beta1Proposal(v1: GovV1Proposal): Proposal {
  */
 async function fetchProposalsViaRest(rpcUrl: string): Promise<Proposal[]> {
   const endpoints = deriveRestEndpoints(rpcUrl);
-  
+
   for (const endpoint of endpoints) {
     try {
-      const response = await fetch(
-        `${endpoint}/cosmos/gov/v1/proposals?proposal_status=2`,
-        { headers: { Accept: "application/json" } }
-      );
-      
+      const response = await fetch(`${endpoint}/cosmos/gov/v1/proposals?proposal_status=2`, {
+        headers: { Accept: "application/json" },
+      });
+
       if (!response.ok) continue;
-      
+
       const data: GovV1ProposalsResponse = await response.json();
       if (data.proposals && data.proposals.length > 0) {
         return data.proposals.map(convertV1ToV1Beta1Proposal);
@@ -685,7 +664,7 @@ async function fetchProposalsViaRest(rpcUrl: string): Promise<Proposal[]> {
       // Try next endpoint
     }
   }
-  
+
   return [];
 }
 
@@ -695,19 +674,19 @@ async function fetchProposalsViaRest(rpcUrl: string): Promise<Proposal[]> {
  */
 export async function getActiveProposals(
   queryClient: ValidatorQueryClient,
-  rpcUrl: string
+  rpcUrl: string,
 ): Promise<Proposal[]> {
   try {
     // Try v1beta1 first (older chains)
     const response = await queryClient.gov.proposals(
       ProposalStatus.PROPOSAL_STATUS_VOTING_PERIOD,
       "",
-      ""
+      "",
     );
     if (response.proposals.length > 0) {
       return response.proposals;
     }
-  } catch (e) {
+  } catch {
     // v1beta1 failed, will try v1 REST fallback
   }
 
@@ -726,7 +705,7 @@ export async function getActiveProposals(
 export async function getValidatorVote(
   queryClient: ValidatorQueryClient,
   proposalId: number,
-  voterAddress: string
+  voterAddress: string,
 ): Promise<Vote | null> {
   try {
     const response = await queryClient.gov.vote(proposalId, voterAddress);
@@ -761,21 +740,14 @@ export interface ValidatorDashboardData {
 export async function getValidatorDashboardData(
   rpcUrl: string,
   delegatorAddress: string,
-  addressPrefix: string
+  addressPrefix: string,
 ): Promise<ValidatorDashboardData | null> {
   try {
     const queryClient = await createValidatorQueryClient(rpcUrl);
-    const validatorAddress = delegatorToValidatorAddress(
-      delegatorAddress,
-      addressPrefix
-    );
+    const validatorAddress = delegatorToValidatorAddress(delegatorAddress, addressPrefix);
 
     // Get validator info first to check if they're a validator
-    const validator = await getValidatorInfo(
-      queryClient,
-      validatorAddress,
-      addressPrefix
-    );
+    const validator = await getValidatorInfo(queryClient, validatorAddress, addressPrefix);
     if (!validator) {
       return null;
     }
@@ -811,13 +783,11 @@ export async function getValidatorDashboardData(
     }
 
     // These can be slow, fetch separately
-    const [delegatorsCount, ranking, votingPowerPercentage] = await Promise.all(
-      [
-        getValidatorDelegatorsCount(queryClient, validatorAddress),
-        getValidatorRanking(rpcUrl, validatorAddress),
-        getVotingPowerPercentage(rpcUrl, validator.tokens),
-      ]
-    );
+    const [delegatorsCount, ranking, votingPowerPercentage] = await Promise.all([
+      getValidatorDelegatorsCount(queryClient, validatorAddress),
+      getValidatorRanking(rpcUrl, validatorAddress),
+      getVotingPowerPercentage(rpcUrl, validator.tokens),
+    ]);
 
     return {
       validator,
@@ -846,29 +816,28 @@ export async function getAssociatedValidators(
   rpcUrl: string,
   address: string,
   multisigAddresses: string[],
-  addressPrefix: string
+  addressPrefix: string,
 ): Promise<{ address: string; validator: ValidatorInfo }[]> {
   try {
     const queryClient = await createValidatorQueryClient(rpcUrl);
     const allAddresses = Array.from(new Set([address, ...multisigAddresses]));
-    
+
     const results = await Promise.all(
       allAddresses.map(async (addr) => {
         try {
           const valAddr = delegatorToValidatorAddress(addr, addressPrefix);
           const validator = await getValidatorInfo(queryClient, valAddr, addressPrefix);
           return validator ? { address: addr, validator } : null;
-        } catch (e) {
+        } catch {
           // Silently ignore errors for individual address checks
           return null;
         }
-      })
+      }),
     );
 
     return results.filter((r): r is { address: string; validator: ValidatorInfo } => r !== null);
-  } catch (e) {
+  } catch {
     // Don't log error if it's just a connection issue during initial load
     return [];
   }
 }
-

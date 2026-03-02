@@ -19,16 +19,16 @@ export default function MultisigApp({ Component, pageProps }: AppProps) {
         <TooltipProvider>
           <div className="flex min-h-screen bg-background text-foreground">
             {!isLandingPage && <Sidebar />}
-            
-            <div className="flex flex-1 flex-col min-w-0">
+
+            <div className="flex min-w-0 flex-1 flex-col">
               {!isLandingPage && (
                 <div className="lg:hidden">
                   <Header />
                 </div>
               )}
               {!isLandingPage && <GeneralNews active={false} />}
-              
-              <main className="flex-1 flex flex-col relative">
+
+              <main className="relative flex flex-1 flex-col">
                 <Component {...pageProps} />
               </main>
             </div>

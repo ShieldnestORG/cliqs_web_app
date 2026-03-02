@@ -50,18 +50,12 @@ describe("PHASE 3 INVARIANTS: Proposal State Machine", () => {
       ];
 
       expect(() => assertProposalInvariants(history)).toThrow(
-        /INVARIANT VIOLATION.*[Dd]ouble execution/
+        /INVARIANT VIOLATION.*[Dd]ouble execution/,
       );
     });
 
     test("single execution is allowed", () => {
-      const history: ProposalState[] = [
-        "DRAFT",
-        "OPEN",
-        "APPROVED",
-        "EXECUTABLE",
-        "EXECUTED",
-      ];
+      const history: ProposalState[] = ["DRAFT", "OPEN", "APPROVED", "EXECUTABLE", "EXECUTED"];
 
       expect(() => assertProposalInvariants(history)).not.toThrow();
     });
@@ -88,9 +82,7 @@ describe("PHASE 3 INVARIANTS: Proposal State Machine", () => {
         "OPEN", // Illegal regression
       ];
 
-      expect(() => assertProposalInvariants(history)).toThrow(
-        /INVARIANT VIOLATION.*regression/
-      );
+      expect(() => assertProposalInvariants(history)).toThrow(/INVARIANT VIOLATION.*regression/);
     });
 
     test("regression after FAILED throws invariant violation", () => {
@@ -101,19 +93,11 @@ describe("PHASE 3 INVARIANTS: Proposal State Machine", () => {
         "OPEN", // Illegal regression
       ];
 
-      expect(() => assertProposalInvariants(history)).toThrow(
-        /INVARIANT VIOLATION.*regression/
-      );
+      expect(() => assertProposalInvariants(history)).toThrow(/INVARIANT VIOLATION.*regression/);
     });
 
     test("valid forward progression is allowed", () => {
-      const history: ProposalState[] = [
-        "DRAFT",
-        "OPEN",
-        "APPROVED",
-        "EXECUTABLE",
-        "EXECUTED",
-      ];
+      const history: ProposalState[] = ["DRAFT", "OPEN", "APPROVED", "EXECUTABLE", "EXECUTED"];
 
       expect(() => assertProposalInvariants(history)).not.toThrow();
     });
@@ -128,7 +112,7 @@ describe("PHASE 3 INVARIANTS: Proposal State Machine", () => {
       const history: ProposalState[] = ["DRAFT", "EXECUTED"];
 
       expect(() => assertProposalInvariants(history)).toThrow(
-        /INVARIANT VIOLATION.*[Ii]nvalid transition/
+        /INVARIANT VIOLATION.*[Ii]nvalid transition/,
       );
     });
 
@@ -136,7 +120,7 @@ describe("PHASE 3 INVARIANTS: Proposal State Machine", () => {
       const history: ProposalState[] = ["DRAFT", "OPEN", "EXECUTED"];
 
       expect(() => assertProposalInvariants(history)).toThrow(
-        /INVARIANT VIOLATION.*[Ii]nvalid transition/
+        /INVARIANT VIOLATION.*[Ii]nvalid transition/,
       );
     });
 
@@ -169,9 +153,7 @@ describe("PHASE 3 INVARIANTS: Proposal State Machine", () => {
       expect(afterApproved).toEqual(["DRAFT", "OPEN", "APPROVED"]);
 
       // Invalid transition should throw
-      expect(() => trackStateTransition(afterApproved, "DRAFT")).toThrow(
-        /INVARIANT VIOLATION/
-      );
+      expect(() => trackStateTransition(afterApproved, "DRAFT")).toThrow(/INVARIANT VIOLATION/);
     });
 
     test("simulateActionSequence captures errors from hostile sequences", () => {
@@ -184,11 +166,11 @@ describe("PHASE 3 INVARIANTS: Proposal State Machine", () => {
       const result = simulateActionSequence(proposal, hostileSequence);
 
       // Should have captured the double execute error (second EXECUTE on terminal EXECUTED state)
-      expect(result.errors.some((e) =>
-        e.includes("terminal") ||
-        e.includes("INVARIANT") ||
-        e.includes("already")
-      )).toBe(true);
+      expect(
+        result.errors.some(
+          (e) => e.includes("terminal") || e.includes("INVARIANT") || e.includes("already"),
+        ),
+      ).toBe(true);
     });
 
     test.each([
@@ -299,4 +281,3 @@ describe("PHASE 3 INVARIANTS: Proposal State Machine", () => {
     });
   });
 });
-

@@ -1,10 +1,10 @@
 /**
  * Group Module Exports
- * 
+ *
  * File: lib/group/index.ts
- * 
+ *
  * Central export point for all group-related functionality.
- * 
+ *
  * Phase 2: Group-Backed Multisig
  */
 
@@ -24,8 +24,4 @@ export {
 } from "./provider";
 
 // CW4 implementation
-export {
-  CW4GroupProvider,
-  createCW4GroupProvider,
-} from "./cw4-provider";
-
+export { CW4GroupProvider, createCW4GroupProvider } from "./cw4-provider";

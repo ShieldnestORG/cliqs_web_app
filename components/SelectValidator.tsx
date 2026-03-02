@@ -8,11 +8,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useChains } from "@/context/ChainsContext";
 import { Validator } from "cosmjs-types/cosmos/staking/v1beta1/staking";
 import { Check, ChevronsUpDown } from "lucide-react";
@@ -24,10 +20,7 @@ interface SelectValidatorProps {
   readonly setValidatorAddress: (validatorAddress: string) => void;
 }
 
-function SelectValidator({
-  selectedValidatorAddress,
-  setValidatorAddress,
-}: SelectValidatorProps) {
+function SelectValidator({ selectedValidatorAddress, setValidatorAddress }: SelectValidatorProps) {
   const [open, setOpen] = useState(false);
   const {
     validatorState: {
@@ -41,12 +34,18 @@ function SelectValidator({
   //
   // If this list becomes too long due to spam registrations, we can try to do some
   // reasonable filtering here.
-  const validators = useMemo(() => [...bonded, ...unbonding, ...unbonded], [bonded, unbonding, unbonded]);
+  const validators = useMemo(
+    () => [...bonded, ...unbonding, ...unbonded],
+    [bonded, unbonding, unbonded],
+  );
 
-  const selectedValidator = useMemo(() =>
-    validators.find(
-      (validatorItem) => selectedValidatorAddress === validatorItem.operatorAddress,
-    ), [validators, selectedValidatorAddress]);
+  const selectedValidator = useMemo(
+    () =>
+      validators.find(
+        (validatorItem) => selectedValidatorAddress === validatorItem.operatorAddress,
+      ),
+    [validators, selectedValidatorAddress],
+  );
 
   function displayValidator(val: Validator): string {
     return val.description.moniker + (val.jailed ? " (jailed)" : "");
@@ -61,18 +60,13 @@ function SelectValidator({
           aria-expanded={open}
           className="mb-4 w-full max-w-[300px] justify-between"
         >
-          {selectedValidator
-            ? displayValidator(selectedValidator)
-            : "Select validator…"}
+          {selectedValidator ? displayValidator(selectedValidator) : "Select validator…"}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[300px] p-0" align="start">
         <Command>
-          <CommandInput 
-            placeholder="Search validator by name..." 
-            className="h-9"
-          />
+          <CommandInput placeholder="Search validator by name..." className="h-9" />
           <CommandList>
             <CommandEmpty>No validator found.</CommandEmpty>
             {validators.map((validatorItem) => (
@@ -89,7 +83,7 @@ function SelectValidator({
                     "mr-2 h-4 w-4",
                     selectedValidatorAddress === validatorItem.operatorAddress
                       ? "opacity-100"
-                      : "opacity-0"
+                      : "opacity-0",
                   )}
                 />
                 {displayValidator(validatorItem)}

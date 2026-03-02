@@ -1,15 +1,15 @@
 /**
  * Flex Cliq Creation Form Schema
- * 
+ *
  * File: components/forms/CreateFlexCliqForm/formSchema.ts
- * 
+ *
  * Schema for creating a CW3-Flex + CW4-group contract pair.
- * 
+ *
  * Flex multisigs differ from fixed multisigs:
  * - Membership is managed by a separate CW4-group contract
  * - Members can be added/removed without changing the multisig address
  * - Group admin controls membership changes
- * 
+ *
  * Phase 2: Group-Backed Multisig
  */
 
@@ -43,7 +43,7 @@ export const getCreateFlexCliqSchema = (chain: ChainInfo) =>
         .max(50, "CLIQ name must be less than 50 characters")
         .regex(
           /^[a-zA-Z0-9\s\-_]+$/,
-          "CLIQ name can only contain letters, numbers, spaces, hyphens, and underscores"
+          "CLIQ name can only contain letters, numbers, spaces, hyphens, and underscores",
         ),
 
       description: z
@@ -171,8 +171,8 @@ export const getCreateFlexCliqSchema = (chain: ChainInfo) =>
     // Validate no duplicate members
     .superRefine(({ members }, ctx) => {
       const addresses = members.map(({ address }) => address.toLowerCase());
-      const dupedAddresses = addresses.filter((addr, i) => 
-        addr !== "" && addresses.indexOf(addr) !== i
+      const dupedAddresses = addresses.filter(
+        (addr, i) => addr !== "" && addresses.indexOf(addr) !== i,
       );
 
       if (dupedAddresses.length > 0) {
@@ -229,7 +229,10 @@ export type CreateFlexCliqFormValues = z.infer<ReturnType<typeof getCreateFlexCl
 // Default Values
 // ============================================================================
 
-export const defaultFlexCliqFormValues: Omit<CreateFlexCliqFormValues, "cw3FlexCodeId" | "cw4GroupCodeId"> & { 
+export const defaultFlexCliqFormValues: Omit<
+  CreateFlexCliqFormValues,
+  "cw3FlexCodeId" | "cw4GroupCodeId"
+> & {
   cw3FlexCodeId: string;
   cw4GroupCodeId: string;
 } = {
@@ -290,4 +293,3 @@ export function getGroupAdminDescription(adminType: GroupAdminType): string {
       return "";
   }
 }
-

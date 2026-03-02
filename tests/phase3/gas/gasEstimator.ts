@@ -18,11 +18,7 @@ export async function estimateGas(input: { msgs: unknown[]; memo?: string }): Pr
   if (CanonicalTxBuilder) {
     try {
       const builder = new CanonicalTxBuilder();
-      const fn =
-        builder.estimateGas ||
-        builder.simulate ||
-        builder.estimate ||
-        null;
+      const fn = builder.estimateGas || builder.simulate || builder.estimate || null;
 
       if (typeof fn === "function") {
         const res = await fn.call(builder, input);

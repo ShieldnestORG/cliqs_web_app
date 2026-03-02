@@ -22,7 +22,7 @@ import {
   Zap,
   Shield,
 } from "lucide-react";
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -112,28 +112,26 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
 
   const tokens: TokenDisplay[] = useMemo(() => {
     if (!balances || balances.length === 0) return [];
-    
+
     const processedTokens = balances
       .map((coin) => {
         // Filter out LP tokens using our metadata service
         if (isLPToken(coin.denom)) return null;
-        
+
         // First check our static token metadata for known bridged assets
         const staticMeta = getStaticTokenMetadata(coin.denom);
-        
+
         // Then check chain registry assets
         const asset = chain.assets.find(
-          (a) =>
-            a.base === coin.denom ||
-            a.denom_units.some((u) => u.denom === coin.denom),
+          (a) => a.base === coin.denom || a.denom_units.some((u) => u.denom === coin.denom),
         );
-        
+
         // Determine the best metadata source
         let symbol: string;
         let displayDenom: string;
         let exponent: number;
         let logo: string | undefined;
-        
+
         if (staticMeta) {
           // Use our curated metadata (for bridged XRP, etc.)
           symbol = staticMeta.symbol;
@@ -144,9 +142,7 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
           // Use chain registry
           const displayUnit =
             asset.denom_units.find(
-              (u) =>
-                u.denom === asset.display ||
-                u.denom === asset.symbol.toLowerCase(),
+              (u) => u.denom === asset.display || u.denom === asset.symbol.toLowerCase(),
             ) ||
             asset.denom_units.find((u) => u.exponent > 0) ||
             asset.denom_units[0];
@@ -157,11 +153,11 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
         } else {
           // Unknown token - DON'T skip, could be valid bridged token!
           // Use smart pattern detection with 6 decimals (standard for Cosmos)
-          
+
           // Bridged tokens (drop-core1..., etc.)
           if (coin.denom.includes("-core1") || coin.denom.includes("-coreum")) {
             const prefix = coin.denom.split("-")[0].toUpperCase();
-            symbol = prefix.length <= 6 ? prefix : `${prefix.slice(0,4)}..`;
+            symbol = prefix.length <= 6 ? prefix : `${prefix.slice(0, 4)}..`;
             displayDenom = "Bridged Token";
             exponent = 6;
             logo = undefined;
@@ -192,14 +188,15 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
           // Any other token - show it, don't hide
           else {
             symbol = getShortDenom(coin.denom);
-            displayDenom = coin.denom.length > 30 
-              ? `${coin.denom.slice(0, 12)}...${coin.denom.slice(-6)}`
-              : coin.denom;
+            displayDenom =
+              coin.denom.length > 30
+                ? `${coin.denom.slice(0, 12)}...${coin.denom.slice(-6)}`
+                : coin.denom;
             exponent = 6; // Assume 6 decimals (standard)
             logo = undefined;
           }
         }
-        
+
         // Calculate display amount
         let displayAmount: string;
         try {
@@ -208,7 +205,7 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
         } catch {
           displayAmount = coin.amount;
         }
-        
+
         return {
           baseDenom: coin.denom,
           displayDenom,
@@ -220,19 +217,17 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
         };
       })
       .filter((t): t is TokenDisplay => t !== null && t.amount !== "0");
-    
+
     // Remove duplicates by baseDenom
-    const uniqueTokens = Array.from(
-      new Map(processedTokens.map((t) => [t.baseDenom, t])).values()
-    );
-    
+    const uniqueTokens = Array.from(new Map(processedTokens.map((t) => [t.baseDenom, t])).values());
+
     // Sort: tokens with logos first, then by symbol
     uniqueTokens.sort((a, b) => {
       if (a.logo && !b.logo) return -1;
       if (!a.logo && b.logo) return 1;
       return a.symbol.localeCompare(b.symbol);
     });
-    
+
     return uniqueTokens;
   }, [balances, chain.assets]);
 
@@ -327,18 +322,13 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
       const signer = await getDirectSigner();
       if (!signer) throw new Error("Failed to get signer. Is your wallet connected?");
 
-      const client = await SigningStargateClient.connectWithSigner(
-        chain.nodeAddress,
-        signer,
-        { gasPrice: GasPrice.fromString(chain.gasPrice) },
-      );
+      const client = await SigningStargateClient.connectWithSigner(chain.nodeAddress, signer, {
+        gasPrice: GasPrice.fromString(chain.gasPrice),
+      });
 
       let baseCoin;
       try {
-        baseCoin = displayCoinToBaseCoin(
-          { denom: selectedToken.symbol, amount },
-          chain.assets,
-        );
+        baseCoin = displayCoinToBaseCoin({ denom: selectedToken.symbol, amount }, chain.assets);
       } catch {
         const dec = Decimal.fromUserInput(amount, selectedToken.exponent);
         baseCoin = { denom: selectedToken.baseDenom, amount: dec.atomics };
@@ -395,11 +385,9 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
       const signer = await getDirectSigner();
       if (!signer) throw new Error("Failed to get signer. Is your wallet connected?");
 
-      const client = await SigningStargateClient.connectWithSigner(
-        chain.nodeAddress,
-        signer,
-        { gasPrice: GasPrice.fromString(chain.gasPrice) },
-      );
+      const client = await SigningStargateClient.connectWithSigner(chain.nodeAddress, signer, {
+        gasPrice: GasPrice.fromString(chain.gasPrice),
+      });
 
       const expirySeconds = BigInt(Math.floor(expirationDate.getTime() / 1000));
 
@@ -459,15 +447,12 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
     }
   };
 
-  const canContinue =
-    selectedToken && amount && parseFloat(amount) > 0;
+  const canContinue = selectedToken && amount && parseFloat(amount) > 0;
 
   if (!open) return null;
 
   const explorerUrl =
-    chain.explorerLinks?.tx && txHash
-      ? chain.explorerLinks.tx.replace("${txHash}", txHash)
-      : null;
+    chain.explorerLinks?.tx && txHash ? chain.explorerLinks.tx.replace("${txHash}", txHash) : null;
 
   const formattedExpiry = expirationDate.toLocaleDateString("en-US", {
     month: "short",
@@ -477,15 +462,12 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
 
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8">
-      <div
-        className="absolute inset-0 bg-black/80 backdrop-blur-md"
-        onClick={handleClose}
-      />
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={handleClose} />
 
-      <div className="relative w-full max-w-3xl rounded-3xl border border-border bg-card shadow-[0_0_50px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in-95 duration-300">
+      <div className="relative w-full max-w-3xl rounded-3xl border border-border bg-card shadow-[0_0_50px_rgba(0,0,0,0.5)] duration-300 animate-in fade-in zoom-in-95">
         {/* Header */}
         <div
-          className="flex items-center justify-between p-8 md:p-12 rounded-t-3xl overflow-hidden"
+          className="flex items-center justify-between overflow-hidden rounded-t-3xl p-8 md:p-12"
           style={{
             background: "linear-gradient(135deg, #ff876d 0%, #ff6b4a 100%)",
           }}
@@ -494,17 +476,17 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
             {currentStepIndex > 0 && !txHash && (
               <button
                 onClick={handleBack}
-                className="h-12 w-12 rounded-2xl flex items-center justify-center hover:bg-black/10 transition-all active:scale-90"
+                className="flex h-12 w-12 items-center justify-center rounded-2xl transition-all hover:bg-black/10 active:scale-90"
               >
                 <ArrowLeft className="h-6 w-6" style={{ color: "#4a1a0e" }} />
               </button>
             )}
-            <div className="h-16 w-16 rounded-2xl bg-black/5 flex items-center justify-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-black/5">
               <Heart className="h-8 w-8" style={{ color: "#4a1a0e" }} />
             </div>
             <div>
               <h2
-                className="text-3xl md:text-4xl font-black tracking-tight"
+                className="text-3xl font-black tracking-tight md:text-4xl"
                 style={{ color: "#4a1a0e" }}
               >
                 {txHash
@@ -515,7 +497,10 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
                       ? "Recurring Support"
                       : "One-Time Donation"}
               </h2>
-              <p className="text-sm md:text-base font-medium opacity-80 mt-1" style={{ color: "#6b3a2a" }}>
+              <p
+                className="mt-1 text-sm font-medium opacity-80 md:text-base"
+                style={{ color: "#6b3a2a" }}
+              >
                 {txHash
                   ? "Your contribution keeps the vision alive."
                   : step === "type"
@@ -528,7 +513,7 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
           </div>
           <button
             onClick={handleClose}
-            className="h-12 w-12 rounded-2xl flex items-center justify-center hover:bg-black/10 transition-all active:scale-90"
+            className="flex h-12 w-12 items-center justify-center rounded-2xl transition-all hover:bg-black/10 active:scale-90"
           >
             <X className="h-6 w-6" style={{ color: "#4a1a0e" }} />
           </button>
@@ -536,15 +521,13 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
 
         {/* Step Indicator */}
         {!txHash && walletInfo && (
-          <div className="flex items-center justify-center gap-3 pt-8 pb-2">
+          <div className="flex items-center justify-center gap-3 pb-2 pt-8">
             {STEPS.map((_, i) => (
               <div
                 key={i}
                 className={cn(
                   "h-2 rounded-full transition-all duration-500",
-                  currentStepIndex >= i
-                    ? "bg-[#ff876d] w-16"
-                    : "bg-border w-6",
+                  currentStepIndex >= i ? "w-16 bg-[#ff876d]" : "w-6 bg-border",
                 )}
               />
             ))}
@@ -555,50 +538,44 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
         <div className="p-8 md:p-12">
           {/* ─── Success State ─── */}
           {txHash ? (
-            <div className="text-center space-y-8 py-4">
-              <div className="w-24 h-24 mx-auto rounded-3xl bg-green-500/10 flex items-center justify-center animate-bounce">
+            <div className="space-y-8 py-4 text-center">
+              <div className="mx-auto flex h-24 w-24 animate-bounce items-center justify-center rounded-3xl bg-green-500/10">
                 <Check className="h-12 w-12 text-green-500" />
               </div>
               <div>
                 <p className="text-3xl font-bold text-foreground">
-                  {donationType === "recurring"
-                    ? "Legacy Authorized"
-                    : "Contribution Received"}
+                  {donationType === "recurring" ? "Legacy Authorized" : "Contribution Received"}
                 </p>
-                <p className="text-lg text-muted-foreground mt-2 max-w-md mx-auto">
+                <p className="mx-auto mt-2 max-w-md text-lg text-muted-foreground">
                   {donationType === "recurring"
                     ? `You've set up a recurring legacy of support until ${formattedExpiry}.`
                     : "Your one-time donation has been successfully broadcast to the network."}
                 </p>
               </div>
-              <div className="p-6 rounded-3xl bg-muted/30 border border-border/50 text-left">
-                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">
+              <div className="rounded-3xl border border-border/50 bg-muted/30 p-6 text-left">
+                <p className="mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
                   Transaction Receipt
                 </p>
-                <p className="font-mono text-sm text-foreground/90 break-all bg-background/50 p-4 rounded-xl border border-border/50">
+                <p className="break-all rounded-xl border border-border/50 bg-background/50 p-4 font-mono text-sm text-foreground/90">
                   {txHash}
                 </p>
               </div>
-              <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex flex-col gap-4 md:flex-row">
                 {explorerUrl && (
                   <Button
                     asChild
                     variant="outline"
-                    className="flex-1 h-16 rounded-2xl text-base font-bold"
+                    className="h-16 flex-1 rounded-2xl text-base font-bold"
                   >
-                    <a
-                      href={explorerUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
+                    <a href={explorerUrl} target="_blank" rel="noopener noreferrer">
                       View on Explorer
-                      <ExternalLink className="h-5 w-5 ml-2" />
+                      <ExternalLink className="ml-2 h-5 w-5" />
                     </a>
                   </Button>
                 )}
                 <Button
                   onClick={handleClose}
-                  className="flex-1 h-16 rounded-2xl text-base font-bold bg-zinc-900 hover:bg-zinc-800 text-white border-none shadow-xl transition-all active:scale-95"
+                  className="h-16 flex-1 rounded-2xl border-none bg-zinc-900 text-base font-bold text-white shadow-xl transition-all hover:bg-zinc-800 active:scale-95"
                 >
                   Return to Dashboard
                 </Button>
@@ -606,22 +583,23 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
             </div>
           ) : !walletInfo ? (
             /* ─── No Wallet ─── */
-            <div className="text-center space-y-8 py-8">
-              <div className="w-20 h-20 mx-auto rounded-3xl bg-muted flex items-center justify-center">
+            <div className="space-y-8 py-8 text-center">
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-muted">
                 <Shield className="h-10 w-10 text-muted-foreground" />
               </div>
               <div className="space-y-2">
                 <h3 className="text-2xl font-bold text-foreground">Wallet Required</h3>
-                <p className="text-muted-foreground max-w-xs mx-auto">
-                  Please connect your wallet to interact with the blockchain and make a contribution.
+                <p className="mx-auto max-w-xs text-muted-foreground">
+                  Please connect your wallet to interact with the blockchain and make a
+                  contribution.
                 </p>
               </div>
-              <div className="p-8 rounded-3xl bg-muted/30 border border-border/50">
-                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">
+              <div className="rounded-3xl border border-border/50 bg-muted/30 p-8">
+                <p className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
                   Manual Contribution Address ({chain.chainDisplayName || "Core"})
                 </p>
-                <div className="flex items-center gap-4 bg-background/50 p-4 rounded-2xl border border-border/50">
-                  <p className="font-mono text-sm truncate flex-1 text-foreground/80">
+                <div className="flex items-center gap-4 rounded-2xl border border-border/50 bg-background/50 p-4">
+                  <p className="flex-1 truncate font-mono text-sm text-foreground/80">
                     {donateAddress}
                   </p>
                   <Button
@@ -641,33 +619,29 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
             </div>
           ) : step === "type" ? (
             /* ─── Step 1: Choose Type ─── */
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+            <div className="grid grid-cols-1 gap-6 pt-4 md:grid-cols-2">
               <button
                 onClick={() => handleSelectType("one-time")}
-                className="group relative p-8 rounded-3xl border-2 border-border bg-muted/10 hover:border-[#ff876d] hover:bg-[#ff876d]/5 transition-all duration-300 text-left active:scale-[0.98]"
+                className="group relative rounded-3xl border-2 border-border bg-muted/10 p-8 text-left transition-all duration-300 hover:border-[#ff876d] hover:bg-[#ff876d]/5 active:scale-[0.98]"
               >
-                <div className="w-16 h-16 rounded-2xl bg-[#ff876d]/10 flex items-center justify-center mb-6 group-hover:bg-[#ff876d]/20 transition-colors">
+                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#ff876d]/10 transition-colors group-hover:bg-[#ff876d]/20">
                   <Zap className="h-8 w-8 text-[#ff876d]" />
                 </div>
-                <h3 className="text-2xl font-bold text-foreground mb-2">
-                  One-Time
-                </h3>
-                <p className="text-base text-muted-foreground leading-relaxed">
+                <h3 className="mb-2 text-2xl font-bold text-foreground">One-Time</h3>
+                <p className="text-base leading-relaxed text-muted-foreground">
                   Support the project with a single on-chain donation of any size.
                 </p>
               </button>
 
               <button
                 onClick={() => handleSelectType("recurring")}
-                className="group relative p-8 rounded-3xl border-2 border-border bg-muted/10 hover:border-[#ff876d] hover:bg-[#ff876d]/5 transition-all duration-300 text-left active:scale-[0.98]"
+                className="group relative rounded-3xl border-2 border-border bg-muted/10 p-8 text-left transition-all duration-300 hover:border-[#ff876d] hover:bg-[#ff876d]/5 active:scale-[0.98]"
               >
-                <div className="w-16 h-16 rounded-2xl bg-[#ff876d]/10 flex items-center justify-center mb-6 group-hover:bg-[#ff876d]/20 transition-colors">
+                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#ff876d]/10 transition-colors group-hover:bg-[#ff876d]/20">
                   <Repeat className="h-8 w-8 text-[#ff876d]" />
                 </div>
-                <h3 className="text-2xl font-bold text-foreground mb-2">
-                  Recurring
-                </h3>
-                <p className="text-base text-muted-foreground leading-relaxed">
+                <h3 className="mb-2 text-2xl font-bold text-foreground">Recurring</h3>
+                <p className="text-base leading-relaxed text-muted-foreground">
                   Set up a recurring stream of support using secure authz technology.
                 </p>
               </button>
@@ -675,7 +649,7 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
           ) : step === "configure" ? (
             /* ─── Step 2: Configure ─── */
             <div className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                 {/* Token selector */}
                 <div className="space-y-3">
                   <label className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
@@ -686,29 +660,30 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
                       ref={tokenButtonRef}
                       onClick={handleToggleTokenList}
                       className={cn(
-                        "w-full flex items-center justify-between p-5 rounded-2xl border-2 border-border bg-muted/20 hover:bg-muted/40 transition-all text-left h-[72px]",
+                        "flex h-[72px] w-full items-center justify-between rounded-2xl border-2 border-border bg-muted/20 p-5 text-left transition-all hover:bg-muted/40",
                         showTokenList && "border-[#ff876d] ring-4 ring-[#ff876d]/10",
                       )}
                     >
                       {selectedToken ? (
                         <div className="flex items-center gap-4">
                           {selectedToken.logo ? (
+                            // eslint-disable-next-line @next/next/no-img-element -- token logos from external URLs with onError fallback
                             <img
                               src={selectedToken.logo}
                               alt={selectedToken.symbol}
-                              className="w-10 h-10 rounded-full shadow-lg bg-card"
+                              className="h-10 w-10 rounded-full bg-card shadow-lg"
                               onError={(e) => {
-                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.style.display = "none";
                                 const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                                if (fallback) fallback.style.display = 'flex';
+                                if (fallback) fallback.style.display = "flex";
                               }}
                             />
                           ) : null}
-                          <div 
-                            className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-black text-white shadow-lg"
-                            style={{ 
+                          <div
+                            className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-black text-white shadow-lg"
+                            style={{
                               background: `linear-gradient(135deg, ${getTokenColor(selectedToken.symbol)} 0%, ${getTokenColor(selectedToken.symbol)}dd 100%)`,
-                              display: selectedToken.logo ? 'none' : 'flex',
+                              display: selectedToken.logo ? "none" : "flex",
                             }}
                           >
                             {selectedToken.symbol.slice(0, 2).toUpperCase()}
@@ -721,12 +696,12 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
                               {(selectedToken.displayDenom.toLowerCase().includes("bridged") ||
                                 selectedToken.baseDenom.startsWith("drop-") ||
                                 selectedToken.baseDenom.includes("-core1")) && (
-                                <span className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400">
+                                <span className="rounded-full bg-blue-500/10 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-blue-400">
                                   Bridged
                                 </span>
                               )}
                               {selectedToken.baseDenom.startsWith("ibc/") && (
-                                <span className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-purple-500/10 text-purple-400">
+                                <span className="rounded-full bg-purple-500/10 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-purple-400">
                                   IBC
                                 </span>
                               )}
@@ -738,9 +713,7 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
                         </div>
                       ) : (
                         <span className="text-lg font-bold text-muted-foreground">
-                          {balancesLoading
-                            ? "Fetching..."
-                            : "Choose Token"}
+                          {balancesLoading ? "Fetching..." : "Choose Token"}
                         </span>
                       )}
                       {balancesLoading ? (
@@ -755,124 +728,127 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
                       )}
                     </button>
 
-                    {showTokenList && createPortal(
-                      <div 
-                        className="fixed inset-0 z-[110] bg-black/60 backdrop-blur-md" 
-                        onClick={() => setShowTokenList(false)}
-                      >
-                        <div 
-                          className="absolute max-h-[70vh] overflow-y-auto rounded-3xl border-2 border-border bg-card shadow-2xl animate-in slide-in-from-top-2 duration-200"
-                          style={{
-                            left: `${dropdownPosition.left}px`,
-                            top: `${dropdownPosition.top}px`,
-                            width: `${Math.max(dropdownPosition.width, 360)}px`,
-                          }}
-                          onClick={(e) => e.stopPropagation()}
+                    {showTokenList &&
+                      createPortal(
+                        <div
+                          className="fixed inset-0 z-[110] bg-black/60 backdrop-blur-md"
+                          onClick={() => setShowTokenList(false)}
                         >
-                          {/* Header */}
-                          <div className="sticky top-0 bg-card border-b border-border p-4 rounded-t-3xl">
-                            <h3 className="text-lg font-black text-foreground">Select Token</h3>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {tokens.length} token{tokens.length !== 1 ? 's' : ''} available
-                            </p>
-                          </div>
-                          
-                          {tokens.length === 0 ? (
-                            <div className="p-12 text-center">
-                              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-muted/50 flex items-center justify-center">
-                                <span className="text-3xl">💰</span>
+                          <div
+                            className="absolute max-h-[70vh] overflow-y-auto rounded-3xl border-2 border-border bg-card shadow-2xl duration-200 animate-in slide-in-from-top-2"
+                            style={{
+                              left: `${dropdownPosition.left}px`,
+                              top: `${dropdownPosition.top}px`,
+                              width: `${Math.max(dropdownPosition.width, 360)}px`,
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {/* Header */}
+                            <div className="sticky top-0 rounded-t-3xl border-b border-border bg-card p-4">
+                              <h3 className="text-lg font-black text-foreground">Select Token</h3>
+                              <p className="mt-0.5 text-xs text-muted-foreground">
+                                {tokens.length} token{tokens.length !== 1 ? "s" : ""} available
+                              </p>
+                            </div>
+
+                            {tokens.length === 0 ? (
+                              <div className="p-12 text-center">
+                                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/50">
+                                  <span className="text-3xl">💰</span>
+                                </div>
+                                <p className="text-base font-bold text-muted-foreground">
+                                  No tokens available
+                                </p>
                               </div>
-                              <p className="text-base font-bold text-muted-foreground">No tokens available</p>
-                            </div>
-                          ) : (
-                            <div className="p-3 space-y-1">
-                              {tokens.map((token) => {
-                                const tokenColor = getTokenColor(token.symbol);
-                                return (
-                                  <button
-                                    key={token.baseDenom}
-                                    onClick={() => handleSelectToken(token)}
-                                    className="w-full flex items-center gap-4 p-4 hover:bg-muted/50 active:bg-muted transition-all rounded-2xl text-left group"
-                                  >
-                                    {/* Token Icon */}
-                                    <div className="relative shrink-0">
-                                      {token.logo ? (
-                                        <img
-                                          src={token.logo}
-                                          alt={token.symbol}
-                                          className="w-12 h-12 rounded-full shadow-lg group-hover:scale-105 transition-transform bg-card"
-                                          onError={(e) => {
-                                            e.currentTarget.style.display = 'none';
-                                            const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                                            if (fallback) fallback.style.display = 'flex';
+                            ) : (
+                              <div className="space-y-1 p-3">
+                                {tokens.map((token) => {
+                                  const tokenColor = getTokenColor(token.symbol);
+                                  return (
+                                    <button
+                                      key={token.baseDenom}
+                                      onClick={() => handleSelectToken(token)}
+                                      className="group flex w-full items-center gap-4 rounded-2xl p-4 text-left transition-all hover:bg-muted/50 active:bg-muted"
+                                    >
+                                      {/* Token Icon */}
+                                      <div className="relative shrink-0">
+                                        {token.logo ? (
+                                          // eslint-disable-next-line @next/next/no-img-element -- token logos from external URLs with onError fallback
+                                          <img
+                                            src={token.logo}
+                                            alt={token.symbol}
+                                            className="h-12 w-12 rounded-full bg-card shadow-lg transition-transform group-hover:scale-105"
+                                            onError={(e) => {
+                                              e.currentTarget.style.display = "none";
+                                              const fallback = e.currentTarget
+                                                .nextElementSibling as HTMLElement;
+                                              if (fallback) fallback.style.display = "flex";
+                                            }}
+                                          />
+                                        ) : null}
+                                        <div
+                                          className={cn(
+                                            "flex h-12 w-12 items-center justify-center rounded-full text-sm font-black text-white shadow-lg",
+                                            token.logo ? "hidden" : "flex",
+                                          )}
+                                          style={{
+                                            background: `linear-gradient(135deg, ${tokenColor} 0%, ${tokenColor}dd 100%)`,
+                                            display: token.logo ? "none" : "flex",
                                           }}
-                                        />
-                                      ) : null}
-                                      <div 
-                                        className={cn(
-                                          "w-12 h-12 rounded-full flex items-center justify-center text-sm font-black text-white shadow-lg",
-                                          token.logo ? "hidden" : "flex"
-                                        )}
-                                        style={{ 
-                                          background: `linear-gradient(135deg, ${tokenColor} 0%, ${tokenColor}dd 100%)`,
-                                          display: token.logo ? 'none' : 'flex',
-                                        }}
-                                      >
-                                        {token.symbol.slice(0, 2).toUpperCase()}
+                                        >
+                                          {token.symbol.slice(0, 2).toUpperCase()}
+                                        </div>
                                       </div>
-                                    </div>
-                                    
-                                    {/* Token Info */}
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-center gap-2 mb-0.5">
-                                        <span className="text-lg font-black text-foreground">
-                                          {token.symbol}
+
+                                      {/* Token Info */}
+                                      <div className="min-w-0 flex-1">
+                                        <div className="mb-0.5 flex items-center gap-2">
+                                          <span className="text-lg font-black text-foreground">
+                                            {token.symbol}
+                                          </span>
+                                          {(token.displayDenom.toLowerCase().includes("bridged") ||
+                                            token.baseDenom.startsWith("drop-") ||
+                                            token.baseDenom.includes("-core1")) && (
+                                            <span className="rounded-full border border-blue-500/20 bg-blue-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-blue-400">
+                                              Bridged
+                                            </span>
+                                          )}
+                                          {token.baseDenom.startsWith("ibc/") && (
+                                            <span className="rounded-full border border-purple-500/20 bg-purple-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-purple-400">
+                                              IBC
+                                            </span>
+                                          )}
+                                        </div>
+                                        <span className="block max-w-[200px] truncate text-xs text-muted-foreground">
+                                          {token.displayDenom}
                                         </span>
-                                        {(token.displayDenom.toLowerCase().includes("bridged") || 
-                                          token.baseDenom.startsWith("drop-") ||
-                                          token.baseDenom.includes("-core1")) && (
-                                          <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                                            Bridged
-                                          </span>
-                                        )}
-                                        {token.baseDenom.startsWith("ibc/") && (
-                                          <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                                            IBC
-                                          </span>
-                                        )}
                                       </div>
-                                      <span className="text-xs text-muted-foreground block truncate max-w-[200px]">
-                                        {token.displayDenom}
-                                      </span>
-                                    </div>
-                                    
-                                    {/* Balance */}
-                                    <div className="text-right shrink-0">
-                                      <span className="text-lg font-black text-foreground tabular-nums block">
-                                        {formatTokenAmount(token.displayAmount)}
-                                      </span>
-                                      <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                                        Balance
-                                      </span>
-                                    </div>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      </div>,
-                      document.body
-                    )}
+
+                                      {/* Balance */}
+                                      <div className="shrink-0 text-right">
+                                        <span className="block text-lg font-black tabular-nums text-foreground">
+                                          {formatTokenAmount(token.displayAmount)}
+                                        </span>
+                                        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                                          Balance
+                                        </span>
+                                      </div>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </div>,
+                        document.body,
+                      )}
                   </div>
                 </div>
 
                 {/* Amount input */}
                 <div className="space-y-3">
                   <label className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
-                    {donationType === "recurring"
-                      ? "Period Amount"
-                      : "Amount"}
+                    {donationType === "recurring" ? "Period Amount" : "Amount"}
                   </label>
                   <div className="relative">
                     <input
@@ -884,11 +860,11 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
                         const val = e.target.value;
                         if (/^\d*\.?\d*$/.test(val)) setAmount(val);
                       }}
-                      className="w-full h-[72px] p-5 pr-24 rounded-2xl border-2 border-border bg-muted/20 text-foreground text-2xl font-bold focus:outline-none focus:border-[#ff876d] focus:ring-4 focus:ring-[#ff876d]/10 transition-all"
+                      className="h-[72px] w-full rounded-2xl border-2 border-border bg-muted/20 p-5 pr-24 text-2xl font-bold text-foreground transition-all focus:border-[#ff876d] focus:outline-none focus:ring-4 focus:ring-[#ff876d]/10"
                     />
                     <button
                       onClick={handleMaxAmount}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black uppercase tracking-widest px-4 py-2 rounded-xl bg-[#ff876d]/10 text-[#ff876d] hover:bg-[#ff876d]/20 transition-all active:scale-90"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 rounded-xl bg-[#ff876d]/10 px-4 py-2 text-xs font-black uppercase tracking-widest text-[#ff876d] transition-all hover:bg-[#ff876d]/20 active:scale-90"
                     >
                       MAX
                     </button>
@@ -898,7 +874,7 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
 
               {/* Recurring options */}
               {donationType === "recurring" && selectedToken && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                <div className="grid grid-cols-1 gap-8 pt-4 md:grid-cols-2">
                   <div className="space-y-4">
                     <label className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
                       Frequency
@@ -909,7 +885,7 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
                           key={f.id}
                           onClick={() => setFrequency(f.id)}
                           className={cn(
-                            "flex-1 py-4 rounded-2xl text-base font-bold transition-all border-2",
+                            "flex-1 rounded-2xl border-2 py-4 text-base font-bold transition-all",
                             frequency === f.id
                               ? "border-[#ff876d] bg-[#ff876d]/10 text-[#ff876d]"
                               : "border-border bg-muted/10 text-muted-foreground hover:border-border/80",
@@ -924,13 +900,13 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
                     <label className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
                       Duration
                     </label>
-                    <div className="flex gap-3 flex-wrap">
+                    <div className="flex flex-wrap gap-3">
                       {DURATIONS.map((d) => (
                         <button
                           key={d.id}
                           onClick={() => setDuration(d.id)}
                           className={cn(
-                            "flex-1 min-w-[80px] py-4 rounded-2xl text-base font-bold transition-all border-2",
+                            "min-w-[80px] flex-1 rounded-2xl border-2 py-4 text-base font-bold transition-all",
                             duration === d.id
                               ? "border-[#ff876d] bg-[#ff876d]/10 text-[#ff876d]"
                               : "border-border bg-muted/10 text-muted-foreground hover:border-border/80",
@@ -948,7 +924,7 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
               <Button
                 onClick={handleContinue}
                 disabled={!canContinue}
-                className="w-full h-20 text-xl font-black rounded-3xl mt-4 bg-zinc-900 hover:bg-zinc-800 text-white border-none shadow-2xl transition-all active:scale-[0.98] disabled:opacity-50"
+                className="mt-4 h-20 w-full rounded-3xl border-none bg-zinc-900 text-xl font-black text-white shadow-2xl transition-all hover:bg-zinc-800 active:scale-[0.98] disabled:opacity-50"
               >
                 Continue to Review
               </Button>
@@ -957,12 +933,10 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
             /* ─── Step 3: Review ─── */
             <div className="space-y-8">
               {/* Summary card */}
-              <div className="rounded-3xl border-2 border-[#ff876d]/30 bg-[#ff876d]/5 p-8 space-y-6">
-                <div className="flex justify-between items-center">
+              <div className="space-y-6 rounded-3xl border-2 border-[#ff876d]/30 bg-[#ff876d]/5 p-8">
+                <div className="flex items-center justify-between">
                   <span className="text-base font-bold text-muted-foreground">
-                    {donationType === "recurring"
-                      ? "Periodic Commitment"
-                      : "Contribution Amount"}
+                    {donationType === "recurring" ? "Periodic Commitment" : "Contribution Amount"}
                   </span>
                   <span className="text-2xl font-black text-foreground">
                     {amount} {selectedToken?.symbol}
@@ -985,13 +959,11 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
                         <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
                           Ends On
                         </span>
-                        <p className="text-lg font-bold text-foreground">
-                          {formattedExpiry}
-                        </p>
+                        <p className="text-lg font-bold text-foreground">{formattedExpiry}</p>
                       </div>
                     </div>
                     <div className="h-px bg-border/50" />
-                    <div className="flex justify-between items-center bg-[#ff876d]/10 p-6 rounded-2xl border border-[#ff876d]/20">
+                    <div className="flex items-center justify-between rounded-2xl border border-[#ff876d]/20 bg-[#ff876d]/10 p-6">
                       <span className="text-sm font-bold text-white/80">
                         Estimated Total Over Period
                       </span>
@@ -1004,12 +976,12 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
               </div>
 
               {/* Recipient info */}
-              <div className="p-6 rounded-2xl bg-muted/20 border border-border/50">
-                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">
+              <div className="rounded-2xl border border-border/50 bg-muted/20 p-6">
+                <p className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
                   Recipient ({chain.chainDisplayName || "Core"})
                 </p>
-                <div className="flex items-center gap-4 bg-background/50 p-4 rounded-xl border border-border/50">
-                  <p className="font-mono text-xs md:text-sm truncate flex-1 text-foreground/70">
+                <div className="flex items-center gap-4 rounded-xl border border-border/50 bg-background/50 p-4">
+                  <p className="flex-1 truncate font-mono text-xs text-foreground/70 md:text-sm">
                     {donateAddress}
                   </p>
                   <Button
@@ -1029,14 +1001,15 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
 
               {/* Authz info for recurring */}
               {donationType === "recurring" && (
-                <div className="flex items-start gap-4 p-6 rounded-2xl bg-muted/20 border border-border/30">
-                  <div className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center shrink-0">
+                <div className="flex items-start gap-4 rounded-2xl border border-border/30 bg-muted/20 p-6">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-900">
                     <Shield className="h-5 w-5 text-white" />
                   </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    This transaction creates an on-chain <span className="text-foreground font-bold">authz</span> grant. 
-                    CLIQS will be authorized to execute sends to the donation address on your behalf. 
-                    Your funds stay in your wallet until each period.
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    This transaction creates an on-chain{" "}
+                    <span className="font-bold text-foreground">authz</span> grant. CLIQS will be
+                    authorized to execute sends to the donation address on your behalf. Your funds
+                    stay in your wallet until each period.
                   </p>
                 </div>
               )}
@@ -1045,7 +1018,7 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
               <Button
                 onClick={handleConfirm}
                 disabled={sending}
-                className="w-full h-20 text-xl font-black rounded-3xl bg-zinc-900 hover:bg-zinc-800 text-white border-none shadow-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-4"
+                className="flex h-20 w-full items-center justify-center gap-4 rounded-3xl border-none bg-zinc-900 text-xl font-black text-white shadow-2xl transition-all hover:bg-zinc-800 active:scale-[0.98]"
               >
                 {sending ? (
                   <>
@@ -1059,9 +1032,7 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
                     ) : (
                       <Heart className="h-6 w-6 fill-current" />
                     )}
-                    {donationType === "recurring"
-                      ? "Authorize Contribution"
-                      : "Confirm Donation"}
+                    {donationType === "recurring" ? "Authorize Contribution" : "Confirm Donation"}
                   </>
                 )}
               </Button>

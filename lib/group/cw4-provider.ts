@@ -1,24 +1,24 @@
 /**
  * CW4 Group Provider Implementation
- * 
+ *
  * File: lib/group/cw4-provider.ts
- * 
+ *
  * Implements the GroupProvider interface for CW4-group contracts.
  * This is the default implementation used in Phase 2 for CW3-Flex multisigs.
- * 
+ *
  * Features:
  * - Full member management (add, remove, update weights)
  * - Snapshot capture for audit trails
  * - Historical weight queries (when archive node available)
  * - Admin validation
- * 
+ *
  * Phase 2: Group-Backed Multisig
  */
 
 import { SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import { GasPrice } from "@cosmjs/stargate";
 import { OfflineSigner } from "@cosmjs/proto-signing";
-import { CW4Client, CW4Member, createCW4Client, createSigningCW4Client } from "../contract/cw4-client";
+import { CW4Client, CW4Member, createCW4Client } from "../contract/cw4-client";
 import {
   GroupProvider,
   ValidationResult,
@@ -36,7 +36,6 @@ import {
   MemberUpdateBatch,
   MemberUpdateResult,
   GroupTxResult,
-  GroupError,
 } from "./types";
 
 // ============================================================================
@@ -59,11 +58,7 @@ export class CW4GroupProvider implements GroupProvider {
   private adminCacheTime: number = 0;
   private readonly adminCacheTTL = 60000; // 1 minute
 
-  constructor(
-    groupAddress: string,
-    chainId: string,
-    nodeAddress: string,
-  ) {
+  constructor(groupAddress: string, chainId: string, nodeAddress: string) {
     this.groupAddress = groupAddress;
     this.chainId = chainId;
     this.nodeAddress = nodeAddress;
@@ -187,7 +182,7 @@ export class CW4GroupProvider implements GroupProvider {
     if (!validation.valid) {
       return {
         success: false,
-        error: `Validation failed: ${validation.errors.map(e => e.message).join(", ")}`,
+        error: `Validation failed: ${validation.errors.map((e) => e.message).join(", ")}`,
       };
     }
 
@@ -423,11 +418,7 @@ export class CW4GroupProvider implements GroupProvider {
 export async function createCW4GroupProvider(
   config: GroupProviderFactoryConfig,
 ): Promise<CW4GroupProvider> {
-  const provider = new CW4GroupProvider(
-    config.groupAddress,
-    config.chainId,
-    config.nodeAddress,
-  );
+  const provider = new CW4GroupProvider(config.groupAddress, config.chainId, config.nodeAddress);
 
   // Validate the contract exists by fetching admin
   await provider.getAdmin();
@@ -459,11 +450,9 @@ export async function createSigningCW4GroupProviderFromSigner(
   signer: OfflineSigner,
   gasPrice: string,
 ): Promise<CW4GroupProvider> {
-  const signingClient = await SigningCosmWasmClient.connectWithSigner(
-    config.nodeAddress,
-    signer,
-    { gasPrice: GasPrice.fromString(gasPrice) },
-  );
+  const signingClient = await SigningCosmWasmClient.connectWithSigner(config.nodeAddress, signer, {
+    gasPrice: GasPrice.fromString(gasPrice),
+  });
   const provider = await createCW4GroupProvider(config);
   provider.setSigningClient(signingClient);
   return provider;
@@ -475,4 +464,3 @@ export async function createSigningCW4GroupProviderFromSigner(
 
 // Register CW4 provider factory
 groupProviderRegistry.register("cw4", createCW4GroupProvider);
-

@@ -1,10 +1,10 @@
 /**
  * Policy Manager Component
- * 
+ *
  * File: components/policies/PolicyManager.tsx
- * 
+ *
  * Displays and manages policies for a multisig.
- * 
+ *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards
  */
 
@@ -20,8 +20,6 @@ import {
   Settings,
   Shield,
   Trash2,
-  ToggleLeft,
-  ToggleRight,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -106,8 +104,8 @@ const policyPriorities: Record<PolicyType, number> = {
 // ============================================================================
 
 export function PolicyManager({
-  multisigAddress,
-  chainId,
+  multisigAddress: _multisigAddress,
+  chainId: _chainId,
   policies,
   onCreatePolicy,
   onEditPolicy,
@@ -144,9 +142,7 @@ export function PolicyManager({
   // Sorting and Grouping
   // ============================================================================
 
-  const sortedPolicies = [...policies].sort(
-    (a, b) => a.priority - b.priority
-  );
+  const sortedPolicies = [...policies].sort((a, b) => a.priority - b.priority);
 
   const enabledCount = policies.filter((p) => p.enabled).length;
 
@@ -167,7 +163,7 @@ export function PolicyManager({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button disabled={isLoading}>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="mr-2 h-4 w-4" />
               Add Policy
             </Button>
           </DropdownMenuTrigger>
@@ -196,14 +192,14 @@ export function PolicyManager({
       {sortedPolicies.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <Shield className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">No policies configured</h3>
-            <p className="text-muted-foreground text-center max-w-md mb-4">
-              Policies provide additional security by enforcing rules on proposals
-              and executions. Add your first policy to get started.
+            <Shield className="mb-4 h-12 w-12 text-muted-foreground" />
+            <h3 className="mb-2 text-lg font-medium">No policies configured</h3>
+            <p className="mb-4 max-w-md text-center text-muted-foreground">
+              Policies provide additional security by enforcing rules on proposals and executions.
+              Add your first policy to get started.
             </p>
             <Button onClick={() => onCreatePolicy("timelock")}>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="mr-2 h-4 w-4" />
               Add Timelock Policy
             </Button>
           </CardContent>
@@ -220,8 +216,12 @@ export function PolicyManager({
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${policy.enabled ? "bg-primary/10" : "bg-muted"}`}>
-                        <Icon className={`h-5 w-5 ${policy.enabled ? "text-primary" : "text-muted-foreground"}`} />
+                      <div
+                        className={`rounded-lg p-2 ${policy.enabled ? "bg-primary/10" : "bg-muted"}`}
+                      >
+                        <Icon
+                          className={`h-5 w-5 ${policy.enabled ? "text-primary" : "text-muted-foreground"}`}
+                        />
                       </div>
                       <div>
                         <CardTitle className="text-base">{policy.name}</CardTitle>
@@ -256,7 +256,7 @@ export function PolicyManager({
                       onClick={() => onEditPolicy(policy)}
                       disabled={isLoading}
                     >
-                      <Settings className="h-4 w-4 mr-1" />
+                      <Settings className="mr-1 h-4 w-4" />
                       Configure
                     </Button>
                     <Dialog>
@@ -274,7 +274,8 @@ export function PolicyManager({
                         <DialogHeader>
                           <DialogTitle>Delete Policy</DialogTitle>
                           <DialogDescription>
-                            Are you sure you want to delete &quot;{policy.name}&quot;? This action cannot be undone.
+                            Are you sure you want to delete &quot;{policy.name}&quot;? This action
+                            cannot be undone.
                           </DialogDescription>
                         </DialogHeader>
                         <DialogFooter>
@@ -303,12 +304,22 @@ export function PolicyManager({
           <CardTitle className="text-sm">Policy Priority Order</CardTitle>
         </CardHeader>
         <CardContent className="text-xs text-muted-foreground">
-          <ol className="list-decimal list-inside space-y-1">
-            <li><strong>Timelock</strong> - Risk containment window (must come before spend limits)</li>
-            <li><strong>Emergency</strong> - Kill switch for operations</li>
-            <li><strong>Message Type</strong> - Controls attack surface</li>
-            <li><strong>Spend Limits</strong> - Value controls (only safe after timelock)</li>
-            <li><strong>Allowlist/Denylist</strong> - Recipient filtering</li>
+          <ol className="list-inside list-decimal space-y-1">
+            <li>
+              <strong>Timelock</strong> - Risk containment window (must come before spend limits)
+            </li>
+            <li>
+              <strong>Emergency</strong> - Kill switch for operations
+            </li>
+            <li>
+              <strong>Message Type</strong> - Controls attack surface
+            </li>
+            <li>
+              <strong>Spend Limits</strong> - Value controls (only safe after timelock)
+            </li>
+            <li>
+              <strong>Allowlist/Denylist</strong> - Recipient filtering
+            </li>
           </ol>
         </CardContent>
       </Card>
@@ -323,7 +334,7 @@ export function PolicyManager({
 function PolicyConfigSummary({ policy }: { policy: StoredPolicy }) {
   try {
     const config = JSON.parse(policy.configJSON);
-    
+
     switch (policy.type) {
       case "timelock":
         return (
@@ -344,7 +355,7 @@ function PolicyConfigSummary({ policy }: { policy: StoredPolicy }) {
             )}
           </div>
         );
-        
+
       case "spend_limit":
         return (
           <div className="text-sm">
@@ -362,7 +373,7 @@ function PolicyConfigSummary({ policy }: { policy: StoredPolicy }) {
             ))}
           </div>
         );
-        
+
       case "msg_type":
         return (
           <div className="text-sm">
@@ -380,7 +391,7 @@ function PolicyConfigSummary({ policy }: { policy: StoredPolicy }) {
             )}
           </div>
         );
-        
+
       case "allowlist":
       case "denylist":
         return (
@@ -393,7 +404,7 @@ function PolicyConfigSummary({ policy }: { policy: StoredPolicy }) {
             </span>
           </div>
         );
-        
+
       default:
         return null;
     }
@@ -415,18 +426,15 @@ function formatDuration(seconds: number): string {
 
 function formatAmount(coin: { denom: string; amount: string }): string {
   const amount = BigInt(coin.amount);
-  const denomDisplay = coin.denom.startsWith("u") 
-    ? coin.denom.slice(1).toUpperCase()
-    : coin.denom;
-  
+  const denomDisplay = coin.denom.startsWith("u") ? coin.denom.slice(1).toUpperCase() : coin.denom;
+
   // Convert from micro units if applicable
   if (coin.denom.startsWith("u")) {
     const major = Number(amount) / 1_000_000;
     return `${major.toLocaleString()} ${denomDisplay}`;
   }
-  
+
   return `${amount.toLocaleString()} ${denomDisplay}`;
 }
 
 export default PolicyManager;
-

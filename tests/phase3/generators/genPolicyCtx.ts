@@ -174,12 +174,7 @@ export function genPolicyCtx(seed?: number): GeneratedPolicyContext {
     totalSigners: randInt(3, 7),
 
     // Chain context
-    chainId: randChoice([
-      "cosmoshub-4",
-      "coreum-mainnet-1",
-      "coreum-testnet-1",
-      "osmosis-1",
-    ]),
+    chainId: randChoice(["cosmoshub-4", "coreum-mainnet-1", "coreum-testnet-1", "osmosis-1"]),
     multisigAddress: randBech32("cosmos"),
 
     // Message types
@@ -417,4 +412,3 @@ export function genPolicyCtxBatch(count: number, seed?: number): GeneratedPolicy
 
   return contexts;
 }
-

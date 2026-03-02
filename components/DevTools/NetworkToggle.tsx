@@ -21,13 +21,19 @@ export default function NetworkToggle({
           <Network className="h-4 w-4 text-muted-foreground" />
           <p className="text-sm font-semibold">Network Mode</p>
         </div>
-        <Badge variant={currentNetwork === "mainnet" ? "destructive" : "outline"} className="uppercase">
+        <Badge
+          variant={currentNetwork === "mainnet" ? "destructive" : "outline"}
+          className="uppercase"
+        >
           {currentNetwork}
         </Badge>
       </div>
 
       <DashboardTabs>
-        <DashboardTab active={currentNetwork === "testnet"} onClick={() => onNetworkChange("testnet")}>
+        <DashboardTab
+          active={currentNetwork === "testnet"}
+          onClick={() => onNetworkChange("testnet")}
+        >
           Testnet
         </DashboardTab>
         <DashboardTab
@@ -47,7 +53,9 @@ export default function NetworkToggle({
       {currentNetwork === "mainnet" && (
         <div className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-xs">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
-          <span>Mainnet actions use real assets. Verify all addresses and messages before signing.</span>
+          <span>
+            Mainnet actions use real assets. Verify all addresses and messages before signing.
+          </span>
         </div>
       )}
     </div>

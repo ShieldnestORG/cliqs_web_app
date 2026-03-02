@@ -1,6 +1,6 @@
 /**
  * RPC Module Exports
- * 
+ *
  * File: lib/rpc/index.ts
  */
 
@@ -23,4 +23,3 @@ export {
   type StateVerificationResult,
   type StateCheckResult,
 } from "./multi-rpc-verifier";
-

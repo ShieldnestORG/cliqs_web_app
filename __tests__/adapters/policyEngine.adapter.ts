@@ -7,14 +7,19 @@
  * interface for unit and integration tests.
  */
 
-import { PolicyRegistry, createPolicyRegistry, PolicyContext, PolicyEvaluationResult } from "@/lib/policies";
+import {
+  PolicyRegistry,
+  createPolicyRegistry,
+  PolicyContext,
+  PolicyEvaluationResult,
+} from "@/lib/policies";
 import { Proposal } from "@/lib/multisig/types";
 
 // Import fault controller for chaos testing
 let faultController: any = null;
 try {
   // Only import in test environment
-  if (process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID) {
+  if (process.env.NODE_ENV === "test" || process.env.JEST_WORKER_ID) {
     const chaosModule = require("../../tests/chaos/faults");
     faultController = chaosModule.faultController;
   }
@@ -60,7 +65,7 @@ export function makePolicyRegistry(): PolicyRegistry {
 export async function evaluateProposal(
   proposal: Proposal,
   context: PolicyContext,
-  registry?: PolicyRegistry
+  registry?: PolicyRegistry,
 ): Promise<PolicyDecision> {
   const policyRegistry = registry ?? makePolicyRegistry();
 
@@ -70,7 +75,7 @@ export async function evaluateProposal(
   } catch (error: any) {
     return {
       allowed: false,
-      reason: `Policy evaluation failed: ${error?.message ?? error ?? "Unknown error"}`
+      reason: `Policy evaluation failed: ${error?.message ?? error ?? "Unknown error"}`,
     };
   }
 }
@@ -81,7 +86,7 @@ export async function evaluateProposal(
 export async function evaluateExecution(
   proposal: Proposal,
   context: PolicyContext,
-  registry?: PolicyRegistry
+  registry?: PolicyRegistry,
 ): Promise<PolicyDecision> {
   const policyRegistry = registry ?? makePolicyRegistry();
 
@@ -91,7 +96,7 @@ export async function evaluateExecution(
   } catch (error: any) {
     return {
       allowed: false,
-      reason: `Policy evaluation failed: ${error?.message ?? error ?? "Unknown error"}`
+      reason: `Policy evaluation failed: ${error?.message ?? error ?? "Unknown error"}`,
     };
   }
 }
@@ -102,7 +107,7 @@ export async function evaluateExecution(
 export async function evaluatePolicies(
   proposal: Proposal,
   context: PolicyContext,
-  registry?: PolicyRegistry
+  registry?: PolicyRegistry,
 ): Promise<PolicyDecision> {
   // Default to proposal evaluation for backward compatibility
   return evaluateProposal(proposal, context, registry);
@@ -114,15 +119,15 @@ export async function evaluatePolicies(
  */
 function evaluateChaosPolicies(
   context: PolicyContext,
-  phase: 'proposal' | 'execution',
-  contextOverrides: any
+  phase: "proposal" | "execution",
+  contextOverrides: any,
 ): PolicyDecision {
   // Check emergency pause - always denies if paused
   if (context.isPaused) {
     return {
       allowed: false,
       reason: "Emergency pause is active",
-      policy: "emergency"
+      policy: "emergency",
     };
   }
 
@@ -131,7 +136,7 @@ function evaluateChaosPolicies(
     return {
       allowed: false,
       reason: "Safe mode is active",
-      policy: "emergency"
+      policy: "emergency",
     };
   }
 
@@ -141,33 +146,35 @@ function evaluateChaosPolicies(
     return {
       allowed: false,
       reason: `Policy version mismatch: expected ${expectedVersion}, got ${context.policyVersion}`,
-      policy: "version"
+      policy: "version",
     };
   }
 
   // Check timelock for execution phase
-  if (phase === 'execution' && contextOverrides.timelock) {
-    const now = contextOverrides.nowMs ?? (context.currentTimestamp * 1000);
+  if (phase === "execution" && contextOverrides.timelock) {
+    const now = contextOverrides.nowMs ?? context.currentTimestamp * 1000;
     if (now < contextOverrides.timelock.unlockAtMs) {
       return {
         allowed: false,
         reason: "Timelock not expired",
-        policy: "timelock"
+        policy: "timelock",
       };
     }
   }
 
   // Check spend limits for execution phase
-  if (phase === 'execution' && contextOverrides.spend) {
-    const totalSpend = contextOverrides.spend.reduce((sum: number, item: any) =>
-      sum + parseInt(item.amount), 0);
+  if (phase === "execution" && contextOverrides.spend) {
+    const totalSpend = contextOverrides.spend.reduce(
+      (sum: number, item: any) => sum + parseInt(item.amount),
+      0,
+    );
 
     // Assume 1000 is the limit for testing
     if (totalSpend > 1000) {
       return {
         allowed: false,
         reason: `Spend limit exceeded: ${totalSpend} > 1000`,
-        policy: "spend_limit"
+        policy: "spend_limit",
       };
     }
   }
@@ -176,18 +183,22 @@ function evaluateChaosPolicies(
   if (contextOverrides.credential && !contextOverrides.credential.valid) {
     return {
       allowed: false,
-      reason: phase === 'proposal' ? "Invalid credential" : "Invalid credential at execution time",
-      policy: "credential"
+      reason: phase === "proposal" ? "Invalid credential" : "Invalid credential at execution time",
+      policy: "credential",
     };
   }
 
   // Check signature requirements for execution phase
-  if (phase === 'execution' && contextOverrides.signaturesRequired && contextOverrides.signaturesCollected !== undefined) {
+  if (
+    phase === "execution" &&
+    contextOverrides.signaturesRequired &&
+    contextOverrides.signaturesCollected !== undefined
+  ) {
     if (contextOverrides.signaturesCollected < contextOverrides.signaturesRequired) {
       return {
         allowed: false,
         reason: `Insufficient signatures: ${contextOverrides.signaturesCollected}/${contextOverrides.signaturesRequired} required`,
-        policy: "signatures"
+        policy: "signatures",
       };
     }
   }
@@ -210,8 +221,8 @@ export async function evaluatePoliciesMinimal(
     signaturesRequired?: number;
     signaturesCollected?: number;
   },
-  phase: 'proposal' | 'execution' = 'execution',
-  registry?: PolicyRegistry
+  phase: "proposal" | "execution" = "execution",
+  registry?: PolicyRegistry,
 ): Promise<PolicyDecision> {
   // For chaos testing, use our simulated policy evaluation
   // This allows us to test the security behaviors without needing full policy implementations
@@ -221,13 +232,15 @@ export async function evaluatePoliciesMinimal(
   if (faultController) {
     injectedOverrides.isPaused = contextOverrides.isPaused ?? faultController.state.emergencyPaused;
     injectedOverrides.isSafeMode = contextOverrides.isSafeMode ?? faultController.state.safeMode;
-    injectedOverrides.policyVersion = contextOverrides.policyVersion ?? faultController.state.policyVersion;
-    injectedOverrides.expectedPolicyVersion = contextOverrides.expectedPolicyVersion ?? faultController.state.expectedPolicyVersion;
+    injectedOverrides.policyVersion =
+      contextOverrides.policyVersion ?? faultController.state.policyVersion;
+    injectedOverrides.expectedPolicyVersion =
+      contextOverrides.expectedPolicyVersion ?? faultController.state.expectedPolicyVersion;
     if (!contextOverrides.credential && faultController.state.credentialValid !== undefined) {
       injectedOverrides.credential = {
         holder: "cosmos1test",
         valid: faultController.state.credentialValid,
-        role: "member"
+        role: "member",
       };
     }
   }
@@ -246,7 +259,9 @@ export async function evaluatePoliciesMinimal(
     queuedAt: injectedOverrides.queuedAt ?? null,
     timeSinceQueue: injectedOverrides.timeSinceQueue ?? 0,
     currentHeight: injectedOverrides.currentHeight ?? 0,
-    currentTimestamp: injectedOverrides.currentTimestamp ?? Math.floor((injectedOverrides.nowMs ?? Date.now()) / 1000),
+    currentTimestamp:
+      injectedOverrides.currentTimestamp ??
+      Math.floor((injectedOverrides.nowMs ?? Date.now()) / 1000),
     isPaused: injectedOverrides.isPaused ?? false,
     isSafeMode: injectedOverrides.isSafeMode ?? false,
     elevatedThreshold: injectedOverrides.elevatedThreshold ?? null,

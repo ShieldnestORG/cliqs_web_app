@@ -1,8 +1,8 @@
 /**
  * Emergency Controls Tests
- * 
+ *
  * File: __tests__/emergency/emergency-controls.test.ts
- * 
+ *
  * Tests for Phase 4 emergency controls
  */
 
@@ -38,7 +38,7 @@ describe("PauseController", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     controller = createPauseController();
-    
+
     // Default to not paused
     mockLocalDb.getEmergencyState.mockReturnValue(null);
   });
@@ -46,7 +46,7 @@ describe("PauseController", () => {
   describe("getState", () => {
     it("returns default state when no state exists", () => {
       const state = controller.getState(testMultisig, testChainId);
-      
+
       expect(state).toEqual(DEFAULT_EMERGENCY_STATE);
     });
 
@@ -204,11 +204,7 @@ describe("PauseController", () => {
         updatedAt: "2024-01-01T00:00:00.000Z",
       });
 
-      const result = controller.isOperationBlocked(
-        testMultisig,
-        testChainId,
-        "query",
-      );
+      const result = controller.isOperationBlocked(testMultisig, testChainId, "query");
 
       expect(result.blocked).toBe(false);
     });
@@ -229,11 +225,7 @@ describe("PauseController", () => {
         updatedAt: "2024-01-01T00:00:00.000Z",
       });
 
-      const result = controller.isOperationBlocked(
-        testMultisig,
-        testChainId,
-        "approve",
-      );
+      const result = controller.isOperationBlocked(testMultisig, testChainId, "approve");
 
       expect(result.blocked).toBe(true);
       expect(result.reason).toBe("Test pause");
@@ -255,11 +247,7 @@ describe("PauseController", () => {
         updatedAt: "2024-01-01T00:00:00.000Z",
       });
 
-      const result = controller.isOperationBlocked(
-        testMultisig,
-        testChainId,
-        "execute",
-      );
+      const result = controller.isOperationBlocked(testMultisig, testChainId, "execute");
 
       expect(result.blocked).toBe(true);
     });
@@ -268,13 +256,13 @@ describe("PauseController", () => {
   describe("getUnpauseThreshold", () => {
     it("returns elevated threshold", () => {
       const result = controller.getUnpauseThreshold(2, 5);
-      
+
       expect(result).toBe(3); // N+1
     });
 
     it("does not exceed total weight", () => {
       const result = controller.getUnpauseThreshold(5, 5);
-      
+
       expect(result).toBe(5); // Can't exceed total
     });
   });
@@ -292,14 +280,14 @@ describe("SafeModeController", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     controller = createSafeModeController();
-    
+
     mockLocalDb.getEmergencyState.mockReturnValue(null);
   });
 
   describe("getState", () => {
     it("returns not in safe mode by default", () => {
       const state = controller.getState(testMultisig, testChainId);
-      
+
       expect(state.isSafeMode).toBe(false);
       expect(state.threshold).toBeNull();
     });
@@ -436,11 +424,7 @@ describe("SafeModeController", () => {
 
   describe("getEffectiveThreshold", () => {
     it("returns normal threshold when not in safe mode", () => {
-      const result = controller.getEffectiveThreshold(
-        testMultisig,
-        testChainId,
-        2,
-      );
+      const result = controller.getEffectiveThreshold(testMultisig, testChainId, 2);
 
       expect(result).toBe(2);
     });
@@ -461,11 +445,7 @@ describe("SafeModeController", () => {
         updatedAt: "2024-01-01T00:00:00.000Z",
       });
 
-      const result = controller.getEffectiveThreshold(
-        testMultisig,
-        testChainId,
-        2,
-      );
+      const result = controller.getEffectiveThreshold(testMultisig, testChainId, 2);
 
       expect(result).toBe(4);
     });
@@ -485,9 +465,8 @@ describe("SafeModeController", () => {
 
     it("never exceeds total weight", () => {
       const result = controller.calculateElevatedThreshold(4, 5, "critical");
-      
+
       expect(result).toBeLessThanOrEqual(5);
     });
   });
 });
-

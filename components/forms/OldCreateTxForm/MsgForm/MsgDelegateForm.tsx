@@ -23,7 +23,12 @@ interface MsgDelegateFormProps {
   readonly gasLimit?: number;
 }
 
-const MsgDelegateForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLimit }: MsgDelegateFormProps) => {
+const MsgDelegateForm = ({
+  senderAddress,
+  setMsgGetter,
+  deleteMsg,
+  gasLimit,
+}: MsgDelegateFormProps) => {
   const { chain } = useChains();
   const { availableBalance } = useBalance({
     address: senderAddress,
@@ -37,7 +42,10 @@ const MsgDelegateForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLimit }: M
   const [validatorAddressError, setValidatorAddressError] = useState("");
   const [amountError, setAmountError] = useState("");
 
-  const trimmedInputs = useMemo(() => trimStringsObj({ validatorAddress, amount }), [validatorAddress, amount]);
+  const trimmedInputs = useMemo(
+    () => trimStringsObj({ validatorAddress, amount }),
+    [validatorAddress, amount],
+  );
 
   useEffect(() => {
     // eslint-disable-next-line no-shadow
@@ -103,23 +111,18 @@ const MsgDelegateForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLimit }: M
   const categoryInfo = getMessageCategory(MsgTypeUrls.Delegate);
 
   return (
-    <StackableContainer 
-      variant="institutional" 
-      lessPadding 
-      lessMargin
-      accent={categoryInfo.accent}
-    >
+    <StackableContainer variant="institutional" lessPadding lessMargin accent={categoryInfo.accent}>
       <Button
         variant="ghost"
         size="icon-sm"
         onClick={() => deleteMsg()}
-        className="absolute right-4 top-4 h-8 w-8 text-muted-foreground hover:text-foreground z-10"
+        className="absolute right-4 top-4 z-10 h-8 w-8 text-muted-foreground hover:text-foreground"
       >
         <X className="h-4 w-4" />
       </Button>
       <div className="mb-4">
         <CardLabel comment>{categoryInfo.label}</CardLabel>
-        <h2 className="text-xl font-heading font-semibold">MsgDelegate</h2>
+        <h2 className="font-heading text-xl font-semibold">MsgDelegate</h2>
       </div>
       <div className="space-y-4">
         <BalanceDisplay
@@ -156,14 +159,19 @@ const MsgDelegateForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLimit }: M
             // Validate against available balance
             if (availableBalance && availableBalance.amount !== "0" && target.value) {
               try {
-                const userAmountCoin = displayCoinToBaseCoin({ denom: chain.displayDenom, amount: target.value }, chain.assets);
+                const userAmountCoin = displayCoinToBaseCoin(
+                  { denom: chain.displayDenom, amount: target.value },
+                  chain.assets,
+                );
                 const userAmountDecimal = Decimal.fromAtomics(userAmountCoin.amount, 0);
                 const availableAmountDecimal = Decimal.fromAtomics(availableBalance.amount, 0);
 
                 if (userAmountDecimal.isGreaterThan(availableAmountDecimal)) {
-                  setAmountError(`Amount exceeds available balance. Available: ${availableBalance.amount}`);
+                  setAmountError(
+                    `Amount exceeds available balance. Available: ${availableBalance.amount}`,
+                  );
                 }
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
               } catch (_: unknown) {
                 // If conversion fails, don't set error
               }

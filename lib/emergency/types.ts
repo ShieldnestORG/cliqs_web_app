@@ -1,16 +1,16 @@
 /**
  * Emergency Types
- * 
+ *
  * File: lib/emergency/types.ts
- * 
+ *
  * Types for the emergency control system including pause mechanism
  * and safe mode.
- * 
+ *
  * Key Design Rules (from Phase 4 requirements):
  * - Emergency authority does NOT bypass credential checks
  * - It only gates execution paths
  * - No "superuser" behavior
- * 
+ *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards
  */
 
@@ -107,11 +107,11 @@ export interface UnpauseResult {
  * Trigger conditions for safe mode
  */
 export type SafeModeTrigger =
-  | "manual"              // Admin activated manually
-  | "anomaly_detected"    // Anomaly detection triggered
-  | "credential_revoked"  // Credential revocation in progress
-  | "high_risk_activity"  // Unusual activity pattern
-  | "external_signal";    // External oracle/API signal
+  | "manual" // Admin activated manually
+  | "anomaly_detected" // Anomaly detection triggered
+  | "credential_revoked" // Credential revocation in progress
+  | "high_risk_activity" // Unusual activity pattern
+  | "external_signal"; // External oracle/API signal
 
 /**
  * Input for activating safe mode
@@ -227,4 +227,3 @@ export class EmergencyError extends Error {
     this.name = "EmergencyError";
   }
 }
-

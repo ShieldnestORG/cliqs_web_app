@@ -19,10 +19,7 @@ interface ExportBody {
   chainId: string;
 }
 
-async function apiExportTransactions(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+async function apiExportTransactions(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     res.status(405).end();
     return;
@@ -53,14 +50,10 @@ async function apiExportTransactions(
       transactions: history,
     });
 
-    console.log(
-      `[Export] ${history.length} transactions exported for ${body.multisigAddress}`,
-    );
+    console.log(`[Export] ${history.length} transactions exported for ${body.multisigAddress}`);
   } catch (err: unknown) {
     console.error("[Export] Error:", err);
-    res.status(400).send(
-      err instanceof Error ? `Export failed: ${err.message}` : "Export failed",
-    );
+    res.status(400).send(err instanceof Error ? `Export failed: ${err.message}` : "Export failed");
   }
 }
 

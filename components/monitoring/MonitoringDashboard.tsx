@@ -1,34 +1,18 @@
 /**
  * Monitoring Dashboard Component
- * 
+ *
  * File: components/monitoring/MonitoringDashboard.tsx
- * 
+ *
  * Displays metrics, alerts, and recent events for a multisig.
- * 
+ *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards
  */
 
 "use client";
 
 import { useState } from "react";
-import {
-  Activity,
-  AlertTriangle,
-  Bell,
-  Check,
-  Clock,
-  TrendingUp,
-  XCircle,
-} from "lucide-react";
-
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Activity, AlertTriangle, Bell, Check, TrendingUp, XCircle } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -62,13 +46,13 @@ interface MonitoringDashboardProps {
 // ============================================================================
 
 export function MonitoringDashboard({
-  multisigAddress,
-  chainId,
+  multisigAddress: _multisigAddress,
+  chainId: _chainId,
   metrics,
   recentEvents,
   recentAnomalies,
   recentAlerts,
-  isLoading = false,
+  isLoading: _isLoading = false,
 }: MonitoringDashboardProps) {
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -122,15 +106,15 @@ export function MonitoringDashboard({
         {metrics.map((metric, index) => (
           <Card key={index}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {metric.label}
-              </CardTitle>
+              <CardTitle className="text-sm font-medium">{metric.label}</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{metric.value}</div>
               {metric.change !== undefined && (
-                <p className={`text-xs ${metric.change >= 0 ? "text-green-accent" : "text-red-500"}`}>
+                <p
+                  className={`text-xs ${metric.change >= 0 ? "text-green-accent" : "text-red-500"}`}
+                >
                   {metric.change >= 0 ? "+" : ""}
                   {metric.change}% {metric.changeLabel || "from last period"}
                 </p>
@@ -153,7 +137,10 @@ export function MonitoringDashboard({
           <TabsTrigger value="anomalies" className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" />
             Anomalies
-            <Badge variant={recentAnomalies.length > 0 ? "destructive" : "secondary"} className="ml-1">
+            <Badge
+              variant={recentAnomalies.length > 0 ? "destructive" : "secondary"}
+              className="ml-1"
+            >
               {recentAnomalies.length}
             </Badge>
           </TabsTrigger>
@@ -171,15 +158,13 @@ export function MonitoringDashboard({
           <Card>
             <CardHeader>
               <CardTitle>Recent Events</CardTitle>
-              <CardDescription>
-                Real-time stream of multisig activity
-              </CardDescription>
+              <CardDescription>Real-time stream of multisig activity</CardDescription>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[400px]">
                 {recentEvents.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                    <Activity className="h-12 w-12 mb-4" />
+                    <Activity className="mb-4 h-12 w-12" />
                     <p>No events recorded yet</p>
                   </div>
                 ) : (
@@ -189,14 +174,14 @@ export function MonitoringDashboard({
                       return (
                         <div
                           key={event.id}
-                          className="flex items-start gap-4 p-3 rounded-lg bg-muted/50"
+                          className="flex items-start gap-4 rounded-lg bg-muted/50 p-3"
                         >
-                          <div className="p-2 rounded-full bg-background">
+                          <div className="rounded-full bg-background p-2">
                             <Icon className="h-4 w-4" />
                           </div>
-                          <div className="flex-1 min-w-0">
+                          <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
-                              <span className="font-medium text-sm">
+                              <span className="text-sm font-medium">
                                 {event.type.replace(/_/g, " ")}
                               </span>
                               <Badge variant="outline" className="text-xs">
@@ -204,12 +189,12 @@ export function MonitoringDashboard({
                               </Badge>
                             </div>
                             {event.actor && (
-                              <p className="text-xs text-muted-foreground truncate">
+                              <p className="truncate text-xs text-muted-foreground">
                                 by {event.actor.slice(0, 12)}...
                               </p>
                             )}
                             {event.data && Object.keys(event.data).length > 0 && (
-                              <p className="text-xs text-muted-foreground mt-1">
+                              <p className="mt-1 text-xs text-muted-foreground">
                                 {JSON.stringify(event.data).slice(0, 100)}...
                               </p>
                             )}
@@ -229,15 +214,13 @@ export function MonitoringDashboard({
           <Card>
             <CardHeader>
               <CardTitle>Detected Anomalies</CardTitle>
-              <CardDescription>
-                Suspicious patterns that may require attention
-              </CardDescription>
+              <CardDescription>Suspicious patterns that may require attention</CardDescription>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[400px]">
                 {recentAnomalies.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                    <Check className="h-12 w-12 mb-4 text-green-accent" />
+                    <Check className="mb-4 h-12 w-12 text-green-accent" />
                     <p>No anomalies detected</p>
                     <p className="text-sm">All systems operating normally</p>
                   </div>
@@ -246,30 +229,37 @@ export function MonitoringDashboard({
                     {recentAnomalies.map((anomaly) => (
                       <div
                         key={anomaly.id}
-                        className={`p-4 rounded-lg border ${
+                        className={`rounded-lg border p-4 ${
                           anomaly.severity === "critical"
                             ? "border-red-500 bg-red-500/10"
                             : anomaly.severity === "high"
-                            ? "border-orange-500 bg-orange-500/10"
-                            : "border-yellow-500 bg-yellow-500/10"
+                              ? "border-orange-500 bg-orange-500/10"
+                              : "border-yellow-500 bg-yellow-500/10"
                         }`}
                       >
-                        <div className="flex items-center justify-between mb-2">
+                        <div className="mb-2 flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <AlertTriangle className={`h-5 w-5 ${getSeverityColor(anomaly.severity)}`} />
+                            <AlertTriangle
+                              className={`h-5 w-5 ${getSeverityColor(anomaly.severity)}`}
+                            />
                             <span className="font-medium">
                               {anomaly.type.replace(/_/g, " ").toUpperCase()}
                             </span>
                           </div>
-                          <Badge variant={
-                            anomaly.severity === "critical" ? "destructive" :
-                            anomaly.severity === "high" ? "default" : "secondary"
-                          }>
+                          <Badge
+                            variant={
+                              anomaly.severity === "critical"
+                                ? "destructive"
+                                : anomaly.severity === "high"
+                                  ? "default"
+                                  : "secondary"
+                            }
+                          >
                             {anomaly.severity}
                           </Badge>
                         </div>
                         <p className="text-sm">{anomaly.message}</p>
-                        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                        <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
                           <span>{formatTimestamp(anomaly.detectedAt)}</span>
                           <span>Rule: {anomaly.ruleId}</span>
                           <span>{anomaly.relatedEvents.length} related events</span>
@@ -288,38 +278,36 @@ export function MonitoringDashboard({
           <Card>
             <CardHeader>
               <CardTitle>Alert History</CardTitle>
-              <CardDescription>
-                Notifications sent to configured channels
-              </CardDescription>
+              <CardDescription>Notifications sent to configured channels</CardDescription>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[400px]">
                 {recentAlerts.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                    <Bell className="h-12 w-12 mb-4" />
+                    <Bell className="mb-4 h-12 w-12" />
                     <p>No alerts sent</p>
                     <p className="text-sm">Configure alert rules to get notified</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {recentAlerts.map((alert) => (
-                      <div
-                        key={alert.id}
-                        className="p-4 rounded-lg border bg-muted/50"
-                      >
-                        <div className="flex items-center justify-between mb-2">
+                      <div key={alert.id} className="rounded-lg border bg-muted/50 p-4">
+                        <div className="mb-2 flex items-center justify-between">
                           <span className="font-medium">{alert.title}</span>
-                          <Badge variant={
-                            alert.severity === "critical" ? "destructive" :
-                            alert.severity === "warning" ? "default" : "secondary"
-                          }>
+                          <Badge
+                            variant={
+                              alert.severity === "critical"
+                                ? "destructive"
+                                : alert.severity === "warning"
+                                  ? "default"
+                                  : "secondary"
+                            }
+                          >
                             {alert.severity}
                           </Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          {alert.message}
-                        </p>
-                        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                        <p className="text-sm text-muted-foreground">{alert.message}</p>
+                        <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
                           <span>{formatTimestamp(alert.timestamp)}</span>
                           <span>Source: {alert.source}</span>
                         </div>
@@ -337,4 +325,3 @@ export function MonitoringDashboard({
 }
 
 export default MonitoringDashboard;
-

@@ -1,11 +1,11 @@
 /**
  * Policies API
- * 
+ *
  * File: pages/api/chain/[chainId]/[address]/policies/index.ts
- * 
+ *
  * GET: List policies for a multisig
  * POST: Create a new policy
- * 
+ *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards
  */
 
@@ -14,10 +14,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import * as localDb from "@/lib/localDb";
 import { PolicyType } from "@/lib/policies/types";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { chainId, address } = req.query;
 
   if (typeof chainId !== "string" || typeof address !== "string") {
@@ -39,8 +36,13 @@ export default async function handler(
         }
 
         const validTypes: PolicyType[] = [
-          "timelock", "emergency", "msg_type", 
-          "spend_limit", "allowlist", "denylist", "custom"
+          "timelock",
+          "emergency",
+          "msg_type",
+          "spend_limit",
+          "allowlist",
+          "denylist",
+          "custom",
         ];
 
         if (!validTypes.includes(type)) {
@@ -68,8 +70,8 @@ export default async function handler(
     }
   } catch (error) {
     console.error("Policies API error:", error);
-    return res.status(500).json({ 
-      error: error instanceof Error ? error.message : "Internal server error" 
+    return res.status(500).json({
+      error: error instanceof Error ? error.message : "Internal server error",
     });
   }
 }
@@ -86,4 +88,3 @@ function getPriorityForType(type: PolicyType): number {
   };
   return priorities[type] ?? 50;
 }
-

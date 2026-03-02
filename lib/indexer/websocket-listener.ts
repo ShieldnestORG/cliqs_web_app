@@ -1,15 +1,15 @@
 /**
  * Layer 1: WebSocket Event Listener
- * 
+ *
  * File: lib/indexer/websocket-listener.ts
- * 
+ *
  * Real-time event listener for contract multisig events.
  * This layer provides fast UX updates and notifications.
- * 
+ *
  * IMPORTANT: Events from this layer are UNCONFIRMED.
  * Never mark state as "final" based on WebSocket events alone.
  * Layer 2 (sync job) is the authoritative source.
- * 
+ *
  * Architecture:
  * - Subscribe to Tendermint WebSocket
  * - Filter: tm.event = 'Tx' AND wasm._contract_address = <multisig>
@@ -32,11 +32,7 @@ import * as localDb from "../localDb";
 /**
  * Types of CW4 group events
  */
-export type CW4EventType = 
-  | "update_members"
-  | "update_admin"
-  | "add_hook"
-  | "remove_hook";
+export type CW4EventType = "update_members" | "update_admin" | "add_hook" | "remove_hook";
 
 /**
  * Combined event type for CW3 multisig and CW4 group events
@@ -173,7 +169,7 @@ export class WebSocketListener {
 
     try {
       console.log(`[WS] Connecting to ${this.config.wsEndpoint}...`);
-      
+
       // Create WebSocket connection
       this.ws = new WebSocket(this.config.wsEndpoint);
 
@@ -227,10 +223,8 @@ export class WebSocketListener {
 
     this.reconnectAttempts++;
     const delay = this.config.reconnectDelayMs || 5000;
-    
-    console.log(
-      `[WS] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`
-    );
+
+    console.log(`[WS] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
 
     setTimeout(() => {
       if (this.shouldReconnect) {
@@ -247,9 +241,9 @@ export class WebSocketListener {
     // Build query for wasm contract events
     // We subscribe to all tx events and filter client-side
     const query = `tm.event = 'Tx'`;
-    
+
     this.subscriptionId = `sub-${Date.now()}`;
-    
+
     const subscribeMsg = {
       jsonrpc: "2.0",
       method: "subscribe",
@@ -282,10 +276,14 @@ export class WebSocketListener {
     }
   }
 
-  private processTxResult(txResult: { height: number; tx: string; result?: { events?: { type: string; attributes: { key: string; value: string }[] }[] } }): void {
+  private processTxResult(txResult: {
+    height: number;
+    tx: string;
+    result?: { events?: { type: string; attributes: { key: string; value: string }[] }[] };
+  }): void {
     const { height, tx, result } = txResult;
     const txHash = this.computeTxHash(tx);
-    
+
     if (!result?.events) {
       return;
     }
@@ -295,13 +293,14 @@ export class WebSocketListener {
       const attributes = this.parseEventAttributes(event.attributes);
 
       // Phase 3: Handle TX assetnft events for credentials
-      if (event.type === "coreum.asset.nft.v1.EventMinted" ||
-          event.type === "coreum.asset.nft.v1.EventBurnt" ||
-          event.type === "coreum.asset.nft.v1.EventFrozen" ||
-          event.type === "coreum.asset.nft.v1.EventUnfrozen") {
-        
+      if (
+        event.type === "coreum.asset.nft.v1.EventMinted" ||
+        event.type === "coreum.asset.nft.v1.EventBurnt" ||
+        event.type === "coreum.asset.nft.v1.EventFrozen" ||
+        event.type === "coreum.asset.nft.v1.EventUnfrozen"
+      ) {
         const classId = attributes["class_id"] || attributes["classId"];
-        
+
         // Check if this is one of our watched credential classes
         if (classId && this.config.credentialClassIds?.includes(classId)) {
           const parsedEvent = this.parseCredentialEvent(
@@ -311,7 +310,7 @@ export class WebSocketListener {
             txHash,
             height,
           );
-          
+
           if (parsedEvent) {
             this.handleParsedEvent(parsedEvent);
           }
@@ -326,8 +325,9 @@ export class WebSocketListener {
       const contractAddress = attributes["_contract_address"];
 
       // Check if this is one of our watched contracts (CW3 multisig)
-      const isCW3Contract = contractAddress && this.config.contractAddresses.includes(contractAddress);
-      
+      const isCW3Contract =
+        contractAddress && this.config.contractAddresses.includes(contractAddress);
+
       // Check if this is one of our watched groups (CW4 group) - Phase 2
       const isCW4Group = contractAddress && this.config.groupAddresses?.includes(contractAddress);
 
@@ -338,20 +338,10 @@ export class WebSocketListener {
       let parsedEvent: ParsedEvent | null = null;
 
       if (isCW3Contract) {
-        parsedEvent = this.parseWasmEvent(
-          contractAddress,
-          attributes,
-          txHash,
-          height,
-        );
+        parsedEvent = this.parseWasmEvent(contractAddress, attributes, txHash, height);
       } else if (isCW4Group) {
         // Phase 2: Parse CW4 group events
-        parsedEvent = this.parseCW4Event(
-          contractAddress,
-          attributes,
-          txHash,
-          height,
-        );
+        parsedEvent = this.parseCW4Event(contractAddress, attributes, txHash, height);
       }
 
       if (parsedEvent) {
@@ -416,10 +406,10 @@ export class WebSocketListener {
   }
 
   private parseEventAttributes(
-    attributes: { key: string; value: string }[]
+    attributes: { key: string; value: string }[],
   ): Record<string, string> {
     const result: Record<string, string> = {};
-    
+
     for (const attr of attributes) {
       // Tendermint events may be base64 encoded
       try {
@@ -430,7 +420,7 @@ export class WebSocketListener {
         result[attr.key] = attr.value;
       }
     }
-    
+
     return result;
   }
 
@@ -461,7 +451,7 @@ export class WebSocketListener {
     let eventType: CW3EventType | null = null;
     let proposalId: number | null = null;
 
-    if (action === "propose" || attributes["proposal_id"] && !attributes["voter"]) {
+    if (action === "propose" || (attributes["proposal_id"] && !attributes["voter"])) {
       eventType = "propose";
     } else if (action === "vote" || attributes["voter"]) {
       eventType = "vote";
@@ -531,7 +521,9 @@ export class WebSocketListener {
   }
 
   private handleParsedEvent(event: ParsedEvent): void {
-    console.log(`[WS] Event: ${event.type}${event.isGroupEvent ? " (group)" : ""}${event.isCredentialEvent ? " (credential)" : ""} ${event.proposalId !== null ? `for proposal ${event.proposalId}` : ""}`);
+    console.log(
+      `[WS] Event: ${event.type}${event.isGroupEvent ? " (group)" : ""}${event.isCredentialEvent ? " (credential)" : ""} ${event.proposalId !== null ? `for proposal ${event.proposalId}` : ""}`,
+    );
 
     // Store event in database (unconfirmed)
     try {
@@ -728,7 +720,9 @@ export class WebSocketListener {
   /**
    * Phase 3: Map credential event type to DB event type
    */
-  private mapCredentialEventType(type: CredentialEventType): "issued" | "revoked" | "frozen" | "unfrozen" {
+  private mapCredentialEventType(
+    type: CredentialEventType,
+  ): "issued" | "revoked" | "frozen" | "unfrozen" {
     switch (type) {
       case "credential_mint":
         return "issued";
@@ -760,9 +754,7 @@ export class WebSocketListener {
 /**
  * Create a WebSocket listener for contract events
  */
-export function createWebSocketListener(
-  config: WebSocketConfig
-): WebSocketListener {
+export function createWebSocketListener(config: WebSocketConfig): WebSocketListener {
   return new WebSocketListener(config);
 }
 
@@ -770,15 +762,13 @@ export function createWebSocketListener(
  * Get WebSocket endpoint from RPC endpoint
  */
 export function rpcToWsEndpoint(rpcEndpoint: string): string {
-  let wsEndpoint = rpcEndpoint
-    .replace("https://", "wss://")
-    .replace("http://", "ws://");
-  
+  let wsEndpoint = rpcEndpoint.replace("https://", "wss://").replace("http://", "ws://");
+
   // Add /websocket path if not present
   if (!wsEndpoint.endsWith("/websocket")) {
     wsEndpoint = wsEndpoint.replace(/\/?$/, "/websocket");
   }
-  
+
   return wsEndpoint;
 }
 
@@ -792,13 +782,9 @@ class WebSocketManager {
   /**
    * Get or create a listener for a chain
    */
-  getListener(
-    chainId: string,
-    wsEndpoint: string,
-    contractAddresses: string[]
-  ): WebSocketListener {
+  getListener(chainId: string, wsEndpoint: string, contractAddresses: string[]): WebSocketListener {
     const key = chainId;
-    
+
     let listener = this.listeners.get(key);
     if (!listener) {
       listener = createWebSocketListener({
@@ -811,7 +797,7 @@ class WebSocketManager {
       // Add new contract addresses if not already watching
       // Note: Would need to update the listener's contract list
     }
-    
+
     return listener;
   }
 
@@ -827,4 +813,3 @@ class WebSocketManager {
 }
 
 export const wsManager = new WebSocketManager();
-

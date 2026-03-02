@@ -1,8 +1,8 @@
 /**
  * Contract Multisig Dashboard
- * 
+ *
  * File: components/dataViews/ContractMultisigDashboard.tsx
- * 
+ *
  * Dashboard view for CW3 contract-based multisigs.
  * Shows members, proposals, voting, and execution.
  */
@@ -107,7 +107,7 @@ export default function ContractMultisigDashboard({
       setIsLoading(true);
       try {
         const response = await fetch(
-          `/api/chain/${chainId}/contract-multisig/${contractAddress}?nodeAddress=${encodeURIComponent(nodeAddress)}&proposals=false`
+          `/api/chain/${chainId}/contract-multisig/${contractAddress}?nodeAddress=${encodeURIComponent(nodeAddress)}&proposals=false`,
         );
 
         if (response.ok) {
@@ -165,10 +165,7 @@ export default function ContractMultisigDashboard({
         )}
       </div>
       <div className="flex gap-2">
-        <CopyButton
-          value={contractAddress}
-          copyLabel="contract address"
-        />
+        <CopyButton value={contractAddress} copyLabel="contract address" />
         {explorerLink && (
           <Button variant="ghost" size="sm" asChild>
             <a href={explorerLink} target="_blank" rel="noopener noreferrer">
@@ -183,10 +180,7 @@ export default function ContractMultisigDashboard({
   // Loading state
   if (isLoading) {
     return (
-      <DashboardLayout
-        title="Contract Multisig"
-        subheader={subheader}
-      >
+      <DashboardLayout title="Contract Multisig" subheader={subheader}>
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
@@ -229,7 +223,8 @@ export default function ContractMultisigDashboard({
           <Alert className="mb-6">
             <Info className="h-4 w-4" />
             <AlertDescription>
-              You are not a member of this multisig. You can view proposals but cannot vote or create new ones.
+              You are not a member of this multisig. You can view proposals but cannot vote or
+              create new ones.
             </AlertDescription>
           </Alert>
         )}
@@ -307,7 +302,7 @@ export default function ContractMultisigDashboard({
                   </TableHeader>
                   <TableBody>
                     {config?.members.map((member) => (
-                      <TableRow 
+                      <TableRow
                         key={member.addr}
                         className={member.addr === userAddress ? "bg-blue-500/5" : ""}
                       >
@@ -315,18 +310,17 @@ export default function ContractMultisigDashboard({
                           <div className="flex items-center gap-2">
                             {member.addr}
                             {member.addr === userAddress && (
-                              <Badge variant="outline" className="text-xs">You</Badge>
+                              <Badge variant="outline" className="text-xs">
+                                You
+                              </Badge>
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="text-right font-medium">
-                          {member.weight}
-                        </TableCell>
+                        <TableCell className="text-right font-medium">{member.weight}</TableCell>
                         <TableCell className="text-right text-muted-foreground">
-                          {totalWeight > 0 
+                          {totalWeight > 0
                             ? `${((member.weight / totalWeight) * 100).toFixed(1)}%`
-                            : "—"
-                          }
+                            : "—"}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -334,18 +328,18 @@ export default function ContractMultisigDashboard({
                 </Table>
 
                 {/* Threshold Info */}
-                <div className="mt-6 p-4 bg-muted/30 rounded-lg">
-                  <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                <div className="mt-6 rounded-lg bg-muted/30 p-4">
+                  <h4 className="mb-2 flex items-center gap-2 text-sm font-medium">
                     <Shield className="h-4 w-4" />
                     Threshold Configuration
                   </h4>
                   <p className="text-sm text-muted-foreground">
                     Proposals require <strong>{config?.threshold}</strong> out of{" "}
-                    <strong>{totalWeight}</strong> total weight to pass 
-                    ({totalWeight > 0 
-                      ? `${((config?.threshold || 0) / totalWeight * 100).toFixed(1)}%`
-                      : "—"
-                    })
+                    <strong>{totalWeight}</strong> total weight to pass (
+                    {totalWeight > 0
+                      ? `${(((config?.threshold || 0) / totalWeight) * 100).toFixed(1)}%`
+                      : "—"}
+                    )
                   </p>
                 </div>
               </CardContent>
@@ -363,7 +357,10 @@ export default function ContractMultisigDashboard({
               <CredentialManagerPanel
                 teamAddress={contractAddress}
                 chainId={chainId}
-                isAdmin={isMember && userMember?.weight === Math.max(...(config?.members.map(m => m.weight) || [0]))}
+                isAdmin={
+                  isMember &&
+                  userMember?.weight === Math.max(...(config?.members.map((m) => m.weight) || [0]))
+                }
               />
             </TabsContent>
           )}
@@ -375,9 +372,7 @@ export default function ContractMultisigDashboard({
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Proposal #{selectedProposalId}</DialogTitle>
-            <DialogDescription>
-              Review the proposal details and cast your vote
-            </DialogDescription>
+            <DialogDescription>Review the proposal details and cast your vote</DialogDescription>
           </DialogHeader>
           {selectedProposalId !== null && (
             <ContractVotePanel
@@ -403,4 +398,3 @@ export default function ContractMultisigDashboard({
     </>
   );
 }
-

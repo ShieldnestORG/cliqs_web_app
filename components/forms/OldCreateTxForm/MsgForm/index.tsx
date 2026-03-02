@@ -38,10 +38,14 @@ const MsgForm = ({ msgType, gasLimit, msgIndex, setMsgGetter, ...restProps }: Ms
   // This prevents infinite render loops in child components
   const stableSetMsgGetter = useCallback(
     (msgGetter: MsgGetter) => setMsgGetter(msgIndex, msgGetter),
-    [msgIndex, setMsgGetter]
+    [msgIndex, setMsgGetter],
   );
 
-  const propsWithGas = { ...restProps, setMsgGetter: stableSetMsgGetter, gasLimit: estimatedGasLimit };
+  const propsWithGas = {
+    ...restProps,
+    setMsgGetter: stableSetMsgGetter,
+    gasLimit: estimatedGasLimit,
+  };
 
   switch (msgType) {
     // Bank

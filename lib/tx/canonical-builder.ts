@@ -1,11 +1,11 @@
 /**
  * Canonical Transaction Builder
- * 
+ *
  * File: lib/tx/canonical-builder.ts
- * 
+ *
  * Enforces deterministic transaction construction with strict ordering,
  * immutable fee policy, and content-addressed hashing for integrity verification.
- * 
+ *
  * Key principles:
  * - Deterministic: Same inputs always produce same outputs
  * - Immutable: No modification after construction
@@ -79,7 +79,7 @@ export class CanonicalTxBuilder {
   private readonly options: TxOptions;
   private readonly registry: Registry;
   private readonly aminoTypes: AminoTypes;
-  
+
   // Cached values (computed lazily)
   private _bodyBytes?: Uint8Array;
   private _payloadHash?: Uint8Array;
@@ -98,14 +98,11 @@ export class CanonicalTxBuilder {
 
   /**
    * Create a CanonicalTxBuilder from messages and options
-   * 
+   *
    * Messages are sorted deterministically by typeUrl, then by a hash of their content.
    * This ensures the same set of messages always produces the same transaction.
    */
-  static fromMessages(
-    msgs: readonly EncodeObject[],
-    options: TxOptions,
-  ): CanonicalTxBuilder {
+  static fromMessages(msgs: readonly EncodeObject[], options: TxOptions): CanonicalTxBuilder {
     // Sort messages deterministically
     const sortedMsgs = CanonicalTxBuilder.sortMessages(msgs);
     return new CanonicalTxBuilder(sortedMsgs, options);
@@ -160,7 +157,7 @@ export class CanonicalTxBuilder {
 
   /**
    * Compute the SHA256 hash of the canonical payload
-   * 
+   *
    * This hash uniquely identifies the transaction content and can be
    * independently reproduced by any party with the same inputs.
    */
@@ -231,7 +228,7 @@ export class CanonicalTxBuilder {
 
   /**
    * Get sign bytes for Amino mode signing
-   * 
+   *
    * Returns the Amino-formatted SignDoc that wallets expect
    */
   getAminoSignDoc(): {
@@ -255,9 +252,7 @@ export class CanonicalTxBuilder {
     };
 
     // Serialize using sorted JSON (canonical form)
-    const bytes = new TextEncoder().encode(
-      this.serializeSortedJson(signDoc),
-    );
+    const bytes = new TextEncoder().encode(this.serializeSortedJson(signDoc));
     const hash = sha256(bytes);
 
     return {
@@ -271,10 +266,7 @@ export class CanonicalTxBuilder {
   /**
    * Get the appropriate sign bytes based on sign mode
    */
-  getSignDoc(
-    mode: "amino" | "direct",
-    multisigPubkey?: MultisigThresholdPubkey,
-  ): SignDocBytes {
+  getSignDoc(mode: "amino" | "direct", multisigPubkey?: MultisigThresholdPubkey): SignDocBytes {
     if (mode === "direct") {
       if (!multisigPubkey) {
         throw new Error("Multisig pubkey required for Direct mode");
@@ -403,12 +395,8 @@ export class CanonicalTxBuilder {
       }
 
       // Then by a hash of the content
-      const hashA = sha256(
-        new TextEncoder().encode(JSON.stringify(a.value)),
-      );
-      const hashB = sha256(
-        new TextEncoder().encode(JSON.stringify(b.value)),
-      );
+      const hashA = sha256(new TextEncoder().encode(JSON.stringify(a.value)));
+      const hashB = sha256(new TextEncoder().encode(JSON.stringify(b.value)));
 
       return toBase64(hashA).localeCompare(toBase64(hashB));
     });
@@ -528,4 +516,3 @@ export function computePayloadHash(data: {
   const builder = CanonicalTxBuilder.fromTransactionData(data);
   return builder.getPayloadHashBase64();
 }
-

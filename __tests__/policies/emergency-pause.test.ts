@@ -54,7 +54,9 @@ describe("Emergency Pause Controller", () => {
     });
 
     // Verify paused
-    expect(controller.isOperationBlocked(multisigAddr, "cosmoshub-4", "approve").blocked).toBe(true);
+    expect(controller.isOperationBlocked(multisigAddr, "cosmoshub-4", "approve").blocked).toBe(
+      true,
+    );
 
     await controller.unpause(multisigAddr, "cosmoshub-4", {
       actor: "admin",
@@ -62,7 +64,9 @@ describe("Emergency Pause Controller", () => {
     });
 
     // Verify unpaused
-    expect(controller.isOperationBlocked(multisigAddr, "cosmoshub-4", "approve").blocked).toBe(false);
+    expect(controller.isOperationBlocked(multisigAddr, "cosmoshub-4", "approve").blocked).toBe(
+      false,
+    );
   });
 
   test("getState returns correct pause information", async () => {
@@ -94,7 +98,7 @@ describe("Emergency Pause Controller", () => {
       controller.pause(multisigAddr, "cosmoshub-4", {
         actor: "admin",
         reason: "Another incident",
-      })
+      }),
     ).rejects.toThrow("already paused");
   });
 
@@ -106,7 +110,7 @@ describe("Emergency Pause Controller", () => {
       controller.unpause(multisigAddr, "cosmoshub-4", {
         actor: "admin",
         reason: "Not actually paused",
-      })
+      }),
     ).rejects.toThrow("not paused");
   });
 });

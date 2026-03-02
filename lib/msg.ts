@@ -67,10 +67,18 @@ const CoreumMsgBurn = {
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
-        case 1: message.sender = reader.string(); break;
-        case 2: message.classId = reader.string(); break;
-        case 3: message.id = reader.string(); break;
-        default: reader.skipType(tag & 7); break;
+        case 1:
+          message.sender = reader.string();
+          break;
+        case 2:
+          message.classId = reader.string();
+          break;
+        case 3:
+          message.id = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
     }
     return message;
@@ -115,11 +123,19 @@ const EXEC_INNER_CODECS: Record<string, InnerMsgCodec> = {
     aminoType: "cosmos-sdk/MsgDelegate",
     toAmino: (v) => {
       const m = v as ReturnType<typeof MsgDelegate.fromPartial>;
-      return { delegator_address: m.delegatorAddress, validator_address: m.validatorAddress, amount: m.amount ? coin(m.amount) : undefined };
+      return {
+        delegator_address: m.delegatorAddress,
+        validator_address: m.validatorAddress,
+        amount: m.amount ? coin(m.amount) : undefined,
+      };
     },
     fromAmino: (v) =>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      MsgDelegate.fromPartial({ delegatorAddress: v.delegator_address as string, validatorAddress: v.validator_address as string, amount: v.amount as any }),
+      MsgDelegate.fromPartial({
+        delegatorAddress: v.delegator_address as string,
+        validatorAddress: v.validator_address as string,
+        amount: v.amount as any,
+      }),
   },
   "/cosmos.staking.v1beta1.MsgUndelegate": {
     encode: MsgUndelegate.encode,
@@ -127,11 +143,19 @@ const EXEC_INNER_CODECS: Record<string, InnerMsgCodec> = {
     aminoType: "cosmos-sdk/MsgUndelegate",
     toAmino: (v) => {
       const m = v as ReturnType<typeof MsgUndelegate.fromPartial>;
-      return { delegator_address: m.delegatorAddress, validator_address: m.validatorAddress, amount: m.amount ? coin(m.amount) : undefined };
+      return {
+        delegator_address: m.delegatorAddress,
+        validator_address: m.validatorAddress,
+        amount: m.amount ? coin(m.amount) : undefined,
+      };
     },
     fromAmino: (v) =>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      MsgUndelegate.fromPartial({ delegatorAddress: v.delegator_address as string, validatorAddress: v.validator_address as string, amount: v.amount as any }),
+      MsgUndelegate.fromPartial({
+        delegatorAddress: v.delegator_address as string,
+        validatorAddress: v.validator_address as string,
+        amount: v.amount as any,
+      }),
   },
   "/cosmos.bank.v1beta1.MsgSend": {
     encode: MsgSend.encode,
@@ -139,11 +163,19 @@ const EXEC_INNER_CODECS: Record<string, InnerMsgCodec> = {
     aminoType: "cosmos-sdk/MsgSend",
     toAmino: (v) => {
       const m = v as ReturnType<typeof MsgSend.fromPartial>;
-      return { from_address: m.fromAddress, to_address: m.toAddress, amount: (m.amount ?? []).map(coin) };
+      return {
+        from_address: m.fromAddress,
+        to_address: m.toAddress,
+        amount: (m.amount ?? []).map(coin),
+      };
     },
     fromAmino: (v) =>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      MsgSend.fromPartial({ fromAddress: v.from_address as string, toAddress: v.to_address as string, amount: v.amount as any }),
+      MsgSend.fromPartial({
+        fromAddress: v.from_address as string,
+        toAddress: v.to_address as string,
+        amount: v.amount as any,
+      }),
   },
   "/coreum.asset.nft.v1.MsgBurn": {
     encode: CoreumMsgBurn.encode,
@@ -213,7 +245,9 @@ function makeAuthzAminoConverters(): AminoConverters {
             break;
           }
           default:
-            throw new Error(`Unsupported authorization type for amino signing: ${authorization.typeUrl}`);
+            throw new Error(
+              `Unsupported authorization type for amino signing: ${authorization.typeUrl}`,
+            );
         }
 
         let expiration: string | undefined;
@@ -221,7 +255,11 @@ function makeAuthzAminoConverters(): AminoConverters {
           expiration = timestampToRfc3339(grant.expiration.seconds, grant.expiration.nanos);
         }
 
-        return { granter, grantee, grant: { authorization: aminoAuth, expiration: expiration ?? "" } };
+        return {
+          granter,
+          grantee,
+          grant: { authorization: aminoAuth, expiration: expiration ?? "" },
+        };
       },
       fromAmino: ({
         granter,
@@ -258,7 +296,11 @@ function makeAuthzAminoConverters(): AminoConverters {
           });
         }
 
-        return MsgGrant.fromPartial({ granter, grantee, grant: { authorization: protoAuth, expiration: protoExpiration } });
+        return MsgGrant.fromPartial({
+          granter,
+          grantee,
+          grant: { authorization: protoAuth, expiration: protoExpiration },
+        });
       },
     },
     "/cosmos.authz.v1beta1.MsgRevoke": {

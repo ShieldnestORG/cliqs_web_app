@@ -31,8 +31,8 @@ const StackableContainer = ({
   const { className: divClassName, ...restDivProps } = divProps || {};
 
   const variantClasses = {
-    default: base 
-      ? "bg-card border border-border shadow-lg" 
+    default: base
+      ? "bg-card border border-border shadow-lg"
       : "bg-muted/30 border border-border/50",
     institutional: "bg-card border-2 border-border shadow-card",
     elevated: "bg-card border border-border shadow-lg hover:shadow-xl",
@@ -51,36 +51,34 @@ const StackableContainer = ({
         // Base styles
         "relative flex flex-col justify-between",
         "transition-all duration-200",
-        
+
         // Variant styles
         variantClasses[variant],
-        
+
         // Accent styles
         accentClasses[accent],
-        
+
         // Padding
         lessPadding ? "p-4" : "p-6",
-        
+
         // Margin
         lessMargin || base ? "mt-4" : "mt-6",
         "first:mt-0",
-        
+
         // Border radius - institutional variant uses rounded corners
-        variant === "institutional" 
-          ? "rounded-xl" 
-          : lessRadius ? "rounded-lg" : "rounded-xl",
-        
+        variant === "institutional" ? "rounded-xl" : lessRadius ? "rounded-lg" : "rounded-xl",
+
         // Height
         fullHeight && "h-full",
-        
+
         // Max width for base containers
         base && "w-full",
-        
+
         // Hover effect
-        hover && "hover:-translate-y-[3px] hover:shadow-card-hover cursor-pointer",
-        
+        hover && "cursor-pointer hover:-translate-y-[3px] hover:shadow-card-hover",
+
         // Custom className from divProps
-        divClassName
+        divClassName,
       )}
       {...restDivProps}
     >

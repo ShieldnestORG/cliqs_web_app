@@ -13,7 +13,12 @@ import { MultisigChaosHarness } from "../../chaos/multisigChaosHarness";
 import { ChaosHarness } from "../../chaos/chaosHarness";
 import { faultController } from "../../chaos/faults";
 import { assertProposalInvariants, ProposalState } from "../oracle/invariantOracle";
-import { genExecutedProposal, genExecutableProposal, simulateActionSequence, ProposalAction } from "../generators/genProposal";
+import {
+  genExecutedProposal,
+  genExecutableProposal,
+  simulateActionSequence,
+  ProposalAction,
+} from "../generators/genProposal";
 
 describe("PHASE 3 REPLAY: Double Execute Attack", () => {
   beforeEach(() => {
@@ -40,7 +45,9 @@ describe("PHASE 3 REPLAY: Double Execute Attack", () => {
 
           // Should have error about invariant violation or already executed
           expect(
-            firstAttempt.errors.some(e => e.includes("INVARIANT") || e.includes("twice") || e.includes("terminal"))
+            firstAttempt.errors.some(
+              (e) => e.includes("INVARIANT") || e.includes("twice") || e.includes("terminal"),
+            ),
           ).toBe(true);
 
           // Second execution attempt
@@ -48,7 +55,9 @@ describe("PHASE 3 REPLAY: Double Execute Attack", () => {
 
           // Should also fail
           expect(
-            secondAttempt.errors.some(e => e.includes("INVARIANT") || e.includes("twice") || e.includes("terminal"))
+            secondAttempt.errors.some(
+              (e) => e.includes("INVARIANT") || e.includes("twice") || e.includes("terminal"),
+            ),
           ).toBe(true);
         },
       });
@@ -61,7 +70,11 @@ describe("PHASE 3 REPLAY: Double Execute Attack", () => {
       const result = simulateActionSequence(proposal, ["EXECUTE"]);
 
       // Should have error about invariant violation or terminal state
-      expect(result.errors.some(e => e.includes("INVARIANT") || e.includes("terminal") || e.includes("already"))).toBe(true);
+      expect(
+        result.errors.some(
+          (e) => e.includes("INVARIANT") || e.includes("terminal") || e.includes("already"),
+        ),
+      ).toBe(true);
     });
   });
 
@@ -88,7 +101,9 @@ describe("PHASE 3 REPLAY: Double Execute Attack", () => {
           for (let i = 0; i < 99; i++) {
             const attempt = simulateActionSequence(executedProposal, ["EXECUTE"]);
             expect(
-              attempt.errors.some(e => e.includes("INVARIANT") || e.includes("twice") || e.includes("terminal"))
+              attempt.errors.some(
+                (e) => e.includes("INVARIANT") || e.includes("twice") || e.includes("terminal"),
+              ),
             ).toBe(true);
           }
         },
@@ -108,7 +123,9 @@ describe("PHASE 3 REPLAY: Double Execute Attack", () => {
       for (let i = 0; i < 9; i++) {
         const attempt = simulateActionSequence(executedProposal, ["EXECUTE"]);
         expect(
-          attempt.errors.some(e => e.includes("INVARIANT") || e.includes("twice") || e.includes("terminal"))
+          attempt.errors.some(
+            (e) => e.includes("INVARIANT") || e.includes("twice") || e.includes("terminal"),
+          ),
         ).toBe(true);
       }
     });
@@ -168,7 +185,9 @@ describe("PHASE 3 REPLAY: Double Execute Attack", () => {
 
       // Should fail due to terminal state
       expect(
-        result.errors.some(e => e.includes("terminal") || e.includes("INVARIANT") || e.includes("twice"))
+        result.errors.some(
+          (e) => e.includes("terminal") || e.includes("INVARIANT") || e.includes("twice"),
+        ),
       ).toBe(true);
     });
 
@@ -184,9 +203,9 @@ describe("PHASE 3 REPLAY: Double Execute Attack", () => {
         const result = simulateActionSequence(proposal, ["EXECUTE"]);
 
         // Should fail due to terminal state
-        expect(
-          result.errors.some(e => e.includes("terminal") || e.includes("already"))
-        ).toBe(true);
+        expect(result.errors.some((e) => e.includes("terminal") || e.includes("already"))).toBe(
+          true,
+        );
       }
     });
   });
@@ -210,7 +229,9 @@ describe("PHASE 3 REPLAY: Double Execute Attack", () => {
         const executedProposal = { ...proposal, currentState: "EXECUTED" as ProposalState };
         const secondResult = simulateActionSequence(executedProposal, ["EXECUTE"]);
         expect(
-          secondResult.errors.some(e => e.includes("INVARIANT") || e.includes("twice") || e.includes("terminal"))
+          secondResult.errors.some(
+            (e) => e.includes("INVARIANT") || e.includes("twice") || e.includes("terminal"),
+          ),
         ).toBe(true);
       }
     });
@@ -241,7 +262,7 @@ describe("PHASE 3 REPLAY: Double Execute Attack", () => {
         const result = simulateActionSequence(executedProposal, sequence);
 
         // Should have errors for the execution attempts
-        const executeAttempts = sequence.filter(action => action === "EXECUTE").length;
+        const executeAttempts = sequence.filter((action) => action === "EXECUTE").length;
         if (executeAttempts > 0) {
           expect(result.errors.length).toBeGreaterThan(0);
         }
@@ -267,10 +288,11 @@ describe("PHASE 3 REPLAY: Double Execute Attack", () => {
         const executedProposal = { ...proposal, currentState: "EXECUTED" as ProposalState };
         const secondResult = simulateActionSequence(executedProposal, ["EXECUTE"]);
         expect(
-          secondResult.errors.some(e => e.includes("INVARIANT") || e.includes("twice") || e.includes("terminal"))
+          secondResult.errors.some(
+            (e) => e.includes("INVARIANT") || e.includes("twice") || e.includes("terminal"),
+          ),
         ).toBe(true);
       }
     });
   });
 });
-

@@ -1,11 +1,11 @@
 /**
  * Member Snapshot View
- * 
+ *
  * File: components/dataViews/MemberSnapshotView.tsx
- * 
+ *
  * Displays the member snapshot captured at proposal creation time.
  * Shows who was eligible to vote when the proposal was created.
- * 
+ *
  * Phase 2: Group-Backed Multisig
  */
 
@@ -24,12 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // ============================================================================
 // Types
@@ -77,16 +72,10 @@ export default function MemberSnapshotView({
     const snapshotAddrs = new Set(members.map((m) => m.addr.toLowerCase()));
     const currentAddrs = new Set(currentMembers.map((m) => m.addr.toLowerCase()));
 
-    const added = currentMembers.filter(
-      (m) => !snapshotAddrs.has(m.addr.toLowerCase())
-    );
-    const removed = members.filter(
-      (m) => !currentAddrs.has(m.addr.toLowerCase())
-    );
+    const added = currentMembers.filter((m) => !snapshotAddrs.has(m.addr.toLowerCase()));
+    const removed = members.filter((m) => !currentAddrs.has(m.addr.toLowerCase()));
     const changed = members.filter((m) => {
-      const current = currentMembers.find(
-        (c) => c.addr.toLowerCase() === m.addr.toLowerCase()
-      );
+      const current = currentMembers.find((c) => c.addr.toLowerCase() === m.addr.toLowerCase());
       return current && current.weight !== m.weight;
     });
 
@@ -129,9 +118,7 @@ export default function MemberSnapshotView({
                   <span>{formattedTime}</span>
                 </div>
               </TooltipTrigger>
-              <TooltipContent>
-                Block height: {snapshotHeight.toLocaleString()}
-              </TooltipContent>
+              <TooltipContent>Block height: {snapshotHeight.toLocaleString()}</TooltipContent>
             </Tooltip>
           </TooltipProvider>
 
@@ -140,9 +127,7 @@ export default function MemberSnapshotView({
             <span>
               Total weight: {totalWeight}
               {currentTotalWeight !== undefined && currentTotalWeight !== totalWeight && (
-                <span className="text-yellow-600 ml-1">
-                  (now: {currentTotalWeight})
-                </span>
+                <span className="ml-1 text-yellow-600">(now: {currentTotalWeight})</span>
               )}
             </span>
           </div>
@@ -156,7 +141,7 @@ export default function MemberSnapshotView({
 
         {/* Changes indicator */}
         {memberChanges?.hasChanges && (
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex flex-wrap gap-2">
             {memberChanges.added.length > 0 && (
               <Badge className="bg-green-accent/20 text-green-accent">
                 +{memberChanges.added.length} added since
@@ -188,25 +173,20 @@ export default function MemberSnapshotView({
           <TableBody>
             {members.map((member) => {
               const currentMember = currentMembers?.find(
-                (c) => c.addr.toLowerCase() === member.addr.toLowerCase()
+                (c) => c.addr.toLowerCase() === member.addr.toLowerCase(),
               );
               const wasRemoved = currentMembers && !currentMember;
               const weightChanged = currentMember && currentMember.weight !== member.weight;
 
               return (
-                <TableRow 
-                  key={member.addr}
-                  className={wasRemoved ? "opacity-50" : ""}
-                >
+                <TableRow key={member.addr} className={wasRemoved ? "opacity-50" : ""}>
                   <TableCell className="font-mono text-sm">
                     {member.addr.slice(0, 12)}...{member.addr.slice(-8)}
                   </TableCell>
                   <TableCell className="text-right">
                     {member.weight}
                     {weightChanged && (
-                      <span className="text-yellow-600 ml-1">
-                        → {currentMember?.weight}
-                      </span>
+                      <span className="ml-1 text-yellow-600">→ {currentMember?.weight}</span>
                     )}
                   </TableCell>
                   <TableCell className="text-right text-muted-foreground">
@@ -235,4 +215,3 @@ export default function MemberSnapshotView({
     </Card>
   );
 }
-

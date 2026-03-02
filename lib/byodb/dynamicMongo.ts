@@ -207,12 +207,7 @@ export async function provisionDatabase(connectionUri: string): Promise<{
   let indexesCreated = 0;
 
   // Ensure all required collections exist
-  const requiredCollections = [
-    "multisigs",
-    "transactions",
-    "signatures",
-    "nonces",
-  ];
+  const requiredCollections = ["multisigs", "transactions", "signatures", "nonces"];
 
   const existingCols = await db.listCollections().toArray();
   const existingNames = new Set(existingCols.map((c) => c.name));
@@ -238,10 +233,7 @@ export async function provisionDatabase(connectionUri: string): Promise<{
 
   const sigCol = db.collection("signatures");
   await sigCol.createIndex({ transactionId: 1 });
-  await sigCol.createIndex(
-    { transactionId: 1, address: 1 },
-    { unique: true },
-  );
+  await sigCol.createIndex({ transactionId: 1, address: 1 }, { unique: true });
   indexesCreated += 2;
 
   const nonceCol = db.collection("nonces");
@@ -269,8 +261,7 @@ export async function getDynamicDbStats(connectionUri: string): Promise<{
   ]);
 
   const stats = await db.stats();
-  const estimatedSizeMB =
-    Math.round((stats.dataSize / (1024 * 1024)) * 100) / 100;
+  const estimatedSizeMB = Math.round((stats.dataSize / (1024 * 1024)) * 100) / 100;
 
   return { multisigCount, transactionCount, signatureCount, estimatedSizeMB };
 }

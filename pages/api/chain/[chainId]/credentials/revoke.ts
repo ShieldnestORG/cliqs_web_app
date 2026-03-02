@@ -1,12 +1,12 @@
 /**
  * Revoke Credential API
- * 
+ *
  * File: pages/api/chain/[chainId]/credentials/revoke.ts
- * 
+ *
  * API route for revoking (burning) credentials.
- * 
+ *
  * POST - Revoke a credential
- * 
+ *
  * Phase 3: Identity NFTs (Credential-Gated Multisig)
  */
 
@@ -106,4 +106,3 @@ export default async function handler(
     });
   }
 }
-

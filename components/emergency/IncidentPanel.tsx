@@ -1,34 +1,20 @@
 /**
  * Incident Panel Component
- * 
+ *
  * File: components/emergency/IncidentPanel.tsx
- * 
+ *
  * Displays and manages incidents for a multisig.
- * 
+ *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards
  */
 
 "use client";
 
 import { useState } from "react";
-import {
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  Eye,
-  Play,
-  XCircle,
-} from "lucide-react";
+import { AlertCircle, CheckCircle, Clock, Eye, Play } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -60,13 +46,13 @@ interface IncidentPanelProps {
 // ============================================================================
 
 export function IncidentPanel({
-  multisigAddress,
-  chainId,
+  multisigAddress: _multisigAddress,
+  chainId: _chainId,
   incidents,
   onAcknowledge,
   onResolve,
-  onRunPlaybook,
-  isLoading = false,
+  onRunPlaybook: _onRunPlaybook,
+  isLoading: _isLoading = false,
 }: IncidentPanelProps) {
   const [selectedIncident, setSelectedIncident] = useState<DbIncident | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -204,15 +190,13 @@ export function IncidentPanel({
       <Card>
         <CardHeader>
           <CardTitle>Incidents</CardTitle>
-          <CardDescription>
-            Security incidents requiring attention
-          </CardDescription>
+          <CardDescription>Security incidents requiring attention</CardDescription>
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[500px]">
             {sortedIncidents.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                <CheckCircle className="h-12 w-12 mb-4 text-green-accent" />
+                <CheckCircle className="mb-4 h-12 w-12 text-green-accent" />
                 <p>No incidents</p>
                 <p className="text-sm">All systems operating normally</p>
               </div>
@@ -225,33 +209,40 @@ export function IncidentPanel({
                   return (
                     <div
                       key={incident.id}
-                      className={`p-4 rounded-lg border ${
+                      className={`rounded-lg border p-4 ${
                         incident.status === "open"
                           ? "border-red-500/50 bg-red-500/5"
                           : incident.status === "acknowledged"
-                          ? "border-yellow-500/50 bg-yellow-500/5"
-                          : "bg-muted/50"
+                            ? "border-yellow-500/50 bg-yellow-500/5"
+                            : "bg-muted/50"
                       }`}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex items-start gap-3">
-                          <StatusIcon className={`h-5 w-5 mt-0.5 ${getStatusColor(incident.status)}`} />
+                          <StatusIcon
+                            className={`mt-0.5 h-5 w-5 ${getStatusColor(incident.status)}`}
+                          />
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{incident.title}</span>
-                              <Badge variant={getSeverityBadge(incident.severity) as "destructive" | "default" | "secondary"}>
+                              <Badge
+                                variant={
+                                  getSeverityBadge(incident.severity) as
+                                    | "destructive"
+                                    | "default"
+                                    | "secondary"
+                                }
+                              >
                                 {incident.severity}
                               </Badge>
                             </div>
-                            <p className="text-sm text-muted-foreground mt-1">
+                            <p className="mt-1 text-sm text-muted-foreground">
                               {incident.description}
                             </p>
-                            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                            <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
                               <span>Created {formatTimestamp(incident.createdAt)}</span>
                               <span>Type: {incident.type}</span>
-                              {incident.playbookId && (
-                                <span>Playbook: {incident.playbookId}</span>
-                              )}
+                              {incident.playbookId && <span>Playbook: {incident.playbookId}</span>}
                             </div>
                           </div>
                         </div>
@@ -263,7 +254,7 @@ export function IncidentPanel({
                               onClick={() => handleAcknowledge(incident.id)}
                               disabled={incidentLoading}
                             >
-                              <Eye className="h-4 w-4 mr-1" />
+                              <Eye className="mr-1 h-4 w-4" />
                               Acknowledge
                             </Button>
                           )}
@@ -279,18 +270,24 @@ export function IncidentPanel({
                           )}
                         </div>
                       </div>
-                      
+
                       {/* Playbook Status */}
                       {incident.playbookId && incident.playbookStatus && (
-                        <div className="mt-3 pt-3 border-t">
+                        <div className="mt-3 border-t pt-3">
                           <div className="flex items-center gap-2 text-sm">
                             <Play className="h-4 w-4" />
                             <span>Playbook: {incident.playbookId}</span>
-                            <Badge variant={
-                              incident.playbookStatus === "completed" ? "secondary" :
-                              incident.playbookStatus === "running" ? "default" :
-                              incident.playbookStatus === "failed" ? "destructive" : "outline"
-                            }>
+                            <Badge
+                              variant={
+                                incident.playbookStatus === "completed"
+                                  ? "secondary"
+                                  : incident.playbookStatus === "running"
+                                    ? "default"
+                                    : incident.playbookStatus === "failed"
+                                      ? "destructive"
+                                      : "outline"
+                              }
+                            >
                               {incident.playbookStatus}
                             </Badge>
                           </div>
@@ -323,7 +320,14 @@ export function IncidentPanel({
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Severity:</span>
-                  <Badge variant={getSeverityBadge(selectedIncident.severity) as "destructive" | "default" | "secondary"}>
+                  <Badge
+                    variant={
+                      getSeverityBadge(selectedIncident.severity) as
+                        | "destructive"
+                        | "default"
+                        | "secondary"
+                    }
+                  >
                     {selectedIncident.severity}
                   </Badge>
                 </div>
@@ -352,4 +356,3 @@ export function IncidentPanel({
 }
 
 export default IncidentPanel;
-

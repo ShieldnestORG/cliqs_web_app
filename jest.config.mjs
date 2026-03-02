@@ -9,39 +9,41 @@ const createJestConfig = nextJest({
 /** @type {import('jest').Config} */
 const config = {
   // Setup polyfills before everything else
-  setupFiles: ['<rootDir>/jest.polyfills.js'],
+  setupFiles: ["<rootDir>/jest.polyfills.js"],
   // Add more setup options before each test is run
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
 
   testEnvironment: "jest-environment-jsdom",
-  
+
   // Test file patterns
   testMatch: [
-    '**/__tests__/**/*.{js,jsx,ts,tsx}',
-    '**/*.{spec,test}.{js,jsx,ts,tsx}',
-    '**/{tests,__tests__}/chaos/**/*.spec.ts',
+    "**/__tests__/**/*.{js,jsx,ts,tsx}",
+    "**/*.{spec,test}.{js,jsx,ts,tsx}",
+    "**/{tests,__tests__}/chaos/**/*.spec.ts",
   ],
-  
+
   // Exclude helper files from test matching
   testPathIgnorePatterns: [
-    '/node_modules/',
-    '/.next/',
-    '/__tests__/helpers.ts',
+    "/node_modules/",
+    "/.next/",
+    "/__tests__/helpers.ts",
+    "/__tests__/mocks/",
+    "/__tests__/adapters/",
   ],
-  
+
   // Module name mapping for path aliases
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/$1',
+    "^@/(.*)$": "<rootDir>/$1",
   },
-  
+
   // Coverage configuration
   collectCoverageFrom: [
-    'pages/**/*.{js,jsx,ts,tsx}',
-    'components/**/*.{js,jsx,ts,tsx}',
-    'lib/**/*.{js,jsx,ts,tsx}',
-    '!**/*.d.ts',
-    '!**/node_modules/**',
-    '!**/.next/**',
+    "pages/**/*.{js,jsx,ts,tsx}",
+    "components/**/*.{js,jsx,ts,tsx}",
+    "lib/**/*.{js,jsx,ts,tsx}",
+    "!**/*.d.ts",
+    "!**/node_modules/**",
+    "!**/.next/**",
   ],
 };
 

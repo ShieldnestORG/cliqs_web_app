@@ -16,7 +16,7 @@ type MsgType = Readonly<{
 }>;
 
 export default function CreateTxForm() {
-  const router = useRouter();
+  const _router = useRouter();
   const { chain } = useChains();
   const [msgTypes, setMsgTypes] = useState<readonly MsgType[]>([]);
 

@@ -146,9 +146,7 @@ export async function saveCredential(
  * Unlock the stored credential with the appropriate material.
  * Level 0 credentials are auto-unlocked.
  */
-export async function unlockCredential(
-  material?: string | Uint8Array,
-): Promise<string> {
+export async function unlockCredential(material?: string | Uint8Array): Promise<string> {
   const encoded = localStorage.getItem(STORAGE_KEY);
   if (!encoded) {
     throw new Error("No BYODB credential stored");
@@ -261,9 +259,7 @@ export function getByodbHeaders(): Record<string, string> {
  *   import { withByodb } from "@/lib/byodb/storage";
  *   const result = await requestJson(endpoint, withByodb({ method: "POST", body }));
  */
-export function withByodb<T extends { headers?: Record<string, string> }>(
-  config: T,
-): T {
+export function withByodb<T extends { headers?: Record<string, string> }>(config: T): T {
   const byodbHeaders = getByodbHeaders();
   if (Object.keys(byodbHeaders).length === 0) return config;
 

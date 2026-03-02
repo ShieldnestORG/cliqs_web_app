@@ -291,7 +291,10 @@ export function genRandomActionSequence(length: number, seed?: number): Proposal
     // 80% chance of valid-ish actions, 20% chance of any action (including invalid)
     if (rand() < 0.8) {
       const reasonableActions: ProposalAction[] = [
-        "CREATE", "VOTE_APPROVE", "VOTE_REJECT", "EXECUTE"
+        "CREATE",
+        "VOTE_APPROVE",
+        "VOTE_REJECT",
+        "EXECUTE",
       ];
       return randChoice(reasonableActions);
     } else {
@@ -341,14 +344,22 @@ export function genHostileActionSequence(type: string, seed?: number): ProposalA
 export function applyAction(
   proposal: GeneratedProposal,
   action: ProposalAction,
-  context: { votesCollected: number; nowMs: number }
+  context: { votesCollected: number; nowMs: number },
 ): { newState: ProposalState; error?: string } {
   const currentState = proposal.currentState;
 
   // INVARIANT: Terminal states cannot transition
-  const TERMINAL_STATES: Set<ProposalState> = new Set(["EXECUTED", "FAILED", "REJECTED", "EXPIRED"]);
+  const TERMINAL_STATES: Set<ProposalState> = new Set([
+    "EXECUTED",
+    "FAILED",
+    "REJECTED",
+    "EXPIRED",
+  ]);
   if (TERMINAL_STATES.has(currentState)) {
-    return { newState: currentState, error: `Cannot ${action}: proposal is already in terminal state ${currentState}. INVARIANT: Terminal states are immutable` };
+    return {
+      newState: currentState,
+      error: `Cannot ${action}: proposal is already in terminal state ${currentState}. INVARIANT: Terminal states are immutable`,
+    };
   }
 
   switch (action) {
@@ -396,7 +407,12 @@ export function applyAction(
       return { newState: "EXECUTED" };
 
     case "EXPIRE":
-      if (currentState === "EXECUTED" || currentState === "FAILED" || currentState === "REJECTED" || currentState === "EXPIRED") {
+      if (
+        currentState === "EXECUTED" ||
+        currentState === "FAILED" ||
+        currentState === "REJECTED" ||
+        currentState === "EXPIRED"
+      ) {
         return { newState: currentState, error: "Cannot expire: already terminal" };
       }
       // EXPIRE only valid from OPEN, APPROVED, EXECUTABLE states (not DRAFT)
@@ -406,7 +422,12 @@ export function applyAction(
       return { newState: "EXPIRED" };
 
     case "CANCEL":
-      if (currentState === "EXECUTED" || currentState === "FAILED" || currentState === "REJECTED" || currentState === "EXPIRED") {
+      if (
+        currentState === "EXECUTED" ||
+        currentState === "FAILED" ||
+        currentState === "REJECTED" ||
+        currentState === "EXPIRED"
+      ) {
         return { newState: currentState, error: "Cannot cancel: already terminal" };
       }
       // CANCEL/FAIL only valid from DRAFT, OPEN states
@@ -431,7 +452,7 @@ export function applyAction(
  */
 export function simulateActionSequence(
   proposal: GeneratedProposal,
-  actions: ProposalAction[]
+  actions: ProposalAction[],
 ): { history: ProposalState[]; errors: string[] } {
   const history: ProposalState[] = [proposal.currentState];
   const errors: string[] = [];
@@ -478,4 +499,3 @@ export function genProposalBatch(count: number, seed?: number): GeneratedProposa
 
   return proposals;
 }
-

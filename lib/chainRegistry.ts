@@ -150,8 +150,9 @@ const getChainInfoFromJsons = (
   if (isCoreum) {
     const polkachuMainnet = "https://coreum-rpc.polkachu.com";
     const polkachuTestnet = "https://coreum-testnet-rpc.polkachu.com";
-    const preferred =
-      registryChain.chain_id?.toLowerCase().includes("testnet") ? polkachuTestnet : polkachuMainnet;
+    const preferred = registryChain.chain_id?.toLowerCase().includes("testnet")
+      ? polkachuTestnet
+      : polkachuMainnet;
     nodeAddresses = [preferred, ...nodeAddresses.filter((a) => a !== preferred)];
   }
 
@@ -206,22 +207,29 @@ const getChainInfoFromJsons = (
     displayDenom: isCoreum ? "TX" : displayDenom,
     displayDenomExponent,
     gasPrice: formattedGasPrice,
-    assets: isCoreum ? cdnRegistryAssets.map(asset => {
-        const isCoreAsset = 
-            asset.symbol.toUpperCase().includes("CORE") || 
+    assets: isCoreum
+      ? cdnRegistryAssets.map((asset) => {
+          const isCoreAsset =
+            asset.symbol.toUpperCase().includes("CORE") ||
             asset.display.toLowerCase().includes("core") ||
             asset.base.toLowerCase().includes("core");
-        return {
+          return {
             ...asset,
             symbol: isCoreAsset ? "TX" : asset.symbol,
             display: isCoreAsset ? "TX" : asset.display,
             logo_URIs: isCoreAsset ? { png: "/tx.png", svg: "/tx.png" } : asset.logo_URIs,
-            denom_units: isCoreAsset ? asset.denom_units.map(unit => ({
-                ...unit,
-                denom: (unit.denom.toLowerCase().includes("core") && unit.exponent > 0) ? "TX" : unit.denom
-            })) : asset.denom_units
-        };
-    }) : cdnRegistryAssets,
+            denom_units: isCoreAsset
+              ? asset.denom_units.map((unit) => ({
+                  ...unit,
+                  denom:
+                    unit.denom.toLowerCase().includes("core") && unit.exponent > 0
+                      ? "TX"
+                      : unit.denom,
+                }))
+              : asset.denom_units,
+          };
+        })
+      : cdnRegistryAssets,
   };
 
   return chain;

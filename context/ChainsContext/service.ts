@@ -13,7 +13,7 @@ import {
   setChainsInStorage,
   setShaInStorage,
 } from "./storage";
-import { ChainItems } from "./types";
+import { ChainInfo, ChainItems } from "./types";
 
 export const useChainsFromRegistry = () => {
   const [chainItems, setChainItems] = useState<ChainItems>({
@@ -149,7 +149,7 @@ export const getChain = (chains: ChainItems) => {
 
   const recentChain = getRecentChainFromStorage(chains);
   if (!chainNameFromUrl && isChainInfoFilled(recentChain)) {
-    return rebrandChain(recentChain as any);
+    return rebrandChain(recentChain as ChainInfo);
   }
 
   const urlChain = getChainFromUrl(chainNameFromUrl);
@@ -159,7 +159,7 @@ export const getChain = (chains: ChainItems) => {
     chains,
   );
 
-  const chain = rebrandChain({ ...storedChain, ...envfileChain, ...urlChain } as any);
+  const chain = rebrandChain({ ...storedChain, ...envfileChain, ...urlChain } as ChainInfo);
 
   return isChainInfoFilled(chain) ? chain : emptyChain;
 };

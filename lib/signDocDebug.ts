@@ -1,6 +1,6 @@
 /**
  * SignDoc Debugging Utilities
- * 
+ *
  * These utilities help diagnose signature verification failures by providing
  * detailed comparison between what the app signs and what the chain expects.
  */
@@ -37,7 +37,7 @@ export function generateSignDocDebugInfo(
   memo: string,
   accountNumber: number | string,
   sequence: number | string,
-  customAminoTypes?: AminoTypes
+  customAminoTypes?: AminoTypes,
 ): SignDocDebugInfo {
   // Use provided amino types or create from shared aminoConverters
   const aminoTypes = customAminoTypes ?? new AminoTypes(aminoConverters);
@@ -52,15 +52,15 @@ export function generateSignDocDebugInfo(
     chainId,
     memo,
     String(accountNumber),
-    String(sequence)
+    String(sequence),
   );
 
   // Serialize to canonical JSON bytes
   const signDocBytes = serializeSignDoc(signDoc);
-  
+
   // Get the JSON string for inspection
   const signDocJson = new TextDecoder().decode(signDocBytes);
-  
+
   // Compute the hash
   const signDocHash = sha256(signDocBytes);
 
@@ -80,7 +80,7 @@ export function generateSignDocDebugInfo(
 export async function verifySignatureAgainstSignDoc(
   signature: Uint8Array,
   signDocHash: Uint8Array,
-  pubkeyBytes: Uint8Array
+  pubkeyBytes: Uint8Array,
 ): Promise<boolean> {
   try {
     const sig = Secp256k1Signature.fromFixedLength(signature);
@@ -96,7 +96,7 @@ export async function verifySignatureAgainstSignDoc(
  */
 export function compareSignDocs(
   doc1: SignDocDebugInfo,
-  doc2: SignDocDebugInfo
+  doc2: SignDocDebugInfo,
 ): { match: boolean; differences: string[] } {
   const differences: string[] = [];
 
@@ -150,22 +150,22 @@ export function compareSignDocs(
  */
 export function logSignDocDebug(
   debugInfo: SignDocDebugInfo,
-  label: string = "SignDoc Debug"
+  label: string = "SignDoc Debug",
 ): void {
   console.log(`\n${"=".repeat(60)}`);
   console.log(`📜 ${label}`);
   console.log("=".repeat(60));
-  
+
   console.log("\n🔑 SignDoc Hash:");
   console.log(`  Base64: ${debugInfo.signDocHashBase64}`);
   console.log(`  Hex:    ${debugInfo.signDocHashHex}`);
-  
+
   console.log("\n📝 Amino Messages:");
   debugInfo.aminoMsgs.forEach((msg, i) => {
     console.log(`  [${i}] type: ${msg.type}`);
     console.log(`      value: ${JSON.stringify(msg.value)}`);
   });
-  
+
   console.log("\n📄 Full SignDoc JSON (canonical):");
   // Pretty print the JSON for readability
   try {
@@ -174,10 +174,10 @@ export function logSignDocDebug(
   } catch {
     console.log(debugInfo.signDocJson);
   }
-  
+
   console.log("\n🔢 SignDoc Bytes (first 100):");
   console.log(`  ${toHex(debugInfo.signDocBytes.slice(0, 100))}...`);
-  
+
   console.log(`\n${"=".repeat(60)}\n`);
 }
 
@@ -191,7 +191,7 @@ export function parseCliTransaction(cliTxJson: string): {
   memo: string;
 } {
   const tx = JSON.parse(cliTxJson);
-  
+
   return {
     messages: tx.body.messages,
     fee: tx.auth_info.fee,
@@ -203,20 +203,22 @@ export function parseCliTransaction(cliTxJson: string): {
  * Convert CLI message format to EncodeObject format
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function cliMsgToEncodeObject(cliMsg: { "@type": string; [key: string]: any }): EncodeObject {
+export function cliMsgToEncodeObject(cliMsg: {
+  "@type": string;
+  [key: string]: any;
+}): EncodeObject {
   const typeUrl = cliMsg["@type"];
   const value = { ...cliMsg };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   delete (value as any)["@type"];
-  
+
   // Convert snake_case to camelCase for value fields
   const camelCaseValue = Object.fromEntries(
     Object.entries(value).map(([key, val]) => {
       const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
       return [camelKey, val];
-    })
+    }),
   );
-  
+
   return { typeUrl, value: camelCaseValue };
 }
-

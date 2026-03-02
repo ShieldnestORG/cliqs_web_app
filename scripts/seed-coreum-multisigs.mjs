@@ -106,11 +106,7 @@ async function upsertMultisigMongo(m) {
     createdAt: now,
     updatedAt: now,
   };
-  await col.updateOne(
-    { chainId: m.chainId, address: m.address },
-    { $set: doc },
-    { upsert: true }
-  );
+  await col.updateOne({ chainId: m.chainId, address: m.address }, { $set: doc }, { upsert: true });
   return true;
 }
 
@@ -191,7 +187,7 @@ function writeDb(db) {
 
 function upsertContractMultisig(db, m) {
   const idx = db.contractMultisigs?.findIndex(
-    (x) => x.chainId === m.chainId && x.contractAddress === m.contractAddress
+    (x) => x.chainId === m.chainId && x.contractAddress === m.contractAddress,
   );
   const now = new Date().toISOString();
   if (idx >= 0) {
@@ -211,7 +207,7 @@ function upsertContractMultisig(db, m) {
 
 function upsertGroup(db, g) {
   const idx = db.groups?.findIndex(
-    (x) => x.chainId === g.chainId && x.groupAddress === g.groupAddress
+    (x) => x.chainId === g.chainId && x.groupAddress === g.groupAddress,
   );
   const now = new Date().toISOString();
   if (idx >= 0) {
@@ -227,9 +223,7 @@ function upsertGroup(db, g) {
 }
 
 function upsertMultisig(db, m) {
-  const idx = db.multisigs?.findIndex(
-    (x) => x.chainId === m.chainId && x.address === m.address
-  );
+  const idx = db.multisigs?.findIndex((x) => x.chainId === m.chainId && x.address === m.address);
   const now = new Date().toISOString();
   if (idx >= 0) {
     Object.assign(db.multisigs[idx], { ...m, updatedAt: now });
@@ -283,7 +277,8 @@ async function runPhaseCw3(client, db, checkpoint) {
   if (codeIds.length === 0) return { phase: "pubkey", done: true };
 
   const startCodeIdx = checkpoint?.phase === "cw3" ? (checkpoint.codeIndex ?? 0) : 0;
-  const startPaginationKey = checkpoint?.phase === "cw3" ? checkpoint.paginationKey ?? null : null;
+  const startPaginationKey =
+    checkpoint?.phase === "cw3" ? (checkpoint.paginationKey ?? null) : null;
   let runningTotal = checkpoint?.phase === "cw3" ? (checkpoint.totalSeeded ?? 0) : 0;
 
   for (let ci = startCodeIdx; ci < codeIds.length; ci++) {
@@ -301,7 +296,10 @@ async function runPhaseCw3(client, db, checkpoint) {
           let members = [];
           try {
             const voters = await client.queryContractSmart(addr, { list_voters: { limit: 100 } });
-            members = (voters.voters || []).map((v) => ({ addr: v.addr, weight: Number(v.weight || 0) }));
+            members = (voters.voters || []).map((v) => ({
+              addr: v.addr,
+              weight: Number(v.weight || 0),
+            }));
           } catch {
             /* ignore */
           }
@@ -364,7 +362,8 @@ async function runPhaseCw4(client, db, checkpoint) {
   if (codeIds.length === 0) return { phase: "pubkey", done: false };
 
   const startCodeIdx = checkpoint?.phase === "cw4" ? (checkpoint.codeIndex ?? 0) : 0;
-  const startPaginationKey = checkpoint?.phase === "cw4" ? checkpoint.paginationKey ?? null : null;
+  const startPaginationKey =
+    checkpoint?.phase === "cw4" ? (checkpoint.paginationKey ?? null) : null;
   let runningTotal = checkpoint?.phase === "cw4" ? (checkpoint.totalSeeded ?? 0) : 0;
 
   for (let ci = startCodeIdx; ci < codeIds.length; ci++) {
@@ -381,7 +380,10 @@ async function runPhaseCw4(client, db, checkpoint) {
           let members = [];
           try {
             const list = await client.queryContractSmart(addr, { list_members: { limit: 100 } });
-            members = (list.members || []).map((m) => ({ addr: m.addr, weight: Number(m.weight || 0) }));
+            members = (list.members || []).map((m) => ({
+              addr: m.addr,
+              weight: Number(m.weight || 0),
+            }));
           } catch {
             /* ignore */
           }
@@ -457,7 +459,7 @@ function pubkeyToJson(pubkey) {
 }
 
 async function runPhasePubkey(db, checkpoint) {
-  const startKey = checkpoint?.phase === "pubkey" ? checkpoint.paginationKey ?? null : null;
+  const startKey = checkpoint?.phase === "pubkey" ? (checkpoint.paginationKey ?? null) : null;
 
   let paginationKey = startKey;
   let totalSeeded = checkpoint?.phase === "pubkey" ? (checkpoint.totalSeeded ?? 0) : 0;
