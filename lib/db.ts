@@ -73,16 +73,18 @@ interface BNonce {
   nonce: number;
 }
 
-// Cache the availability check for 60 seconds
+// Cache the availability check for 60 seconds (only when available – retry sooner on failure)
 let _mongoAvailable: boolean | null = null;
 let _lastCheck = 0;
 const CHECK_INTERVAL_MS = 60_000;
+const RETRY_INTERVAL_MS = 5_000; // Retry connection sooner when it failed
 
 async function usesMongo(): Promise<boolean> {
   if (!process.env.MONGODB_URI) return false;
 
   const now = Date.now();
-  if (_mongoAvailable !== null && now - _lastCheck < CHECK_INTERVAL_MS) {
+  const interval = _mongoAvailable === false ? RETRY_INTERVAL_MS : CHECK_INTERVAL_MS;
+  if (_mongoAvailable !== null && now - _lastCheck < interval) {
     return _mongoAvailable;
   }
 
@@ -92,10 +94,29 @@ async function usesMongo(): Promise<boolean> {
   if (_mongoAvailable) {
     console.log("[DB] Using MongoDB Atlas");
   } else {
-    console.log("[DB] MongoDB unavailable, using local JSON database");
+    console.log("[DB] MongoDB connection failed – will not fall back to local DB when MONGODB_URI is set");
   }
 
   return _mongoAvailable;
+}
+
+/**
+ * When MONGODB_URI is set, MongoDB is required. Do not fall back to localDb.
+ * Throws a clear error if MongoDB is configured but connection failed.
+ * Call only when BYODB is not in use (byodb already checked by caller).
+ */
+async function requireMongoOrLocalDb(): Promise<"mongo" | "local"> {
+  if (process.env.MONGODB_URI) {
+    const available = await usesMongo();
+    if (!available) {
+      throw new Error(
+        "MongoDB is configured (MONGODB_URI) but connection failed. " +
+          "Verify the connection string, network access, and that your MongoDB Atlas IP allowlist includes Vercel (or use 0.0.0.0/0 for serverless)."
+      );
+    }
+    return "mongo";
+  }
+  return "local";
 }
 
 // ---------------------------------------------------------------------------
@@ -143,7 +164,6 @@ function dedupeMultisigs<T extends { address: string; creator?: string | null }>
 // ============================================================================
 
 export const getMultisig = async (chainId: string, address: string) => {
-  // BYODB takes priority – user's data is fully isolated
   const byodb = await getByodbInstance();
   if (byodb) {
     const col = byodb.collection<BMultisig>(COL.MULTISIGS);
@@ -154,11 +174,8 @@ export const getMultisig = async (chainId: string, address: string) => {
     return null;
   }
 
-  if (await usesMongo()) {
-    const mongoResult = await mongoDb.getMultisig(chainId, address);
-    if (mongoResult) return mongoResult;
-    return localDb.getMultisig(chainId, address);
-  }
+  const backend = await requireMongoOrLocalDb();
+  if (backend === "mongo") return mongoDb.getMultisig(chainId, address);
   return localDb.getMultisig(chainId, address);
 };
 
@@ -176,11 +193,8 @@ export const getMultisigById = async (id: string) => {
     return null;
   }
 
-  if (await usesMongo()) {
-    const mongoResult = await mongoDb.getMultisigById(id);
-    if (mongoResult) return mongoResult;
-    return localDb.getMultisigById(id);
-  }
+  const backend = await requireMongoOrLocalDb();
+  if (backend === "mongo") return mongoDb.getMultisigById(id);
   return localDb.getMultisigById(id);
 };
 
@@ -192,11 +206,8 @@ export const getCreatedMultisigs = async (chainId: string, creatorAddress: strin
     return docs.map((d) => ({ ...d, id: docId(d) }));
   }
 
-  if (await usesMongo()) {
-    const mongoResults = await mongoDb.getCreatedMultisigs(chainId, creatorAddress);
-    const localResults = localDb.getCreatedMultisigs(chainId, creatorAddress);
-    return dedupeMultisigs([...mongoResults, ...localResults]);
-  }
+  const backend = await requireMongoOrLocalDb();
+  if (backend === "mongo") return mongoDb.getCreatedMultisigs(chainId, creatorAddress);
   return localDb.getCreatedMultisigs(chainId, creatorAddress);
 };
 
@@ -222,11 +233,8 @@ export const getBelongedMultisigs = async (chainId: string, memberPubkey: string
     return exact.map((d) => ({ ...d, id: docId(d) }));
   }
 
-  if (await usesMongo()) {
-    const mongoResults = await mongoDb.getBelongedMultisigs(chainId, memberPubkey);
-    const localResults = localDb.getBelongedMultisigs(chainId, memberPubkey);
-    return dedupeMultisigs([...mongoResults, ...localResults]);
-  }
+  const backend = await requireMongoOrLocalDb();
+  if (backend === "mongo") return mongoDb.getBelongedMultisigs(chainId, memberPubkey);
   return localDb.getBelongedMultisigs(chainId, memberPubkey);
 };
 
@@ -269,9 +277,8 @@ export const createMultisig = async (multisig: {
     return multisig.address;
   }
 
-  if (await usesMongo()) {
-    return mongoDb.createMultisig(multisig);
-  }
+  const backend = await requireMongoOrLocalDb();
+  if (backend === "mongo") return mongoDb.createMultisig(multisig);
   return localDb.createMultisig(multisig);
 };
 
@@ -292,9 +299,8 @@ export const getTransaction = async (transactionId: string) => {
     return null;
   }
 
-  if (await usesMongo()) {
-    return mongoDb.getTransaction(transactionId);
-  }
+  const backend = await requireMongoOrLocalDb();
+  if (backend === "mongo") return mongoDb.getTransaction(transactionId);
   return localDb.getTransaction(transactionId);
 };
 
@@ -306,9 +312,8 @@ export const getTransactionsByCreator = async (creatorId: string) => {
     return docs.map((d) => ({ ...d, id: docId(d) }));
   }
 
-  if (await usesMongo()) {
-    return mongoDb.getTransactionsByCreator(creatorId);
-  }
+  const backend = await requireMongoOrLocalDb();
+  if (backend === "mongo") return mongoDb.getTransactionsByCreator(creatorId);
   return localDb.getTransactionsByCreator(creatorId);
 };
 
@@ -322,9 +327,8 @@ export const getPendingTransactionsByCreator = async (creatorId: string) => {
     return docs.map((d) => ({ ...d, id: docId(d) }));
   }
 
-  if (await usesMongo()) {
-    return mongoDb.getPendingTransactionsByCreator(creatorId);
-  }
+  const backend = await requireMongoOrLocalDb();
+  if (backend === "mongo") return mongoDb.getPendingTransactionsByCreator(creatorId);
   return localDb.getPendingTransactionsByCreator(creatorId);
 };
 
@@ -347,9 +351,8 @@ export const createTransaction = async (transaction: {
     return result.insertedId.toHexString();
   }
 
-  if (await usesMongo()) {
-    return mongoDb.createTransaction(transaction);
-  }
+  const backend = await requireMongoOrLocalDb();
+  if (backend === "mongo") return mongoDb.createTransaction(transaction);
   return localDb.createTransaction(transaction);
 };
 
@@ -367,9 +370,8 @@ export const updateTransactionHash = async (transactionId: string, txHash: strin
     return;
   }
 
-  if (await usesMongo()) {
-    return mongoDb.updateTransactionHash(transactionId, txHash);
-  }
+  const backend = await requireMongoOrLocalDb();
+  if (backend === "mongo") return mongoDb.updateTransactionHash(transactionId, txHash);
   return localDb.updateTransactionHash(transactionId, txHash);
 };
 
@@ -387,9 +389,8 @@ export const cancelTransaction = async (transactionId: string) => {
     return;
   }
 
-  if (await usesMongo()) {
-    return mongoDb.cancelTransaction(transactionId);
-  }
+  const backend = await requireMongoOrLocalDb();
+  if (backend === "mongo") return mongoDb.cancelTransaction(transactionId);
   return localDb.cancelTransaction(transactionId);
 };
 
@@ -410,9 +411,8 @@ export const updateTransactionPayloadHash = async (
     return;
   }
 
-  if (await usesMongo()) {
-    return mongoDb.updateTransactionPayloadHash(transactionId, payloadHash, signDocHash);
-  }
+  const backend = await requireMongoOrLocalDb();
+  if (backend === "mongo") return mongoDb.updateTransactionPayloadHash(transactionId, payloadHash, signDocHash);
   return localDb.updateTransactionPayloadHash(transactionId, payloadHash, signDocHash);
 };
 
@@ -428,9 +428,8 @@ export const getSignaturesByTransaction = async (transactionId: string) => {
     return docs.map((d) => ({ ...d, id: docId(d) }));
   }
 
-  if (await usesMongo()) {
-    return mongoDb.getSignaturesByTransaction(transactionId);
-  }
+  const backend = await requireMongoOrLocalDb();
+  if (backend === "mongo") return mongoDb.getSignaturesByTransaction(transactionId);
   return localDb.getSignaturesByTransaction(transactionId);
 };
 
@@ -459,9 +458,8 @@ export const createSignature = async (signature: {
     return result.insertedId.toHexString();
   }
 
-  if (await usesMongo()) {
-    return mongoDb.createSignature(signature);
-  }
+  const backend = await requireMongoOrLocalDb();
+  if (backend === "mongo") return mongoDb.createSignature(signature);
   return localDb.createSignature(signature);
 };
 
@@ -478,7 +476,8 @@ export const getNonce = async (chainId: string, address: string) => {
     return { nonce: doc.nonce };
   }
 
-  if (await usesMongo()) {
+  const backend = await requireMongoOrLocalDb();
+  if (backend === "mongo") {
     const result = await mongoDb.getNonce(chainId, address);
     return result ? result : null;
   }
@@ -497,9 +496,8 @@ export const createOrUpdateNonce = async (chainId: string, address: string, nonc
     return;
   }
 
-  if (await usesMongo()) {
-    return mongoDb.createOrUpdateNonce(chainId, address, nonce);
-  }
+  const backend = await requireMongoOrLocalDb();
+  if (backend === "mongo") return mongoDb.createOrUpdateNonce(chainId, address, nonce);
   return localDb.createOrUpdateNonce(chainId, address, nonce);
 };
 
@@ -524,9 +522,8 @@ export const wipeCompletedTransactions = async (multisigId: string) => {
     };
   }
 
-  if (await usesMongo()) {
-    return mongoDb.wipeCompletedTransactions(multisigId);
-  }
+  const backend = await requireMongoOrLocalDb();
+  if (backend === "mongo") return mongoDb.wipeCompletedTransactions(multisigId);
   return {
     deletedTransactions: 0,
     deletedSignatures: 0,
@@ -550,9 +547,8 @@ export const wipeAllTransactions = async (multisigId: string) => {
     };
   }
 
-  if (await usesMongo()) {
-    return mongoDb.wipeAllTransactions(multisigId);
-  }
+  const backend = await requireMongoOrLocalDb();
+  if (backend === "mongo") return mongoDb.wipeAllTransactions(multisigId);
   return {
     deletedTransactions: 0,
     deletedSignatures: 0,
@@ -587,9 +583,8 @@ export const exportTransactionHistory = async (multisigId: string) => {
     return history;
   }
 
-  if (await usesMongo()) {
-    return mongoDb.exportTransactionHistory(multisigId);
-  }
+  const backend = await requireMongoOrLocalDb();
+  if (backend === "mongo") return mongoDb.exportTransactionHistory(multisigId);
   const txs = localDb.getTransactionsByCreator(multisigId);
   return txs.map((tx) => ({
     id: tx.id,
@@ -619,9 +614,8 @@ export const getStorageStats = async () => {
     return { multisigCount, transactionCount, signatureCount, estimatedSizeMB };
   }
 
-  if (await usesMongo()) {
-    return mongoDb.getStorageStats();
-  }
+  const backend = await requireMongoOrLocalDb();
+  if (backend === "mongo") return mongoDb.getStorageStats();
   return null;
 };
 

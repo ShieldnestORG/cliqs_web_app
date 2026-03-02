@@ -442,50 +442,83 @@ interface Database {
   spendRecords: DbSpendRecord[];
 }
 
-const DB_FILE_PATH = path.join(process.cwd(), "data", "local-db.json");
+// On Vercel/serverless, process.cwd() is /var/task (read-only). Use /tmp instead.
+const getDataDir = (): string =>
+  process.env.VERCEL ? path.join("/tmp", "cliq-data") : path.join(process.cwd(), "data");
 
-// Initialize database file if it doesn't exist
+let _dbFilePath: string | null = null;
+let _useMemoryDb = false;
+let _memoryDb: Database | null = null;
+
+const getDbFilePath = (): string => {
+  if (_dbFilePath) return _dbFilePath;
+  _dbFilePath = path.join(getDataDir(), "local-db.json");
+  return _dbFilePath;
+};
+
+const createEmptyDb = (): Database => ({
+  multisigs: [],
+  transactions: [],
+  signatures: [],
+  nonces: [],
+  contractMultisigs: [],
+  contractProposals: [],
+  contractVotes: [],
+  syncStates: [],
+  websocketEvents: [],
+  groups: [],
+  memberSnapshots: [],
+  voteSnapshots: [],
+  groupEvents: [],
+  credentialClasses: [],
+  credentials: [],
+  credentialEvents: [],
+  policies: [],
+  policyViolations: [],
+  emergencyEvents: [],
+  emergencyStates: [],
+  incidents: [],
+  alertRules: [],
+  alerts: [],
+  spendRecords: [],
+});
+
+// Initialize database file if it doesn't exist. Falls back to in-memory on serverless ENOENT.
 const initDb = (): void => {
-  const dataDir = path.join(process.cwd(), "data");
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
+  if (_useMemoryDb && _memoryDb) return;
+
+  const dataDir = getDataDir();
+  try {
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+  } catch (e) {
+    const err = e as NodeJS.ErrnoException;
+    if (err?.code === "ENOENT" || err?.code === "EROFS" || err?.code === "EACCES") {
+      _useMemoryDb = true;
+      _memoryDb = createEmptyDb();
+      return;
+    }
+    throw e;
   }
-  
-  if (!fs.existsSync(DB_FILE_PATH)) {
-    const initialDb: Database = {
-      multisigs: [],
-      transactions: [],
-      signatures: [],
-      nonces: [],
-      // Phase 1 additions
-      contractMultisigs: [],
-      contractProposals: [],
-      contractVotes: [],
-      syncStates: [],
-      websocketEvents: [],
-      // Phase 2 additions
-      groups: [],
-      memberSnapshots: [],
-      voteSnapshots: [],
-      groupEvents: [],
-      // Phase 3 additions
-      credentialClasses: [],
-      credentials: [],
-      credentialEvents: [],
-      // Phase 4 additions
-      policies: [],
-      policyViolations: [],
-      emergencyEvents: [],
-      emergencyStates: [],
-      incidents: [],
-      alertRules: [],
-      alerts: [],
-      spendRecords: [],
-    };
-    fs.writeFileSync(DB_FILE_PATH, JSON.stringify(initialDb, null, 2));
+
+  const dbFilePath = getDbFilePath();
+  if (!fs.existsSync(dbFilePath)) {
+    const initialDb = createEmptyDb();
+    try {
+      fs.writeFileSync(dbFilePath, JSON.stringify(initialDb, null, 2));
+    } catch (e) {
+      const err = e as NodeJS.ErrnoException;
+      if (err?.code === "ENOENT" || err?.code === "EROFS" || err?.code === "EACCES") {
+        _useMemoryDb = true;
+        _memoryDb = initialDb;
+        return;
+      }
+      throw e;
+    }
   } else {
     // Migrate existing database to include new tables
-    const data = fs.readFileSync(DB_FILE_PATH, "utf-8");
+    const data = fs.readFileSync(dbFilePath, "utf-8");
     const db = JSON.parse(data);
     let needsWrite = false;
     
@@ -586,28 +619,26 @@ const initDb = (): void => {
     }
     
     if (needsWrite) {
-      fs.writeFileSync(DB_FILE_PATH, JSON.stringify(db, null, 2));
+      fs.writeFileSync(dbFilePath, JSON.stringify(db, null, 2));
     }
   }
 };
 
 // Read database
 const readDb = (): Database => {
-  console.log("DEBUG: readDb called");
   initDb();
-  console.log("DEBUG: initDb completed");
-  const data = fs.readFileSync(DB_FILE_PATH, "utf-8");
-  console.log("DEBUG: file read, parsing JSON");
-  const result = JSON.parse(data);
-  console.log("DEBUG: JSON parsed successfully");
-  return result;
+  if (_useMemoryDb && _memoryDb) return _memoryDb;
+  const data = fs.readFileSync(getDbFilePath(), "utf-8");
+  return JSON.parse(data);
 };
 
 // Write database
 const writeDb = (db: Database): void => {
-  console.log("DEBUG: writeDb called, writing to", DB_FILE_PATH);
-  fs.writeFileSync(DB_FILE_PATH, JSON.stringify(db, null, 2));
-  console.log("DEBUG: writeDb completed successfully");
+  if (_useMemoryDb) {
+    _memoryDb = db;
+    return;
+  }
+  fs.writeFileSync(getDbFilePath(), JSON.stringify(db, null, 2));
 };
 
 // Generate unique ID
