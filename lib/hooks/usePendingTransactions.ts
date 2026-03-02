@@ -61,10 +61,6 @@ export function usePendingTransactions(): PendingTransactionsData {
 
     // Ensure chain has required properties including nodeAddress
     if (!chain?.chainId || !chain?.nodeAddress) {
-      console.log("DEBUG: usePendingTransactions - waiting for chain to be fully loaded", {
-        chainId: chain?.chainId,
-        nodeAddress: chain?.nodeAddress,
-      });
       setData(prev => ({
         ...prev,
         isLoading: false,
@@ -93,10 +89,6 @@ export function usePendingTransactions(): PendingTransactionsData {
       }
 
       // Fetch user's multisigs
-      console.log("DEBUG: usePendingTransactions - chain:", chain);
-      console.log("DEBUG: usePendingTransactions - chainId:", chain.chainId);
-      console.log("DEBUG: usePendingTransactions - walletInfo:", walletInfo);
-
       const multisigs = await getDbUserMultisigs(chain, {
         signature: requiresVerification ? verificationSignature || undefined : undefined,
         address: walletInfo.address,
@@ -197,11 +189,12 @@ export function usePendingTransactions(): PendingTransactionsData {
     }
   }, [walletInfo, isVerified, fetchPendingTransactions]);
 
-  // Set up periodic refresh when wallet is connected
+  // Set up periodic refresh when wallet is connected and chain is ready
   useEffect(() => {
     if (!isClient) return;
     
-    if (walletInfo?.type === "Keplr") {
+    const chainReady = chain?.chainId && chain?.nodeAddress;
+    if (walletInfo?.type === "Keplr" && chainReady) {
       const settings = getUserSettings();
       const requiresVerification = settings.requireWalletSignInForCliqs;
       const canFetch = requiresVerification ? isVerified : true;
@@ -220,7 +213,7 @@ export function usePendingTransactions(): PendingTransactionsData {
         intervalRef.current = null;
       }
     };
-  }, [walletInfo, isVerified, fetchPendingTransactions]);
+  }, [walletInfo, isVerified, chain?.chainId, chain?.nodeAddress, fetchPendingTransactions]);
 
   // Refresh on route change (e.g., after broadcasting or cancelling a transaction)
   useEffect(() => {
@@ -276,7 +269,6 @@ export function usePendingTransactions(): PendingTransactionsData {
     if (!isClient) return;
 
     const handleTransactionStatusChange = () => {
-      console.log("DEBUG: usePendingTransactions - received transactionStatusChanged event");
       if (walletInfo?.type === "Keplr") {
         const settings = getUserSettings();
         const requiresVerification = settings.requireWalletSignInForCliqs;

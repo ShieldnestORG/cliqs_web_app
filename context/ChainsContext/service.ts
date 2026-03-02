@@ -84,6 +84,24 @@ export const useChainsFromRegistry = () => {
   return { chainItems, chainItemsError };
 };
 
+const RPC_PROBE_TIMEOUT_MS = 6000; // 6 seconds per node
+
+const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("RPC probe timeout")), ms);
+    promise.then(
+      (v) => {
+        clearTimeout(timer);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(timer);
+        reject(e);
+      },
+    );
+  });
+};
+
 export const getNodeFromArray = async (nodeArray: readonly string[]) => {
   // only return https connections
   const secureNodes = nodeArray
@@ -94,13 +112,24 @@ export const getNodeFromArray = async (nodeArray: readonly string[]) => {
     throw new Error("No SSL enabled RPC nodes available for this chain");
   }
 
-  for (const node of secureNodes) {
-    try {
-      // test client connection
-      const client = await StargateClient.connect(ensureProtocol(node));
-      await client.getHeight();
-      return node;
-    } catch {}
+  // Probe all nodes in parallel; return first successful
+  const results = await Promise.allSettled(
+    secureNodes.map((node) =>
+      withTimeout(
+        (async () => {
+          const client = await StargateClient.connect(ensureProtocol(node));
+          await client.getHeight();
+          return node;
+        })(),
+        RPC_PROBE_TIMEOUT_MS,
+      ),
+    ),
+  );
+
+  for (const result of results) {
+    if (result.status === "fulfilled") {
+      return result.value;
+    }
   }
 
   throw new Error("No RPC nodes available for this chain");

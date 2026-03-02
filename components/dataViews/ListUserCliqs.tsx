@@ -54,6 +54,11 @@ export default function ListUserCliqs() {
       return;
     }
 
+    // Wait for chain RPC to be ready
+    if (!chain.nodeAddress) {
+      return;
+    }
+
     // Create a unique key for this fetch attempt
     const fetchKey = `${walletInfo.address}-${chainId}`;
     
@@ -110,14 +115,19 @@ export default function ListUserCliqs() {
     // Use stable primitive dependencies - chain object is needed for API call but
     // we track changes via chainId to avoid unnecessary rerenders
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chainId, walletInfo?.address, walletInfo?.type, walletInfo?.pubKey, verify, verificationSignature]);
+  }, [chainId, chain.nodeAddress, walletInfo?.address, walletInfo?.type, walletInfo?.pubKey, verify, verificationSignature]);
 
-  // Auto-fetch cliqs when wallet connects (check settings first)
+  // Auto-fetch cliqs when wallet connects and chain is ready (check settings first)
   useEffect(() => {
     if (!walletInfo || walletInfo.type !== "Keplr") {
       // Reset attempts when wallet disconnects
       hasAttemptedFetch.current = null;
       fetchError.current = null;
+      return;
+    }
+
+    // Wait for chain nodeAddress before fetching
+    if (!chain.nodeAddress) {
       return;
     }
 
@@ -139,7 +149,7 @@ export default function ListUserCliqs() {
         fetchCliqs();
       }
     }
-  }, [walletInfo, isVerified, loadingCliqs, cliqs, fetchCliqs, chainId]);
+  }, [walletInfo, isVerified, loadingCliqs, cliqs, fetchCliqs, chainId, chain.nodeAddress]);
 
   // Clear cliqs when wallet disconnects
   useEffect(() => {
@@ -189,9 +199,10 @@ export default function ListUserCliqs() {
           </Button>
         ) : null}
         
-        {/* Connected but not verified - Keplr only (only show if verification is required by settings) */}
+        {/* Connected but not verified - Keplr only (only show if verification is required by settings, and chain is ready) */}
         {walletInfo && 
          walletInfo.type === "Keplr" && 
+         chain.nodeAddress &&
          getUserSettings().requireWalletSignInForCliqs &&
          !isVerified && 
          !cliqs && 
@@ -215,8 +226,16 @@ export default function ListUserCliqs() {
           </div>
         ) : null}
         
+        {/* Chain initializing - waiting for RPC */}
+        {walletInfo && walletInfo.type === "Keplr" && chain.chainId && !chain.nodeAddress && (
+          <div className="flex items-center gap-2">
+            <Loader2 className="animate-spin text-green-accent" />
+            <p>Connecting to chain...</p>
+          </div>
+        )}
+
         {/* Loading states */}
-        {(loadingCliqs || isVerifying) && (
+        {(loadingCliqs || isVerifying) && chain.nodeAddress && (
           <div className="flex items-center gap-2">
             <Loader2 className="animate-spin text-green-accent" />
             <p>{isVerifying ? "Verifying wallet..." : "Loading your Cliqs..."}</p>

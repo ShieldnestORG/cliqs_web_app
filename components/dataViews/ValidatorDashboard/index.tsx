@@ -260,6 +260,45 @@ export default function ValidatorDashboard() {
     }, 3000);
   };
 
+  // Chain initializing (waiting for nodeAddress / RPC)
+  const isChainInitializing = effectiveAddress && chain.chainId && !chain.nodeAddress;
+  if (isChainInitializing) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          <Card variant="institutional" className="lg:col-span-2">
+            <CardHeader>
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-8 w-48" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </CardContent>
+          </Card>
+          <Card variant="institutional" className="lg:col-span-3">
+            <CardHeader>
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-8 w-48" />
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 gap-4">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <Skeleton key={i} className="h-24 w-full" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <span className="ml-2 text-muted-foreground">Connecting to chain...</span>
+        </div>
+      </div>
+    );
+  }
+
   // Not connected state
   if (!effectiveAddress && !walletInfo) {
     return (
