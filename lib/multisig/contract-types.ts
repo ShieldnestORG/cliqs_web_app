@@ -1,8 +1,8 @@
 /**
  * Contract Multisig Types
- * 
+ *
  * File: lib/multisig/contract-types.ts
- * 
+ *
  * Types for CW3-Fixed style contract multisig operations.
  * These are placeholder types that will be customized when building
  * the custom contract in later phases.
@@ -75,11 +75,11 @@ export interface CW3Voter {
 /**
  * Proposal status on-chain
  */
-export type CW3ProposalStatus = 
-  | "pending"   // Voting is still open
-  | "open"      // Alias for pending (some CW3 versions)
-  | "passed"    // Threshold met, ready to execute
-  | "rejected"  // Voting closed, threshold not met
+export type CW3ProposalStatus =
+  | "pending" // Voting is still open
+  | "open" // Alias for pending (some CW3 versions)
+  | "passed" // Threshold met, ready to execute
+  | "rejected" // Voting closed, threshold not met
   | "executed"; // Successfully executed
 
 /**
@@ -550,11 +550,7 @@ export interface ContractExecutionResult {
 /**
  * Event types emitted by CW3 contracts
  */
-export type CW3EventType = 
-  | "propose"
-  | "vote"
-  | "execute"
-  | "close";
+export type CW3EventType = "propose" | "vote" | "execute" | "close";
 
 /**
  * Parsed CW3 event from chain
@@ -607,4 +603,3 @@ export interface ExecuteEventAttributes {
 export interface CloseEventAttributes {
   proposal_id: string;
 }
-

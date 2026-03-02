@@ -10,14 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useChains } from "@/context/ChainsContext";
 import Link from "next/link";
-import { 
-  Shield, 
-  Users, 
-  Lock, 
-  ArrowRight, 
-  ShieldPlus,
-  Info
-} from "lucide-react";
+import { Shield, Users, Lock, ArrowRight, ShieldPlus, Info } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -49,36 +42,40 @@ export default function CliqUpgradeCTA() {
   ];
 
   return (
-    <Card variant="institutional" bracket="purple" className="bg-gradient-to-br from-card to-accent-purple/5">
+    <Card
+      variant="institutional"
+      bracket="purple"
+      className="to-accent-purple/5 bg-gradient-to-br from-card"
+    >
       <CardContent className="p-6 md:p-8">
-        <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center">
           {/* Content */}
           <div className="flex-1 space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-purple/20 border border-accent-purple/30 text-xs font-mono uppercase tracking-wider text-accent-purple">
+            <div className="bg-accent-purple/20 border-accent-purple/30 text-accent-purple inline-flex items-center gap-2 rounded-full border px-3 py-1 font-mono text-xs uppercase tracking-wider">
               <ShieldPlus className="h-3 w-3" />
               Security Upgrade
             </div>
-            
-            <h3 className="text-2xl md:text-3xl font-heading font-bold">
+
+            <h3 className="font-heading text-2xl font-bold md:text-3xl">
               Secure Your Validator Operations
             </h3>
-            
-            <p className="text-muted-foreground text-lg max-w-2xl">
-              Your validator key is a single point of failure. Upgrade to a CLIQ (multi-signature wallet) 
-              to protect your operations with team-based security.
+
+            <p className="max-w-2xl text-lg text-muted-foreground">
+              Your validator key is a single point of failure. Upgrade to a CLIQ (multi-signature
+              wallet) to protect your operations with team-based security.
             </p>
 
             {/* Benefits - Desktop */}
-            <div className="hidden md:flex flex-wrap gap-4 pt-2">
+            <div className="hidden flex-wrap gap-4 pt-2 md:flex">
               {benefits.map((benefit, index) => {
                 const Icon = benefit.icon;
                 return (
-                  <div 
+                  <div
                     key={index}
                     className="flex items-center gap-2 text-sm text-muted-foreground"
                   >
-                    <div className="w-6 h-6 rounded bg-accent-purple/20 flex items-center justify-center">
-                      <Icon className="h-3 w-3 text-accent-purple" />
+                    <div className="bg-accent-purple/20 flex h-6 w-6 items-center justify-center rounded">
+                      <Icon className="text-accent-purple h-3 w-3" />
                     </div>
                     <span>{benefit.title}</span>
                   </div>
@@ -88,17 +85,17 @@ export default function CliqUpgradeCTA() {
           </div>
 
           {/* Actions */}
-          <div className="flex flex-col sm:flex-row lg:flex-col gap-3 lg:w-auto shrink-0">
+          <div className="flex shrink-0 flex-col gap-3 sm:flex-row lg:w-auto lg:flex-col">
             {chain.registryName && (
               <Link href={`/${chain.registryName}/create`}>
-                <Button variant="action" size="action-lg" className="w-full gap-2 group">
+                <Button variant="action" size="action-lg" className="group w-full gap-2">
                   <ShieldPlus className="h-4 w-4" />
                   Create Validator CLIQ
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
               </Link>
             )}
-            
+
             <Dialog>
               <DialogTrigger asChild>
                 <Button variant="action-outline" size="action-lg" className="w-full gap-2">
@@ -108,27 +105,25 @@ export default function CliqUpgradeCTA() {
               </DialogTrigger>
               <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
-                  <DialogTitle className="text-2xl font-heading">
+                  <DialogTitle className="font-heading text-2xl">
                     Why Use a CLIQ for Your Validator?
                   </DialogTitle>
                   <DialogDescription className="text-base">
                     Multi-signature security for professional validator operations
                   </DialogDescription>
                 </DialogHeader>
-                
+
                 <div className="space-y-6 py-4">
                   {benefits.map((benefit, index) => {
                     const Icon = benefit.icon;
                     return (
                       <div key={index} className="flex gap-4">
-                        <div className="w-10 h-10 rounded-lg bg-accent-purple/20 flex items-center justify-center shrink-0">
-                          <Icon className="h-5 w-5 text-accent-purple" />
+                        <div className="bg-accent-purple/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
+                          <Icon className="text-accent-purple h-5 w-5" />
                         </div>
                         <div>
-                          <h4 className="font-semibold text-foreground">
-                            {benefit.title}
-                          </h4>
-                          <p className="text-sm text-muted-foreground mt-1">
+                          <h4 className="font-semibold text-foreground">{benefit.title}</h4>
+                          <p className="mt-1 text-sm text-muted-foreground">
                             {benefit.description}
                           </p>
                         </div>
@@ -136,31 +131,29 @@ export default function CliqUpgradeCTA() {
                     );
                   })}
 
-                  <div className="p-4 rounded-lg bg-muted/50 border border-border">
-                    <h4 className="font-semibold text-foreground mb-2">
-                      How It Works
-                    </h4>
+                  <div className="rounded-lg border border-border bg-muted/50 p-4">
+                    <h4 className="mb-2 font-semibold text-foreground">How It Works</h4>
                     <ol className="space-y-2 text-sm text-muted-foreground">
                       <li className="flex gap-2">
-                        <span className="font-mono text-accent-purple">1.</span>
+                        <span className="text-accent-purple font-mono">1.</span>
                         <span>Create a CLIQ with your team members' addresses</span>
                       </li>
                       <li className="flex gap-2">
-                        <span className="font-mono text-accent-purple">2.</span>
+                        <span className="text-accent-purple font-mono">2.</span>
                         <span>Set the signing threshold (e.g., 2-of-3)</span>
                       </li>
                       <li className="flex gap-2">
-                        <span className="font-mono text-accent-purple">3.</span>
+                        <span className="text-accent-purple font-mono">3.</span>
                         <span>Propose transactions that require multiple signatures</span>
                       </li>
                       <li className="flex gap-2">
-                        <span className="font-mono text-accent-purple">4.</span>
+                        <span className="text-accent-purple font-mono">4.</span>
                         <span>Team members sign and broadcast securely</span>
                       </li>
                     </ol>
                   </div>
 
-                  <div className="text-center pt-2">
+                  <div className="pt-2 text-center">
                     {chain.registryName && (
                       <Link href={`/${chain.registryName}/create`}>
                         <Button variant="action" size="action" className="gap-2">
@@ -179,4 +172,3 @@ export default function CliqUpgradeCTA() {
     </Card>
   );
 }
-

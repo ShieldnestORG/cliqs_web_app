@@ -234,9 +234,7 @@ const CHAIN_DEPLOYMENT_CONSTRAINTS: Record<string, ChainDeploymentConstraints> =
     supportsBulkMemory: true,
     gasAdjustment: 1.4,
     permissionedUpload: true,
-    notes: [
-      "Contract code upload on Osmosis requires governance approval",
-    ],
+    notes: ["Contract code upload on Osmosis requires governance approval"],
   },
 
   // ── Neutron mainnet ────────────────────────────────────────────────
@@ -407,8 +405,7 @@ async function queryNodeInfo(restEndpoint: string): Promise<{
     if (!res.ok) return null;
     const data = await res.json();
 
-    const appVersion = data?.application_version?.version ||
-                       data?.application_version?.app_version;
+    const appVersion = data?.application_version?.version || data?.application_version?.app_version;
     const cosmosSdkVersion = data?.application_version?.cosmos_sdk_version;
 
     // Try to extract wasmd version from build_deps or name
@@ -474,7 +471,7 @@ export async function queryChainConstraints(
   // Check localStorage cache
   const cachedStore = loadCachedConstraints();
   const cached = cachedStore[chainId];
-  if (cached && (Date.now() - cached.fetchedAt) < CONSTRAINTS_CACHE_TTL_MS) {
+  if (cached && Date.now() - cached.fetchedAt < CONSTRAINTS_CACHE_TTL_MS) {
     liveConstraintsCache[chainId] = cached.constraints;
     return cached.constraints;
   }
@@ -563,7 +560,7 @@ export function getChainConstraints(chainId: string): ChainDeploymentConstraints
   // Check localStorage cache
   const cachedStore = loadCachedConstraints();
   const cached = cachedStore[chainId];
-  if (cached && (Date.now() - cached.fetchedAt) < CONSTRAINTS_CACHE_TTL_MS) {
+  if (cached && Date.now() - cached.fetchedAt < CONSTRAINTS_CACHE_TTL_MS) {
     liveConstraintsCache[chainId] = cached.constraints;
     return cached.constraints;
   }
@@ -618,9 +615,12 @@ export function getCodeIdSuggestions(
   // 1. Well-known registry
   const wellKnown = WELL_KNOWN_CODE_IDS[chainId];
   if (wellKnown) {
-    const id = contractType === "cw3-fixed" ? wellKnown.cw3Fixed
-      : contractType === "cw3-flex" ? wellKnown.cw3Flex
-      : wellKnown.cw4Group;
+    const id =
+      contractType === "cw3-fixed"
+        ? wellKnown.cw3Fixed
+        : contractType === "cw3-flex"
+          ? wellKnown.cw3Flex
+          : wellKnown.cw4Group;
 
     if (id && !seen.has(id)) {
       seen.add(id);
@@ -635,9 +635,12 @@ export function getCodeIdSuggestions(
   // 2. User overrides
   const userOverrides = loadUserCodeIds()[chainId];
   if (userOverrides) {
-    const id = contractType === "cw3-fixed" ? userOverrides.cw3Fixed
-      : contractType === "cw3-flex" ? userOverrides.cw3Flex
-      : userOverrides.cw4Group;
+    const id =
+      contractType === "cw3-fixed"
+        ? userOverrides.cw3Fixed
+        : contractType === "cw3-flex"
+          ? userOverrides.cw3Flex
+          : userOverrides.cw4Group;
 
     if (id && !seen.has(id)) {
       seen.add(id);
@@ -664,11 +667,11 @@ export function getCodeIdSuggestions(
       e.stage === "upload" &&
       e.codeId &&
       e.codeId > 0 &&
-      (matchLabels.some(
+      matchLabels.some(
         (lbl) =>
           (e.contractType || "").toLowerCase().includes(lbl) ||
           (e.label || "").toLowerCase().includes(lbl),
-      )),
+      ),
   );
 
   for (const entry of devEntries) {
@@ -720,10 +723,7 @@ export async function validateCodeId(
       creator: "",
       checksum: "",
       exists: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : `Code ID ${codeId} not found on chain`,
+      error: error instanceof Error ? error.message : `Code ID ${codeId} not found on chain`,
     };
   }
 }

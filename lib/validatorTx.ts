@@ -1,8 +1,8 @@
 /**
  * Validator Transaction Utilities
- * 
+ *
  * File: lib/validatorTx.ts
- * 
+ *
  * Utilities for creating CLIQ (multisig) transactions directly from the validator dashboard.
  * This allows validator actions to create proposals without redirecting to a form.
  */
@@ -34,7 +34,7 @@ export interface CreateCliqTxResult {
  * Used by validator dashboard to create commission claims, withdraw address changes, etc.
  */
 export async function createCliqTransaction(
-  params: CreateCliqTxParams
+  params: CreateCliqTxParams,
 ): Promise<CreateCliqTxResult> {
   const { chain, cliqAddress, messages, memo = "" } = params;
 
@@ -92,7 +92,7 @@ export async function createCliqTransaction(
 export function buildClaimCommissionMsg(
   validatorAddress: string,
   delegatorAddress: string,
-  includeRewards: boolean
+  includeRewards: boolean,
 ): EncodeObject[] {
   const messages: EncodeObject[] = [];
 
@@ -123,7 +123,7 @@ export function buildClaimCommissionMsg(
  */
 export function buildClaimRewardsMsg(
   validatorAddress: string,
-  delegatorAddress: string
+  delegatorAddress: string,
 ): EncodeObject[] {
   return [
     {
@@ -141,7 +141,7 @@ export function buildClaimRewardsMsg(
  */
 export function buildSetWithdrawAddressMsg(
   delegatorAddress: string,
-  withdrawAddress: string
+  withdrawAddress: string,
 ): EncodeObject[] {
   return [
     {
@@ -157,11 +157,7 @@ export function buildSetWithdrawAddressMsg(
 /**
  * Build message for voting on a proposal
  */
-export function buildVoteMsg(
-  voter: string,
-  proposalId: number,
-  option: number
-): EncodeObject[] {
+export function buildVoteMsg(voter: string, proposalId: number, option: number): EncodeObject[] {
   return [
     {
       typeUrl: MsgTypeUrls.Vote,
@@ -182,7 +178,7 @@ const DO_NOT_MODIFY = "[do-not-modify]";
 
 /**
  * Build message for editing validator
- * 
+ *
  * IMPORTANT: MsgEditValidator requires ALL description fields to be present.
  * Fields that should NOT change must use the sentinel value "[do-not-modify]".
  */
@@ -197,16 +193,18 @@ export function buildEditValidatorMsg(
     details?: string;
   },
   commissionRate?: string,
-  minSelfDelegation?: string
+  minSelfDelegation?: string,
 ): EncodeObject[] {
   // Build description with ALL fields - use [do-not-modify] for unchanged ones
   // The Cosmos SDK requires this sentinel value for fields that shouldn't change
   const descriptionValue = {
-    moniker: enabledFields.moniker ? (description.moniker || "") : DO_NOT_MODIFY,
-    identity: enabledFields.identity ? (description.identity || "") : DO_NOT_MODIFY,
-    website: enabledFields.website ? (description.website || "") : DO_NOT_MODIFY,
-    securityContact: enabledFields.securityContact ? (description.securityContact || "") : DO_NOT_MODIFY,
-    details: enabledFields.details ? (description.details || "") : DO_NOT_MODIFY,
+    moniker: enabledFields.moniker ? description.moniker || "" : DO_NOT_MODIFY,
+    identity: enabledFields.identity ? description.identity || "" : DO_NOT_MODIFY,
+    website: enabledFields.website ? description.website || "" : DO_NOT_MODIFY,
+    securityContact: enabledFields.securityContact
+      ? description.securityContact || ""
+      : DO_NOT_MODIFY,
+    details: enabledFields.details ? description.details || "" : DO_NOT_MODIFY,
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

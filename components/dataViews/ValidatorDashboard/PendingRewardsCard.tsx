@@ -10,7 +10,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardLabel } from "@/component
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { formatDecCoinAmount, ValidatorInfo } from "@/lib/validatorHelpers";
-import { createCliqTransaction, buildClaimCommissionMsg, buildClaimRewardsMsg } from "@/lib/validatorTx";
+import {
+  createCliqTransaction,
+  buildClaimCommissionMsg,
+  buildClaimRewardsMsg,
+} from "@/lib/validatorTx";
 import { useChains } from "@/context/ChainsContext";
 import { useWallet } from "@/context/WalletContext";
 import { Coins, Wallet, Loader2, CheckCircle2, Users } from "lucide-react";
@@ -85,13 +89,13 @@ export default function PendingRewardsCard({
     if (isCliqMode && cliqAddress) {
       try {
         setIsClaimingCommission(true);
-        
+
         const loadingToast = toast.loading("Creating transaction...");
-        
+
         const messages = buildClaimCommissionMsg(
           validator.operatorAddress,
           validator.delegatorAddress,
-          includeRewards && hasRewards
+          includeRewards && hasRewards,
         );
 
         const result = await createCliqTransaction({
@@ -133,11 +137,9 @@ export default function PendingRewardsCard({
         throw new Error("Failed to get signer");
       }
 
-      const client = await SigningStargateClient.connectWithSigner(
-        chain.nodeAddress,
-        signer,
-        { gasPrice: GasPrice.fromString(chain.gasPrice) },
-      );
+      const client = await SigningStargateClient.connectWithSigner(chain.nodeAddress, signer, {
+        gasPrice: GasPrice.fromString(chain.gasPrice),
+      });
 
       // Build messages dynamically based on what rewards exist
       // For jailed validators with no self-delegation, only send MsgWithdrawValidatorCommission
@@ -166,18 +168,13 @@ export default function PendingRewardsCard({
       const gasPriceNum = parseFloat(chain.gasPrice) || 0.0625;
       const gasLimit = messages.length > 1 ? 1_100_000 : 600_000;
       const feeAmount = Math.ceil(gasPriceNum * gasLimit).toString();
-      
+
       const fee = {
         amount: [{ denom: chain.denom, amount: feeAmount }],
         gas: gasLimit.toString(),
       };
 
-      const result = await client.signAndBroadcast(
-        validator.delegatorAddress,
-        messages,
-        fee,
-        ""
-      );
+      const result = await client.signAndBroadcast(validator.delegatorAddress, messages, fee, "");
 
       if (result.code !== 0) {
         throw new Error(`Transaction failed: ${result.rawLog}`);
@@ -191,7 +188,7 @@ export default function PendingRewardsCard({
           onClick: () => {
             const explorerLink = chain.explorerLinks.tx?.replace(
               "${txHash}",
-              result.transactionHash
+              result.transactionHash,
             );
             if (explorerLink) {
               window.open(explorerLink, "_blank");
@@ -227,12 +224,12 @@ export default function PendingRewardsCard({
     if (isCliqMode && cliqAddress) {
       try {
         setIsClaimingRewards(true);
-        
+
         const loadingToast = toast.loading("Creating transaction...");
-        
+
         const messages = buildClaimRewardsMsg(
           validator.operatorAddress,
-          validator.delegatorAddress
+          validator.delegatorAddress,
         );
 
         const result = await createCliqTransaction({
@@ -274,11 +271,9 @@ export default function PendingRewardsCard({
         throw new Error("Failed to get signer");
       }
 
-      const client = await SigningStargateClient.connectWithSigner(
-        chain.nodeAddress,
-        signer,
-        { gasPrice: GasPrice.fromString(chain.gasPrice) },
-      );
+      const client = await SigningStargateClient.connectWithSigner(chain.nodeAddress, signer, {
+        gasPrice: GasPrice.fromString(chain.gasPrice),
+      });
 
       const messages = [
         {
@@ -293,18 +288,13 @@ export default function PendingRewardsCard({
       // Calculate fee based on gas price
       const gasPriceNum = parseFloat(chain.gasPrice) || 0.0625;
       const feeAmount = Math.ceil(gasPriceNum * 500_000).toString();
-      
+
       const fee = {
         amount: [{ denom: chain.denom, amount: feeAmount }],
         gas: "500000",
       };
 
-      const result = await client.signAndBroadcast(
-        validator.delegatorAddress,
-        messages,
-        fee,
-        ""
-      );
+      const result = await client.signAndBroadcast(validator.delegatorAddress, messages, fee, "");
 
       if (result.code !== 0) {
         throw new Error(`Transaction failed: ${result.rawLog}`);
@@ -317,7 +307,7 @@ export default function PendingRewardsCard({
           onClick: () => {
             const explorerLink = chain.explorerLinks.tx?.replace(
               "${txHash}",
-              result.transactionHash
+              result.transactionHash,
             );
             if (explorerLink) {
               window.open(explorerLink, "_blank");
@@ -341,9 +331,7 @@ export default function PendingRewardsCard({
     <Card variant="institutional" accent="left" className="h-full">
       <CardHeader>
         <CardLabel comment>Pending</CardLabel>
-        <CardTitle className="text-xl font-heading font-bold">
-          Rewards & Commission
-        </CardTitle>
+        <CardTitle className="font-heading text-xl font-bold">Rewards & Commission</CardTitle>
       </CardHeader>
 
       <CardContent className="space-y-6">
@@ -354,10 +342,10 @@ export default function PendingRewardsCard({
             <span>Validator Commission</span>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-heading font-bold tabular-nums">
+            <span className="font-heading text-3xl font-bold tabular-nums">
               {commissionFormatted.amount}
             </span>
-            <span className="text-lg text-muted-foreground font-mono">
+            <span className="font-mono text-lg text-muted-foreground">
               {commissionFormatted.denom}
             </span>
           </div>
@@ -372,10 +360,10 @@ export default function PendingRewardsCard({
             <span>Self-Delegation Rewards</span>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-heading font-bold tabular-nums">
+            <span className="font-heading text-3xl font-bold tabular-nums">
               {rewardsFormatted.amount}
             </span>
-            <span className="text-lg text-muted-foreground font-mono">
+            <span className="font-mono text-lg text-muted-foreground">
               {rewardsFormatted.denom}
             </span>
           </div>
@@ -387,7 +375,7 @@ export default function PendingRewardsCard({
         <div className="space-y-3">
           {/* CLIQ mode indicator */}
           {isCliqMode && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/30 px-3 py-2 rounded-lg">
+            <div className="flex items-center gap-2 rounded-lg bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
               <Users className="h-4 w-4" />
               <span>Actions will create a transaction for multisig signing</span>
             </div>
@@ -409,7 +397,11 @@ export default function PendingRewardsCard({
                 </>
               ) : (
                 <>
-                  {isCliqMode ? <Users className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+                  {isCliqMode ? (
+                    <Users className="h-4 w-4" />
+                  ) : (
+                    <CheckCircle2 className="h-4 w-4" />
+                  )}
                   {isCliqMode ? "Create: Claim All" : "Claim All (Commission + Rewards)"}
                 </>
               )}
@@ -418,7 +410,15 @@ export default function PendingRewardsCard({
 
           {/* Claim Commission Only - useful for jailed validators with no self-delegation */}
           <Button
-            variant={isCliqMode ? (hasRewards ? "action-bronze-outline" : "action-bronze") : (hasRewards ? "action-outline" : "action")}
+            variant={
+              isCliqMode
+                ? hasRewards
+                  ? "action-bronze-outline"
+                  : "action-bronze"
+                : hasRewards
+                  ? "action-outline"
+                  : "action"
+            }
             size="action"
             className="w-full gap-2"
             onClick={() => claimCommission(false)}
@@ -461,7 +461,7 @@ export default function PendingRewardsCard({
 
         {/* No rewards message */}
         {!hasCommission && !hasRewards && (
-          <div className="text-center py-4">
+          <div className="py-4 text-center">
             <p className="text-sm text-muted-foreground">
               No pending rewards to claim at this time.
             </p>
@@ -471,4 +471,3 @@ export default function PendingRewardsCard({
     </Card>
   );
 }
-

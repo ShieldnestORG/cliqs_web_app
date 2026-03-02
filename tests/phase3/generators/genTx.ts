@@ -431,4 +431,3 @@ export function genTxBatch(count: number, seed?: number): GeneratedTx[] {
 
   return txs;
 }
-

@@ -9,7 +9,13 @@
 import { Card, CardContent, CardHeader, CardTitle, CardLabel } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -17,7 +23,16 @@ import { ValidatorInfo } from "@/lib/validatorHelpers";
 import { createCliqTransaction, buildEditValidatorMsg } from "@/lib/validatorTx";
 import { useChains } from "@/context/ChainsContext";
 import { useWallet } from "@/context/WalletContext";
-import { Settings, Edit3, Loader2, CheckCircle2, TrendingUp, Coins, Vote, Users } from "lucide-react";
+import {
+  Settings,
+  Edit3,
+  Loader2,
+  CheckCircle2,
+  TrendingUp,
+  Coins,
+  Vote,
+  Users,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { GasPrice, SigningStargateClient } from "@cosmjs/stargate";
@@ -47,7 +62,7 @@ export default function ValidatorCommandsCard({
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Get the target address for links (CLIQ or direct)
   const targetAddress = isCliqMode && cliqAddress ? cliqAddress : validator.delegatorAddress;
 
@@ -68,7 +83,7 @@ export default function ValidatorCommandsCard({
     identity: validator.identity || "",
     website: validator.website || "",
     securityContact: validator.securityContact || "",
-    details: validator.details || ""
+    details: validator.details || "",
   });
   const [commissionRate, setCommissionRate] = useState("");
   const [minSelfDelegation, setMinSelfDelegation] = useState("");
@@ -78,7 +93,7 @@ export default function ValidatorCommandsCard({
 
   // Check if any fields are enabled
   const hasEnabledFields = () => {
-    return Object.values(enabledFields).some(enabled => enabled);
+    return Object.values(enabledFields).some((enabled) => enabled);
   };
 
   // Validate form
@@ -130,15 +145,15 @@ export default function ValidatorCommandsCard({
     if (isCliqMode && cliqAddress) {
       try {
         setIsSubmitting(true);
-        
+
         const loadingToast = toast.loading("Creating transaction...");
-        
+
         const messages = buildEditValidatorMsg(
           validator.operatorAddress,
           enabledFields,
           description,
           commissionRate.trim() || undefined,
-          minSelfDelegation.trim() || undefined
+          minSelfDelegation.trim() || undefined,
         );
 
         const result = await createCliqTransaction({
@@ -181,11 +196,9 @@ export default function ValidatorCommandsCard({
         throw new Error("Failed to get signer");
       }
 
-      const client = await SigningStargateClient.connectWithSigner(
-        chain.nodeAddress,
-        signer,
-        { gasPrice: GasPrice.fromString(chain.gasPrice) },
-      );
+      const client = await SigningStargateClient.connectWithSigner(chain.nodeAddress, signer, {
+        gasPrice: GasPrice.fromString(chain.gasPrice),
+      });
 
       // Sentinel value for MsgEditValidator - indicates field should not be modified
       const DO_NOT_MODIFY = "[do-not-modify]";
@@ -199,7 +212,9 @@ export default function ValidatorCommandsCard({
           moniker: enabledFields.moniker ? description.moniker : DO_NOT_MODIFY,
           identity: enabledFields.identity ? description.identity : DO_NOT_MODIFY,
           website: enabledFields.website ? description.website : DO_NOT_MODIFY,
-          securityContact: enabledFields.securityContact ? description.securityContact : DO_NOT_MODIFY,
+          securityContact: enabledFields.securityContact
+            ? description.securityContact
+            : DO_NOT_MODIFY,
           details: enabledFields.details ? description.details : DO_NOT_MODIFY,
         },
       };
@@ -214,10 +229,12 @@ export default function ValidatorCommandsCard({
         messageValue.minSelfDelegation = minSelfDelegation.trim();
       }
 
-      const messages = [{
-        typeUrl: MsgTypeUrls.EditValidator,
-        value: messageValue,
-      }];
+      const messages = [
+        {
+          typeUrl: MsgTypeUrls.EditValidator,
+          value: messageValue,
+        },
+      ];
 
       // Calculate fee
       const gasPriceNum = parseFloat(chain.gasPrice) || 0.0625;
@@ -228,12 +245,7 @@ export default function ValidatorCommandsCard({
         gas: "400000",
       };
 
-      const result = await client.signAndBroadcast(
-        validator.delegatorAddress,
-        messages,
-        fee,
-        ""
-      );
+      const result = await client.signAndBroadcast(validator.delegatorAddress, messages, fee, "");
 
       if (result.code !== 0) {
         throw new Error(`Transaction failed: ${result.rawLog}`);
@@ -246,7 +258,7 @@ export default function ValidatorCommandsCard({
           onClick: () => {
             const explorerLink = chain.explorerLinks.tx?.replace(
               "${txHash}",
-              result.transactionHash
+              result.transactionHash,
             );
             if (explorerLink) {
               window.open(explorerLink, "_blank");
@@ -274,7 +286,7 @@ export default function ValidatorCommandsCard({
       identity: validator.identity || "",
       website: validator.website || "",
       securityContact: validator.securityContact || "",
-      details: validator.details || ""
+      details: validator.details || "",
     });
     setCommissionRate("");
     setMinSelfDelegation("");
@@ -293,9 +305,9 @@ export default function ValidatorCommandsCard({
   };
 
   const toggleField = (field: string) => {
-    setEnabledFields(prev => ({
+    setEnabledFields((prev) => ({
       ...prev,
-      [field]: !prev[field]
+      [field]: !prev[field],
     }));
   };
 
@@ -303,15 +315,13 @@ export default function ValidatorCommandsCard({
     <Card variant="institutional" accent="left" className="h-full">
       <CardHeader>
         <CardLabel comment>Management</CardLabel>
-        <CardTitle className="text-xl font-heading font-bold">
-          Validator Commands
-        </CardTitle>
+        <CardTitle className="font-heading text-xl font-bold">Validator Commands</CardTitle>
       </CardHeader>
 
       <CardContent className="space-y-6">
         {/* CLIQ mode indicator */}
         {isCliqMode && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/30 px-3 py-2 rounded-lg">
+          <div className="flex items-center gap-2 rounded-lg bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
             <Users className="h-4 w-4" />
             <span>Managing via CLIQ - actions will create transactions for multisig signing</span>
           </div>
@@ -320,89 +330,100 @@ export default function ValidatorCommandsCard({
         {/* Staking & Governance Section */}
         <div className="space-y-4">
           <div>
-            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">{`// Staking & Governance`}</h3>
+            <h3 className="mb-4 text-sm font-medium uppercase tracking-wide text-muted-foreground">{`// Staking & Governance`}</h3>
             <BentoGrid className="grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
               {/* Delegate */}
-              <Link href={`/${chain.registryName}/${targetAddress}/transaction/new`} className="block">
-                <BentoCard
-                  variant="default"
-                  interactive
-                  className="p-4 min-h-0"
-                >
-                  <div className="flex flex-col h-full">
-                    <div className="flex items-center gap-2 mb-2">
+              <Link
+                href={`/${chain.registryName}/${targetAddress}/transaction/new`}
+                className="block"
+              >
+                <BentoCard variant="default" interactive className="min-h-0 p-4">
+                  <div className="flex h-full flex-col">
+                    <div className="mb-2 flex items-center gap-2">
                       <TrendingUp className="h-6 w-6" />
-                      <h4 className="text-sm font-heading font-semibold leading-tight">Delegate</h4>
+                      <h4 className="font-heading text-sm font-semibold leading-tight">Delegate</h4>
                     </div>
-                    <p className="text-xs text-muted-foreground leading-tight">Stake tokens to validator</p>
+                    <p className="text-xs leading-tight text-muted-foreground">
+                      Stake tokens to validator
+                    </p>
                   </div>
                 </BentoCard>
               </Link>
 
               {/* Undelegate */}
-              <Link href={`/${chain.registryName}/${targetAddress}/transaction/new`} className="block">
-                <BentoCard
-                  variant="default"
-                  interactive
-                  className="p-4 min-h-0"
-                >
-                  <div className="flex flex-col h-full">
-                    <div className="flex items-center gap-2 mb-2">
+              <Link
+                href={`/${chain.registryName}/${targetAddress}/transaction/new`}
+                className="block"
+              >
+                <BentoCard variant="default" interactive className="min-h-0 p-4">
+                  <div className="flex h-full flex-col">
+                    <div className="mb-2 flex items-center gap-2">
                       <TrendingUp className="h-6 w-6" />
-                      <h4 className="text-sm font-heading font-semibold leading-tight">Undelegate</h4>
+                      <h4 className="font-heading text-sm font-semibold leading-tight">
+                        Undelegate
+                      </h4>
                     </div>
-                    <p className="text-xs text-muted-foreground leading-tight">Unstake tokens from validator</p>
+                    <p className="text-xs leading-tight text-muted-foreground">
+                      Unstake tokens from validator
+                    </p>
                   </div>
                 </BentoCard>
               </Link>
 
               {/* Redelegate */}
-              <Link href={`/${chain.registryName}/${targetAddress}/transaction/new`} className="block">
-                <BentoCard
-                  variant="default"
-                  interactive
-                  className="p-4 min-h-0"
-                >
-                  <div className="flex flex-col h-full">
-                    <div className="flex items-center gap-2 mb-2">
+              <Link
+                href={`/${chain.registryName}/${targetAddress}/transaction/new`}
+                className="block"
+              >
+                <BentoCard variant="default" interactive className="min-h-0 p-4">
+                  <div className="flex h-full flex-col">
+                    <div className="mb-2 flex items-center gap-2">
                       <TrendingUp className="h-6 w-6" />
-                      <h4 className="text-sm font-heading font-semibold leading-tight">Redelegate</h4>
+                      <h4 className="font-heading text-sm font-semibold leading-tight">
+                        Redelegate
+                      </h4>
                     </div>
-                    <p className="text-xs text-muted-foreground leading-tight">Move stake between validators</p>
+                    <p className="text-xs leading-tight text-muted-foreground">
+                      Move stake between validators
+                    </p>
                   </div>
                 </BentoCard>
               </Link>
 
               {/* Withdraw Rewards */}
-              <Link href={`/${chain.registryName}/${targetAddress}/transaction/new`} className="block">
-                <BentoCard
-                  variant="default"
-                  interactive
-                  className="p-4 min-h-0"
-                >
-                  <div className="flex flex-col h-full">
-                    <div className="flex items-center gap-2 mb-2">
+              <Link
+                href={`/${chain.registryName}/${targetAddress}/transaction/new`}
+                className="block"
+              >
+                <BentoCard variant="default" interactive className="min-h-0 p-4">
+                  <div className="flex h-full flex-col">
+                    <div className="mb-2 flex items-center gap-2">
                       <Coins className="h-6 w-6" />
-                      <h4 className="text-sm font-heading font-semibold leading-tight">Withdraw Rewards</h4>
+                      <h4 className="font-heading text-sm font-semibold leading-tight">
+                        Withdraw Rewards
+                      </h4>
                     </div>
-                    <p className="text-xs text-muted-foreground leading-tight">Claim staking rewards</p>
+                    <p className="text-xs leading-tight text-muted-foreground">
+                      Claim staking rewards
+                    </p>
                   </div>
                 </BentoCard>
               </Link>
 
               {/* Vote */}
-              <Link href={`/${chain.registryName}/${targetAddress}/transaction/new`} className="block">
-                <BentoCard
-                  variant="default"
-                  interactive
-                  className="p-4 min-h-0"
-                >
-                  <div className="flex flex-col h-full">
-                    <div className="flex items-center gap-2 mb-2">
+              <Link
+                href={`/${chain.registryName}/${targetAddress}/transaction/new`}
+                className="block"
+              >
+                <BentoCard variant="default" interactive className="min-h-0 p-4">
+                  <div className="flex h-full flex-col">
+                    <div className="mb-2 flex items-center gap-2">
                       <Vote className="h-6 w-6" />
-                      <h4 className="text-sm font-heading font-semibold leading-tight">Vote</h4>
+                      <h4 className="font-heading text-sm font-semibold leading-tight">Vote</h4>
                     </div>
-                    <p className="text-xs text-muted-foreground leading-tight">Vote on governance proposals</p>
+                    <p className="text-xs leading-tight text-muted-foreground">
+                      Vote on governance proposals
+                    </p>
                   </div>
                 </BentoCard>
               </Link>
@@ -440,46 +461,88 @@ export default function ValidatorCommandsCard({
               </Button>
             </DialogTrigger>
 
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-xl font-heading font-bold">
+                <DialogTitle className="font-heading text-xl font-bold">
                   Edit Validator Details
                 </DialogTitle>
               </DialogHeader>
 
               <div className="space-y-6 py-4">
                 <div className="space-y-4">
-                  <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                  <h3 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
                     Select fields to update
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-center justify-between space-x-2 border p-3 rounded-lg">
-                      <Label htmlFor="toggle-moniker" className="flex-1">Moniker (Name)</Label>
-                      <Switch id="toggle-moniker" checked={enabledFields.moniker} onCheckedChange={() => toggleField('moniker')} />
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
+                      <Label htmlFor="toggle-moniker" className="flex-1">
+                        Moniker (Name)
+                      </Label>
+                      <Switch
+                        id="toggle-moniker"
+                        checked={enabledFields.moniker}
+                        onCheckedChange={() => toggleField("moniker")}
+                      />
                     </div>
-                    <div className="flex items-center justify-between space-x-2 border p-3 rounded-lg">
-                      <Label htmlFor="toggle-identity" className="flex-1">Identity (Keybase)</Label>
-                      <Switch id="toggle-identity" checked={enabledFields.identity} onCheckedChange={() => toggleField('identity')} />
+                    <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
+                      <Label htmlFor="toggle-identity" className="flex-1">
+                        Identity (Keybase)
+                      </Label>
+                      <Switch
+                        id="toggle-identity"
+                        checked={enabledFields.identity}
+                        onCheckedChange={() => toggleField("identity")}
+                      />
                     </div>
-                    <div className="flex items-center justify-between space-x-2 border p-3 rounded-lg">
-                      <Label htmlFor="toggle-website" className="flex-1">Website</Label>
-                      <Switch id="toggle-website" checked={enabledFields.website} onCheckedChange={() => toggleField('website')} />
+                    <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
+                      <Label htmlFor="toggle-website" className="flex-1">
+                        Website
+                      </Label>
+                      <Switch
+                        id="toggle-website"
+                        checked={enabledFields.website}
+                        onCheckedChange={() => toggleField("website")}
+                      />
                     </div>
-                    <div className="flex items-center justify-between space-x-2 border p-3 rounded-lg">
-                      <Label htmlFor="toggle-security" className="flex-1">Security Contact</Label>
-                      <Switch id="toggle-security" checked={enabledFields.securityContact} onCheckedChange={() => toggleField('securityContact')} />
+                    <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
+                      <Label htmlFor="toggle-security" className="flex-1">
+                        Security Contact
+                      </Label>
+                      <Switch
+                        id="toggle-security"
+                        checked={enabledFields.securityContact}
+                        onCheckedChange={() => toggleField("securityContact")}
+                      />
                     </div>
-                    <div className="flex items-center justify-between space-x-2 border p-3 rounded-lg">
-                      <Label htmlFor="toggle-details" className="flex-1">Details</Label>
-                      <Switch id="toggle-details" checked={enabledFields.details} onCheckedChange={() => toggleField('details')} />
+                    <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
+                      <Label htmlFor="toggle-details" className="flex-1">
+                        Details
+                      </Label>
+                      <Switch
+                        id="toggle-details"
+                        checked={enabledFields.details}
+                        onCheckedChange={() => toggleField("details")}
+                      />
                     </div>
-                    <div className="flex items-center justify-between space-x-2 border p-3 rounded-lg">
-                      <Label htmlFor="toggle-commission" className="flex-1">Commission Rate</Label>
-                      <Switch id="toggle-commission" checked={enabledFields.commissionRate} onCheckedChange={() => toggleField('commissionRate')} />
+                    <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
+                      <Label htmlFor="toggle-commission" className="flex-1">
+                        Commission Rate
+                      </Label>
+                      <Switch
+                        id="toggle-commission"
+                        checked={enabledFields.commissionRate}
+                        onCheckedChange={() => toggleField("commissionRate")}
+                      />
                     </div>
-                    <div className="flex items-center justify-between space-x-2 border p-3 rounded-lg">
-                      <Label htmlFor="toggle-min-delegation" className="flex-1">Min Self Delegation</Label>
-                      <Switch id="toggle-min-delegation" checked={enabledFields.minSelfDelegation} onCheckedChange={() => toggleField('minSelfDelegation')} />
+                    <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
+                      <Label htmlFor="toggle-min-delegation" className="flex-1">
+                        Min Self Delegation
+                      </Label>
+                      <Switch
+                        id="toggle-min-delegation"
+                        checked={enabledFields.minSelfDelegation}
+                        onCheckedChange={() => toggleField("minSelfDelegation")}
+                      />
                     </div>
                   </div>
                 </div>
@@ -492,7 +555,9 @@ export default function ValidatorCommandsCard({
                     <Input
                       label="Moniker (Name)"
                       value={description.moniker}
-                      onChange={(e) => setDescription(prev => ({ ...prev, moniker: e.target.value }))}
+                      onChange={(e) =>
+                        setDescription((prev) => ({ ...prev, moniker: e.target.value }))
+                      }
                       placeholder="Enter validator name"
                     />
                   )}
@@ -500,7 +565,9 @@ export default function ValidatorCommandsCard({
                     <Input
                       label="Identity"
                       value={description.identity}
-                      onChange={(e) => setDescription(prev => ({ ...prev, identity: e.target.value }))}
+                      onChange={(e) =>
+                        setDescription((prev) => ({ ...prev, identity: e.target.value }))
+                      }
                       placeholder="Keybase identity"
                     />
                   )}
@@ -508,7 +575,9 @@ export default function ValidatorCommandsCard({
                     <Input
                       label="Website"
                       value={description.website}
-                      onChange={(e) => setDescription(prev => ({ ...prev, website: e.target.value }))}
+                      onChange={(e) =>
+                        setDescription((prev) => ({ ...prev, website: e.target.value }))
+                      }
                       placeholder="https://validator.com"
                     />
                   )}
@@ -516,7 +585,9 @@ export default function ValidatorCommandsCard({
                     <Input
                       label="Security Contact"
                       value={description.securityContact}
-                      onChange={(e) => setDescription(prev => ({ ...prev, securityContact: e.target.value }))}
+                      onChange={(e) =>
+                        setDescription((prev) => ({ ...prev, securityContact: e.target.value }))
+                      }
                       placeholder="security@validator.com"
                     />
                   )}
@@ -524,11 +595,13 @@ export default function ValidatorCommandsCard({
                     <Input
                       label="Details"
                       value={description.details}
-                      onChange={(e) => setDescription(prev => ({ ...prev, details: e.target.value }))}
+                      onChange={(e) =>
+                        setDescription((prev) => ({ ...prev, details: e.target.value }))
+                      }
                       placeholder="Validator description"
                     />
                   )}
-                  
+
                   {enabledFields.commissionRate && (
                     <div>
                       <Input
@@ -538,14 +611,15 @@ export default function ValidatorCommandsCard({
                         placeholder="Leave empty to keep current"
                         error={errors.commissionRate}
                       />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Current: {validator.commissionRate ?
-                          (parseFloat(validator.commissionRate) / 1000000000000000000).toFixed(4) :
-                          "N/A"}
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Current:{" "}
+                        {validator.commissionRate
+                          ? (parseFloat(validator.commissionRate) / 1000000000000000000).toFixed(4)
+                          : "N/A"}
                       </p>
                     </div>
                   )}
-                  
+
                   {enabledFields.minSelfDelegation && (
                     <div>
                       <Input
@@ -555,7 +629,7 @@ export default function ValidatorCommandsCard({
                         placeholder="Leave empty to keep current"
                         error={errors.minSelfDelegation}
                       />
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="mt-1 text-xs text-muted-foreground">
                         Current: {validator.minSelfDelegation || "N/A"}
                       </p>
                     </div>
@@ -565,7 +639,7 @@ export default function ValidatorCommandsCard({
                 <Separator />
 
                 {/* Actions */}
-                <div className="flex gap-3 justify-end">
+                <div className="flex justify-end gap-3">
                   <Button
                     variant="outline"
                     onClick={() => setIsEditing(false)}
@@ -603,7 +677,7 @@ export default function ValidatorCommandsCard({
         </div>
 
         {/* Info */}
-        <div className="text-center py-2">
+        <div className="py-2 text-center">
           <p className="text-xs text-muted-foreground">
             Changes may take a few minutes to reflect on the network.
           </p>

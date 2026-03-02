@@ -1,11 +1,11 @@
 /**
  * CW3 Contract Client
- * 
+ *
  * File: lib/contract/cw3-client.ts
- * 
+ *
  * Wrapper for CW3 multisig contract queries and executes.
  * This client handles all interactions with CW3-Fixed style contracts.
- * 
+ *
  * Note: This is a placeholder implementation that will be customized
  * when building the custom contract in later phases.
  */
@@ -65,11 +65,7 @@ export class CW3Client {
   private _senderAddress: string | null = null;
   private _gasMultiplier: "auto" | number = "auto";
 
-  constructor(
-    nodeAddress: string,
-    contractAddress: string,
-    chainId: string,
-  ) {
+  constructor(nodeAddress: string, contractAddress: string, chainId: string) {
     this.nodeAddress = nodeAddress;
     this.contractAddress = contractAddress;
     this.chainId = chainId;
@@ -142,18 +138,16 @@ export class CW3Client {
    */
   async queryConfig(): Promise<CW3Config> {
     const client = await this.getClient();
-    
+
     // Query threshold
-    const threshold = await client.queryContractSmart(
-      this.contractAddress,
-      { threshold: {} },
-    ) as ThresholdResponse;
+    const threshold = (await client.queryContractSmart(this.contractAddress, {
+      threshold: {},
+    })) as ThresholdResponse;
 
     // Query voters
-    const votersResponse = await client.queryContractSmart(
-      this.contractAddress,
-      { list_voters: {} },
-    ) as VoterListResponse;
+    const votersResponse = (await client.queryContractSmart(this.contractAddress, {
+      list_voters: {},
+    })) as VoterListResponse;
 
     // Try to get max_voting_period from the contract
     const maxVotingPeriod = await this.queryMaxVotingPeriod(client);
@@ -171,15 +165,16 @@ export class CW3Client {
    *   1. Try `config {}` query (many CW3-Fixed implementations support this)
    *   2. Fall back to 604800s (7 days) default
    */
-  private async queryMaxVotingPeriod(client: CosmWasmClient): Promise<{ time?: number; height?: number }> {
+  private async queryMaxVotingPeriod(
+    client: CosmWasmClient,
+  ): Promise<{ time?: number; height?: number }> {
     const DEFAULT_VOTING_PERIOD = { time: 604800 };
 
     // Attempt 1: Try the `config` query supported by cw-plus CW3 contracts
     try {
-      const config = await client.queryContractSmart(
-        this.contractAddress,
-        { config: {} },
-      ) as { max_voting_period?: { time?: number; height?: number } };
+      const config = (await client.queryContractSmart(this.contractAddress, { config: {} })) as {
+        max_voting_period?: { time?: number; height?: number };
+      };
 
       if (config?.max_voting_period) {
         return config.max_voting_period;
@@ -196,10 +191,9 @@ export class CW3Client {
         if (proposal.expires?.at_time) {
           // The proposal expires at a specific nanosecond timestamp.
           // Query the proposal's creation block to compute the delta.
-          const fullProposal = await client.queryContractSmart(
-            this.contractAddress,
-            { proposal: { proposal_id: proposal.id } },
-          ) as ProposalResponse & { open_time?: string };
+          const fullProposal = (await client.queryContractSmart(this.contractAddress, {
+            proposal: { proposal_id: proposal.id },
+          })) as ProposalResponse & { open_time?: string };
 
           // Some CW3 implementations include open_time; if not available,
           // we can't infer the voting period from this proposal alone.
@@ -226,10 +220,9 @@ export class CW3Client {
   async queryProposal(proposalId: number): Promise<CW3Proposal | null> {
     try {
       const client = await this.getClient();
-      const response = await client.queryContractSmart(
-        this.contractAddress,
-        { proposal: { proposal_id: proposalId } },
-      ) as ProposalResponse;
+      const response = (await client.queryContractSmart(this.contractAddress, {
+        proposal: { proposal_id: proposalId },
+      })) as ProposalResponse;
 
       return {
         id: response.id,
@@ -251,10 +244,7 @@ export class CW3Client {
   /**
    * Query list of proposals with pagination
    */
-  async queryListProposals(
-    startAfter?: number,
-    limit: number = 30,
-  ): Promise<CW3Proposal[]> {
+  async queryListProposals(startAfter?: number, limit: number = 30): Promise<CW3Proposal[]> {
     const client = await this.getClient();
     const query: CW3QueryMsg = {
       list_proposals: {
@@ -263,10 +253,10 @@ export class CW3Client {
       },
     };
 
-    const response = await client.queryContractSmart(
+    const response = (await client.queryContractSmart(
       this.contractAddress,
       query,
-    ) as ProposalListResponse;
+    )) as ProposalListResponse;
 
     return response.proposals.map((p) => ({
       id: p.id,
@@ -284,10 +274,7 @@ export class CW3Client {
   /**
    * Query proposals in reverse order (newest first)
    */
-  async queryReverseProposals(
-    startBefore?: number,
-    limit: number = 30,
-  ): Promise<CW3Proposal[]> {
+  async queryReverseProposals(startBefore?: number, limit: number = 30): Promise<CW3Proposal[]> {
     const client = await this.getClient();
     const query: CW3QueryMsg = {
       reverse_proposals: {
@@ -296,10 +283,10 @@ export class CW3Client {
       },
     };
 
-    const response = await client.queryContractSmart(
+    const response = (await client.queryContractSmart(
       this.contractAddress,
       query,
-    ) as ProposalListResponse;
+    )) as ProposalListResponse;
 
     return response.proposals.map((p) => ({
       id: p.id,
@@ -331,10 +318,10 @@ export class CW3Client {
       },
     };
 
-    const response = await client.queryContractSmart(
+    const response = (await client.queryContractSmart(
       this.contractAddress,
       query,
-    ) as VoteListResponse;
+    )) as VoteListResponse;
 
     return response.votes.map((v) => ({
       voter: v.voter,
@@ -349,10 +336,9 @@ export class CW3Client {
   async queryVoter(address: string): Promise<{ weight: number } | null> {
     try {
       const client = await this.getClient();
-      const response = await client.queryContractSmart(
-        this.contractAddress,
-        { voter: { address } },
-      );
+      const response = await client.queryContractSmart(this.contractAddress, {
+        voter: { address },
+      });
       return response;
     } catch {
       return null;
@@ -374,10 +360,10 @@ export class CW3Client {
       },
     };
 
-    const response = await client.queryContractSmart(
+    const response = (await client.queryContractSmart(
       this.contractAddress,
       query,
-    ) as VoterListResponse;
+    )) as VoterListResponse;
 
     return response.voters;
   }
@@ -438,10 +424,7 @@ export class CW3Client {
   /**
    * Vote on a proposal
    */
-  async vote(
-    proposalId: number,
-    vote: VoteOption,
-  ): Promise<CW3ExecuteResult> {
+  async vote(proposalId: number, vote: VoteOption): Promise<CW3ExecuteResult> {
     try {
       const client = this.getSigningClient();
       const senderAddress = await this.getSenderAddress();
@@ -754,7 +737,9 @@ export class CW3Client {
   /**
    * Extract proposal_id from transaction events
    */
-  private extractProposalIdFromEvents(events: readonly { type: string; attributes: readonly { key: string; value: string }[] }[]): number | undefined {
+  private extractProposalIdFromEvents(
+    events: readonly { type: string; attributes: readonly { key: string; value: string }[] }[],
+  ): number | undefined {
     for (const event of events) {
       if (event.type === "wasm" || event.type === "wasm-propose") {
         for (const attr of event.attributes) {
@@ -874,13 +859,10 @@ export async function createSigningCW3ClientFromSigner(
     throw new Error("Signer has no accounts");
   }
 
-  const signingClient = await SigningCosmWasmClient.connectWithSigner(
-    nodeAddress,
-    signer,
-    { gasPrice: GasPrice.fromString(gasPrice) },
-  );
+  const signingClient = await SigningCosmWasmClient.connectWithSigner(nodeAddress, signer, {
+    gasPrice: GasPrice.fromString(gasPrice),
+  });
   const client = new CW3Client(nodeAddress, contractAddress, chainId);
   client.setSigningClient(signingClient, senderAddress, gasMultiplier);
   return client;
 }
-

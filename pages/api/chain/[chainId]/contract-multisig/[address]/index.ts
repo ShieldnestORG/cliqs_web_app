@@ -1,8 +1,8 @@
 /**
  * Contract Multisig API - Single Contract Operations
- * 
+ *
  * File: pages/api/chain/[chainId]/contract-multisig/[address]/index.ts
- * 
+ *
  * GET: Get contract config, proposals, and state
  * POST: Trigger sync or verify proposal
  */
@@ -11,9 +11,9 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import * as localDb from "@/lib/localDb";
 import { CW3Client } from "@/lib/contract/cw3-client";
 import { createSyncJob } from "@/lib/indexer/sync-job";
-import { 
-  verifyCanVote, 
-  verifyCanExecute, 
+import {
+  verifyCanVote,
+  verifyCanExecute,
   verifyAndReconcileProposal,
 } from "@/lib/indexer/chain-verifier";
 
@@ -21,10 +21,7 @@ import {
 // Handler
 // ============================================================================
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { chainId, address } = req.query;
 
   if (typeof chainId !== "string" || typeof address !== "string") {
@@ -49,7 +46,7 @@ async function handleGet(
   req: NextApiRequest,
   res: NextApiResponse,
   chainId: string,
-  contractAddress: string
+  contractAddress: string,
 ) {
   try {
     const nodeAddress = req.query.nodeAddress as string;
@@ -61,13 +58,14 @@ async function handleGet(
     }
 
     // Ensure protocol prefix for RPC endpoint (inline to avoid browser-only imports)
-    const rpcEndpoint = nodeAddress.startsWith("http") || nodeAddress.startsWith("ws")
-      ? nodeAddress
-      : `https://${nodeAddress}`;
+    const rpcEndpoint =
+      nodeAddress.startsWith("http") || nodeAddress.startsWith("ws")
+        ? nodeAddress
+        : `https://${nodeAddress}`;
 
     // Try to get from DB first
     let dbMultisig = localDb.getContractMultisig(chainId, contractAddress);
-    
+
     // If not in DB, try to fetch from chain and cache
     if (!dbMultisig) {
       try {
@@ -81,7 +79,7 @@ async function handleGet(
         } else if (config.threshold.absolute_percentage) {
           threshold = Math.ceil(
             parseFloat(config.threshold.absolute_percentage.percentage) *
-            config.threshold.absolute_percentage.total_weight
+              config.threshold.absolute_percentage.total_weight,
           );
         }
 
@@ -124,16 +122,18 @@ async function handleGet(
     return res.status(200).json({
       chainId,
       contractAddress,
-      multisig: dbMultisig ? {
-        label: dbMultisig.label,
-        name: dbMultisig.name,
-        description: dbMultisig.description,
-        threshold: dbMultisig.threshold,
-        maxVotingPeriodSeconds: dbMultisig.maxVotingPeriodSeconds,
-        members: dbMultisig.members,
-        creator: dbMultisig.creator,
-        createdAt: dbMultisig.createdAt,
-      } : null,
+      multisig: dbMultisig
+        ? {
+            label: dbMultisig.label,
+            name: dbMultisig.name,
+            description: dbMultisig.description,
+            threshold: dbMultisig.threshold,
+            maxVotingPeriodSeconds: dbMultisig.maxVotingPeriodSeconds,
+            members: dbMultisig.members,
+            creator: dbMultisig.creator,
+            createdAt: dbMultisig.createdAt,
+          }
+        : null,
       proposals: proposals.map((p) => ({
         proposalId: p.proposalId,
         title: p.title,
@@ -145,12 +145,14 @@ async function handleGet(
         yesWeight: localDb.getProposalYesWeight(contractAddress, p.proposalId),
         createdAt: p.createdAt,
       })),
-      syncState: syncState ? {
-        lastFinalizedHeight: syncState.lastFinalizedHeight,
-        lastSyncedAt: syncState.lastSyncedAt,
-        status: syncState.status,
-        errorMessage: syncState.errorMessage,
-      } : null,
+      syncState: syncState
+        ? {
+            lastFinalizedHeight: syncState.lastFinalizedHeight,
+            lastSyncedAt: syncState.lastSyncedAt,
+            status: syncState.status,
+            errorMessage: syncState.errorMessage,
+          }
+        : null,
     });
   } catch (error) {
     console.error("Failed to get contract multisig:", error);
@@ -168,7 +170,7 @@ async function handlePost(
   req: NextApiRequest,
   res: NextApiResponse,
   chainId: string,
-  contractAddress: string
+  contractAddress: string,
 ) {
   try {
     const { action, nodeAddress: rawNodeAddress, proposalId, voterAddress } = req.body;
@@ -177,21 +179,31 @@ async function handlePost(
       return res.status(400).json({ error: "nodeAddress required" });
     }
 
-    const nodeAddress = rawNodeAddress.startsWith("http") || rawNodeAddress.startsWith("ws")
-      ? rawNodeAddress
-      : `https://${rawNodeAddress}`;
+    const nodeAddress =
+      rawNodeAddress.startsWith("http") || rawNodeAddress.startsWith("ws")
+        ? rawNodeAddress
+        : `https://${rawNodeAddress}`;
 
     switch (action) {
       case "sync":
         return handleSync(res, chainId, contractAddress, nodeAddress);
       case "verify-vote":
-        return handleVerifyVote(res, chainId, contractAddress, nodeAddress, proposalId, voterAddress);
+        return handleVerifyVote(
+          res,
+          chainId,
+          contractAddress,
+          nodeAddress,
+          proposalId,
+          voterAddress,
+        );
       case "verify-execute":
         return handleVerifyExecute(res, chainId, contractAddress, nodeAddress, proposalId);
       case "reconcile":
         return handleReconcile(res, chainId, contractAddress, nodeAddress, proposalId);
       default:
-        return res.status(400).json({ error: "Invalid action. Use: sync, verify-vote, verify-execute, reconcile" });
+        return res
+          .status(400)
+          .json({ error: "Invalid action. Use: sync, verify-vote, verify-execute, reconcile" });
     }
   } catch (error) {
     console.error("Failed to process action:", error);
@@ -209,7 +221,7 @@ async function handleSync(
   res: NextApiResponse,
   chainId: string,
   contractAddress: string,
-  nodeAddress: string
+  nodeAddress: string,
 ) {
   const syncJob = createSyncJob({
     chainId,
@@ -231,7 +243,7 @@ async function handleVerifyVote(
   contractAddress: string,
   nodeAddress: string,
   proposalId: number,
-  voterAddress: string
+  voterAddress: string,
 ) {
   if (!proposalId || !voterAddress) {
     return res.status(400).json({ error: "proposalId and voterAddress required for verify-vote" });
@@ -258,7 +270,7 @@ async function handleVerifyExecute(
   chainId: string,
   contractAddress: string,
   nodeAddress: string,
-  proposalId: number
+  proposalId: number,
 ) {
   if (!proposalId) {
     return res.status(400).json({ error: "proposalId required for verify-execute" });
@@ -283,7 +295,7 @@ async function handleReconcile(
   chainId: string,
   contractAddress: string,
   nodeAddress: string,
-  proposalId: number
+  proposalId: number,
 ) {
   if (!proposalId) {
     return res.status(400).json({ error: "proposalId required for reconcile" });
@@ -293,7 +305,7 @@ async function handleReconcile(
     nodeAddress,
     contractAddress,
     chainId,
-    proposalId
+    proposalId,
   );
 
   return res.status(200).json({
@@ -302,4 +314,3 @@ async function handleReconcile(
     result,
   });
 }
-

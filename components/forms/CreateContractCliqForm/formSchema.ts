@@ -1,8 +1,8 @@
 /**
  * Contract Cliq Creation Form Schema
- * 
+ *
  * File: components/forms/CreateContractCliqForm/formSchema.ts
- * 
+ *
  * Schema for creating a CW3-based contract multisig.
  * Unlike PubKey multisigs, contract multisigs:
  * - Don't require public keys (only addresses)
@@ -39,7 +39,7 @@ export const getCreateContractCliqSchema = (chain: ChainInfo) =>
         .max(50, "CLIQ name must be less than 50 characters")
         .regex(
           /^[a-zA-Z0-9\s\-_]+$/,
-          "CLIQ name can only contain letters, numbers, spaces, hyphens, and underscores"
+          "CLIQ name can only contain letters, numbers, spaces, hyphens, and underscores",
         ),
 
       description: z
@@ -135,8 +135,8 @@ export const getCreateContractCliqSchema = (chain: ChainInfo) =>
     // Validate no duplicate members
     .superRefine(({ members }, ctx) => {
       const addresses = members.map(({ address }) => address.toLowerCase());
-      const dupedAddresses = addresses.filter((addr, i) => 
-        addr !== "" && addresses.indexOf(addr) !== i
+      const dupedAddresses = addresses.filter(
+        (addr, i) => addr !== "" && addresses.indexOf(addr) !== i,
       );
 
       if (dupedAddresses.length > 0) {
@@ -180,7 +180,9 @@ export type CreateContractCliqFormValues = z.infer<ReturnType<typeof getCreateCo
 // Default Values
 // ============================================================================
 
-export const defaultContractCliqFormValues: Omit<CreateContractCliqFormValues, "codeId"> & { codeId: string } = {
+export const defaultContractCliqFormValues: Omit<CreateContractCliqFormValues, "codeId"> & {
+  codeId: string;
+} = {
   name: "",
   description: "",
   label: "",
@@ -218,4 +220,3 @@ export function secondsToVotingPeriod(seconds: number): number {
 export function calculateTotalWeight(members: { weight: number }[]): number {
   return members.reduce((sum, { weight }) => sum + weight, 0);
 }
-

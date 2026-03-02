@@ -1,13 +1,13 @@
 /**
  * Credential Class API
- * 
+ *
  * File: pages/api/chain/[chainId]/credentials/class.ts
- * 
+ *
  * API routes for creating and querying credential classes.
- * 
+ *
  * POST - Create a new credential class for a team
  * GET  - Get credential class for a team (by teamAddress query param)
- * 
+ *
  * Phase 3: Identity NFTs (Credential-Gated Multisig)
  */
 
@@ -179,4 +179,3 @@ async function handleGetClass(
     });
   }
 }
-

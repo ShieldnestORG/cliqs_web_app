@@ -1,8 +1,8 @@
 /**
  * Monitoring Module Exports
- * 
+ *
  * File: lib/monitoring/index.ts
- * 
+ *
  * Central export point for Phase 4 observability infrastructure.
  */
 
@@ -56,4 +56,3 @@ export {
   getAnomalyDetector,
   setAnomalyDetector,
 } from "./anomaly-detector";
-

@@ -20,9 +20,7 @@ function pubkeyMatches(
   memberPubkey: string,
   pubkeys: ReadonlyArray<{ value?: string; key?: string }>,
 ): boolean {
-  return pubkeys.some(
-    (pk) => pk.value === memberPubkey || pk.key === memberPubkey,
-  );
+  return pubkeys.some((pk) => pk.value === memberPubkey || pk.key === memberPubkey);
 }
 
 /**
@@ -41,10 +39,7 @@ export async function getMultisigsFromChainWhereMember(
 
   try {
     const cometClient = await connectComet(rpcUrl);
-    const queryClient = QueryClient.withExtensions(
-      cometClient,
-      setupStakingExtension,
-    );
+    const queryClient = QueryClient.withExtensions(cometClient, setupStakingExtension);
 
     const stargateClient = await StargateClient.connect(rpcUrl);
 
@@ -52,10 +47,7 @@ export async function getMultisigsFromChainWhereMember(
     let paginationKey: Uint8Array | undefined;
 
     do {
-      const response = await queryClient.staking.validators(
-        "BOND_STATUS_BONDED",
-        paginationKey,
-      );
+      const response = await queryClient.staking.validators("BOND_STATUS_BONDED", paginationKey);
       validators.push(...response.validators);
       paginationKey = response.pagination?.nextKey;
     } while (paginationKey?.length);
@@ -64,13 +56,11 @@ export async function getMultisigsFromChainWhereMember(
 
     for (const v of validators) {
       try {
-        const delegatorAddr = validatorToDelegatorAddress(
-          v.operatorAddress,
-          chain.addressPrefix,
-        );
+        const delegatorAddr = validatorToDelegatorAddress(v.operatorAddress, chain.addressPrefix);
         const account = await stargateClient.getAccount(delegatorAddr);
-        if (!account?.pubkey || !isMultisigThresholdPubkey(account.pubkey))
+        if (!account?.pubkey || !isMultisigThresholdPubkey(account.pubkey)) {
           continue;
+        }
 
         const pubkeys = account.pubkey.value?.pubkeys ?? [];
         if (!pubkeyMatches(pubkey, pubkeys)) continue;

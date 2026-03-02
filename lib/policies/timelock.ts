@@ -1,17 +1,17 @@
 /**
  * Timelock Policy Implementation
- * 
+ *
  * File: lib/policies/timelock.ts
- * 
+ *
  * Priority 1 policy - Risk containment window.
  * All other policies need reaction time, so timelock must come first.
- * 
+ *
  * This policy enforces:
  * - Minimum delay between proposal approval and execution
  * - Maximum delay (proposals expire)
  * - High-value multiplier for extra protection
  * - Per-message-type delays
- * 
+ *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards
  */
 
@@ -52,7 +52,7 @@ export class TimelockPolicy implements Policy {
   readonly name: string;
   readonly enabled: boolean;
   readonly priority: number;
-  
+
   private readonly config: TimelockPolicyConfig;
 
   constructor(
@@ -73,21 +73,18 @@ export class TimelockPolicy implements Policy {
    * At creation time, we just check if timelock policy is enabled
    * The actual delay enforcement happens at execution
    */
-  async evaluateProposal(
-    proposal: Proposal,
-    context: PolicyContext,
-  ): Promise<PolicyDecision> {
+  async evaluateProposal(proposal: Proposal, context: PolicyContext): Promise<PolicyDecision> {
     // Proposal creation is always allowed by timelock policy
     // The actual enforcement happens at execution time
     // We might add warnings for high-value proposals here
-    
+
     const isHighValue = this.isHighValue(context.proposalValue, context.treasuryBalance);
-    
+
     if (isHighValue) {
       // Could add a warning here, but we allow the proposal
       // The high-value multiplier will be applied at execution
     }
-    
+
     return allowed();
   }
 
@@ -95,10 +92,7 @@ export class TimelockPolicy implements Policy {
    * Evaluate for proposal execution
    * This is where the timelock is actually enforced
    */
-  async evaluateExecution(
-    proposal: Proposal,
-    context: PolicyContext,
-  ): Promise<PolicyDecision> {
+  async evaluateExecution(proposal: Proposal, context: PolicyContext): Promise<PolicyDecision> {
     // Check if operations are paused (defer to emergency policy)
     if (context.isPaused) {
       return denied([
@@ -128,7 +122,7 @@ export class TimelockPolicy implements Policy {
 
     // Calculate required delay
     const requiredDelay = this.getRequiredDelay(proposal, context);
-    
+
     // Check minimum delay
     if (context.timeSinceQueue < requiredDelay) {
       const remainingSeconds = requiredDelay - context.timeSinceQueue;
@@ -217,7 +211,7 @@ export class TimelockPolicy implements Policy {
     // Check each denom in the proposal
     for (const proposedCoin of proposalValue) {
       const treasuryCoin = treasuryBalance.find((c) => c.denom === proposedCoin.denom);
-      
+
       if (!treasuryCoin) {
         // If we're spending a denom that's not in treasury tracking, be conservative
         continue;
@@ -246,17 +240,17 @@ export class TimelockPolicy implements Policy {
     if (seconds < 60) {
       return `${seconds} second${seconds === 1 ? "" : "s"}`;
     }
-    
+
     if (seconds < 3600) {
       const minutes = Math.floor(seconds / 60);
       return `${minutes} minute${minutes === 1 ? "" : "s"}`;
     }
-    
+
     if (seconds < 86400) {
       const hours = Math.floor(seconds / 3600);
       return `${hours} hour${hours === 1 ? "" : "s"}`;
     }
-    
+
     const days = Math.floor(seconds / 86400);
     return `${days} day${days === 1 ? "" : "s"}`;
   }
@@ -303,25 +297,23 @@ export class TimelockPolicy implements Policy {
  */
 export function createTimelockPolicy(stored: StoredPolicy): TimelockPolicy {
   const parsedConfig = JSON.parse(stored.configJSON);
-  
+
   // Convert perMsgTypeDelays from object to Map if needed
   let perMsgTypeDelays = parsedConfig.perMsgTypeDelays;
   if (perMsgTypeDelays && !(perMsgTypeDelays instanceof Map)) {
     const delays = perMsgTypeDelays as unknown as Record<string, number>;
     perMsgTypeDelays = new Map(Object.entries(delays)) as ReadonlyMap<MsgTypeUrl, number>;
   }
-  
+
   const config: TimelockPolicyConfig = {
     ...parsedConfig,
     perMsgTypeDelays,
   };
-  
-  return new TimelockPolicy(
-    stored.id,
-    stored.name,
-    config,
-    { enabled: stored.enabled, priority: stored.priority },
-  );
+
+  return new TimelockPolicy(stored.id, stored.name, config, {
+    enabled: stored.enabled,
+    priority: stored.priority,
+  });
 }
 
 /**
@@ -337,16 +329,13 @@ export function createDefaultTimelockPolicy(
     highValueThresholdPercent?: number;
   },
 ): TimelockPolicy {
-  return new TimelockPolicy(
-    id,
-    "Timelock Policy",
-    {
-      minDelaySeconds: options?.minDelaySeconds ?? DEFAULT_CONFIG.minDelaySeconds,
-      maxDelaySeconds: options?.maxDelaySeconds ?? DEFAULT_CONFIG.maxDelaySeconds,
-      highValueMultiplier: options?.highValueMultiplier ?? DEFAULT_CONFIG.highValueMultiplier,
-      highValueThresholdPercent: options?.highValueThresholdPercent ?? DEFAULT_CONFIG.highValueThresholdPercent,
-    },
-  );
+  return new TimelockPolicy(id, "Timelock Policy", {
+    minDelaySeconds: options?.minDelaySeconds ?? DEFAULT_CONFIG.minDelaySeconds,
+    maxDelaySeconds: options?.maxDelaySeconds ?? DEFAULT_CONFIG.maxDelaySeconds,
+    highValueMultiplier: options?.highValueMultiplier ?? DEFAULT_CONFIG.highValueMultiplier,
+    highValueThresholdPercent:
+      options?.highValueThresholdPercent ?? DEFAULT_CONFIG.highValueThresholdPercent,
+  });
 }
 
 // ============================================================================
@@ -376,7 +365,13 @@ export function calculateExecuteAfter(
   }
 
   // Apply high-value multiplier
-  if (isHighValueProposal(context.proposalValue, context.treasuryBalance, config.highValueThresholdPercent)) {
+  if (
+    isHighValueProposal(
+      context.proposalValue,
+      context.treasuryBalance,
+      config.highValueThresholdPercent,
+    )
+  ) {
     delay = Math.ceil(delay * config.highValueMultiplier);
   }
 
@@ -402,7 +397,7 @@ export function isHighValueProposal(
 
   for (const proposedCoin of proposalValue) {
     const treasuryCoin = treasuryBalance.find((c) => c.denom === proposedCoin.denom);
-    
+
     if (!treasuryCoin) continue;
 
     const treasuryAmount = BigInt(treasuryCoin.amount);
@@ -440,4 +435,3 @@ export function formatTimelockRemaining(remainingSeconds: number): string {
 
   return parts.join(" ") || "Ready to execute";
 }
-

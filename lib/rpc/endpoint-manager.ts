@@ -1,8 +1,8 @@
 /**
  * RPC Endpoint Manager
- * 
+ *
  * File: lib/rpc/endpoint-manager.ts
- * 
+ *
  * Manages RPC endpoint configuration for multi-endpoint verification.
  * Supports priority-based endpoint selection and health monitoring.
  */
@@ -141,9 +141,7 @@ export class EndpointManager {
     const config = this.configs.get(chainId);
     if (!config) return [];
 
-    return config.endpoints.filter(
-      (e) => e.priority === "witness" || e.priority === "secondary",
-    );
+    return config.endpoints.filter((e) => e.priority === "witness" || e.priority === "secondary");
   }
 
   /**
@@ -183,17 +181,11 @@ export class EndpointManager {
           signal: AbortSignal.timeout(config.timeoutMs),
         });
         const responseTime = Date.now() - start;
-        
+
         if (response.ok) {
           this.updateHealth(chainId, endpoint.url, true, responseTime);
         } else {
-          this.updateHealth(
-            chainId,
-            endpoint.url,
-            false,
-            responseTime,
-            `HTTP ${response.status}`,
-          );
+          this.updateHealth(chainId, endpoint.url, false, responseTime, `HTTP ${response.status}`);
         }
       } catch (error) {
         const responseTime = Date.now() - start;
@@ -223,4 +215,3 @@ export function getEndpointManager(): EndpointManager {
   }
   return endpointManager;
 }
-

@@ -1,11 +1,11 @@
 /**
  * Membership Management Panel
- * 
+ *
  * File: components/dataViews/MembershipManagementPanel.tsx
- * 
+ *
  * UI component for managing CW4 group membership in flex-style multisigs.
  * Provides admin controls to add, remove, and update member weights.
- * 
+ *
  * Features:
  * - View current members with weights
  * - Add new members (admin only)
@@ -13,21 +13,21 @@
  * - Update member weights (admin only)
  * - Preview pending changes before submission
  * - Warning for changes affecting open proposals
- * 
+ *
  * Phase 2: Group-Backed Multisig
  */
 
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { 
-  Plus, 
-  Trash2, 
-  Edit2, 
-  Save, 
-  X, 
-  AlertTriangle, 
-  Users, 
+import {
+  Plus,
+  Trash2,
+  Edit2,
+  Save,
+  X,
+  AlertTriangle,
+  Users,
   Shield,
   RefreshCw,
   Check,
@@ -106,7 +106,7 @@ export default function MembershipManagementPanel({
   totalWeight,
   adminAddress,
   userAddress,
-  groupAddress,
+  groupAddress: _groupAddress,
   addressPrefix,
   hasOpenProposals = false,
   openProposalCount = 0,
@@ -133,7 +133,7 @@ export default function MembershipManagementPanel({
   // Calculate new total weight after pending changes
   const projectedTotalWeight = useMemo(() => {
     let weight = totalWeight;
-    
+
     for (const change of pendingChanges) {
       switch (change.type) {
         case "add":
@@ -147,19 +147,19 @@ export default function MembershipManagementPanel({
           break;
       }
     }
-    
+
     return weight;
   }, [totalWeight, pendingChanges]);
 
   // Get display members (with pending changes applied)
   const displayMembers = useMemo(() => {
     const memberMap = new Map<string, GroupMember & { pending?: PendingChange }>();
-    
+
     // Add current members
     for (const member of members) {
       memberMap.set(member.address, { ...member });
     }
-    
+
     // Apply pending changes
     for (const change of pendingChanges) {
       if (change.type === "add") {
@@ -184,7 +184,7 @@ export default function MembershipManagementPanel({
         }
       }
     }
-    
+
     return Array.from(memberMap.values());
   }, [members, pendingChanges]);
 
@@ -196,11 +196,9 @@ export default function MembershipManagementPanel({
     }
 
     // Check if already exists
-    const exists = members.some(
-      (m) => m.address.toLowerCase() === newMemberAddress.toLowerCase()
-    );
+    const exists = members.some((m) => m.address.toLowerCase() === newMemberAddress.toLowerCase());
     const pendingAdd = pendingChanges.some(
-      (c) => c.type === "add" && c.address.toLowerCase() === newMemberAddress.toLowerCase()
+      (c) => c.type === "add" && c.address.toLowerCase() === newMemberAddress.toLowerCase(),
     );
 
     if (exists || pendingAdd) {
@@ -218,23 +216,26 @@ export default function MembershipManagementPanel({
     toast.success("Member added to pending changes");
   }, [newMemberAddress, newMemberWeight, members, pendingChanges]);
 
-  const handleRemoveMember = useCallback((address: string) => {
-    const member = members.find((m) => m.address === address);
-    if (!member) return;
+  const handleRemoveMember = useCallback(
+    (address: string) => {
+      const member = members.find((m) => m.address === address);
+      if (!member) return;
 
-    // Check if there's already a pending change for this member
-    const existingIndex = pendingChanges.findIndex((c) => c.address === address);
-    if (existingIndex >= 0) {
-      // Remove the pending change
-      setPendingChanges((prev) => prev.filter((_, i) => i !== existingIndex));
-    }
+      // Check if there's already a pending change for this member
+      const existingIndex = pendingChanges.findIndex((c) => c.address === address);
+      if (existingIndex >= 0) {
+        // Remove the pending change
+        setPendingChanges((prev) => prev.filter((_, i) => i !== existingIndex));
+      }
 
-    setPendingChanges((prev) => [
-      ...prev,
-      { type: "remove", address, originalWeight: member.weight },
-    ]);
-    toast.success("Member removal added to pending changes");
-  }, [members, pendingChanges]);
+      setPendingChanges((prev) => [
+        ...prev,
+        { type: "remove", address, originalWeight: member.weight },
+      ]);
+      toast.success("Member removal added to pending changes");
+    },
+    [members, pendingChanges],
+  );
 
   const handleStartEdit = useCallback((member: GroupMember) => {
     setEditingMember(member.address);
@@ -257,9 +258,9 @@ export default function MembershipManagementPanel({
 
     setPendingChanges((prev) => [
       ...prev,
-      { 
-        type: "update", 
-        address: editingMember, 
+      {
+        type: "update",
+        address: editingMember,
         weight: editWeight,
         originalWeight: member.weight,
       },
@@ -322,9 +323,7 @@ export default function MembershipManagementPanel({
             <CardDescription>
               {members.length} members · Total weight: {totalWeight}
               {hasChanges && (
-                <span className="text-yellow-600 ml-2">
-                  → Projected: {projectedTotalWeight}
-                </span>
+                <span className="ml-2 text-yellow-600">→ Projected: {projectedTotalWeight}</span>
               )}
             </CardDescription>
           </div>
@@ -338,7 +337,7 @@ export default function MembershipManagementPanel({
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
                   <Button size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="mr-2 h-4 w-4" />
                     Add Member
                   </Button>
                 </DialogTrigger>
@@ -374,9 +373,7 @@ export default function MembershipManagementPanel({
                     <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                       Cancel
                     </Button>
-                    <Button onClick={handleAddMember}>
-                      Add Member
-                    </Button>
+                    <Button onClick={handleAddMember}>Add Member</Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -389,12 +386,15 @@ export default function MembershipManagementPanel({
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Shield className="h-4 w-4" />
           <span>
-            Admin: {adminAddress 
+            Admin:{" "}
+            {adminAddress
               ? `${adminAddress.slice(0, 12)}...${adminAddress.slice(-8)}`
               : "No admin (immutable)"}
           </span>
           {isAdmin && (
-            <Badge variant="secondary" className="ml-2">You</Badge>
+            <Badge variant="secondary" className="ml-2">
+              You
+            </Badge>
           )}
         </div>
 
@@ -404,8 +404,9 @@ export default function MembershipManagementPanel({
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Warning: Open Proposals</AlertTitle>
             <AlertDescription>
-              There {openProposalCount === 1 ? "is" : "are"} {openProposalCount} open proposal{openProposalCount !== 1 ? "s" : ""}.
-              Changing membership may affect voting thresholds.
+              There {openProposalCount === 1 ? "is" : "are"} {openProposalCount} open proposal
+              {openProposalCount !== 1 ? "s" : ""}. Changing membership may affect voting
+              thresholds.
             </AlertDescription>
           </Alert>
         )}
@@ -430,25 +431,34 @@ export default function MembershipManagementPanel({
               const isEditing = editingMember === member.address;
 
               return (
-                <TableRow 
+                <TableRow
                   key={member.address}
                   className={
-                    isPendingAdd ? "bg-green-50 dark:bg-green-950" :
-                    isPendingRemove ? "bg-red-50 dark:bg-red-950 opacity-50" :
-                    isPendingUpdate ? "bg-yellow-50 dark:bg-yellow-950" :
-                    ""
+                    isPendingAdd
+                      ? "bg-green-50 dark:bg-green-950"
+                      : isPendingRemove
+                        ? "bg-red-50 opacity-50 dark:bg-red-950"
+                        : isPendingUpdate
+                          ? "bg-yellow-50 dark:bg-yellow-950"
+                          : ""
                   }
                 >
                   <TableCell className="font-mono text-sm">
                     {member.address.slice(0, 12)}...{member.address.slice(-8)}
                     {isPendingAdd && (
-                      <Badge variant="outline" className="ml-2 text-green-600">New</Badge>
+                      <Badge variant="outline" className="ml-2 text-green-600">
+                        New
+                      </Badge>
                     )}
                     {isPendingRemove && (
-                      <Badge variant="outline" className="ml-2 text-red-600">Removing</Badge>
+                      <Badge variant="outline" className="ml-2 text-red-600">
+                        Removing
+                      </Badge>
                     )}
                     {isPendingUpdate && (
-                      <Badge variant="outline" className="ml-2 text-yellow-600">Updated</Badge>
+                      <Badge variant="outline" className="ml-2 text-yellow-600">
+                        Updated
+                      </Badge>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
@@ -464,7 +474,7 @@ export default function MembershipManagementPanel({
                       <span>
                         {member.weight}
                         {isPendingUpdate && member.pending?.originalWeight !== undefined && (
-                          <span className="text-muted-foreground ml-1">
+                          <span className="ml-1 text-muted-foreground">
                             (was {member.pending.originalWeight})
                           </span>
                         )}
@@ -479,18 +489,10 @@ export default function MembershipManagementPanel({
                       <div className="flex items-center gap-1">
                         {isEditing ? (
                           <>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={handleSaveEdit}
-                            >
+                            <Button variant="ghost" size="icon" onClick={handleSaveEdit}>
                               <Check className="h-4 w-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={handleCancelEdit}
-                            >
+                            <Button variant="ghost" size="icon" onClick={handleCancelEdit}>
                               <X className="h-4 w-4" />
                             </Button>
                           </>
@@ -538,17 +540,13 @@ export default function MembershipManagementPanel({
                 {pendingChanges.length} pending change{pendingChanges.length !== 1 ? "s" : ""}
               </div>
               <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDiscardAllChanges}
-                >
+                <Button variant="outline" size="sm" onClick={handleDiscardAllChanges}>
                   Discard All
                 </Button>
                 <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
                   <DialogTrigger asChild>
                     <Button size="sm" disabled={isUpdating}>
-                      <Save className="h-4 w-4 mr-2" />
+                      <Save className="mr-2 h-4 w-4" />
                       Apply Changes
                     </Button>
                   </DialogTrigger>
@@ -556,8 +554,8 @@ export default function MembershipManagementPanel({
                     <DialogHeader>
                       <DialogTitle>Confirm Membership Changes</DialogTitle>
                       <DialogDescription>
-                        You are about to apply the following changes to the group membership.
-                        This will require a transaction.
+                        You are about to apply the following changes to the group membership. This
+                        will require a transaction.
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-2 py-4">
@@ -597,16 +595,10 @@ export default function MembershipManagementPanel({
                       ))}
                     </div>
                     <DialogFooter>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => setIsConfirmDialogOpen(false)}
-                      >
+                      <Button variant="outline" onClick={() => setIsConfirmDialogOpen(false)}>
                         Cancel
                       </Button>
-                      <Button 
-                        onClick={handleApplyChanges}
-                        disabled={isUpdating}
-                      >
+                      <Button onClick={handleApplyChanges} disabled={isUpdating}>
                         {isUpdating ? "Applying..." : "Confirm & Apply"}
                       </Button>
                     </DialogFooter>
@@ -619,14 +611,14 @@ export default function MembershipManagementPanel({
 
         {/* Not admin message */}
         {!isAdmin && userAddress && (
-          <div className="text-center text-sm text-muted-foreground py-4">
+          <div className="py-4 text-center text-sm text-muted-foreground">
             Only the group admin can modify membership.
           </div>
         )}
 
         {/* Not connected message */}
         {!userAddress && (
-          <div className="text-center text-sm text-muted-foreground py-4">
+          <div className="py-4 text-center text-sm text-muted-foreground">
             Connect your wallet to manage membership.
           </div>
         )}
@@ -634,4 +626,3 @@ export default function MembershipManagementPanel({
     </Card>
   );
 }
-

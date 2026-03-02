@@ -1,13 +1,13 @@
 /**
  * Group API - Index
- * 
+ *
  * File: pages/api/chain/[chainId]/group/[address]/index.ts
- * 
+ *
  * API endpoints for CW4 group contract operations.
- * 
+ *
  * GET - Get group details and members
  * POST - Register a new group in local DB
- * 
+ *
  * Phase 2: Group-Backed Multisig
  */
 
@@ -45,10 +45,7 @@ interface RegisterGroupBody {
 // Handler
 // ============================================================================
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { chainId, address } = req.query;
 
   if (typeof chainId !== "string" || typeof address !== "string") {
@@ -74,7 +71,7 @@ async function handleGet(
   _req: NextApiRequest,
   res: NextApiResponse,
   chainId: string,
-  groupAddress: string
+  groupAddress: string,
 ) {
   try {
     const group = localDb.getGroup(chainId, groupAddress);
@@ -115,7 +112,7 @@ async function handlePost(
   req: NextApiRequest,
   res: NextApiResponse,
   chainId: string,
-  groupAddress: string
+  groupAddress: string,
 ) {
   try {
     const body: RegisterGroupBody = req.body;
@@ -168,4 +165,3 @@ async function handlePost(
     });
   }
 }
-

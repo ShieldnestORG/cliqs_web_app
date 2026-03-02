@@ -1,8 +1,8 @@
 /**
  * Find Cliq Form
- * 
+ *
  * File: components/forms/FindMultisigForm.tsx
- * 
+ *
  * Form to search for an existing Cliq by address.
  */
 
@@ -72,7 +72,8 @@ const FindCliqForm = ({ router }: FindCliqFormProps) => {
           Already have a CLIQ?
         </CardTitle>
         <CardDescription>
-          Enter the address of your existing CLIQ on {chain.chainDisplayName || "Cosmos"} to view it.
+          Enter the address of your existing CLIQ on {chain.chainDisplayName || "Cosmos"} to view
+          it.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -101,7 +102,7 @@ const FindCliqForm = ({ router }: FindCliqFormProps) => {
                 Open CLIQ
               </Button>
               {chain.registryName && (
-                <Button asChild variant="link" className="p-0 text-muted-foreground gap-1">
+                <Button asChild variant="link" className="gap-1 p-0 text-muted-foreground">
                   <Link href={`/${chain.registryName}/create`}>
                     <Users className="h-4 w-4" />
                     Create new CLIQ

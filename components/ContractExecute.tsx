@@ -129,13 +129,13 @@ export function ContractExecute({ client: externalClient, selectedAccount }: Con
     if (!walletInfo || !chain.nodeAddress) return null;
 
     try {
-      const signer = await getAminoSigner() || await getDirectSigner();
+      const signer = (await getAminoSigner()) || (await getDirectSigner());
       if (!signer) return null;
 
       const newClient = await SigningCosmWasmClient.connectWithSigner(
         ensureProtocol(chain.nodeAddress),
         signer,
-        { gasPrice: GasPrice.fromString(chain.gasPrice) }
+        { gasPrice: GasPrice.fromString(chain.gasPrice) },
       );
 
       setClient(newClient);
@@ -206,7 +206,9 @@ export function ContractExecute({ client: externalClient, selectedAccount }: Con
       } else {
         const fundsArray: Coin[] = [];
         if (showFunds && funds) {
-          const fundsAmount = Math.floor(parseFloat(funds) * Math.pow(10, chain.displayDenomExponent));
+          const fundsAmount = Math.floor(
+            parseFloat(funds) * Math.pow(10, chain.displayDenomExponent),
+          );
           if (fundsAmount > 0) {
             fundsArray.push({
               denom: chain.denom,
@@ -221,7 +223,7 @@ export function ContractExecute({ client: externalClient, selectedAccount }: Con
           parsedMsg,
           "auto",
           "",
-          fundsArray
+          fundsArray,
         );
 
         setExecuteResult({
@@ -251,31 +253,42 @@ export function ContractExecute({ client: externalClient, selectedAccount }: Con
   const isValidContract = contractAddress.trim().length > 10;
   const canExecute = isValidJson && isValidContract && !isExecuting;
 
-  const explorerTxUrl = chain.explorerLinks?.tx && executeResult?.txHash
-    ? chain.explorerLinks.tx.replace("${txHash}", executeResult.txHash)
-    : null;
+  const explorerTxUrl =
+    chain.explorerLinks?.tx && executeResult?.txHash
+      ? chain.explorerLinks.tx.replace("${txHash}", executeResult.txHash)
+      : null;
 
   return (
-    <Card className={`transition-all duration-300 ${isDisabled ? "opacity-40 pointer-events-none" : ""}`}>
+    <Card
+      className={`transition-all duration-300 ${isDisabled ? "pointer-events-none opacity-40" : ""}`}
+    >
       <CardHeader>
-        <CardTitle className={`flex items-center gap-2 ${isDisabled ? "text-gray-500" : "text-secondary"}`}>
-          <FileCode2 className={`w-6 h-6 ${isDisabled ? "" : "text-secondary"}`} />
+        <CardTitle
+          className={`flex items-center gap-2 ${isDisabled ? "text-gray-500" : "text-secondary"}`}
+        >
+          <FileCode2 className={`h-6 w-6 ${isDisabled ? "" : "text-secondary"}`} />
           Execute Custom Message
         </CardTitle>
       </CardHeader>
 
       <CardContent className="space-y-6">
         <div className="text-sm text-muted-foreground">
-          Send custom JSON messages to any CosmWasm contract. Update configs, execute functions, or query state.
+          Send custom JSON messages to any CosmWasm contract. Update configs, execute functions, or
+          query state.
         </div>
 
         {senderAddress && (
           <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/20 px-3 py-2">
             <span className="text-xs font-medium text-muted-foreground">Sender</span>
-            <Badge variant={selectedAccount?.type === "multisig" ? "outline" : "default"} className="text-xs capitalize">
+            <Badge
+              variant={selectedAccount?.type === "multisig" ? "outline" : "default"}
+              className="text-xs capitalize"
+            >
               {selectedAccount?.type || "wallet"}
             </Badge>
-            <code className="ml-auto truncate font-mono text-xs text-muted-foreground">{senderAddress}</code>
+            <code className="ml-auto truncate font-mono text-xs text-muted-foreground">
+              {senderAddress}
+            </code>
           </div>
         )}
 
@@ -292,8 +305,8 @@ export function ContractExecute({ client: externalClient, selectedAccount }: Con
         </div>
 
         {/* Message Type Toggle */}
-        <div className="bg-muted/50 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-3">
+        <div className="rounded-lg bg-muted/50 p-4">
+          <div className="mb-3 flex items-center justify-between">
             <Label>Message Type</Label>
             <div className="flex gap-2">
               <Button
@@ -303,7 +316,7 @@ export function ContractExecute({ client: externalClient, selectedAccount }: Con
                 onClick={() => setMessageType("execute")}
                 className="gap-2"
               >
-                <Zap className="w-4 h-4" />
+                <Zap className="h-4 w-4" />
                 Execute
               </Button>
               <Button
@@ -313,21 +326,25 @@ export function ContractExecute({ client: externalClient, selectedAccount }: Con
                 onClick={() => setMessageType("query")}
                 className="gap-2"
               >
-                <Eye className="w-4 h-4" />
+                <Eye className="h-4 w-4" />
                 Query
               </Button>
             </div>
           </div>
 
           {/* Info about message types */}
-          <Alert className={messageType === "execute" ? "border-secondary/30 bg-secondary/5" : "border-info/30 bg-info/5"}>
+          <Alert
+            className={
+              messageType === "execute"
+                ? "border-secondary/30 bg-secondary/5"
+                : "border-info/30 bg-info/5"
+            }
+          >
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              {messageType === "execute" ? (
-                "Execute messages modify state and require wallet signature + gas fees"
-              ) : (
-                "Query messages are read-only and free (no signature or gas needed)"
-              )}
+              {messageType === "execute"
+                ? "Execute messages modify state and require wallet signature + gas fees"
+                : "Query messages are read-only and free (no signature or gas needed)"}
             </AlertDescription>
           </Alert>
         </div>
@@ -363,7 +380,7 @@ export function ContractExecute({ client: externalClient, selectedAccount }: Con
               onClick={formatJson}
               className="text-xs"
             >
-              <Settings className="w-3 h-3 mr-1" />
+              <Settings className="mr-1 h-3 w-3" />
               Format
             </Button>
           </div>
@@ -372,7 +389,7 @@ export function ContractExecute({ client: externalClient, selectedAccount }: Con
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder={`{\n  "update_config": {\n    "treasury": "${chain.addressPrefix}1...",\n    "fee_bps": 100\n  }\n}`}
-            className={`font-mono text-sm h-48 ${message && !isValidJson ? "border-destructive" : ""}`}
+            className={`h-48 font-mono text-sm ${message && !isValidJson ? "border-destructive" : ""}`}
           />
           {message && !isValidJson && (
             <p className="text-sm text-destructive">Invalid JSON format</p>
@@ -426,14 +443,14 @@ export function ContractExecute({ client: externalClient, selectedAccount }: Con
               <div className="space-y-3">
                 <div className="font-semibold text-green-600">Message Executed Successfully</div>
 
-                <div className="bg-muted/50 rounded p-3 space-y-2">
-                  <div className="flex justify-between items-center text-sm">
+                <div className="space-y-2 rounded bg-muted/50 p-3">
+                  <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Gas Used:</span>
                     <span className="font-mono">{executeResult.gasUsed}</span>
                   </div>
                   <div className="space-y-1">
                     <div className="text-xs text-muted-foreground">Transaction Hash</div>
-                    <div className="font-mono text-xs break-all select-all bg-background/50 p-2 rounded">
+                    <div className="select-all break-all rounded bg-background/50 p-2 font-mono text-xs">
                       {executeResult.txHash}
                     </div>
                   </div>
@@ -445,10 +462,10 @@ export function ContractExecute({ client: externalClient, selectedAccount }: Con
                       type="button"
                       size="sm"
                       variant="outline"
-                      onClick={() => window.open(explorerTxUrl, '_blank')}
+                      onClick={() => window.open(explorerTxUrl, "_blank")}
                       className="gap-1"
                     >
-                      <ExternalLink className="w-3 h-3" />
+                      <ExternalLink className="h-3 w-3" />
                       View Transaction
                     </Button>
                   )}
@@ -462,7 +479,7 @@ export function ContractExecute({ client: externalClient, selectedAccount }: Con
                     }}
                     className="gap-1"
                   >
-                    <Copy className="w-3 h-3" />
+                    <Copy className="h-3 w-3" />
                     Copy Hash
                   </Button>
                 </div>
@@ -474,13 +491,13 @@ export function ContractExecute({ client: externalClient, selectedAccount }: Con
         {/* Query Result */}
         {queryResult && (
           <Alert className="border-info/30 bg-info/5">
-            <CheckCircle2 className="h-4 w-4 text-info" />
+            <CheckCircle2 className="text-info h-4 w-4" />
             <AlertDescription>
               <div className="space-y-3">
-                <div className="font-semibold text-info">Query Result</div>
+                <div className="text-info font-semibold">Query Result</div>
 
-                <div className="bg-muted/50 rounded p-3">
-                  <pre className="font-mono text-xs overflow-auto max-h-64 whitespace-pre-wrap break-all">
+                <div className="rounded bg-muted/50 p-3">
+                  <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-all font-mono text-xs">
                     {JSON.stringify(queryResult.data, null, 2)}
                   </pre>
                 </div>
@@ -495,7 +512,7 @@ export function ContractExecute({ client: externalClient, selectedAccount }: Con
                   }}
                   className="gap-1"
                 >
-                  <Copy className="w-3 h-3" />
+                  <Copy className="h-3 w-3" />
                   Copy Result
                 </Button>
               </div>
@@ -504,34 +521,27 @@ export function ContractExecute({ client: externalClient, selectedAccount }: Con
         )}
 
         {/* Execute Button */}
-        <Button
-          onClick={handleExecute}
-          disabled={!canExecute}
-          className="w-full gap-2"
-          size="lg"
-        >
+        <Button onClick={handleExecute} disabled={!canExecute} className="w-full gap-2" size="lg">
           {isExecuting ? (
             <>
-              <div className="w-4 h-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
               {messageType === "execute" ? "Executing... (Sign in your wallet)" : "Querying..."}
             </>
           ) : messageType === "execute" ? (
             <>
-              <Play className="w-4 h-4" />
+              <Play className="h-4 w-4" />
               Execute Message
             </>
           ) : (
             <>
-              <Search className="w-4 h-4" />
+              <Search className="h-4 w-4" />
               Query Contract
             </>
           )}
         </Button>
 
         {!senderAddress && (
-          <p className="text-center text-sm text-muted-foreground">
-            Connect your wallet first
-          </p>
+          <p className="text-center text-sm text-muted-foreground">Connect your wallet first</p>
         )}
       </CardContent>
     </Card>

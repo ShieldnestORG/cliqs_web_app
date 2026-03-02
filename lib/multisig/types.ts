@@ -1,8 +1,8 @@
 /**
  * Shared types for MultisigEngine abstraction
- * 
+ *
  * File: lib/multisig/types.ts
- * 
+ *
  * These types are used by both PubKeyMultisigEngine and ContractMultisigEngine
  * to provide a unified interface for multisig operations.
  */
@@ -50,14 +50,14 @@ export interface MultisigPolicy {
 // Proposal Types
 // ============================================================================
 
-export type ProposalStatus = 
-  | "draft"      // Created but not yet ready for signing
-  | "pending"    // Ready for signatures
-  | "signing"    // Actively collecting signatures
-  | "ready"      // Threshold met, ready to broadcast
-  | "broadcast"  // Sent to chain, awaiting confirmation
-  | "confirmed"  // Successfully included in block
-  | "failed"     // Broadcast failed or tx rejected
+export type ProposalStatus =
+  | "draft" // Created but not yet ready for signing
+  | "pending" // Ready for signatures
+  | "signing" // Actively collecting signatures
+  | "ready" // Threshold met, ready to broadcast
+  | "broadcast" // Sent to chain, awaiting confirmation
+  | "confirmed" // Successfully included in block
+  | "failed" // Broadcast failed or tx rejected
   | "cancelled"; // Manually cancelled
 
 export interface ProposalInput {
@@ -218,4 +218,3 @@ export type MultisigErrorCode =
   | "CREDENTIAL_INVALID"
   | "CREDENTIAL_EXPIRED"
   | "CREDENTIAL_FROZEN";
-

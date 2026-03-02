@@ -29,7 +29,7 @@ export default function BalanceDisplay({
 }: BalanceDisplayProps) {
   const { chain } = useChains();
   const { walletInfo } = useWallet();
-  
+
   // Get treasury balance (multisig address - this is what transactions will use)
   const {
     balance: treasuryBalance,
@@ -58,15 +58,17 @@ export default function BalanceDisplay({
   const loading = treasuryLoading || (walletInfo && walletLoading);
   const displayDenom = denom || chain.displayDenom;
   const asset = chain.assets.find(
-    (a) => a.base === displayDenom || a.symbol === displayDenom || a.display === displayDenom
+    (a) => a.base === displayDenom || a.symbol === displayDenom || a.display === displayDenom,
   );
-  
+
   // Get the display unit (e.g., "TX" with exponent 6) for formatting
-  const displayUnit = asset?.denom_units.find(
-    (unit) => unit.denom === asset?.display?.toLowerCase() || unit.denom === asset?.symbol?.toLowerCase()
-  ) || asset?.denom_units.find((unit) => unit.exponent > 0);
+  const displayUnit =
+    asset?.denom_units.find(
+      (unit) =>
+        unit.denom === asset?.display?.toLowerCase() || unit.denom === asset?.symbol?.toLowerCase(),
+    ) || asset?.denom_units.find((unit) => unit.exponent > 0);
   const displayExponent = displayUnit?.exponent || 6;
-  
+
   // Use display unit denom (e.g., "TX") instead of symbol (e.g., "TX")
   const displaySymbol = displayUnit?.denom || asset?.display || asset?.symbol || displayDenom;
 
@@ -99,51 +101,52 @@ export default function BalanceDisplay({
   }
 
   // Format treasury balance with proper decimals
-  const treasuryBalanceDisplay = treasuryBalance 
+  const treasuryBalanceDisplay = treasuryBalance
     ? (() => {
         const formatted = printableCoin(treasuryBalance, chain);
         // Ensure it shows proper decimal places
         const parts = formatted.split(thinSpace);
         if (parts.length === 2) {
           const [amount, _symbol] = parts;
-          const amountParts = amount.split('.');
+          const amountParts = amount.split(".");
           if (amountParts.length === 1) {
-            return `${amount}.${'0'.repeat(displayExponent)}${thinSpace}${displaySymbol}`;
+            return `${amount}.${"0".repeat(displayExponent)}${thinSpace}${displaySymbol}`;
           } else {
-            const paddedDecimal = amountParts[1].padEnd(displayExponent, '0');
+            const paddedDecimal = amountParts[1].padEnd(displayExponent, "0");
             return `${amountParts[0]}.${paddedDecimal}${thinSpace}${displaySymbol}`;
           }
         }
         return formatted;
       })()
-    : `0.${'0'.repeat(displayExponent)}${thinSpace}${displaySymbol}`;
-  
+    : `0.${"0".repeat(displayExponent)}${thinSpace}${displaySymbol}`;
+
   // Format wallet balance - show actual balance or "0" if no balance found for the denom
   // If wallet has balances but not for the requested denom, show "0" for that denom
-  const walletBalanceDisplay = walletInfo 
-    ? (walletBalance 
-        ? (() => {
-            const formatted = printableCoin(walletBalance, chain);
-            // Ensure it shows proper decimal places
-            const parts = formatted.split(thinSpace);
-            if (parts.length === 2) {
-              const [amount, _symbol] = parts;
-              const amountParts = amount.split('.');
-              if (amountParts.length === 1) {
-                return `${amount}.${'0'.repeat(displayExponent)}${thinSpace}${displaySymbol}`;
-              } else {
-                const paddedDecimal = amountParts[1].padEnd(displayExponent, '0');
-                return `${amountParts[0]}.${paddedDecimal}${thinSpace}${displaySymbol}`;
-              }
+  const walletBalanceDisplay = walletInfo
+    ? walletBalance
+      ? (() => {
+          const formatted = printableCoin(walletBalance, chain);
+          // Ensure it shows proper decimal places
+          const parts = formatted.split(thinSpace);
+          if (parts.length === 2) {
+            const [amount, _symbol] = parts;
+            const amountParts = amount.split(".");
+            if (amountParts.length === 1) {
+              return `${amount}.${"0".repeat(displayExponent)}${thinSpace}${displaySymbol}`;
+            } else {
+              const paddedDecimal = amountParts[1].padEnd(displayExponent, "0");
+              return `${amountParts[0]}.${paddedDecimal}${thinSpace}${displaySymbol}`;
             }
-            return formatted;
-          })()
-        : `0.${'0'.repeat(displayExponent)}${thinSpace}${displaySymbol}`)
+          }
+          return formatted;
+        })()
+      : `0.${"0".repeat(displayExponent)}${thinSpace}${displaySymbol}`
     : null;
 
-  const treasuryAvailableCoin: Coin | null = treasuryAvailableBalance && treasuryAvailableBalance.amount !== "0" 
-    ? treasuryAvailableBalance 
-    : null;
+  const treasuryAvailableCoin: Coin | null =
+    treasuryAvailableBalance && treasuryAvailableBalance.amount !== "0"
+      ? treasuryAvailableBalance
+      : null;
 
   return (
     <Card className={cn("border-muted bg-muted/30", className)}>
@@ -155,37 +158,37 @@ export default function BalanceDisplay({
               <Building2 className="h-4 w-4" />
               <span>Treasury Balance</span>
             </div>
-            
+
             {showAvailableOnly ? (
               <div className="text-lg font-semibold">
-                {treasuryAvailableCoin 
+                {treasuryAvailableCoin
                   ? (() => {
                       // Format with proper decimal places
-                      const parts = treasuryAvailableDisplay.split('.');
+                      const parts = treasuryAvailableDisplay.split(".");
                       if (parts.length === 1) {
-                        return `${parts[0]}.${'0'.repeat(displayExponent)}${thinSpace}${displaySymbol}`;
+                        return `${parts[0]}.${"0".repeat(displayExponent)}${thinSpace}${displaySymbol}`;
                       } else {
-                        const paddedDecimal = parts[1].padEnd(displayExponent, '0');
+                        const paddedDecimal = parts[1].padEnd(displayExponent, "0");
                         return `${parts[0]}.${paddedDecimal}${thinSpace}${displaySymbol}`;
                       }
                     })()
-                  : `0.${'0'.repeat(displayExponent)}${thinSpace}${displaySymbol}`}
+                  : `0.${"0".repeat(displayExponent)}${thinSpace}${displaySymbol}`}
               </div>
             ) : (
               <div className="space-y-1">
                 <div className="text-lg font-semibold">
-                  {treasuryAvailableCoin 
+                  {treasuryAvailableCoin
                     ? (() => {
                         // Format with proper decimal places
-                        const parts = treasuryAvailableDisplay.split('.');
+                        const parts = treasuryAvailableDisplay.split(".");
                         if (parts.length === 1) {
-                          return `${parts[0]}.${'0'.repeat(displayExponent)}${thinSpace}${displaySymbol}`;
+                          return `${parts[0]}.${"0".repeat(displayExponent)}${thinSpace}${displaySymbol}`;
                         } else {
-                          const paddedDecimal = parts[1].padEnd(displayExponent, '0');
+                          const paddedDecimal = parts[1].padEnd(displayExponent, "0");
                           return `${parts[0]}.${paddedDecimal}${thinSpace}${displaySymbol}`;
                         }
                       })()
-                    : `0.${'0'.repeat(displayExponent)}${thinSpace}${displaySymbol}`}
+                    : `0.${"0".repeat(displayExponent)}${thinSpace}${displaySymbol}`}
                 </div>
                 {treasuryAvailableCoin && gasLimit && (
                   <div className="text-xs text-muted-foreground">
@@ -193,9 +196,7 @@ export default function BalanceDisplay({
                   </div>
                 )}
                 {!treasuryAvailableCoin && treasuryBalance && gasLimit && (
-                  <div className="text-xs text-destructive">
-                    Insufficient balance for gas fees
-                  </div>
+                  <div className="text-xs text-destructive">Insufficient balance for gas fees</div>
                 )}
               </div>
             )}
@@ -210,28 +211,20 @@ export default function BalanceDisplay({
             {walletInfo ? (
               <>
                 {walletLoading ? (
-                  <div className="text-sm text-muted-foreground animate-pulse">
-                    Loading...
-                  </div>
+                  <div className="animate-pulse text-sm text-muted-foreground">Loading...</div>
                 ) : walletError ? (
                   <>
-                    <div className="text-lg font-semibold text-muted-foreground">
-                      Error
-                    </div>
+                    <div className="text-lg font-semibold text-muted-foreground">Error</div>
                     <div className="text-xs text-destructive">
                       {walletError.message || "Could not load wallet balance"}
                     </div>
                   </>
                 ) : (
-                  <div className="text-lg font-semibold">
-                    {walletBalanceDisplay || "0"}
-                  </div>
+                  <div className="text-lg font-semibold">{walletBalanceDisplay || "0"}</div>
                 )}
               </>
             ) : (
-              <div className="text-sm text-muted-foreground">
-                Not connected
-              </div>
+              <div className="text-sm text-muted-foreground">Not connected</div>
             )}
           </div>
         </div>

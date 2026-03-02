@@ -1,11 +1,11 @@
 /**
  * Credential Types
- * 
+ *
  * File: lib/credentials/types.ts
- * 
+ *
  * Type definitions for TX assetnft-based credentials.
  * These credentials are soulbound NFTs that gate access to multisig operations.
- * 
+ *
  * Phase 3: Identity NFTs (Credential-Gated Multisig)
  */
 
@@ -78,10 +78,10 @@ export interface Credential {
  * Based on TX assetnft module features
  */
 export type CredentialClassFeature =
-  | "burning"      // Allows credential revocation via burn
-  | "freezing"     // Allows freezing (not recommended for revocation)
+  | "burning" // Allows credential revocation via burn
+  | "freezing" // Allows freezing (not recommended for revocation)
   | "whitelisting" // Restricts who can receive credentials
-  | "soulbound"    // Issuer-only transfer (required for credentials)
+  | "soulbound" // Issuer-only transfer (required for credentials)
   | "disable_sending"; // Prevents transfers (alternative to soulbound)
 
 /**
@@ -152,13 +152,13 @@ export interface CredentialVerificationResult {
  * Reasons a credential may be invalid
  */
 export type CredentialInvalidReason =
-  | "not_found"        // No credential exists for this address
-  | "wrong_team"       // Credential is for a different team
-  | "frozen"           // Credential is frozen
-  | "expired"          // Credential has expired
-  | "revoked"          // Credential was burned/revoked
-  | "wrong_role"       // Credential doesn't have required role
-  | "query_failed";    // Chain query failed
+  | "not_found" // No credential exists for this address
+  | "wrong_team" // Credential is for a different team
+  | "frozen" // Credential is frozen
+  | "expired" // Credential has expired
+  | "revoked" // Credential was burned/revoked
+  | "wrong_role" // Credential doesn't have required role
+  | "query_failed"; // Chain query failed
 
 // ============================================================================
 // Operation Types
@@ -348,4 +348,3 @@ export class CredentialError extends Error {
     this.name = "CredentialError";
   }
 }
-

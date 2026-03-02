@@ -1,11 +1,11 @@
 /**
  * Alert Engine - Webhook, Email, Slack, Discord Support
- * 
+ *
  * File: lib/alerts/engine.ts
- * 
+ *
  * Routes alerts to appropriate channels with cooldown management
  * and severity-based routing.
- * 
+ *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards
  */
 
@@ -92,7 +92,7 @@ const webhookSender: ChannelSender = {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(config.headers as Record<string, string> || {}),
+          ...((config.headers as Record<string, string>) || {}),
         },
         body: JSON.stringify({
           alert,
@@ -116,26 +116,31 @@ const slackSender: ChannelSender = {
     const webhookUrl = config.webhookUrl as string;
     if (!webhookUrl) return false;
 
-    const color = alert.severity === "critical" ? "#ff0000" 
-      : alert.severity === "warning" ? "#ffaa00" 
-      : "#00ff00";
+    const color =
+      alert.severity === "critical"
+        ? "#ff0000"
+        : alert.severity === "warning"
+          ? "#ffaa00"
+          : "#00ff00";
 
     try {
       const response = await fetch(webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          attachments: [{
-            color,
-            title: alert.title,
-            text: alert.message,
-            fields: [
-              { title: "Multisig", value: alert.multisigAddress, short: true },
-              { title: "Chain", value: alert.chainId, short: true },
-              { title: "Severity", value: alert.severity, short: true },
-            ],
-            ts: alert.timestamp,
-          }],
+          attachments: [
+            {
+              color,
+              title: alert.title,
+              text: alert.message,
+              fields: [
+                { title: "Multisig", value: alert.multisigAddress, short: true },
+                { title: "Chain", value: alert.chainId, short: true },
+                { title: "Severity", value: alert.severity, short: true },
+              ],
+              ts: alert.timestamp,
+            },
+          ],
         }),
         signal: AbortSignal.timeout(5000),
       });
@@ -155,26 +160,27 @@ const discordSender: ChannelSender = {
     const webhookUrl = config.webhookUrl as string;
     if (!webhookUrl) return false;
 
-    const color = alert.severity === "critical" ? 0xff0000 
-      : alert.severity === "warning" ? 0xffaa00 
-      : 0x00ff00;
+    const color =
+      alert.severity === "critical" ? 0xff0000 : alert.severity === "warning" ? 0xffaa00 : 0x00ff00;
 
     try {
       const response = await fetch(webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          embeds: [{
-            title: alert.title,
-            description: alert.message,
-            color,
-            fields: [
-              { name: "Multisig", value: alert.multisigAddress, inline: true },
-              { name: "Chain", value: alert.chainId, inline: true },
-              { name: "Severity", value: alert.severity, inline: true },
-            ],
-            timestamp: new Date(alert.timestamp * 1000).toISOString(),
-          }],
+          embeds: [
+            {
+              title: alert.title,
+              description: alert.message,
+              color,
+              fields: [
+                { name: "Multisig", value: alert.multisigAddress, inline: true },
+                { name: "Chain", value: alert.chainId, inline: true },
+                { name: "Severity", value: alert.severity, inline: true },
+              ],
+              timestamp: new Date(alert.timestamp * 1000).toISOString(),
+            },
+          ],
         }),
         signal: AbortSignal.timeout(5000),
       });
@@ -191,9 +197,8 @@ const discordSender: ChannelSender = {
  */
 const consoleSender: ChannelSender = {
   async send(alert: Alert, _config: Record<string, unknown>): Promise<boolean> {
-    const prefix = alert.severity === "critical" ? "🚨" 
-      : alert.severity === "warning" ? "⚠️" 
-      : "ℹ️";
+    const prefix =
+      alert.severity === "critical" ? "🚨" : alert.severity === "warning" ? "⚠️" : "ℹ️";
     console.log(`${prefix} [ALERT] ${alert.title}: ${alert.message}`);
     return true;
   },
@@ -246,10 +251,10 @@ export class AlertEngine {
    * Get rules for a multisig
    */
   getRulesForMultisig(multisigAddress: string): AlertConfig[] {
-    return Array.from(this.rules.values()).filter((r) =>
-      r.conditions.some(
-        (c) => c.type === "multisig" && c.value === multisigAddress,
-      ) || !r.conditions.some((c) => c.type === "multisig"),
+    return Array.from(this.rules.values()).filter(
+      (r) =>
+        r.conditions.some((c) => c.type === "multisig" && c.value === multisigAddress) ||
+        !r.conditions.some((c) => c.type === "multisig"),
     );
   }
 
@@ -333,19 +338,19 @@ export class AlertEngine {
       case "event_type":
         if (!event) return false;
         return this.matchValue(event.type, condition.value, operator);
-        
+
       case "anomaly_type":
         if (!anomaly) return false;
         return this.matchValue(anomaly.type, condition.value, operator);
-        
+
       case "severity":
         const severity = anomaly?.severity || "info";
         return this.matchValue(severity, condition.value, operator);
-        
+
       case "multisig":
         const address = event?.multisigAddress || anomaly?.multisigAddress || "";
         return this.matchValue(address, condition.value, operator);
-        
+
       default:
         return true;
     }
@@ -408,10 +413,7 @@ export class AlertEngine {
   // Alert Sending
   // ============================================================================
 
-  private async sendAlert(
-    alert: Alert,
-    channels: AlertChannelConfig[],
-  ): Promise<boolean> {
+  private async sendAlert(alert: Alert, channels: AlertChannelConfig[]): Promise<boolean> {
     let anySent = false;
 
     for (const channel of channels) {
@@ -437,16 +439,12 @@ export class AlertEngine {
     const key = `${ruleId}:${multisigAddress}`;
     const lastTriggered = this.cooldowns.get(key);
     if (!lastTriggered) return false;
-    
+
     const now = Math.floor(Date.now() / 1000);
     return now < lastTriggered;
   }
 
-  private setCooldown(
-    ruleId: string,
-    multisigAddress: string,
-    cooldownSeconds: number,
-  ): void {
+  private setCooldown(ruleId: string, multisigAddress: string, cooldownSeconds: number): void {
     const key = `${ruleId}:${multisigAddress}`;
     const expiresAt = Math.floor(Date.now() / 1000) + cooldownSeconds;
     this.cooldowns.set(key, expiresAt);
@@ -462,13 +460,14 @@ export class AlertEngine {
         ruleId,
         multisigAddress: alert.multisigAddress,
         chainId: alert.chainId,
-        eventType: alert.source === "event" ? alert.sourceId : alert.metadata.type as string || "anomaly",
+        eventType:
+          alert.source === "event" ? alert.sourceId : (alert.metadata.type as string) || "anomaly",
         eventId: alert.sourceId,
         severity: alert.severity,
         message: alert.message,
         channelsSentJSON: "[]",
       });
-      
+
       localDb.updateAlertRuleLastTriggered(ruleId);
     } catch (error) {
       console.error("Failed to record alert:", error);
@@ -509,9 +508,7 @@ export function createCriticalEventsRule(
     name: "Critical Events",
     description: "Alert on all critical events",
     channels,
-    conditions: [
-      { type: "multisig", value: multisigAddress },
-    ],
+    conditions: [{ type: "multisig", value: multisigAddress }],
     severity: "critical",
     cooldownSeconds: 300,
     enabled: true,
@@ -562,4 +559,3 @@ export function getAlertEngine(): AlertEngine {
 export function setAlertEngine(engine: AlertEngine): void {
   globalAlertEngine = engine;
 }
-

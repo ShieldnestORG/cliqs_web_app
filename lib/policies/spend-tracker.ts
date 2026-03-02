@@ -1,11 +1,11 @@
 /**
  * Spend Tracker - Historical Spending Aggregation
- * 
+ *
  * File: lib/policies/spend-tracker.ts
- * 
+ *
  * Tracks historical spending for spend limit enforcement.
  * Aggregates spending within rolling windows.
- * 
+ *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards
  */
 
@@ -94,11 +94,7 @@ export class SpendTracker {
     const window = windowSeconds ?? this.defaultWindowSeconds;
     const windowStart = new Date(Date.now() - window * 1000).toISOString();
 
-    const totals = localDb.getTotalSpentInWindow(
-      multisigAddress,
-      chainId,
-      windowStart,
-    );
+    const totals = localDb.getTotalSpentInWindow(multisigAddress, chainId, windowStart);
 
     const result = new Map<string, Coin>();
     for (const [denom, amount] of totals) {
@@ -120,11 +116,7 @@ export class SpendTracker {
     const windowStart = new Date(Date.now() - window * 1000).toISOString();
     const windowEnd = new Date().toISOString();
 
-    const records = localDb.getSpendRecordsInWindow(
-      multisigAddress,
-      chainId,
-      windowStart,
-    );
+    const records = localDb.getSpendRecordsInWindow(multisigAddress, chainId, windowStart);
 
     // Aggregate by denom
     const summaryMap = new Map<string, { total: bigint; count: number }>();
@@ -149,19 +141,11 @@ export class SpendTracker {
   /**
    * Get recent spend records
    */
-  getRecentSpends(
-    multisigAddress: string,
-    chainId: string,
-    limit: number = 50,
-  ): SpendRecord[] {
+  getRecentSpends(multisigAddress: string, chainId: string, limit: number = 50): SpendRecord[] {
     // Get last 7 days of records
     const windowStart = new Date(Date.now() - 7 * 86400 * 1000).toISOString();
 
-    const records = localDb.getSpendRecordsInWindow(
-      multisigAddress,
-      chainId,
-      windowStart,
-    );
+    const records = localDb.getSpendRecordsInWindow(multisigAddress, chainId, windowStart);
 
     return records
       .sort((a, b) => new Date(b.executedAt).getTime() - new Date(a.executedAt).getTime())
@@ -187,11 +171,7 @@ export class SpendTracker {
     const window = windowSeconds ?? this.defaultWindowSeconds;
     const windowStart = new Date(Date.now() - window * 1000).toISOString();
 
-    const records = localDb.getSpendRecordsInWindow(
-      multisigAddress,
-      chainId,
-      windowStart,
-    );
+    const records = localDb.getSpendRecordsInWindow(multisigAddress, chainId, windowStart);
 
     const result = new Map<string, Map<string, bigint>>();
 
@@ -259,7 +239,7 @@ export class SpendTracker {
     // Get last 7 days of data
     const weekWindow = 7 * 86400;
     const totals = this.getTotalSpentInWindow(multisigAddress, chainId, weekWindow);
-    
+
     const weeklyTotal = BigInt(totals.get(denom)?.amount ?? "0");
     const averageDaily = weeklyTotal / BigInt(7);
     const proposed = BigInt(proposedAmount);
@@ -292,9 +272,7 @@ export class SpendTracker {
 /**
  * Create a spend tracker
  */
-export function createSpendTracker(
-  defaultWindowSeconds?: number,
-): SpendTracker {
+export function createSpendTracker(defaultWindowSeconds?: number): SpendTracker {
   return new SpendTracker(defaultWindowSeconds);
 }
 
@@ -320,4 +298,3 @@ export function getSpendTracker(): SpendTracker {
 export function setSpendTracker(tracker: SpendTracker): void {
   globalSpendTracker = tracker;
 }
-

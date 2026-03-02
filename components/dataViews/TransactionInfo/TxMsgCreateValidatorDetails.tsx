@@ -57,11 +57,15 @@ const TxMsgCreateValidatorDetails = ({ msgValue }: TxMsgCreateValidatorDetailsPr
       </li>
       <li>
         <label>Self Delegation Amount:</label>
-        <div>{msgValue.value?.amount} {msgValue.value?.denom}</div>
+        <div>
+          {msgValue.value?.amount} {msgValue.value?.denom}
+        </div>
       </li>
       <li>
         <label>Public Key:</label>
-        <div>{msgValue.pubkey?.value ? Buffer.from(msgValue.pubkey.value).toString('base64') : 'N/A'}</div>
+        <div>
+          {msgValue.pubkey?.value ? Buffer.from(msgValue.pubkey.value).toString("base64") : "N/A"}
+        </div>
       </li>
     </div>
   );

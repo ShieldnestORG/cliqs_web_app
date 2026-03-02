@@ -1,13 +1,13 @@
 /**
  * Group Members API
- * 
+ *
  * File: pages/api/chain/[chainId]/group/[address]/members.ts
- * 
+ *
  * API endpoints for group member operations.
- * 
+ *
  * GET - Get group members
  * PATCH - Update members (admin only - requires wallet signature)
- * 
+ *
  * Phase 2: Group-Backed Multisig
  */
 
@@ -39,10 +39,7 @@ interface UpdateMembersBody {
 // Handler
 // ============================================================================
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { chainId, address } = req.query;
 
   if (typeof chainId !== "string" || typeof address !== "string") {
@@ -68,7 +65,7 @@ async function handleGet(
   _req: NextApiRequest,
   res: NextApiResponse,
   chainId: string,
-  groupAddress: string
+  groupAddress: string,
 ) {
   try {
     const group = localDb.getGroup(chainId, groupAddress);
@@ -105,7 +102,7 @@ async function handlePatch(
   req: NextApiRequest,
   res: NextApiResponse,
   chainId: string,
-  groupAddress: string
+  groupAddress: string,
 ) {
   try {
     const body: UpdateMembersBody = req.body;
@@ -117,7 +114,7 @@ async function handlePatch(
     }
 
     // Validate that at least one operation is specified
-    const hasOperations = 
+    const hasOperations =
       (body.add && body.add.length > 0) ||
       (body.remove && body.remove.length > 0) ||
       (body.update && body.update.length > 0);
@@ -153,4 +150,3 @@ async function handlePatch(
     });
   }
 }
-

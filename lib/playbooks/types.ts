@@ -1,11 +1,11 @@
 /**
  * Incident Playbooks - Automated Response Sequences
- * 
+ *
  * File: lib/playbooks/types.ts
- * 
+ *
  * Defines types and implementations for automated incident response.
  * Playbooks are sequences of actions executed in response to incidents.
- * 
+ *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards
  */
 
@@ -109,10 +109,7 @@ export interface PlaybookResult {
 /**
  * Step action handler type
  */
-export type StepHandler = (
-  step: PlaybookStep,
-  context: PlaybookContext,
-) => Promise<StepResult>;
+export type StepHandler = (step: PlaybookStep, context: PlaybookContext) => Promise<StepResult>;
 
 /**
  * Playbook runner
@@ -182,7 +179,7 @@ export class PlaybookRunner {
     });
 
     // Check condition action
-    this.handlers.set("check_condition", async (step, context) => {
+    this.handlers.set("check_condition", async (step, _context) => {
       const condition = step.params.condition as string;
       // Simple condition evaluation (expand as needed)
       const result = condition === "true";
@@ -230,7 +227,9 @@ export class PlaybookRunner {
 
     // Activate safe mode action
     this.handlers.set("activate_safe_mode", async (step, context) => {
-      console.log(`[Playbook ${context.playbookId}] Activating safe mode: ${context.multisigAddress}`);
+      console.log(
+        `[Playbook ${context.playbookId}] Activating safe mode: ${context.multisigAddress}`,
+      );
       // Actual safe mode would be implemented with SafeModeController
       return {
         stepId: step.id,
@@ -319,12 +318,9 @@ export class PlaybookRunner {
     }
   }
 
-  private async executeStep(
-    step: PlaybookStep,
-    context: PlaybookContext,
-  ): Promise<StepResult> {
+  private async executeStep(step: PlaybookStep, context: PlaybookContext): Promise<StepResult> {
     const handler = this.handlers.get(step.action);
-    
+
     if (!handler) {
       return {
         stepId: step.id,
@@ -335,7 +331,7 @@ export class PlaybookRunner {
     }
 
     const startTime = Date.now();
-    
+
     try {
       const result = await handler(step, context);
       return {
@@ -383,13 +379,13 @@ export class PlaybookRunner {
   findPlaybooksForAnomaly(anomaly: Anomaly): Playbook[] {
     return Array.from(this.playbooks.values()).filter((playbook) => {
       if (!playbook.enabled) return false;
-      
+
       return playbook.triggerConditions.some((trigger) => {
         if (trigger.type !== "anomaly") return false;
-        
+
         const requiredType = trigger.conditions.anomalyType as string;
         if (requiredType && requiredType !== anomaly.type) return false;
-        
+
         const minSeverity = trigger.conditions.minSeverity as string;
         if (minSeverity) {
           const severityOrder = ["low", "medium", "high", "critical"];
@@ -397,7 +393,7 @@ export class PlaybookRunner {
           const minSeverityIndex = severityOrder.indexOf(minSeverity);
           if (anomalySeverityIndex < minSeverityIndex) return false;
         }
-        
+
         return true;
       });
     });
@@ -561,4 +557,3 @@ export function getPlaybookRunner(): PlaybookRunner {
 export function setPlaybookRunner(runner: PlaybookRunner): void {
   globalPlaybookRunner = runner;
 }
-

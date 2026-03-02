@@ -80,7 +80,7 @@ const MsgUpdateAdminForm = ({
       >
         <X className="h-4 w-4" />
       </Button>
-      <h2 className="text-xl font-heading font-semibold mb-4">MsgUpdateAdmin</h2>
+      <h2 className="mb-4 font-heading text-xl font-semibold">MsgUpdateAdmin</h2>
       <div className="space-y-4">
         <Input
           variant="institutional"

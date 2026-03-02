@@ -6,10 +6,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 const endpointErrMsg = "Failed to get pending transactions";
 
-async function apiGetPendingTransactions(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+async function apiGetPendingTransactions(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     res.status(405).end();
     return;
@@ -20,7 +17,7 @@ async function apiGetPendingTransactions(
   try {
     // Find the multisig
     const multisig = await getMultisig(body.chainId, body.multisigAddress);
-    
+
     if (!multisig) {
       res.status(200).send([]);
       return;

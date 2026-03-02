@@ -32,12 +32,12 @@ export const rebrandChain = (chain: ChainInfo): ChainInfo => {
   // Reorder nodeAddresses: prefer Polkachu (handles large payloads; Foundation returns 500 on contract uploads)
   const polkachuMainnet = "https://coreum-rpc.polkachu.com";
   const polkachuTestnet = "https://coreum-testnet-rpc.polkachu.com";
-  const preferred =
-    chain.chainId?.toLowerCase().includes("testnet") ? polkachuTestnet : polkachuMainnet;
-  const nodeAddresses =
-    chain.nodeAddresses?.length
-      ? [preferred, ...chain.nodeAddresses.filter((a) => a !== preferred)]
-      : chain.nodeAddresses;
+  const preferred = chain.chainId?.toLowerCase().includes("testnet")
+    ? polkachuTestnet
+    : polkachuMainnet;
+  const nodeAddresses = chain.nodeAddresses?.length
+    ? [preferred, ...chain.nodeAddresses.filter((a) => a !== preferred)]
+    : chain.nodeAddresses;
 
   return {
     ...chain,
@@ -73,19 +73,19 @@ export const rebrandChain = (chain: ChainInfo): ChainInfo => {
  */
 export const rebrandChains = (chains: ChainItems): ChainItems => {
   const rebrandedMainnets = new Map<string, ChainInfo>();
-  chains.mainnets.forEach((chain, key) => {
+  chains.mainnets.forEach((chain, _key) => {
     const rebranded = rebrandChain(chain);
     rebrandedMainnets.set(rebranded.registryName, rebranded);
   });
 
   const rebrandedTestnets = new Map<string, ChainInfo>();
-  chains.testnets.forEach((chain, key) => {
+  chains.testnets.forEach((chain, _key) => {
     const rebranded = rebrandChain(chain);
     rebrandedTestnets.set(rebranded.registryName, rebranded);
   });
 
   const rebrandedLocalnets = new Map<string, ChainInfo>();
-  chains.localnets.forEach((chain, key) => {
+  chains.localnets.forEach((chain, _key) => {
     const rebranded = rebrandChain(chain);
     rebrandedLocalnets.set(rebranded.registryName, rebranded);
   });

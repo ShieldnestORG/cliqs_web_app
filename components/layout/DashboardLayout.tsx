@@ -29,7 +29,7 @@ export default function DashboardLayout({
   };
 
   return (
-    <div className="min-h-screen w-full bg-pattern-dots">
+    <div className="bg-pattern-dots min-h-screen w-full">
       <Head title={title || "Cosmos Multisig Manager"} />
 
       {/* Subheader slot */}
@@ -47,12 +47,12 @@ export default function DashboardLayout({
           // Layout with sidebar
           <div className="flex gap-6">
             {/* Sidebar - fixed on desktop */}
-            <aside className="hidden lg:block w-72 shrink-0">
+            <aside className="hidden w-72 shrink-0 lg:block">
               <div className="sticky top-24 space-y-4">{sidebar}</div>
             </aside>
 
             {/* Main content */}
-            <main className={cn("flex-1 min-w-0", className)}>{children}</main>
+            <main className={cn("min-w-0 flex-1", className)}>{children}</main>
           </div>
         ) : (
           // Full width layout
@@ -85,11 +85,9 @@ export function DashboardSection({
         <div className="flex items-center justify-between gap-4">
           <div>
             {title && (
-              <h2 className="text-xl font-heading font-semibold tracking-tight">{title}</h2>
+              <h2 className="font-heading text-xl font-semibold tracking-tight">{title}</h2>
             )}
-            {description && (
-              <p className="text-sm text-muted-foreground mt-1">{description}</p>
-            )}
+            {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
           </div>
           {action && <div className="shrink-0">{action}</div>}
         </div>
@@ -107,12 +105,7 @@ interface DashboardTabsProps {
 
 export function DashboardTabs({ children, className }: DashboardTabsProps) {
   return (
-    <div
-      className={cn(
-        "flex items-center gap-2 p-1 rounded-xl bg-muted/50 w-fit",
-        className
-      )}
-    >
+    <div className={cn("flex w-fit items-center gap-2 rounded-xl bg-muted/50 p-1", className)}>
       {children}
     </div>
   );
@@ -130,10 +123,10 @@ export function DashboardTab({ active, children, onClick, icon }: DashboardTabPr
     <button
       onClick={onClick}
       className={cn(
-        "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
+        "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all",
         active
           ? "bg-background text-foreground shadow-sm"
-          : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+          : "text-muted-foreground hover:bg-background/50 hover:text-foreground",
       )}
     >
       {icon}
@@ -149,16 +142,7 @@ interface QuickStatsRowProps {
 }
 
 export function QuickStatsRow({ children, className }: QuickStatsRowProps) {
-  return (
-    <div
-      className={cn(
-        "grid gap-4 grid-cols-2 md:grid-cols-4",
-        className
-      )}
-    >
-      {children}
-    </div>
-  );
+  return <div className={cn("grid grid-cols-2 gap-4 md:grid-cols-4", className)}>{children}</div>;
 }
 
 interface QuickStatProps {
@@ -173,20 +157,18 @@ interface QuickStatProps {
 
 export function QuickStat({ label, value, icon, trend }: QuickStatProps) {
   return (
-    <div className="flex items-center gap-4 p-4 rounded-xl bg-card border border-border">
+    <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-4">
       {icon && icon}
       <div className="min-w-0">
-        <p className="text-xs text-muted-foreground uppercase tracking-wide truncate">
-          {label}
-        </p>
-        <p className="text-xl font-heading font-bold mt-0.5">{value}</p>
+        <p className="truncate text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+        <p className="mt-0.5 font-heading text-xl font-bold">{value}</p>
         {trend && (
           <p
             className={cn(
-              "text-xs mt-1",
+              "mt-1 text-xs",
               trend.direction === "up" && "text-green-accent",
               trend.direction === "down" && "text-red-500",
-              trend.direction === "neutral" && "text-muted-foreground"
+              trend.direction === "neutral" && "text-muted-foreground",
             )}
           >
             {trend.value}

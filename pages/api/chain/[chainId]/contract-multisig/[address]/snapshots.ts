@@ -1,12 +1,12 @@
 /**
  * Snapshots API
- * 
+ *
  * File: pages/api/chain/[chainId]/contract-multisig/[address]/snapshots.ts
- * 
+ *
  * API endpoints for member and vote snapshots.
- * 
+ *
  * GET - Get snapshots for a proposal
- * 
+ *
  * Phase 2: Group-Backed Multisig
  */
 
@@ -48,10 +48,7 @@ interface SnapshotsResponse {
 // Handler
 // ============================================================================
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { chainId, address, proposalId } = req.query;
 
   if (typeof chainId !== "string" || typeof address !== "string") {
@@ -76,14 +73,14 @@ async function handleGet(
   res: NextApiResponse,
   _chainId: string,
   contractAddress: string,
-  proposalIdParam: string | string[] | undefined
+  proposalIdParam: string | string[] | undefined,
 ) {
   try {
     // If proposalId is provided, get snapshots for that proposal
     if (proposalIdParam) {
       const proposalId = parseInt(
         Array.isArray(proposalIdParam) ? proposalIdParam[0] : proposalIdParam,
-        10
+        10,
       );
 
       if (isNaN(proposalId)) {
@@ -92,31 +89,36 @@ async function handleGet(
 
       // Get member snapshot
       const memberSnapshot = localDb.getMemberSnapshot(contractAddress, proposalId);
-      
+
       // Get vote snapshots
       const voteSnapshots = localDb.getVoteSnapshots(contractAddress, proposalId);
 
       const response: SnapshotsResponse = {
         contractAddress,
         proposalId,
-        memberSnapshot: memberSnapshot ? {
-          proposalId: memberSnapshot.proposalId,
-          members: localDb.parseMemberSnapshotMembers(memberSnapshot),
-          totalWeight: memberSnapshot.totalWeight,
-          snapshotHeight: memberSnapshot.snapshotHeight,
-          snapshotTime: memberSnapshot.snapshotTime,
-          groupAddress: memberSnapshot.groupAddress,
-        } : null,
-        voteSnapshots: voteSnapshots.length > 0 ? {
-          proposalId,
-          votes: voteSnapshots.map((v) => ({
-            voter: v.voter,
-            weightAtVote: v.weightAtVote,
-            credentialValid: v.credentialValid,
-            voteHeight: v.voteHeight,
-            voteTime: v.voteTime,
-          })),
-        } : null,
+        memberSnapshot: memberSnapshot
+          ? {
+              proposalId: memberSnapshot.proposalId,
+              members: localDb.parseMemberSnapshotMembers(memberSnapshot),
+              totalWeight: memberSnapshot.totalWeight,
+              snapshotHeight: memberSnapshot.snapshotHeight,
+              snapshotTime: memberSnapshot.snapshotTime,
+              groupAddress: memberSnapshot.groupAddress,
+            }
+          : null,
+        voteSnapshots:
+          voteSnapshots.length > 0
+            ? {
+                proposalId,
+                votes: voteSnapshots.map((v) => ({
+                  voter: v.voter,
+                  weightAtVote: v.weightAtVote,
+                  credentialValid: v.credentialValid,
+                  voteHeight: v.voteHeight,
+                  voteTime: v.voteTime,
+                })),
+              }
+            : null,
       };
 
       return res.status(200).json(response);
@@ -145,4 +147,3 @@ async function handleGet(
     });
   }
 }
-

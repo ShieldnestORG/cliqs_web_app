@@ -1,18 +1,18 @@
 /**
  * Layer 2: Height-Based Authoritative Sync Job
- * 
+ *
  * File: lib/indexer/sync-job.ts
- * 
+ *
  * This is the authoritative indexer that ensures data correctness.
  * It is height-based, deterministic, idempotent, and reorg-aware.
- * 
+ *
  * Key Properties:
  * - Tracks last_finalized_height per contract
  * - Processes blocks sequentially
  * - Re-derives state from events + contract queries
  * - Handles chain reorgs by rollback + replay
  * - Periodically re-validates proposal status
- * 
+ *
  * This layer:
  * - Corrects missed WebSocket events
  * - Detects chain reorgs
@@ -81,11 +81,7 @@ export class SyncJob {
       ...config,
     };
 
-    this.cw3Client = new CW3Client(
-      config.nodeAddress,
-      config.contractAddress,
-      config.chainId,
-    );
+    this.cw3Client = new CW3Client(config.nodeAddress, config.contractAddress, config.chainId);
   }
 
   // ============================================================================
@@ -114,10 +110,7 @@ export class SyncJob {
 
     try {
       // Get current sync state
-      const syncState = localDb.getSyncState(
-        this.config.chainId,
-        this.config.contractAddress,
-      );
+      const syncState = localDb.getSyncState(this.config.chainId, this.config.contractAddress);
       const previousHeight = syncState?.lastFinalizedHeight || 0;
 
       // Get current chain height
@@ -180,7 +173,7 @@ export class SyncJob {
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      
+
       // Update sync state to "error"
       localDb.updateSyncState(
         this.config.chainId,
@@ -210,12 +203,7 @@ export class SyncJob {
    */
   async fullResync(): Promise<SyncResult> {
     // Reset sync state
-    localDb.updateSyncState(
-      this.config.chainId,
-      this.config.contractAddress,
-      0,
-      "syncing",
-    );
+    localDb.updateSyncState(this.config.chainId, this.config.contractAddress, 0, "syncing");
 
     // Clear cached data for this contract
     // Note: In a real implementation, we'd have methods to clear proposals/votes
@@ -341,7 +329,7 @@ export class SyncJob {
 
       try {
         const chainProposal = await this.cw3Client.queryProposal(cached.proposalId);
-        
+
         if (chainProposal) {
           // Update with chain state
           await this.syncProposal(chainProposal);
@@ -375,7 +363,7 @@ export class SyncJob {
    */
   private async processWebSocketEvents(): Promise<void> {
     const events = localDb.getUnprocessedEvents(this.config.contractAddress);
-    
+
     if (events.length === 0) {
       return;
     }
@@ -411,12 +399,12 @@ export class SyncJob {
   private async confirmRecords(): Promise<void> {
     // Get all unconfirmed proposals
     const proposals = localDb.getContractProposals(this.config.contractAddress);
-    
+
     for (const proposal of proposals) {
       if (!proposal.isConfirmed) {
         // Verify against chain
         const chainProposal = await this.cw3Client.queryProposal(proposal.proposalId);
-        
+
         if (chainProposal) {
           // Proposal exists on chain - confirm it
           localDb.updateContractProposalStatus(
@@ -446,7 +434,7 @@ export class SyncJob {
     // 2. Query the chain for the block hash at our last synced height
     // 3. If hashes don't match, we have a reorg
     // 4. Binary search to find the fork point
-    
+
     // For now, this is a placeholder
     return null;
   }
@@ -480,31 +468,30 @@ export class SyncJob {
    */
   async syncContractConfig(): Promise<void> {
     const config = await this.cw3Client.queryConfig();
-    
+
     // Update contract multisig record with latest config
     try {
-      localDb.updateContractMultisig(
-        this.config.chainId,
-        this.config.contractAddress,
-        {
-          threshold: this.extractThreshold(config.threshold),
-          maxVotingPeriodSeconds: config.max_voting_period.time || 0,
-          members: config.voters,
-        },
-      );
+      localDb.updateContractMultisig(this.config.chainId, this.config.contractAddress, {
+        threshold: this.extractThreshold(config.threshold),
+        maxVotingPeriodSeconds: config.max_voting_period.time || 0,
+        members: config.voters,
+      });
     } catch {
       // Contract might not be in DB yet - that's OK
     }
   }
 
-  private extractThreshold(threshold: { absolute_count?: { weight: number }; absolute_percentage?: { percentage: string; total_weight: number } }): number {
+  private extractThreshold(threshold: {
+    absolute_count?: { weight: number };
+    absolute_percentage?: { percentage: string; total_weight: number };
+  }): number {
     if (threshold.absolute_count) {
       return threshold.absolute_count.weight;
     }
     if (threshold.absolute_percentage) {
       return Math.ceil(
         parseFloat(threshold.absolute_percentage.percentage) *
-        threshold.absolute_percentage.total_weight
+          threshold.absolute_percentage.total_weight,
       );
     }
     return 1;
@@ -537,12 +524,9 @@ export class SyncScheduler {
   /**
    * Add a contract to be synced periodically
    */
-  addContract(
-    config: SyncJobConfig,
-    intervalMs?: number
-  ): void {
+  addContract(config: SyncJobConfig, intervalMs?: number): void {
     const key = `${config.chainId}:${config.contractAddress}`;
-    
+
     if (this.jobs.has(key)) {
       return; // Already scheduled
     }
@@ -571,13 +555,13 @@ export class SyncScheduler {
    */
   removeContract(chainId: string, contractAddress: string): void {
     const key = `${chainId}:${contractAddress}`;
-    
+
     const interval = this.intervals.get(key);
     if (interval) {
       clearInterval(interval);
       this.intervals.delete(key);
     }
-    
+
     this.jobs.delete(key);
   }
 
@@ -587,7 +571,7 @@ export class SyncScheduler {
   async syncNow(chainId: string, contractAddress: string): Promise<SyncResult | null> {
     const key = `${chainId}:${contractAddress}`;
     const job = this.jobs.get(key);
-    
+
     if (!job) {
       return null;
     }
@@ -644,11 +628,7 @@ export class GroupSyncJob {
 
   constructor(config: GroupSyncJobConfig) {
     this.config = config;
-    this.cw4Client = new CW4Client(
-      config.nodeAddress,
-      config.groupAddress,
-      config.chainId,
-    );
+    this.cw4Client = new CW4Client(config.nodeAddress, config.groupAddress, config.chainId);
   }
 
   /**
@@ -717,7 +697,7 @@ export class GroupSyncJob {
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      
+
       return {
         success: false,
         groupAddress: this.config.groupAddress,
@@ -842,4 +822,3 @@ export class GroupSyncScheduler {
 }
 
 export const groupSyncScheduler = new GroupSyncScheduler();
-

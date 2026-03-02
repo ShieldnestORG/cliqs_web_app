@@ -1,6 +1,6 @@
 /**
  * MultisigEngine Module Exports
- * 
+ *
  * File: lib/multisig/index.ts
  */
 
@@ -23,4 +23,3 @@ export {
   isContractMultisig,
   type ContractEngineConfig,
 } from "./contract-engine";
-

@@ -1,15 +1,15 @@
 /**
  * GroupProvider Interface
- * 
+ *
  * File: lib/group/provider.ts
- * 
+ *
  * Defines the abstract interface for group membership providers.
  * This abstraction allows the system to work with:
  * - CW4-group contracts (Phase 2)
  * - Custom group modules with identity NFT hooks (Phase 3+)
- * 
+ *
  * The interface mirrors MultisigEngine's design pattern for consistency.
- * 
+ *
  * Phase 2: Group-Backed Multisig
  */
 
@@ -19,7 +19,6 @@ import {
   GroupConfig,
   GroupType,
   MemberSnapshot,
-  MemberSnapshotInput,
   MemberUpdate,
   MemberUpdateBatch,
   MemberUpdateResult,
@@ -32,14 +31,14 @@ import {
 
 /**
  * GroupProvider - Unified interface for group membership management
- * 
+ *
  * This interface supports multiple implementation types:
- * 
+ *
  * 1. CW4GroupProvider ("cw4")
  *    - Standard CW4-group contract
  *    - Battle-tested, ecosystem-standard
  *    - Compatible with cw3-flex-multisig
- * 
+ *
  * 2. CustomGroupProvider ("custom") - Future Phase 3+
  *    - TX-specific group module
  *    - Identity NFT hooks
@@ -66,14 +65,14 @@ export interface GroupProvider {
 
   /**
    * Get the group configuration
-   * 
+   *
    * @returns Group configuration including admin, total weight, etc.
    */
   getConfig(): Promise<GroupConfig>;
 
   /**
    * List all members of the group
-   * 
+   *
    * @param startAfter - Optional pagination cursor
    * @param limit - Maximum number of members to return
    * @returns List of members with their weights
@@ -82,7 +81,7 @@ export interface GroupProvider {
 
   /**
    * Get a specific member's info
-   * 
+   *
    * @param address - Member's bech32 address
    * @returns Member info or null if not a member
    */
@@ -90,21 +89,21 @@ export interface GroupProvider {
 
   /**
    * Get the total voting weight of all members
-   * 
+   *
    * @returns Total weight
    */
   getTotalWeight(): Promise<number>;
 
   /**
    * Get the admin address
-   * 
+   *
    * @returns Admin address or null if no admin
    */
   getAdmin(): Promise<string | null>;
 
   /**
    * Check if an address is a member
-   * 
+   *
    * @param address - Address to check
    * @returns True if address is a member with weight > 0
    */
@@ -112,7 +111,7 @@ export interface GroupProvider {
 
   /**
    * Get the member count
-   * 
+   *
    * @returns Number of members in the group
    */
   getMemberCount(): Promise<number>;
@@ -123,20 +122,20 @@ export interface GroupProvider {
 
   /**
    * Take a snapshot of the current member set
-   * 
+   *
    * This captures the full member list at the current block height
    * for audit and eligibility tracking.
-   * 
+   *
    * @returns Member snapshot with all members and total weight
    */
   snapshotMembers(): Promise<MemberSnapshot>;
 
   /**
    * Get a member's weight at a specific block height
-   * 
+   *
    * Note: This may require archive node access for historical queries.
    * Falls back to current weight if historical data unavailable.
-   * 
+   *
    * @param address - Member address
    * @param height - Block height to query
    * @returns Weight at that height (0 if not a member)
@@ -145,7 +144,7 @@ export interface GroupProvider {
 
   /**
    * Check if a member was in the group at a specific height
-   * 
+   *
    * @param address - Member address
    * @param height - Block height to check
    * @returns True if was a member at that height
@@ -158,10 +157,10 @@ export interface GroupProvider {
 
   /**
    * Update group members (add, remove, or update weights)
-   * 
+   *
    * This is an admin-only operation. The provider will verify
    * the sender is the group admin before submitting.
-   * 
+   *
    * @param updates - Array of member updates to apply
    * @returns Update result with tx hash and new state
    */
@@ -169,7 +168,7 @@ export interface GroupProvider {
 
   /**
    * Apply a batch of member updates atomically
-   * 
+   *
    * @param batch - Batch of add/remove/update operations
    * @returns Update result
    */
@@ -177,7 +176,7 @@ export interface GroupProvider {
 
   /**
    * Add a single member
-   * 
+   *
    * @param address - New member's address
    * @param weight - Member's voting weight
    * @returns Update result
@@ -186,7 +185,7 @@ export interface GroupProvider {
 
   /**
    * Remove a single member
-   * 
+   *
    * @param address - Member's address to remove
    * @returns Update result
    */
@@ -194,7 +193,7 @@ export interface GroupProvider {
 
   /**
    * Update a member's weight
-   * 
+   *
    * @param address - Member's address
    * @param newWeight - New voting weight
    * @returns Update result
@@ -203,7 +202,7 @@ export interface GroupProvider {
 
   /**
    * Transfer admin rights to a new address
-   * 
+   *
    * @param newAdmin - New admin address (or null to remove admin)
    * @returns Transaction result
    */
@@ -215,7 +214,7 @@ export interface GroupProvider {
 
   /**
    * Validate that the sender can perform admin operations
-   * 
+   *
    * @param senderAddress - Address attempting the operation
    * @returns True if sender is the admin
    */
@@ -223,12 +222,12 @@ export interface GroupProvider {
 
   /**
    * Validate a batch of member updates
-   * 
+   *
    * Checks for:
    * - Valid addresses
    * - Valid weights (>= 1)
    * - No duplicate operations
-   * 
+   *
    * @param updates - Updates to validate
    * @returns Validation result with any errors
    */
@@ -292,7 +291,7 @@ export interface GroupProviderFactoryConfig {
 
 /**
  * Registry for group provider implementations
- * 
+ *
  * This allows dynamic registration of provider types,
  * supporting CW4 now and custom modules later.
  */
@@ -335,11 +334,11 @@ export class DefaultGroupProviderRegistry implements GroupProviderRegistry {
   async create(config: GroupProviderFactoryConfig): Promise<GroupProvider> {
     const type = config.groupType || "cw4";
     const factory = this.factories.get(type);
-    
+
     if (!factory) {
       throw new Error(`No provider registered for group type: ${type}`);
     }
-    
+
     return factory(config);
   }
 
@@ -354,4 +353,3 @@ export class DefaultGroupProviderRegistry implements GroupProviderRegistry {
 
 // Singleton registry instance
 export const groupProviderRegistry = new DefaultGroupProviderRegistry();
-

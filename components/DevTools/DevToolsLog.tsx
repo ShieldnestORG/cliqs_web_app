@@ -47,7 +47,8 @@ export default function DevToolsLog({ entries, onClear }: DevToolsLogProps) {
           <div>
             <CardTitle className="text-xl">Developer Activity Log</CardTitle>
             <CardDescription>
-              Local history of dev-console operations across upload, execute, query, and authz actions.
+              Local history of dev-console operations across upload, execute, query, and authz
+              actions.
             </CardDescription>
           </div>
           {entries.length > 0 && (
@@ -60,7 +61,10 @@ export default function DevToolsLog({ entries, onClear }: DevToolsLogProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <Select value={networkFilter} onValueChange={(value: "all" | "mainnet" | "testnet") => setNetworkFilter(value)}>
+          <Select
+            value={networkFilter}
+            onValueChange={(value: "all" | "mainnet" | "testnet") => setNetworkFilter(value)}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Network" />
             </SelectTrigger>
@@ -70,7 +74,10 @@ export default function DevToolsLog({ entries, onClear }: DevToolsLogProps) {
               <SelectItem value="testnet">Testnet</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={stageFilter} onValueChange={(value: "all" | DeploymentStage) => setStageFilter(value)}>
+          <Select
+            value={stageFilter}
+            onValueChange={(value: "all" | DeploymentStage) => setStageFilter(value)}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Stage" />
             </SelectTrigger>
@@ -121,8 +128,12 @@ export default function DevToolsLog({ entries, onClear }: DevToolsLogProps) {
                         </Badge>
                       </td>
                       <td className="px-2 py-2 font-mono text-xs">{entry.codeId ?? "-"}</td>
-                      <td className="px-2 py-2 font-mono text-xs">{value ? truncate(value, 24) : "-"}</td>
-                      <td className="px-2 py-2 text-xs text-muted-foreground">{entry.detail || entry.label || "-"}</td>
+                      <td className="px-2 py-2 font-mono text-xs">
+                        {value ? truncate(value, 24) : "-"}
+                      </td>
+                      <td className="px-2 py-2 text-xs text-muted-foreground">
+                        {entry.detail || entry.label || "-"}
+                      </td>
                     </tr>
                   );
                 })}

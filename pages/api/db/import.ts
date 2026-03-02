@@ -106,9 +106,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const txCol = db.collection("transactions");
     for (const tx of data.transactions) {
       const oldId = tx.id;
-      const { id: _unusedId, ...txData } = sanitizeForInsert(
-        tx as Record<string, unknown>,
-      );
+      const { id: _unusedId, ...txData } = sanitizeForInsert(tx as Record<string, unknown>);
       void _unusedId;
       const now = new Date().toISOString();
 
@@ -135,8 +133,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       const cleaned = sanitizeForInsert(sig as Record<string, unknown>);
 
       // Remap the transaction ID if we have a mapping
-      const remappedTxId =
-        results.transactions.idMap.get(sig.transactionId) || sig.transactionId;
+      const remappedTxId = results.transactions.idMap.get(sig.transactionId) || sig.transactionId;
 
       try {
         const existing = await sigCol.findOne({

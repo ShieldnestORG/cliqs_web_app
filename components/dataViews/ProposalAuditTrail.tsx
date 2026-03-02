@@ -1,28 +1,20 @@
 /**
  * Proposal Audit Trail
- * 
+ *
  * File: components/dataViews/ProposalAuditTrail.tsx
- * 
+ *
  * Displays the complete audit trail for a proposal, showing:
  * - Who approved with what weight at what time
  * - Member snapshot at proposal creation
  * - Credential validity (prepared for Phase 3)
- * 
+ *
  * Phase 2: Group-Backed Multisig
  */
 
 "use client";
 
 import { useMemo } from "react";
-import { 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  Users, 
-  Shield,
-  FileCheck,
-  History,
-} from "lucide-react";
+import { CheckCircle, XCircle, Clock, Users, Shield, FileCheck, History } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -35,12 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Accordion,
   AccordionContent,
@@ -118,11 +105,11 @@ export default function ProposalAuditTrail({
   // Calculate vote totals
   const voteTotals = useMemo(() => {
     const totals = { yes: 0, no: 0, abstain: 0, veto: 0 };
-    
+
     for (const vote of votes) {
       totals[vote.vote] += vote.weightAtVote;
     }
-    
+
     return totals;
   }, [votes]);
 
@@ -184,20 +171,16 @@ export default function ProposalAuditTrail({
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Summary */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Status</p>
-            <Badge variant={status === "executed" ? "default" : "secondary"}>
-              {status}
-            </Badge>
+            <Badge variant={status === "executed" ? "default" : "secondary"}>{status}</Badge>
           </div>
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Threshold</p>
             <p className="font-medium">
               {voteTotals.yes} / {threshold}
-              {thresholdMet && (
-                <CheckCircle className="inline h-4 w-4 text-green-accent ml-1" />
-              )}
+              {thresholdMet && <CheckCircle className="ml-1 inline h-4 w-4 text-green-accent" />}
             </p>
           </div>
           <div className="space-y-1">
@@ -205,9 +188,7 @@ export default function ProposalAuditTrail({
             <p className="font-medium">
               {totalVoted}
               {memberSnapshot && (
-                <span className="text-muted-foreground ml-1">
-                  / {memberSnapshot.totalWeight}
-                </span>
+                <span className="ml-1 text-muted-foreground">/ {memberSnapshot.totalWeight}</span>
               )}
             </p>
           </div>
@@ -218,21 +199,21 @@ export default function ProposalAuditTrail({
         </div>
 
         {/* Vote breakdown */}
-        <div className="flex gap-4 flex-wrap">
+        <div className="flex flex-wrap gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-green-accent" />
+            <div className="h-3 w-3 rounded-full bg-green-accent" />
             <span className="text-sm">Yes: {voteTotals.yes}</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-red-500" />
+            <div className="h-3 w-3 rounded-full bg-red-500" />
             <span className="text-sm">No: {voteTotals.no}</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-gray-500" />
+            <div className="h-3 w-3 rounded-full bg-gray-500" />
             <span className="text-sm">Abstain: {voteTotals.abstain}</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-orange-500" />
+            <div className="h-3 w-3 rounded-full bg-orange-500" />
             <span className="text-sm">Veto: {voteTotals.veto}</span>
           </div>
         </div>
@@ -247,16 +228,13 @@ export default function ProposalAuditTrail({
               <div className="flex items-center gap-2">
                 <FileCheck className="h-4 w-4" />
                 <span>Proposal Created</span>
-                <span className="text-muted-foreground text-sm ml-2">
-                  {formatTime(createdAt)}
-                </span>
+                <span className="ml-2 text-sm text-muted-foreground">{formatTime(createdAt)}</span>
               </div>
             </AccordionTrigger>
             <AccordionContent>
-              <div className="pl-6 space-y-2 text-sm">
+              <div className="space-y-2 pl-6 text-sm">
                 <p>
-                  <span className="text-muted-foreground">Time:</span>{" "}
-                  {formatTime(createdAt)}
+                  <span className="text-muted-foreground">Time:</span> {formatTime(createdAt)}
                 </p>
                 {memberSnapshot && (
                   <>
@@ -309,7 +287,7 @@ export default function ProposalAuditTrail({
                             <TooltipContent>
                               <p>{vote.voter}</p>
                               {vote.txHash && (
-                                <p className="text-xs text-muted-foreground mt-1">
+                                <p className="mt-1 text-xs text-muted-foreground">
                                   Tx: {vote.txHash.slice(0, 12)}...
                                 </p>
                               )}
@@ -325,15 +303,11 @@ export default function ProposalAuditTrail({
                           </Badge>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">
-                        {vote.weightAtVote}
-                      </TableCell>
+                      <TableCell className="text-right">{vote.weightAtVote}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         <TooltipProvider>
                           <Tooltip>
-                            <TooltipTrigger>
-                              {formatTime(vote.voteTime)}
-                            </TooltipTrigger>
+                            <TooltipTrigger>{formatTime(vote.voteTime)}</TooltipTrigger>
                             <TooltipContent>
                               Block: {vote.voteHeight.toLocaleString()}
                             </TooltipContent>
@@ -343,12 +317,12 @@ export default function ProposalAuditTrail({
                       <TableCell>
                         {vote.credentialValid ? (
                           <Badge variant="outline" className="text-green-600">
-                            <Shield className="h-3 w-3 mr-1" />
+                            <Shield className="mr-1 h-3 w-3" />
                             Valid
                           </Badge>
                         ) : (
                           <Badge variant="outline" className="text-red-600">
-                            <Shield className="h-3 w-3 mr-1" />
+                            <Shield className="mr-1 h-3 w-3" />
                             Invalid
                           </Badge>
                         )}
@@ -385,17 +359,15 @@ export default function ProposalAuditTrail({
                   <TableBody>
                     {memberSnapshot.members.map((member) => {
                       const memberVote = votes.find(
-                        (v) => v.voter.toLowerCase() === member.addr.toLowerCase()
+                        (v) => v.voter.toLowerCase() === member.addr.toLowerCase(),
                       );
-                      
+
                       return (
                         <TableRow key={member.addr}>
                           <TableCell className="font-mono text-sm">
                             {member.addr.slice(0, 12)}...{member.addr.slice(-8)}
                           </TableCell>
-                          <TableCell className="text-right">
-                            {member.weight}
-                          </TableCell>
+                          <TableCell className="text-right">{member.weight}</TableCell>
                           <TableCell className="text-right text-muted-foreground">
                             {((member.weight / memberSnapshot.totalWeight) * 100).toFixed(1)}%
                           </TableCell>
@@ -406,9 +378,7 @@ export default function ProposalAuditTrail({
                                 <span className="text-sm">{memberVote.vote}</span>
                               </div>
                             ) : (
-                              <span className="text-muted-foreground text-sm">
-                                Not voted
-                              </span>
+                              <span className="text-sm text-muted-foreground">Not voted</span>
                             )}
                           </TableCell>
                         </TableRow>
@@ -427,16 +397,15 @@ export default function ProposalAuditTrail({
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-green-accent" />
                   <span>Executed</span>
-                  <span className="text-muted-foreground text-sm ml-2">
+                  <span className="ml-2 text-sm text-muted-foreground">
                     {formatTime(executedAt)}
                   </span>
                 </div>
               </AccordionTrigger>
               <AccordionContent>
-                <div className="pl-6 space-y-2 text-sm">
+                <div className="space-y-2 pl-6 text-sm">
                   <p>
-                    <span className="text-muted-foreground">Time:</span>{" "}
-                    {formatTime(executedAt)}
+                    <span className="text-muted-foreground">Time:</span> {formatTime(executedAt)}
                   </p>
                   {executionTxHash && (
                     <p>
@@ -453,4 +422,3 @@ export default function ProposalAuditTrail({
     </Card>
   );
 }
-

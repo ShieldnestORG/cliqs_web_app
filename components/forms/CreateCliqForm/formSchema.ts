@@ -1,8 +1,8 @@
 /**
  * Cliq Creation Form Schema
- * 
+ *
  * File: components/forms/CreateCliqForm/formSchema.ts
- * 
+ *
  * A Cliq is a multisig group that lets multiple people manage shared funds.
  * This schema validates the cliq creation form with:
  * - Cliq name and description
@@ -45,16 +45,16 @@ export const getCreateCliqSchema = (chain: ChainInfo) =>
         .max(50, "CLIQ name must be less than 50 characters")
         .regex(
           /^[a-zA-Z0-9\s\-_]+$/,
-          "CLIQ name can only contain letters, numbers, spaces, hyphens, and underscores"
+          "CLIQ name can only contain letters, numbers, spaces, hyphens, and underscores",
         ),
-      
+
       description: z
         .string()
         .trim()
         .max(200, "Description must be less than 200 characters")
         .optional()
         .or(z.literal("")),
-      
+
       // Members array
       members: z.array(
         z.object({
@@ -92,7 +92,7 @@ export const getCreateCliqSchema = (chain: ChainInfo) =>
             }),
         }),
       ),
-      
+
       // Threshold (number of signatures required)
       threshold: z.coerce
         .number({ invalid_type_error: "Threshold must be a number" })
@@ -101,32 +101,34 @@ export const getCreateCliqSchema = (chain: ChainInfo) =>
 
       // Phase 3: Credential gating configuration
       enableCredentialGating: z.boolean().optional().default(false),
-      
-      credentialConfig: z.object({
-        classSymbol: z
-          .string()
-          .trim()
-          .max(16, "Symbol must be 16 characters or less")
-          .regex(/^[A-Z0-9]+$/, "Symbol must be uppercase letters and numbers only")
-          .optional()
-          .or(z.literal("")),
-        className: z
-          .string()
-          .trim()
-          .max(50, "Name must be 50 characters or less")
-          .optional()
-          .or(z.literal("")),
-        autoIssueCredentials: z.boolean().optional().default(true),
-      }).optional(),
+
+      credentialConfig: z
+        .object({
+          classSymbol: z
+            .string()
+            .trim()
+            .max(16, "Symbol must be 16 characters or less")
+            .regex(/^[A-Z0-9]+$/, "Symbol must be uppercase letters and numbers only")
+            .optional()
+            .or(z.literal("")),
+          className: z
+            .string()
+            .trim()
+            .max(50, "Name must be 50 characters or less")
+            .optional()
+            .or(z.literal("")),
+          autoIssueCredentials: z.boolean().optional().default(true),
+        })
+        .optional(),
     })
     // Validate minimum members (at least 2)
     .superRefine(({ members }, ctx) => {
       const filledMembers = members.filter(({ member }) => member.trim() !== "");
-      
+
       if (filledMembers.length < 2) {
         const emptyIndex = members.findIndex(({ member }) => member.trim() === "");
         const errorIndex = emptyIndex !== -1 ? emptyIndex : members.length - 1;
-        
+
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "A CLIQ needs at least 2 members",

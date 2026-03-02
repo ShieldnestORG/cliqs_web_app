@@ -108,7 +108,7 @@ const importMsgFromJson = (msg: EncodeObject): EncodeObject => {
     if (msg.typeUrl === MsgTypeUrls.CreateValidator && msg.value?.pubkey) {
       console.log("🔍 DECIMAL DEBUG: processing pubkey format");
       console.log("  - original pubkey:", msg.value.pubkey);
-      
+
       // Handle legacy format: { type: "/cosmos.crypto.ed25519.PubKey", key: "base64..." }
       if (msg.value.pubkey.type && msg.value.pubkey.key) {
         console.log("🔍 DECIMAL DEBUG: converting legacy pubkey format");
@@ -119,8 +119,8 @@ const importMsgFromJson = (msg: EncodeObject): EncodeObject => {
           pubkey: {
             typeUrl: msg.value.pubkey.type,
             // Keep as base64 string - fromJSON will decode it
-            value: msg.value.pubkey.key
-          }
+            value: msg.value.pubkey.key,
+          },
         };
         console.log("  - converted pubkey structure:", processedValue.pubkey);
       }
@@ -153,41 +153,50 @@ const importMsgFromJson = (msg: EncodeObject): EncodeObject => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       console.log("  - parsed value.pubkey:", (parsedValue as any).pubkey);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      console.log("  - parsed value.pubkey.value length:", (parsedValue as any).pubkey?.value?.length);
-      
+      console.log(
+        "  - parsed value.pubkey.value length:",
+        (parsedValue as any).pubkey?.value?.length,
+      );
+
       // Critical fix: fromJSON returns a 32-byte raw pubkey, but amino converter needs
       // the full protobuf-encoded format (34 bytes with wrapper).
       // We need to re-encode it using encodePubkey to add the protobuf wrapper.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if ((parsedValue as any).pubkey && (parsedValue as any).pubkey.value.length === 32) {
-        console.log("🔍 DECIMAL DEBUG: Re-encoding pubkey with protobuf wrapper for amino compatibility");
+        console.log(
+          "🔍 DECIMAL DEBUG: Re-encoding pubkey with protobuf wrapper for amino compatibility",
+        );
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const rawPubkeyBytes = (parsedValue as any).pubkey.value;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const pubkeyType = (parsedValue as any).pubkey.typeUrl;
-        
+
         // Determine the amino type based on the typeUrl
         let aminoType = "tendermint/PubKeyEd25519";
         if (pubkeyType.includes("secp256k1")) {
           aminoType = "tendermint/PubKeySecp256k1";
         }
-        
+
         // Re-encode with protobuf wrapper by converting bytes back to base64
         // and using encodePubkey which adds the wrapper
-        const base64Pubkey = Buffer.from(rawPubkeyBytes).toString('base64');
+        const base64Pubkey = Buffer.from(rawPubkeyBytes).toString("base64");
         const reEncodedPubkey = encodePubkey({
           type: aminoType,
-          value: base64Pubkey
+          value: base64Pubkey,
         });
-        
-        console.log("  - re-encoded pubkey.value length:", reEncodedPubkey.value.length, "(should be 34)");
-        
-        return { 
-          ...msg, 
+
+        console.log(
+          "  - re-encoded pubkey.value length:",
+          reEncodedPubkey.value.length,
+          "(should be 34)",
+        );
+
+        return {
+          ...msg,
           value: {
             ...parsedValue,
-            pubkey: reEncodedPubkey
-          }
+            pubkey: reEncodedPubkey,
+          },
         };
       }
     }
@@ -220,8 +229,16 @@ export const dbTxFromJson = (txJson: string): DbTransactionParsedDataJson | null
         if (msg.typeUrl === "/cosmos.staking.v1beta1.MsgCreateValidator" && msg.value?.commission) {
           console.log(`  - CREATE_VALIDATOR commission:`, msg.value.commission);
           console.log(`    - rate:`, msg.value.commission.rate, typeof msg.value.commission.rate);
-          console.log(`    - maxRate:`, msg.value.commission.maxRate, typeof msg.value.commission.maxRate);
-          console.log(`    - maxChangeRate:`, msg.value.commission.maxChangeRate, typeof msg.value.commission.maxChangeRate);
+          console.log(
+            `    - maxRate:`,
+            msg.value.commission.maxRate,
+            typeof msg.value.commission.maxRate,
+          );
+          console.log(
+            `    - maxChangeRate:`,
+            msg.value.commission.maxChangeRate,
+            typeof msg.value.commission.maxChangeRate,
+          );
         }
       });
     }
@@ -244,8 +261,16 @@ export const dbTxFromJson = (txJson: string): DbTransactionParsedDataJson | null
         if (msg.typeUrl === "/cosmos.staking.v1beta1.MsgCreateValidator" && msg.value?.commission) {
           console.log(`  - CREATE_VALIDATOR commission after import:`, msg.value.commission);
           console.log(`    - rate:`, msg.value.commission.rate, typeof msg.value.commission.rate);
-          console.log(`    - maxRate:`, msg.value.commission.maxRate, typeof msg.value.commission.maxRate);
-          console.log(`    - maxChangeRate:`, msg.value.commission.maxChangeRate, typeof msg.value.commission.maxChangeRate);
+          console.log(
+            `    - maxRate:`,
+            msg.value.commission.maxRate,
+            typeof msg.value.commission.maxRate,
+          );
+          console.log(
+            `    - maxChangeRate:`,
+            msg.value.commission.maxChangeRate,
+            typeof msg.value.commission.maxChangeRate,
+          );
         }
       });
     }

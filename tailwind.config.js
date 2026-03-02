@@ -1,10 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
-  content: [
-    "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-  ],
+  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   theme: {
     container: {
       center: true,
@@ -16,16 +13,29 @@ module.exports = {
     extend: {
       fontFamily: {
         // UI4 Typography System
-        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', 'sans-serif'],
-        heading: ['Space Grotesk', 'Inter', 'sans-serif'],
-        mono: ['JetBrains Mono', 'SF Mono', 'Fira Code', 'monospace'],
-        body: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        sans: [
+          "Inter",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "Roboto",
+          "Oxygen",
+          "Ubuntu",
+          "Cantarell",
+          "Fira Sans",
+          "Droid Sans",
+          "Helvetica Neue",
+          "sans-serif",
+        ],
+        heading: ["Space Grotesk", "Inter", "sans-serif"],
+        mono: ["JetBrains Mono", "SF Mono", "Fira Code", "monospace"],
+        body: ["Inter", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
       },
       fontSize: {
         // UI4 Typography Scale
-        'micro': ['0.625rem', { lineHeight: '1' }],       // 10px
-        'label': ['0.75rem', { lineHeight: '1.25' }],     // 12px
-        'body-sm': ['0.8125rem', { lineHeight: '1.5' }],  // 13px
+        micro: ["0.625rem", { lineHeight: "1" }], // 10px
+        label: ["0.75rem", { lineHeight: "1.25" }], // 12px
+        "body-sm": ["0.8125rem", { lineHeight: "1.5" }], // 13px
       },
       colors: {
         border: "hsl(var(--border))",
@@ -91,9 +101,9 @@ module.exports = {
       },
       boxShadow: {
         // UI4 Shadow System
-        'card': '0 1px 3px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
-        'card-hover': '0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08)',
-        'focus-ring': '0 0 0 3px hsl(var(--accent-purple) / 0.3)',
+        card: "0 1px 3px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
+        "card-hover": "0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08)",
+        "focus-ring": "0 0 0 3px hsl(var(--accent-purple) / 0.3)",
       },
       keyframes: {
         "accordion-down": {

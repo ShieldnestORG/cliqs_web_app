@@ -20,7 +20,7 @@ describe("Integration: MultiRpcVerifier module surface", () => {
     const instance = new MultiRpcVerifier({
       chainId: "test-chain",
       minConfirmations: 1,
-      endpoints: [{ url: "http://test-rpc", priority: "primary" }]
+      endpoints: [{ url: "http://test-rpc", priority: "primary" }],
     });
 
     expect(typeof instance.broadcastAndVerify).toBe("function");
@@ -38,7 +38,7 @@ describe("Integration: MultiRpcVerifier module surface", () => {
       endpoints: [
         { url: "https://rpc.cosmoshub.strange.love", priority: "primary" },
         { url: "https://cosmoshub-4.technofractal.com", priority: "secondary" },
-      ]
+      ],
     };
 
     expect(() => new MultiRpcVerifier(config)).not.toThrow();
@@ -48,7 +48,7 @@ describe("Integration: MultiRpcVerifier module surface", () => {
     const instance = new MultiRpcVerifier({
       chainId: "test-chain",
       minConfirmations: 1,
-      endpoints: [{ url: "http://test-rpc", priority: "primary" }]
+      endpoints: [{ url: "http://test-rpc", priority: "primary" }],
     });
 
     expect(typeof instance.broadcastAndVerify).toBe("function");

@@ -12,11 +12,11 @@ import { getDbUserMultisigs, getPendingDbTxs } from "@/lib/api";
 import { getUserSettings } from "@/lib/settingsStorage";
 import { DbTransaction } from "@/graphql";
 
-const isClient = typeof window !== 'undefined';
+const isClient = typeof window !== "undefined";
 const REFRESH_INTERVAL_MS = 30000; // Refresh every 30 seconds
 
 // Custom event name for transaction status changes
-export const TRANSACTION_STATUS_CHANGED_EVENT = 'transactionStatusChanged';
+export const TRANSACTION_STATUS_CHANGED_EVENT = "transactionStatusChanged";
 
 // Helper function to dispatch transaction status change event
 export function dispatchTransactionStatusChanged() {
@@ -55,13 +55,13 @@ export function usePendingTransactions(): PendingTransactionsData {
     if (!isClient) return;
 
     if (!walletInfo || walletInfo.type !== "Keplr") {
-      setData(prev => ({ ...prev, isLoading: false, error: null }));
+      setData((prev) => ({ ...prev, isLoading: false, error: null }));
       return;
     }
 
     // Ensure chain has required properties including nodeAddress
     if (!chain?.chainId || !chain?.nodeAddress) {
-      setData(prev => ({
+      setData((prev) => ({
         ...prev,
         isLoading: false,
         error: null, // Not an error, just waiting for chain to load
@@ -70,7 +70,7 @@ export function usePendingTransactions(): PendingTransactionsData {
     }
 
     try {
-      setData(prev => ({ ...prev, isLoading: true, error: null }));
+      setData((prev) => ({ ...prev, isLoading: true, error: null }));
 
       // Check user settings to see if verification is required
       const settings = getUserSettings();
@@ -78,7 +78,7 @@ export function usePendingTransactions(): PendingTransactionsData {
 
       if (requiresVerification && !isVerified) {
         // Can't fetch without verification
-        setData(prev => ({
+        setData((prev) => ({
           ...prev,
           isLoading: false,
           hasPendingTransactions: false,
@@ -97,7 +97,7 @@ export function usePendingTransactions(): PendingTransactionsData {
 
       // Combine created and belonged multisigs, deduplicating by address
       // (a user who creates a multisig is typically also a member)
-      const allMultisigsMap = new Map<string, typeof multisigs.created[number]>();
+      const allMultisigsMap = new Map<string, (typeof multisigs.created)[number]>();
       for (const m of [...multisigs.created, ...multisigs.belonged]) {
         if (!allMultisigsMap.has(m.address)) {
           allMultisigsMap.set(m.address, m);
@@ -106,7 +106,7 @@ export function usePendingTransactions(): PendingTransactionsData {
       const allMultisigs = Array.from(allMultisigsMap.values());
 
       if (allMultisigs.length === 0) {
-        setData(prev => ({
+        setData((prev) => ({
           ...prev,
           isLoading: false,
           hasPendingTransactions: false,
@@ -138,10 +138,13 @@ export function usePendingTransactions(): PendingTransactionsData {
       const results = await Promise.all(pendingPromises);
 
       // Filter out multisigs with no pending transactions
-      const multisigsWithPending = results.filter(result => result.pendingCount > 0);
-      const totalPendingCount = multisigsWithPending.reduce((sum, result) => sum + result.pendingCount, 0);
+      const multisigsWithPending = results.filter((result) => result.pendingCount > 0);
+      const totalPendingCount = multisigsWithPending.reduce(
+        (sum, result) => sum + result.pendingCount,
+        0,
+      );
 
-      setData(prev => ({
+      setData((prev) => ({
         ...prev,
         isLoading: false,
         hasPendingTransactions: totalPendingCount > 0,
@@ -150,7 +153,7 @@ export function usePendingTransactions(): PendingTransactionsData {
       }));
     } catch (error) {
       console.error("Failed to fetch pending transactions:", error);
-      setData(prev => ({
+      setData((prev) => ({
         ...prev,
         isLoading: false,
         error: error instanceof Error ? error.message : "Failed to fetch pending transactions",
@@ -192,7 +195,7 @@ export function usePendingTransactions(): PendingTransactionsData {
   // Set up periodic refresh when wallet is connected and chain is ready
   useEffect(() => {
     if (!isClient) return;
-    
+
     const chainReady = chain?.chainId && chain?.nodeAddress;
     if (walletInfo?.type === "Keplr" && chainReady) {
       const settings = getUserSettings();
@@ -224,7 +227,7 @@ export function usePendingTransactions(): PendingTransactionsData {
         const settings = getUserSettings();
         const requiresVerification = settings.requireWalletSignInForCliqs;
         const canFetch = requiresVerification ? isVerified : true;
-        
+
         if (canFetch) {
           // Small delay to ensure transaction updates are saved
           setTimeout(() => {
@@ -234,10 +237,10 @@ export function usePendingTransactions(): PendingTransactionsData {
       }
     };
 
-    router.events.on('routeChangeComplete', handleRouteChange);
-    
+    router.events.on("routeChangeComplete", handleRouteChange);
+
     return () => {
-      router.events.off('routeChangeComplete', handleRouteChange);
+      router.events.off("routeChangeComplete", handleRouteChange);
     };
   }, [router.events, walletInfo, isVerified, fetchPendingTransactions]);
 
@@ -250,17 +253,17 @@ export function usePendingTransactions(): PendingTransactionsData {
         const settings = getUserSettings();
         const requiresVerification = settings.requireWalletSignInForCliqs;
         const canFetch = requiresVerification ? isVerified : true;
-        
+
         if (canFetch) {
           fetchPendingTransactions();
         }
       }
     };
 
-    window.addEventListener('focus', handleFocus);
-    
+    window.addEventListener("focus", handleFocus);
+
     return () => {
-      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener("focus", handleFocus);
     };
   }, [walletInfo, isVerified, fetchPendingTransactions]);
 
@@ -273,7 +276,7 @@ export function usePendingTransactions(): PendingTransactionsData {
         const settings = getUserSettings();
         const requiresVerification = settings.requireWalletSignInForCliqs;
         const canFetch = requiresVerification ? isVerified : true;
-        
+
         if (canFetch) {
           // Small delay to ensure database updates are complete
           setTimeout(() => {
@@ -284,7 +287,7 @@ export function usePendingTransactions(): PendingTransactionsData {
     };
 
     window.addEventListener(TRANSACTION_STATUS_CHANGED_EVENT, handleTransactionStatusChange);
-    
+
     return () => {
       window.removeEventListener(TRANSACTION_STATUS_CHANGED_EVENT, handleTransactionStatusChange);
     };

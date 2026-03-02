@@ -30,18 +30,24 @@ const CompletedTransaction = ({ transactionHash }: CompletedTransactionProps) =>
           <p>This transaction has been broadcast</p>
         </div>
       </StackableContainer>
-      <div 
-        className={`hash-card ${copied ? 'copied' : ''}`}
+      <div
+        className={`hash-card ${copied ? "copied" : ""}`}
         onClick={handleCopyHash}
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => e.key === 'Enter' && handleCopyHash()}
+        onKeyDown={(e) => e.key === "Enter" && handleCopyHash()}
       >
         <div className="hash-header">
           <label>Transaction Hash</label>
-          <span className={`copied-badge ${copied ? 'show' : ''}`}>
+          <span className={`copied-badge ${copied ? "show" : ""}`}>
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path
+                d="M5 13l4 4L19 7"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
             Copied!
           </span>
@@ -88,16 +94,25 @@ const CompletedTransaction = ({ transactionHash }: CompletedTransactionProps) =>
         }
         .hash-card.copied {
           border-color: #22c55e;
-          box-shadow: 0 0 20px rgba(34, 197, 94, 0.4), 0 0 40px rgba(34, 197, 94, 0.2), inset 0 0 20px rgba(34, 197, 94, 0.1);
+          box-shadow:
+            0 0 20px rgba(34, 197, 94, 0.4),
+            0 0 40px rgba(34, 197, 94, 0.2),
+            inset 0 0 20px rgba(34, 197, 94, 0.1);
           animation: glowPulse 1s ease-out;
         }
         @keyframes glowPulse {
           0% {
-            box-shadow: 0 0 20px rgba(34, 197, 94, 0.6), 0 0 40px rgba(34, 197, 94, 0.4), inset 0 0 30px rgba(34, 197, 94, 0.2);
+            box-shadow:
+              0 0 20px rgba(34, 197, 94, 0.6),
+              0 0 40px rgba(34, 197, 94, 0.4),
+              inset 0 0 30px rgba(34, 197, 94, 0.2);
             border-color: #4ade80;
           }
           100% {
-            box-shadow: 0 0 20px rgba(34, 197, 94, 0.4), 0 0 40px rgba(34, 197, 94, 0.2), inset 0 0 20px rgba(34, 197, 94, 0.1);
+            box-shadow:
+              0 0 20px rgba(34, 197, 94, 0.4),
+              0 0 40px rgba(34, 197, 94, 0.2),
+              inset 0 0 20px rgba(34, 197, 94, 0.1);
             border-color: #22c55e;
           }
         }

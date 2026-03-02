@@ -78,8 +78,7 @@ export const userJourneys: UserJourney[] = [
       },
       {
         title: "Start Creating",
-        description:
-          'Navigate to "Create Multisig" in the sidebar, then select the PubKey tab.',
+        description: 'Navigate to "Create Multisig" in the sidebar, then select the PubKey tab.',
         details: [
           'Click "Create Multisig" in the left sidebar navigation.',
           "You'll see three multisig type cards — select PubKey.",
@@ -150,8 +149,7 @@ export const userJourneys: UserJourney[] = [
     steps: [
       {
         title: "Connect Your Wallet",
-        description:
-          "Connect Keplr and select a CosmWasm-enabled chain.",
+        description: "Connect Keplr and select a CosmWasm-enabled chain.",
         details: [
           "Click the Keplr button in the sidebar to connect.",
           "Ensure you're on a chain that supports CosmWasm (e.g., Juno, Osmosis, Archway, Coreum).",
@@ -161,8 +159,7 @@ export const userJourneys: UserJourney[] = [
       },
       {
         title: "Name Your CLIQ (Step 1 of 6)",
-        description:
-          "The wizard starts with naming your multisig.",
+        description: "The wizard starts with naming your multisig.",
         details: [
           'Navigate to "Create Multisig" and select the Fixed tab.',
           "Enter a memorable name and optional description.",
@@ -555,10 +552,7 @@ export const userJourneys: UserJourney[] = [
     category: "manage",
     estimatedTime: "2-5 min",
     difficulty: "beginner",
-    prerequisites: [
-      "The multisig address you want to find",
-      "The correct chain selected",
-    ],
+    prerequisites: ["The multisig address you want to find", "The correct chain selected"],
     steps: [
       {
         title: "Navigate to Find CLIQ",

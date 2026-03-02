@@ -12,7 +12,14 @@
  *   6. Complete – result, download backup, retention notice
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardLabel } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardLabel,
+} from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -79,7 +86,11 @@ import {
   calculateTotalWeight,
 } from "./formSchema";
 import { toast } from "sonner";
-import { loadBundledWasm, checkBundledWasmAvailable, formatWasmSize } from "@/lib/contract/bundledWasm";
+import {
+  loadBundledWasm,
+  checkBundledWasmAvailable,
+  formatWasmSize,
+} from "@/lib/contract/bundledWasm";
 import { validateWasm, type WasmValidationResult } from "@/lib/contract/wasmValidator";
 import { getRetentionDays } from "@/lib/dataRetention";
 
@@ -126,11 +137,13 @@ export default function CreateContractCliqForm() {
   const [wasmSource, setWasmSource] = useState<"bundled" | "custom">("bundled");
   const [customWasmFile, setCustomWasmFile] = useState<File | null>(null);
   const [customWasmBytes, setCustomWasmBytes] = useState<Uint8Array | null>(null);
-  const [bundledAvailable, setBundledAvailable] = useState<boolean>(true);
+  const [_bundledAvailable, setBundledAvailable] = useState<boolean>(true);
   const [showWalletSwitch, setShowWalletSwitch] = useState(false);
   const [uploadedCodeId, setUploadedCodeId] = useState<number | null>(null);
   const [uploadTxHash, setUploadTxHash] = useState<string | null>(null);
-  const [deployPhase, setDeployPhase] = useState<"idle" | "uploading" | "uploaded" | "instantiating" | "done" | "error">("idle");
+  const [deployPhase, setDeployPhase] = useState<
+    "idle" | "uploading" | "uploaded" | "instantiating" | "done" | "error"
+  >("idle");
   const [deployError, setDeployError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [wasmValidation, setWasmValidation] = useState<WasmValidationResult | null>(null);
@@ -138,7 +151,9 @@ export default function CreateContractCliqForm() {
   // Advanced settings (code ID, label, admin)
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [codeIdSuggestions, setCodeIdSuggestions] = useState<CodeIdSuggestion[]>([]);
-  const [codeIdStatus, setCodeIdStatus] = useState<"idle" | "validating" | "valid" | "invalid">("idle");
+  const [codeIdStatus, setCodeIdStatus] = useState<"idle" | "validating" | "valid" | "invalid">(
+    "idle",
+  );
   const [codeIdError, setCodeIdError] = useState<string | null>(null);
 
   // Chain config
@@ -148,7 +163,7 @@ export default function CreateContractCliqForm() {
     () => getChainConstraints(chain.chainId),
   );
   const isLedger = walletInfo?.type === "Ledger";
-  const hasRegistryCodeId = Boolean(registryCodeIds?.cw3Fixed);
+  const _hasRegistryCodeId = Boolean(registryCodeIds?.cw3Fixed);
 
   const createContractCliqSchema = getCreateContractCliqSchema(chain);
 
@@ -171,7 +186,7 @@ export default function CreateContractCliqForm() {
     }
     setCodeIdStatus("idle");
     setCodeIdError(null);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chain.chainId]);
 
   useEffect(() => {
@@ -236,7 +251,8 @@ export default function CreateContractCliqForm() {
 
   const isSetupComplete = watchedName.trim().length >= 2;
   const isMembersComplete = filledMembersCount >= 2;
-  const isSettingsComplete = watchedThreshold >= 1 && watchedThreshold <= totalWeight && watchedVotingPeriod >= 0.01;
+  const isSettingsComplete =
+    watchedThreshold >= 1 && watchedThreshold <= totalWeight && watchedVotingPeriod >= 0.01;
 
   const handleAddMember = useCallback(() => {
     membersAppend({ address: "", weight: 1 }, { shouldFocus: true });
@@ -298,7 +314,7 @@ export default function CreateContractCliqForm() {
         values.label = `${values.name.trim().toLowerCase().replace(/\s+/g, "-")}-multisig`;
       }
 
-      const signer = await getDirectSigner() || await getAminoSigner();
+      const signer = (await getDirectSigner()) || (await getAminoSigner());
       if (!signer) {
         toast.error("Failed to get wallet signer");
         return;
@@ -384,7 +400,7 @@ export default function CreateContractCliqForm() {
       const maxVotingPeriodSeconds = votingPeriodToSeconds(values.votingPeriodDays);
 
       // Re-acquire signer in case wallet was switched
-      const instantiateSigner = await getDirectSigner() || await getAminoSigner();
+      const instantiateSigner = (await getDirectSigner()) || (await getAminoSigner());
       if (!instantiateSigner) {
         toast.error("Failed to get wallet signer for instantiation");
         setDeployPhase("error");
@@ -457,7 +473,6 @@ export default function CreateContractCliqForm() {
       setDeployPhase("done");
       toast.success("Contract CLIQ created!");
       setCurrentStep("complete");
-
     } catch (e) {
       console.error("Deploy failed:", e);
       setDeployError(e instanceof Error ? e.message : "Unknown error");
@@ -530,9 +545,9 @@ export default function CreateContractCliqForm() {
   return (
     <Card variant="institutional" bracket="purple" className="overflow-visible">
       <CardHeader>
-        <div className="flex items-center gap-4 mb-2">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted border border-border">
-            <FileCode2 className="w-7 h-7 text-foreground" />
+        <div className="mb-2 flex items-center gap-4">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-muted">
+            <FileCode2 className="h-7 w-7 text-foreground" />
           </div>
           <div>
             <CardLabel comment className="flex items-center gap-1">
@@ -542,21 +557,24 @@ export default function CreateContractCliqForm() {
             <CardTitle className="text-2xl">Create Smart Wallet</CardTitle>
           </div>
         </div>
-        <CardDescription className="space-y-3 mt-4">
+        <CardDescription className="mt-4 space-y-3">
           <span className="block text-base">
             Create a CW3 contract multisig on{" "}
-            <span className="font-semibold text-foreground">{chain.chainDisplayName || "Cosmos"}</span>
+            <span className="font-semibold text-foreground">
+              {chain.chainDisplayName || "Cosmos"}
+            </span>
           </span>
           <span className="block text-sm text-muted-foreground">
             The app uploads and deploys the contract for you. No technical knowledge required.
           </span>
           {chainConstraints?.permissionedUpload && (
-            <div className="flex items-start gap-2 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-sm">
-              <AlertCircle className="h-4 w-4 text-yellow-500 mt-0.5 shrink-0" />
+            <div className="flex items-start gap-2 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-yellow-500" />
               <div>
                 <p className="font-medium text-foreground">Permissioned chain</p>
-                <p className="text-muted-foreground mt-0.5">
-                  {chain.chainDisplayName} requires governance approval for contract uploads. You may need to use an existing Code ID instead.
+                <p className="mt-0.5 text-muted-foreground">
+                  {chain.chainDisplayName} requires governance approval for contract uploads. You
+                  may need to use an existing Code ID instead.
                 </p>
               </div>
             </div>
@@ -567,39 +585,41 @@ export default function CreateContractCliqForm() {
       <CardContent>
         {/* Progress Bar */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-3">
+          <div className="mb-3 flex items-center justify-between">
             {WIZARD_STEPS.map((step, idx) => {
               const isActive = step === currentStep;
               const isCompleted = idx < currentStepIndex;
-              const isClickable = idx <= currentStepIndex || (
-                step === "members" && isSetupComplete
-              ) || (
-                step === "settings" && isSetupComplete && isMembersComplete
-              ) || (
-                step === "review" && isSetupComplete && isMembersComplete && isSettingsComplete
-              );
+              const isClickable =
+                idx <= currentStepIndex ||
+                (step === "members" && isSetupComplete) ||
+                (step === "settings" && isSetupComplete && isMembersComplete) ||
+                (step === "review" && isSetupComplete && isMembersComplete && isSettingsComplete);
 
               return (
                 <button
                   key={step}
                   type="button"
-                  onClick={() => isClickable && step !== "complete" && step !== "deploy" ? goTo(step) : undefined}
+                  onClick={() =>
+                    isClickable && step !== "complete" && step !== "deploy" ? goTo(step) : undefined
+                  }
                   disabled={!isClickable}
                   className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${
                     isActive
                       ? "text-foreground"
                       : isCompleted
-                        ? "text-primary cursor-pointer"
+                        ? "cursor-pointer text-primary"
                         : "text-muted-foreground"
-                  } ${isClickable && !isActive ? "hover:text-foreground cursor-pointer" : ""}`}
+                  } ${isClickable && !isActive ? "cursor-pointer hover:text-foreground" : ""}`}
                 >
-                  <div className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-colors ${
-                    isCompleted
-                      ? "bg-primary text-primary-foreground"
-                      : isActive
-                        ? "bg-foreground text-background"
-                        : "bg-muted text-muted-foreground"
-                  }`}>
+                  <div
+                    className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-colors ${
+                      isCompleted
+                        ? "bg-primary text-primary-foreground"
+                        : isActive
+                          ? "bg-foreground text-background"
+                          : "bg-muted text-muted-foreground"
+                    }`}
+                  >
                     {isCompleted ? <Check className="h-3.5 w-3.5" /> : idx + 1}
                   </div>
                   <span className="hidden sm:inline">{STEP_LABELS[step]}</span>
@@ -607,24 +627,23 @@ export default function CreateContractCliqForm() {
               );
             })}
           </div>
-          <div className="h-1 bg-muted rounded-full overflow-hidden">
+          <div className="h-1 overflow-hidden rounded-full bg-muted">
             <div
-              className="h-full bg-primary rounded-full transition-all duration-300"
-              style={{ width: `${((currentStepIndex) / (WIZARD_STEPS.length - 1)) * 100}%` }}
+              className="h-full rounded-full bg-primary transition-all duration-300"
+              style={{ width: `${(currentStepIndex / (WIZARD_STEPS.length - 1)) * 100}%` }}
             />
           </div>
         </div>
 
         <Form {...form}>
           <form id="create-contract-cliq-form" onSubmit={(e) => e.preventDefault()}>
-
             {/* ============================================================ */}
             {/* STEP 1: SETUP */}
             {/* ============================================================ */}
             {currentStep === "setup" && (
               <div className="space-y-6">
-                <div className="space-y-1 mb-6">
-                  <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <div className="mb-6 space-y-1">
+                  <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
                     <FileText className="h-5 w-5 text-muted-foreground" />
                     Name Your CLIQ
                   </h3>
@@ -640,7 +659,11 @@ export default function CreateContractCliqForm() {
                     <FormItem>
                       <FormLabel>CLIQ Name</FormLabel>
                       <FormControl>
-                        <Input variant="institutional" placeholder="e.g., Treasury CLIQ" {...field} />
+                        <Input
+                          variant="institutional"
+                          placeholder="e.g., Treasury CLIQ"
+                          {...field}
+                        />
                       </FormControl>
                       <FormDescription>A memorable name for your CLIQ</FormDescription>
                       <FormMessage />
@@ -655,7 +678,11 @@ export default function CreateContractCliqForm() {
                     <FormItem>
                       <FormLabel>Description (optional)</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="What is this CLIQ for?" className="resize-none h-20" {...field} />
+                        <Textarea
+                          placeholder="What is this CLIQ for?"
+                          className="h-20 resize-none"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -667,14 +694,16 @@ export default function CreateContractCliqForm() {
                   <button
                     type="button"
                     onClick={() => setShowAdvanced(!showAdvanced)}
-                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
                   >
-                    <ChevronRight className={`h-4 w-4 transition-transform ${showAdvanced ? "rotate-90" : ""}`} />
+                    <ChevronRight
+                      className={`h-4 w-4 transition-transform ${showAdvanced ? "rotate-90" : ""}`}
+                    />
                     Advanced settings
                   </button>
 
                   {showAdvanced && (
-                    <div className="mt-4 space-y-4 pl-6 border-l-2 border-border">
+                    <div className="mt-4 space-y-4 border-l-2 border-border pl-6">
                       <FormField
                         control={form.control}
                         name="label"
@@ -682,9 +711,16 @@ export default function CreateContractCliqForm() {
                           <FormItem>
                             <FormLabel>Contract Label</FormLabel>
                             <FormControl>
-                              <Input variant="institutional" placeholder="Auto-generated from CLIQ name if left empty" {...field} />
+                              <Input
+                                variant="institutional"
+                                placeholder="Auto-generated from CLIQ name if left empty"
+                                {...field}
+                              />
                             </FormControl>
-                            <FormDescription>On-chain label visible in block explorers. Leave empty to auto-generate.</FormDescription>
+                            <FormDescription>
+                              On-chain label visible in block explorers. Leave empty to
+                              auto-generate.
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -697,30 +733,43 @@ export default function CreateContractCliqForm() {
                           <FormItem>
                             <FormLabel className="flex items-center gap-2">
                               CW3 Code ID (skip upload)
-                              {codeIdStatus === "validating" && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
-                              {codeIdStatus === "valid" && <Check className="h-3 w-3 text-green-500" />}
-                              {codeIdStatus === "invalid" && <AlertCircle className="h-3 w-3 text-destructive" />}
+                              {codeIdStatus === "validating" && (
+                                <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                              )}
+                              {codeIdStatus === "valid" && (
+                                <Check className="h-3 w-3 text-green-500" />
+                              )}
+                              {codeIdStatus === "invalid" && (
+                                <AlertCircle className="h-3 w-3 text-destructive" />
+                              )}
                             </FormLabel>
                             <FormControl>
-                              <Input type="number" variant="institutional" placeholder="Leave at 0 to auto-upload" {...field} />
+                              <Input
+                                type="number"
+                                variant="institutional"
+                                placeholder="Leave at 0 to auto-upload"
+                                {...field}
+                              />
                             </FormControl>
                             {codeIdStatus === "invalid" && codeIdError && (
                               <p className="text-xs text-destructive">{codeIdError}</p>
                             )}
                             {codeIdStatus === "valid" && (
-                              <p className="text-xs text-green-600">Code ID verified on-chain — upload step will be skipped</p>
+                              <p className="text-xs text-green-600">
+                                Code ID verified on-chain — upload step will be skipped
+                              </p>
                             )}
                             {codeIdSuggestions.length > 0 && (
-                              <div className="flex flex-wrap gap-1.5 mt-1">
+                              <div className="mt-1 flex flex-wrap gap-1.5">
                                 {codeIdSuggestions.map((s) => (
                                   <button
                                     key={`${s.source}-${s.codeId}`}
                                     type="button"
                                     onClick={() => form.setValue("codeId", s.codeId)}
-                                    className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full border transition-colors cursor-pointer ${
+                                    className={`inline-flex cursor-pointer items-center gap-1 rounded-full border px-2 py-0.5 text-xs transition-colors ${
                                       Number(field.value) === s.codeId
-                                        ? "bg-primary/10 border-primary text-primary"
-                                        : "bg-muted border-border text-muted-foreground hover:bg-muted/80"
+                                        ? "border-primary bg-primary/10 text-primary"
+                                        : "border-border bg-muted text-muted-foreground hover:bg-muted/80"
                                     }`}
                                   >
                                     <span className="font-mono font-medium">{s.codeId}</span>
@@ -730,8 +779,9 @@ export default function CreateContractCliqForm() {
                               </div>
                             )}
                             <FormDescription>
-                              If you already have a CW3-Fixed Code ID on this chain, enter it here to skip the upload step.
-                              Leave at 0 to auto-upload the bundled contract.
+                              If you already have a CW3-Fixed Code ID on this chain, enter it here
+                              to skip the upload step. Leave at 0 to auto-upload the bundled
+                              contract.
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
@@ -745,10 +795,15 @@ export default function CreateContractCliqForm() {
                           <FormItem>
                             <FormLabel>Admin Address (optional)</FormLabel>
                             <FormControl>
-                              <Input variant="institutional" placeholder="Leave empty to make contract immutable" {...field} />
+                              <Input
+                                variant="institutional"
+                                placeholder="Leave empty to make contract immutable"
+                                {...field}
+                              />
                             </FormControl>
                             <FormDescription>
-                              The admin can upgrade the contract. Leave empty for immutable contracts.
+                              The admin can upgrade the contract. Leave empty for immutable
+                              contracts.
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
@@ -759,8 +814,15 @@ export default function CreateContractCliqForm() {
                 </div>
 
                 {/* Navigation */}
-                <div className="flex justify-end pt-4 border-t border-border">
-                  <Button type="button" variant="action" size="action" onClick={goNext} disabled={!isSetupComplete} className="gap-2">
+                <div className="flex justify-end border-t border-border pt-4">
+                  <Button
+                    type="button"
+                    variant="action"
+                    size="action"
+                    onClick={goNext}
+                    disabled={!isSetupComplete}
+                    className="gap-2"
+                  >
                     Continue to Members
                     <ChevronRight className="h-4 w-4" />
                   </Button>
@@ -773,29 +835,31 @@ export default function CreateContractCliqForm() {
             {/* ============================================================ */}
             {currentStep === "members" && (
               <div className="space-y-6">
-                <div className="flex items-center justify-between mb-6">
+                <div className="mb-6 flex items-center justify-between">
                   <div className="space-y-1">
-                    <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                    <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
                       <UsersRound className="h-5 w-5 text-muted-foreground" />
                       Add Members
                     </h3>
-                    <p className="text-sm text-muted-foreground">Add wallet addresses with voting weights</p>
+                    <p className="text-sm text-muted-foreground">
+                      Add wallet addresses with voting weights
+                    </p>
                   </div>
-                  <div className="text-sm font-medium px-3 py-1.5 bg-muted text-foreground rounded-full border border-border">
+                  <div className="rounded-full border border-border bg-muted px-3 py-1.5 text-sm font-medium text-foreground">
                     Total Weight: {totalWeight}
                   </div>
                 </div>
 
-                <div className="p-3 bg-muted/30 rounded-lg border border-border">
+                <div className="rounded-lg border border-border bg-muted/30 p-3">
                   <p className="text-xs text-muted-foreground">
-                    <strong>Weighted Voting:</strong> Members with higher weights have more voting power.
-                    The threshold is the minimum total weight needed to pass proposals.
+                    <strong>Weighted Voting:</strong> Members with higher weights have more voting
+                    power. The threshold is the minimum total weight needed to pass proposals.
                   </p>
                 </div>
 
                 <div className="space-y-3">
                   {membersFields.map((arrayField, index) => (
-                    <div key={arrayField.id} className="flex gap-3 items-start">
+                    <div key={arrayField.id} className="flex items-start gap-3">
                       <div className="flex-1">
                         <FormField
                           control={form.control}
@@ -804,7 +868,11 @@ export default function CreateContractCliqForm() {
                             <FormItem>
                               {index === 0 && <FormLabel>Address</FormLabel>}
                               <FormControl>
-                                <Input variant="institutional" placeholder={`${chain.addressPrefix}1...`} {...field} />
+                                <Input
+                                  variant="institutional"
+                                  placeholder={`${chain.addressPrefix}1...`}
+                                  {...field}
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -827,7 +895,13 @@ export default function CreateContractCliqForm() {
                         />
                       </div>
                       {membersFields.length > 2 && (
-                        <Button type="button" variant="ghost" size="icon" onClick={() => membersRemove(index)} className={index === 0 ? "mt-8" : "mt-1"}>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => membersRemove(index)}
+                          className={index === 0 ? "mt-8" : "mt-1"}
+                        >
                           <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
                         </Button>
                       )}
@@ -835,25 +909,44 @@ export default function CreateContractCliqForm() {
                   ))}
                 </div>
 
-                <Button type="button" variant="outline" size="sm" onClick={handleAddMember} className="w-full gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddMember}
+                  className="w-full gap-2"
+                >
                   <UserPlus className="h-4 w-4" />
                   Add Another Member
                 </Button>
 
                 {filledMembersCount < 2 && (
-                  <div className="p-3 bg-muted border border-border rounded-lg">
-                    <p className="text-xs text-muted-foreground flex items-center gap-2">
-                      <AlertCircle className="h-3.5 w-3.5 text-yellow-500" />
-                      A CLIQ requires at least 2 members.
+                  <div className="rounded-lg border border-border bg-muted p-3">
+                    <p className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <AlertCircle className="h-3.5 w-3.5 text-yellow-500" />A CLIQ requires at
+                      least 2 members.
                     </p>
                   </div>
                 )}
 
-                <div className="flex justify-between pt-4 border-t border-border">
-                  <Button type="button" variant="ghost" size="action" onClick={goPrev} className="gap-2">
+                <div className="flex justify-between border-t border-border pt-4">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="action"
+                    onClick={goPrev}
+                    className="gap-2"
+                  >
                     <ChevronLeft className="h-4 w-4" /> Back
                   </Button>
-                  <Button type="button" variant="action" size="action" onClick={goNext} disabled={!isMembersComplete} className="gap-2">
+                  <Button
+                    type="button"
+                    variant="action"
+                    size="action"
+                    onClick={goNext}
+                    disabled={!isMembersComplete}
+                    className="gap-2"
+                  >
                     Continue to Settings
                     <ChevronRight className="h-4 w-4" />
                   </Button>
@@ -866,12 +959,14 @@ export default function CreateContractCliqForm() {
             {/* ============================================================ */}
             {currentStep === "settings" && (
               <div className="space-y-6">
-                <div className="space-y-1 mb-6">
-                  <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <div className="mb-6 space-y-1">
+                  <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
                     <Shield className="h-5 w-5 text-muted-foreground" />
                     Governance Settings
                   </h3>
-                  <p className="text-sm text-muted-foreground">Configure voting threshold and proposal duration</p>
+                  <p className="text-sm text-muted-foreground">
+                    Configure voting threshold and proposal duration
+                  </p>
                 </div>
 
                 {/* Threshold */}
@@ -885,22 +980,40 @@ export default function CreateContractCliqForm() {
                       <FormItem className="space-y-4">
                         <div>
                           <FormLabel className="text-base">Voting Threshold</FormLabel>
-                          <FormDescription className="mt-1">Minimum combined weight needed to pass a proposal</FormDescription>
+                          <FormDescription className="mt-1">
+                            Minimum combined weight needed to pass a proposal
+                          </FormDescription>
                         </div>
                         <FormControl>
                           <div className="space-y-4">
                             <div className="flex items-center gap-6">
                               <div className="flex-1">
-                                <Slider size="lg" min={1} max={maxThreshold || 1} step={1} value={[currentThreshold]} onValueChange={(values) => field.onChange(values[0])} disabled={totalWeight < 1} />
+                                <Slider
+                                  size="lg"
+                                  min={1}
+                                  max={maxThreshold || 1}
+                                  step={1}
+                                  value={[currentThreshold]}
+                                  onValueChange={(values) => field.onChange(values[0])}
+                                  disabled={totalWeight < 1}
+                                />
                               </div>
-                              <div className="flex items-center gap-2 px-4 py-3 bg-muted border border-border rounded-xl min-w-[120px] justify-center shadow-sm">
+                              <div className="flex min-w-[120px] items-center justify-center gap-2 rounded-xl border border-border bg-muted px-4 py-3 shadow-sm">
                                 <Shield className="h-5 w-5 text-foreground" />
-                                <span className="text-2xl font-heading font-bold text-foreground">{currentThreshold}</span>
-                                <span className="text-muted-foreground font-medium">/ {totalWeight}</span>
+                                <span className="font-heading text-2xl font-bold text-foreground">
+                                  {currentThreshold}
+                                </span>
+                                <span className="font-medium text-muted-foreground">
+                                  / {totalWeight}
+                                </span>
                               </div>
                             </div>
                             <p className="text-sm text-muted-foreground">
-                              Members with combined weight of <span className="font-semibold text-foreground">{currentThreshold}</span> or more must vote yes to pass
+                              Members with combined weight of{" "}
+                              <span className="font-semibold text-foreground">
+                                {currentThreshold}
+                              </span>{" "}
+                              or more must vote yes to pass
                             </p>
                           </div>
                         </FormControl>
@@ -917,16 +1030,28 @@ export default function CreateContractCliqForm() {
                   render={({ field }) => (
                     <FormItem className="space-y-4">
                       <div>
-                        <FormLabel className="text-base flex items-center gap-2">
+                        <FormLabel className="flex items-center gap-2 text-base">
                           <Clock className="h-4 w-4" /> Voting Period
                         </FormLabel>
-                        <FormDescription className="mt-1">How long members have to vote on proposals</FormDescription>
+                        <FormDescription className="mt-1">
+                          How long members have to vote on proposals
+                        </FormDescription>
                       </div>
                       <FormControl>
                         <div className="flex items-center gap-4">
-                          <Input type="number" min={0.01} max={365} step={0.5} variant="institutional" className="w-32" {...field} />
+                          <Input
+                            type="number"
+                            min={0.01}
+                            max={365}
+                            step={0.5}
+                            variant="institutional"
+                            className="w-32"
+                            {...field}
+                          />
                           <span className="text-muted-foreground">days</span>
-                          <span className="text-sm text-muted-foreground">({Math.floor(Number(field.value) * 24)} hours)</span>
+                          <span className="text-sm text-muted-foreground">
+                            ({Math.floor(Number(field.value) * 24)} hours)
+                          </span>
                         </div>
                       </FormControl>
                       <FormMessage />
@@ -934,11 +1059,24 @@ export default function CreateContractCliqForm() {
                   )}
                 />
 
-                <div className="flex justify-between pt-4 border-t border-border">
-                  <Button type="button" variant="ghost" size="action" onClick={goPrev} className="gap-2">
+                <div className="flex justify-between border-t border-border pt-4">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="action"
+                    onClick={goPrev}
+                    className="gap-2"
+                  >
                     <ChevronLeft className="h-4 w-4" /> Back
                   </Button>
-                  <Button type="button" variant="action" size="action" onClick={goNext} disabled={!isSettingsComplete} className="gap-2">
+                  <Button
+                    type="button"
+                    variant="action"
+                    size="action"
+                    onClick={goNext}
+                    disabled={!isSettingsComplete}
+                    className="gap-2"
+                  >
                     Review Configuration
                     <Eye className="h-4 w-4" />
                   </Button>
@@ -951,20 +1089,21 @@ export default function CreateContractCliqForm() {
             {/* ============================================================ */}
             {currentStep === "review" && (
               <div className="space-y-6">
-                <div className="space-y-1 mb-6">
-                  <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <div className="mb-6 space-y-1">
+                  <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
                     <Eye className="h-5 w-5 text-muted-foreground" />
                     Review Your CLIQ
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Verify all details before deploying to {chain.chainDisplayName}. Contract parameters are immutable after deployment.
+                    Verify all details before deploying to {chain.chainDisplayName}. Contract
+                    parameters are immutable after deployment.
                   </p>
                 </div>
 
                 <div className="space-y-4">
                   {/* Identity */}
-                  <div className="p-4 bg-muted/30 rounded-xl border border-border">
-                    <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <div className="rounded-xl border border-border bg-muted/30 p-4">
+                    <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
                       <FileText className="h-4 w-4" /> Identity
                     </h4>
                     <div className="grid grid-cols-1 gap-2 text-sm">
@@ -975,104 +1114,129 @@ export default function CreateContractCliqForm() {
                       {watchedDescription && (
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Description</span>
-                          <span className="font-medium text-foreground text-right max-w-[60%]">{watchedDescription}</span>
+                          <span className="max-w-[60%] text-right font-medium text-foreground">
+                            {watchedDescription}
+                          </span>
                         </div>
                       )}
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Chain</span>
-                        <span className="font-medium text-foreground">{chain.chainDisplayName}</span>
+                        <span className="font-medium text-foreground">
+                          {chain.chainDisplayName}
+                        </span>
                       </div>
                     </div>
                   </div>
 
                   {/* Members */}
-                  <div className="p-4 bg-muted/30 rounded-xl border border-border">
-                    <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <div className="rounded-xl border border-border bg-muted/30 p-4">
+                    <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
                       <UsersRound className="h-4 w-4" /> Members ({filledMembersCount})
                     </h4>
                     <div className="space-y-2">
                       {filledMembers.map(({ address, weight }, i) => (
-                        <div key={i} className="flex items-center justify-between text-sm py-1.5 px-2 bg-background/50 rounded-lg">
-                          <span className="font-mono text-xs text-muted-foreground truncate max-w-[70%]">{address}</span>
-                          <span className="font-medium text-foreground ml-2 shrink-0">weight {weight}</span>
+                        <div
+                          key={i}
+                          className="flex items-center justify-between rounded-lg bg-background/50 px-2 py-1.5 text-sm"
+                        >
+                          <span className="max-w-[70%] truncate font-mono text-xs text-muted-foreground">
+                            {address}
+                          </span>
+                          <span className="ml-2 shrink-0 font-medium text-foreground">
+                            weight {weight}
+                          </span>
                         </div>
                       ))}
                     </div>
                   </div>
 
                   {/* Governance */}
-                  <div className="p-4 bg-muted/30 rounded-xl border border-border">
-                    <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <div className="rounded-xl border border-border bg-muted/30 p-4">
+                    <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
                       <Shield className="h-4 w-4" /> Governance
                     </h4>
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
-                        <span className="text-muted-foreground block">Threshold</span>
-                        <span className="font-medium text-foreground text-lg">{watchedThreshold} / {totalWeight}</span>
+                        <span className="block text-muted-foreground">Threshold</span>
+                        <span className="text-lg font-medium text-foreground">
+                          {watchedThreshold} / {totalWeight}
+                        </span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground block">Voting Period</span>
-                        <span className="font-medium text-foreground text-lg">{watchedVotingPeriod} days</span>
+                        <span className="block text-muted-foreground">Voting Period</span>
+                        <span className="text-lg font-medium text-foreground">
+                          {watchedVotingPeriod} days
+                        </span>
                       </div>
                     </div>
                   </div>
 
                   {/* Deployment Info */}
-                  <div className="p-4 bg-muted/30 rounded-xl border border-border">
-                    <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <div className="rounded-xl border border-border bg-muted/30 p-4">
+                    <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
                       <Rocket className="h-4 w-4" /> Deployment
                     </h4>
                     <div className="space-y-2 text-sm">
                       {watchedCodeId > 0 && codeIdStatus === "valid" ? (
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Code ID</span>
-                          <span className="font-mono font-medium text-foreground">{watchedCodeId} (existing)</span>
+                          <span className="font-mono font-medium text-foreground">
+                            {watchedCodeId} (existing)
+                          </span>
                         </div>
                       ) : (
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Contract Code</span>
                           <span className="font-medium text-foreground">
-                            {wasmSource === "bundled" ? "Bundled CW3-Fixed (cw-plus v0.16)" : `Custom: ${customWasmFile?.name || "—"}`}
+                            {wasmSource === "bundled"
+                              ? "Bundled CW3-Fixed (cw-plus v0.16)"
+                              : `Custom: ${customWasmFile?.name || "—"}`}
                           </span>
                         </div>
                       )}
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Creator</span>
-                        <span className="font-mono text-xs text-foreground truncate max-w-[60%]">{walletInfo?.address || "Connect wallet"}</span>
+                        <span className="max-w-[60%] truncate font-mono text-xs text-foreground">
+                          {walletInfo?.address || "Connect wallet"}
+                        </span>
                       </div>
                     </div>
                   </div>
 
                   {/* WASM source selector (only if no existing code ID) */}
                   {!(watchedCodeId > 0 && codeIdStatus === "valid") && (
-                    <div className="p-4 bg-muted/30 rounded-xl border border-border space-y-3">
-                      <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <div className="space-y-3 rounded-xl border border-border bg-muted/30 p-4">
+                      <h4 className="flex items-center gap-2 text-sm font-semibold text-foreground">
                         <UploadCloud className="h-4 w-4" /> Contract Source
                       </h4>
                       <div className="flex gap-2">
                         <button
                           type="button"
                           onClick={() => setWasmSource("bundled")}
-                          className={`flex-1 p-3 rounded-lg border text-left text-sm transition-colors ${
+                          className={`flex-1 rounded-lg border p-3 text-left text-sm transition-colors ${
                             wasmSource === "bundled"
                               ? "border-primary bg-primary/5 text-foreground"
                               : "border-border bg-background text-muted-foreground hover:bg-muted/50"
                           }`}
                         >
                           <p className="font-medium">Bundled (recommended)</p>
-                          <p className="text-xs mt-0.5 opacity-70">Pre-compiled CW3-Fixed from cw-plus v0.16</p>
+                          <p className="mt-0.5 text-xs opacity-70">
+                            Pre-compiled CW3-Fixed from cw-plus v0.16
+                          </p>
                         </button>
                         <button
                           type="button"
                           onClick={() => setWasmSource("custom")}
-                          className={`flex-1 p-3 rounded-lg border text-left text-sm transition-colors ${
+                          className={`flex-1 rounded-lg border p-3 text-left text-sm transition-colors ${
                             wasmSource === "custom"
                               ? "border-primary bg-primary/5 text-foreground"
                               : "border-border bg-background text-muted-foreground hover:bg-muted/50"
                           }`}
                         >
                           <p className="font-medium">Custom WASM</p>
-                          <p className="text-xs mt-0.5 opacity-70">Upload your own compiled .wasm file</p>
+                          <p className="mt-0.5 text-xs opacity-70">
+                            Upload your own compiled .wasm file
+                          </p>
                         </button>
                       </div>
 
@@ -1093,7 +1257,7 @@ export default function CreateContractCliqForm() {
                       )}
 
                       {/* Wallet switch toggle */}
-                      <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer mt-2">
+                      <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
                         <input
                           type="checkbox"
                           checked={showWalletSwitch}
@@ -1104,30 +1268,45 @@ export default function CreateContractCliqForm() {
                       </label>
 
                       {/* Chain compatibility warning for bulk-memory */}
-                      {chainConstraints?.supportsBulkMemory === false && wasmSource === "bundled" && (
-                        <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-sm mt-3">
-                          <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" />
-                          <div>
-                            <p className="font-medium text-foreground">Bundled WASM may not be compatible</p>
-                            <p className="text-muted-foreground mt-0.5">
-                              {chain.chainDisplayName} does not support bulk-memory WASM opcodes
-                              {chainConstraints.wasmdVersion && <> (wasmd {chainConstraints.wasmdVersion})</>}.
-                              The bundled binary from cw-plus releases may contain these opcodes.
-                            </p>
-                            <p className="text-muted-foreground mt-1">
-                              <strong>Options:</strong> (1) Upload a custom WASM compiled with{" "}
-                              <code className="text-xs bg-muted px-1 py-0.5 rounded">{chainConstraints.optimizerImage || "cosmwasm/optimizer:0.16.1"}</code>
-                              , or (2) proceed and the app will validate the binary before uploading.
-                            </p>
+                      {chainConstraints?.supportsBulkMemory === false &&
+                        wasmSource === "bundled" && (
+                          <div className="mt-3 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm">
+                            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+                            <div>
+                              <p className="font-medium text-foreground">
+                                Bundled WASM may not be compatible
+                              </p>
+                              <p className="mt-0.5 text-muted-foreground">
+                                {chain.chainDisplayName} does not support bulk-memory WASM opcodes
+                                {chainConstraints.wasmdVersion && (
+                                  <> (wasmd {chainConstraints.wasmdVersion})</>
+                                )}
+                                . The bundled binary from cw-plus releases may contain these
+                                opcodes.
+                              </p>
+                              <p className="mt-1 text-muted-foreground">
+                                <strong>Options:</strong> (1) Upload a custom WASM compiled with{" "}
+                                <code className="rounded bg-muted px-1 py-0.5 text-xs">
+                                  {chainConstraints.optimizerImage || "cosmwasm/optimizer:0.16.1"}
+                                </code>
+                                , or (2) proceed and the app will validate the binary before
+                                uploading.
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
                     </div>
                   )}
                 </div>
 
-                <div className="flex justify-between pt-4 border-t border-border">
-                  <Button type="button" variant="ghost" size="action" onClick={goPrev} className="gap-2">
+                <div className="flex justify-between border-t border-border pt-4">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="action"
+                    onClick={goPrev}
+                    className="gap-2"
+                  >
                     <ChevronLeft className="h-4 w-4" /> Edit
                   </Button>
                   <Button
@@ -1135,7 +1314,12 @@ export default function CreateContractCliqForm() {
                     variant="action"
                     size="action"
                     onClick={goNext}
-                    disabled={!walletInfo || (wasmSource === "custom" && !customWasmBytes && !(watchedCodeId > 0 && codeIdStatus === "valid"))}
+                    disabled={
+                      !walletInfo ||
+                      (wasmSource === "custom" &&
+                        !customWasmBytes &&
+                        !(watchedCodeId > 0 && codeIdStatus === "valid"))
+                    }
                     className="gap-2"
                   >
                     {!walletInfo ? (
@@ -1159,8 +1343,8 @@ export default function CreateContractCliqForm() {
             {/* ============================================================ */}
             {currentStep === "deploy" && (
               <div className="space-y-6">
-                <div className="space-y-1 mb-6">
-                  <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <div className="mb-6 space-y-1">
+                  <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
                     <Rocket className="h-5 w-5 text-muted-foreground" />
                     Deploy to {chain.chainDisplayName}
                   </h3>
@@ -1175,11 +1359,17 @@ export default function CreateContractCliqForm() {
                 <div className="space-y-3">
                   {/* Upload step */}
                   {!(watchedCodeId > 0 && codeIdStatus === "valid") && (
-                    <div className={`p-4 rounded-xl border ${
-                      deployPhase === "uploading" ? "border-primary bg-primary/5"
-                        : deployPhase === "uploaded" || deployPhase === "instantiating" || deployPhase === "done" ? "border-green-500 bg-green-500/5"
-                        : "border-border bg-muted/30"
-                    }`}>
+                    <div
+                      className={`rounded-xl border p-4 ${
+                        deployPhase === "uploading"
+                          ? "border-primary bg-primary/5"
+                          : deployPhase === "uploaded" ||
+                              deployPhase === "instantiating" ||
+                              deployPhase === "done"
+                            ? "border-green-500 bg-green-500/5"
+                            : "border-border bg-muted/30"
+                      }`}
+                    >
                       <div className="flex items-center gap-3">
                         {deployPhase === "uploading" ? (
                           <Loader2 className="h-5 w-5 animate-spin text-primary" />
@@ -1190,10 +1380,14 @@ export default function CreateContractCliqForm() {
                         )}
                         <div>
                           <p className="text-sm font-medium text-foreground">
-                            {deployPhase === "uploading" ? "Uploading contract code..." : uploadedCodeId ? `Uploaded — Code ID: ${uploadedCodeId}` : "Upload contract code"}
+                            {deployPhase === "uploading"
+                              ? "Uploading contract code..."
+                              : uploadedCodeId
+                                ? `Uploaded — Code ID: ${uploadedCodeId}`
+                                : "Upload contract code"}
                           </p>
                           {uploadTxHash && (
-                            <p className="text-xs font-mono text-muted-foreground mt-0.5 truncate max-w-[400px]">
+                            <p className="mt-0.5 max-w-[400px] truncate font-mono text-xs text-muted-foreground">
                               TX: {uploadTxHash}
                             </p>
                           )}
@@ -1204,23 +1398,40 @@ export default function CreateContractCliqForm() {
 
                   {/* Wallet switch panel */}
                   {showWalletSwitch && deployPhase === "uploaded" && (
-                    <div className="p-4 rounded-xl border border-yellow-500/30 bg-yellow-500/5 space-y-3">
+                    <div className="space-y-3 rounded-xl border border-yellow-500/30 bg-yellow-500/5 p-4">
                       <div className="flex items-center gap-3">
                         <Wallet className="h-5 w-5 text-yellow-500" />
                         <div>
-                          <p className="text-sm font-medium text-foreground">Switch Wallet (optional)</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            Connected: <span className="font-mono">{walletInfo?.address?.slice(0, 20)}...</span>
+                          <p className="text-sm font-medium text-foreground">
+                            Switch Wallet (optional)
+                          </p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            Connected:{" "}
+                            <span className="font-mono">
+                              {walletInfo?.address?.slice(0, 20)}...
+                            </span>
                             {walletInfo?.type && <span className="ml-1">({walletInfo.type})</span>}
                           </p>
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button type="button" variant="outline" size="sm" onClick={disconnect} className="gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={disconnect}
+                          className="gap-2"
+                        >
                           <Wallet className="h-3.5 w-3.5" />
                           Disconnect & Reconnect
                         </Button>
-                        <Button type="button" variant="action" size="sm" onClick={handleContinueAfterWalletSwitch} className="gap-2">
+                        <Button
+                          type="button"
+                          variant="action"
+                          size="sm"
+                          onClick={handleContinueAfterWalletSwitch}
+                          className="gap-2"
+                        >
                           Continue with current wallet
                           <ChevronRight className="h-3.5 w-3.5" />
                         </Button>
@@ -1229,11 +1440,15 @@ export default function CreateContractCliqForm() {
                   )}
 
                   {/* Instantiate step */}
-                  <div className={`p-4 rounded-xl border ${
-                    deployPhase === "instantiating" ? "border-primary bg-primary/5"
-                      : deployPhase === "done" ? "border-green-500 bg-green-500/5"
-                      : "border-border bg-muted/30"
-                  }`}>
+                  <div
+                    className={`rounded-xl border p-4 ${
+                      deployPhase === "instantiating"
+                        ? "border-primary bg-primary/5"
+                        : deployPhase === "done"
+                          ? "border-green-500 bg-green-500/5"
+                          : "border-border bg-muted/30"
+                    }`}
+                  >
                     <div className="flex items-center gap-3">
                       {deployPhase === "instantiating" ? (
                         <Loader2 className="h-5 w-5 animate-spin text-primary" />
@@ -1244,12 +1459,14 @@ export default function CreateContractCliqForm() {
                       )}
                       <div>
                         <p className="text-sm font-medium text-foreground">
-                          {deployPhase === "instantiating" ? "Creating multisig contract..."
-                            : deployPhase === "done" ? "Multisig created!"
-                            : "Create multisig contract"}
+                          {deployPhase === "instantiating"
+                            ? "Creating multisig contract..."
+                            : deployPhase === "done"
+                              ? "Multisig created!"
+                              : "Create multisig contract"}
                         </p>
                         {deployResult && (
-                          <p className="text-xs font-mono text-muted-foreground mt-0.5 truncate max-w-[400px]">
+                          <p className="mt-0.5 max-w-[400px] truncate font-mono text-xs text-muted-foreground">
                             {deployResult.contractAddress}
                           </p>
                         )}
@@ -1259,33 +1476,39 @@ export default function CreateContractCliqForm() {
 
                   {/* Error */}
                   {deployPhase === "error" && deployError && (
-                    <div className="p-4 rounded-xl border border-destructive bg-destructive/5 space-y-3">
+                    <div className="space-y-3 rounded-xl border border-destructive bg-destructive/5 p-4">
                       <div className="flex items-start gap-3">
-                        <AlertCircle className="h-5 w-5 text-destructive mt-0.5" />
+                        <AlertCircle className="mt-0.5 h-5 w-5 text-destructive" />
                         <div>
                           <p className="text-sm font-medium text-foreground">Deployment failed</p>
-                          <p className="text-xs text-muted-foreground mt-1">{deployError}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">{deployError}</p>
                         </div>
                       </div>
                       {wasmValidation && !wasmValidation.valid && (
                         <div className="ml-8 space-y-2 text-xs">
                           <p className="text-muted-foreground">
                             WASM size: {wasmValidation.details.sizeKB}KB
-                            {chainConstraints?.wasmSizeLimitKB && <> (limit: {chainConstraints.wasmSizeLimitKB}KB)</>}
+                            {chainConstraints?.wasmSizeLimitKB && (
+                              <> (limit: {chainConstraints.wasmSizeLimitKB}KB)</>
+                            )}
                           </p>
                           {wasmValidation.details.hasBulkMemory && (
                             <div>
-                              <p className="text-muted-foreground font-medium">Bulk-memory opcodes found:</p>
-                              <ul className="list-disc list-inside text-muted-foreground mt-1">
+                              <p className="font-medium text-muted-foreground">
+                                Bulk-memory opcodes found:
+                              </p>
+                              <ul className="mt-1 list-inside list-disc text-muted-foreground">
                                 {wasmValidation.details.bulkMemoryOpcodes.map((op) => (
-                                  <li key={op.name}>{op.name} ({op.opcode}) x{op.count}</li>
+                                  <li key={op.name}>
+                                    {op.name} ({op.opcode}) x{op.count}
+                                  </li>
                                 ))}
                               </ul>
                             </div>
                           )}
-                          <p className="text-muted-foreground mt-2">
+                          <p className="mt-2 text-muted-foreground">
                             Switch to <strong>Custom WASM</strong> and upload a binary compiled with{" "}
-                            <code className="bg-muted px-1 py-0.5 rounded">
+                            <code className="rounded bg-muted px-1 py-0.5">
                               {chainConstraints?.optimizerImage || "cosmwasm/optimizer:0.16.1"}
                             </code>{" "}
                             or Rust &lt;= {chainConstraints?.maxRustVersion || "1.81"}.
@@ -1297,8 +1520,15 @@ export default function CreateContractCliqForm() {
                 </div>
 
                 {/* Action buttons */}
-                <div className="flex justify-between pt-4 border-t border-border">
-                  <Button type="button" variant="ghost" size="action" onClick={goPrev} disabled={isSubmitting} className="gap-2">
+                <div className="flex justify-between border-t border-border pt-4">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="action"
+                    onClick={goPrev}
+                    disabled={isSubmitting}
+                    className="gap-2"
+                  >
                     <ChevronLeft className="h-4 w-4" /> Back to Review
                   </Button>
 
@@ -1312,17 +1542,35 @@ export default function CreateContractCliqForm() {
                       className="gap-2"
                     >
                       {isSubmitting ? (
-                        <><Loader2 className="h-4 w-4 animate-spin" /> Deploying...</>
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" /> Deploying...
+                        </>
                       ) : isLedger ? (
-                        <><AlertCircle className="h-4 w-4" /> Switch to Keplr</>
+                        <>
+                          <AlertCircle className="h-4 w-4" /> Switch to Keplr
+                        </>
                       ) : !walletInfo ? (
-                        <><AlertCircle className="h-4 w-4" /> Connect Wallet</>
+                        <>
+                          <AlertCircle className="h-4 w-4" /> Connect Wallet
+                        </>
                       ) : (
-                        <><Rocket className="h-4 w-4" /> {watchedCodeId > 0 && codeIdStatus === "valid" ? "Create Contract CLIQ" : "Upload & Create CLIQ"}</>
+                        <>
+                          <Rocket className="h-4 w-4" />{" "}
+                          {watchedCodeId > 0 && codeIdStatus === "valid"
+                            ? "Create Contract CLIQ"
+                            : "Upload & Create CLIQ"}
+                        </>
                       )}
                     </Button>
                   ) : deployPhase === "uploaded" && showWalletSwitch ? (
-                    <Button type="button" variant="action" size="action" onClick={handleContinueAfterWalletSwitch} disabled={!walletInfo} className="gap-2">
+                    <Button
+                      type="button"
+                      variant="action"
+                      size="action"
+                      onClick={handleContinueAfterWalletSwitch}
+                      disabled={!walletInfo}
+                      className="gap-2"
+                    >
                       <Rocket className="h-4 w-4" /> Instantiate Contract
                     </Button>
                   ) : null}
@@ -1335,22 +1583,37 @@ export default function CreateContractCliqForm() {
             {/* ============================================================ */}
             {currentStep === "complete" && deployResult && (
               <div className="space-y-6">
-                <div className="text-center py-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10 border-2 border-green-500/30 mx-auto mb-4">
+                <div className="py-4 text-center">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-green-500/30 bg-green-500/10">
                     <CheckCircle2 className="h-8 w-8 text-green-500" />
                   </div>
-                  <h3 className="text-xl font-semibold text-foreground">CLIQ Created Successfully</h3>
-                  <p className="text-sm text-muted-foreground mt-1">Your contract multisig is live on {chain.chainDisplayName}</p>
+                  <h3 className="text-xl font-semibold text-foreground">
+                    CLIQ Created Successfully
+                  </h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Your contract multisig is live on {chain.chainDisplayName}
+                  </p>
                 </div>
 
                 {/* Contract details */}
-                <div className="p-4 bg-muted/30 rounded-xl border border-border space-y-3">
+                <div className="space-y-3 rounded-xl border border-border bg-muted/30 p-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Contract Address</span>
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs text-foreground">{deployResult.contractAddress.slice(0, 20)}...{deployResult.contractAddress.slice(-8)}</span>
-                      <button type="button" onClick={() => copyToClipboard(deployResult.contractAddress)} className="p-1 hover:bg-muted rounded">
-                        {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground" />}
+                      <span className="font-mono text-xs text-foreground">
+                        {deployResult.contractAddress.slice(0, 20)}...
+                        {deployResult.contractAddress.slice(-8)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(deployResult.contractAddress)}
+                        className="rounded p-1 hover:bg-muted"
+                      >
+                        {copied ? (
+                          <Check className="h-3.5 w-3.5 text-green-500" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -1361,28 +1624,40 @@ export default function CreateContractCliqForm() {
                   {deployResult.txHash && (
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">TX Hash</span>
-                      <span className="font-mono text-xs text-muted-foreground truncate max-w-[250px]">{deployResult.txHash}</span>
+                      <span className="max-w-[250px] truncate font-mono text-xs text-muted-foreground">
+                        {deployResult.txHash}
+                      </span>
                     </div>
                   )}
                 </div>
 
                 {/* Data retention notice */}
-                <div className="p-4 bg-blue-500/5 rounded-xl border border-blue-500/20 space-y-2">
+                <div className="space-y-2 rounded-xl border border-blue-500/20 bg-blue-500/5 p-4">
                   <div className="flex items-start gap-2">
-                    <Info className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
+                    <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
                     <div className="text-sm">
                       <p className="font-medium text-foreground">Download a backup copy</p>
-                      <p className="text-muted-foreground mt-0.5">
-                        Server data is retained for <span className="font-medium text-foreground">{getRetentionDays()} days</span> and then automatically deleted.
-                        Download a backup to keep your CLIQ details permanently.
+                      <p className="mt-0.5 text-muted-foreground">
+                        Server data is retained for{" "}
+                        <span className="font-medium text-foreground">
+                          {getRetentionDays()} days
+                        </span>{" "}
+                        and then automatically deleted. Download a backup to keep your CLIQ details
+                        permanently.
                       </p>
                     </div>
                   </div>
                 </div>
 
                 {/* Action buttons */}
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button type="button" variant="action" size="action" onClick={handleDownloadBackup} className="flex-1 gap-2">
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <Button
+                    type="button"
+                    variant="action"
+                    size="action"
+                    onClick={handleDownloadBackup}
+                    className="flex-1 gap-2"
+                  >
                     <Download className="h-4 w-4" />
                     Download Backup
                   </Button>
@@ -1390,7 +1665,9 @@ export default function CreateContractCliqForm() {
                     type="button"
                     variant="outline"
                     size="action"
-                    onClick={() => router.push(`/${chain.registryName}/${deployResult.contractAddress}`)}
+                    onClick={() =>
+                      router.push(`/${chain.registryName}/${deployResult.contractAddress}`)
+                    }
                     className="flex-1 gap-2"
                   >
                     <ExternalLink className="h-4 w-4" />
@@ -1399,7 +1676,6 @@ export default function CreateContractCliqForm() {
                 </div>
               </div>
             )}
-
           </form>
         </Form>
       </CardContent>

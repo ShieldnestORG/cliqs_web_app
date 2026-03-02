@@ -2,7 +2,11 @@ import { useChains } from "@/context/ChainsContext";
 import { useWallet } from "@/context/WalletContext";
 import { DbTransaction } from "@/graphql";
 import { getDbMultisigTxs, getPendingDbTxs } from "@/lib/api";
-import { categorizeTransaction, msgTypeCountsFromJson, TransactionCategory } from "@/lib/txMsgHelpers";
+import {
+  categorizeTransaction,
+  msgTypeCountsFromJson,
+  TransactionCategory,
+} from "@/lib/txMsgHelpers";
 import { cn, toastError } from "@/lib/utils";
 import { CardLabel } from "@/components/ui/card";
 import { Loader2, MoveRightIcon, RefreshCw, Code2, Shield, Wallet } from "lucide-react";
@@ -25,12 +29,18 @@ interface TransactionCardProps {
   walletAddress?: string;
 }
 
-const TransactionCard = ({ tx, multisigAddress, multisigThreshold, chainName, walletAddress }: TransactionCardProps) => {
+const TransactionCard = ({
+  tx,
+  multisigAddress,
+  multisigThreshold,
+  chainName,
+  walletAddress,
+}: TransactionCardProps) => {
   const msgTypeCounts = msgTypeCountsFromJson(tx.dataJSON);
   const hasSigned = Boolean(tx.signatures.find(({ address }) => address === walletAddress));
   const isCancelled = tx.status === "cancelled";
   const isBroadcast = Boolean(tx.txHash);
-  
+
   const statusColor = isCancelled
     ? "bg-gray-400"
     : isBroadcast
@@ -50,17 +60,17 @@ const TransactionCard = ({ tx, multisigAddress, multisigThreshold, chainName, wa
       <div
         className={cn(
           "group relative rounded-xl border-2 border-border bg-card p-4 transition-all duration-300",
-          "hover:shadow-lg hover:shadow-black/10 hover:-translate-y-0.5 hover:border-foreground/20",
+          "hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-lg hover:shadow-black/10",
           "active:translate-y-0 active:shadow-md",
           "cursor-pointer",
-          isCancelled && "opacity-50"
+          isCancelled && "opacity-50",
         )}
       >
         {/* Mobile: Vertical layout */}
         <div className="flex flex-col gap-3 md:hidden">
           <div className="flex items-center gap-2">
-            <span className={cn("h-2 w-2 rounded-full shrink-0", statusColor)} />
-            <span className="text-xs font-mono text-muted-foreground tabular-nums">
+            <span className={cn("h-2 w-2 shrink-0 rounded-full", statusColor)} />
+            <span className="font-mono text-xs tabular-nums text-muted-foreground">
               {statusText}
               {hasSigned && !isBroadcast && !isCancelled && " (you signed)"}
             </span>
@@ -70,18 +80,17 @@ const TransactionCard = ({ tx, multisigAddress, multisigThreshold, chainName, wa
               <span
                 key={msgType}
                 className={cn(
-                  "text-xs font-mono font-medium px-2 py-1 rounded bg-muted/50 border border-border/50",
-                  isCancelled && "line-through opacity-60"
+                  "rounded border border-border/50 bg-muted/50 px-2 py-1 font-mono text-xs font-medium",
+                  isCancelled && "line-through opacity-60",
                 )}
               >
-                {msgType}{count > 1 && ` ×${count}`}
+                {msgType}
+                {count > 1 && ` ×${count}`}
               </span>
             ))}
           </div>
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span className="font-mono truncate">
-              {tx.id.split("-")[0]}
-            </span>
+            <span className="truncate font-mono">{tx.id.split("-")[0]}</span>
             <span className="tabular-nums">
               {isCancelled ? "—" : `${tx.signatures.length}/${multisigThreshold}`}
             </span>
@@ -89,45 +98,46 @@ const TransactionCard = ({ tx, multisigAddress, multisigThreshold, chainName, wa
         </div>
 
         {/* Desktop: Horizontal linear layout */}
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden items-center gap-4 md:flex">
           {/* Status indicator */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex shrink-0 items-center gap-2">
             <span className={cn("h-2 w-2 rounded-full", statusColor)} />
           </div>
 
           {/* Message types - full width, no truncation */}
-          <div className="flex items-center gap-2 flex-1 min-w-0">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
             {msgTypeCounts.map(({ msgType, count }) => (
               <span
                 key={msgType}
                 className={cn(
-                  "text-xs font-mono font-medium px-2 py-1 rounded bg-muted/50 border border-border/50 whitespace-nowrap",
-                  isCancelled && "line-through opacity-60"
+                  "whitespace-nowrap rounded border border-border/50 bg-muted/50 px-2 py-1 font-mono text-xs font-medium",
+                  isCancelled && "line-through opacity-60",
                 )}
               >
-                {msgType}{count > 1 && ` ×${count}`}
+                {msgType}
+                {count > 1 && ` ×${count}`}
               </span>
             ))}
           </div>
 
           {/* Status text */}
-          <div className="text-xs font-mono text-muted-foreground tabular-nums whitespace-nowrap shrink-0">
+          <div className="shrink-0 whitespace-nowrap font-mono text-xs tabular-nums text-muted-foreground">
             {statusText}
             {hasSigned && !isBroadcast && !isCancelled && " (you signed)"}
           </div>
 
           {/* Transaction ID - full width, no truncation */}
-          <div className="text-xs font-mono text-muted-foreground whitespace-nowrap shrink-0 min-w-[120px]">
+          <div className="min-w-[120px] shrink-0 whitespace-nowrap font-mono text-xs text-muted-foreground">
             {tx.id.split("-")[0]}
           </div>
 
           {/* Signature count */}
-          <div className="text-xs font-mono text-muted-foreground tabular-nums whitespace-nowrap shrink-0 w-12 text-right">
+          <div className="w-12 shrink-0 whitespace-nowrap text-right font-mono text-xs tabular-nums text-muted-foreground">
             {isCancelled ? "—" : `${tx.signatures.length}/${multisigThreshold}`}
           </div>
 
           {/* Arrow icon */}
-          <MoveRightIcon className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+          <MoveRightIcon className="h-4 w-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
         </div>
       </div>
     </Link>
@@ -159,13 +169,11 @@ const CategorySection = ({
         {icon}
         <div>
           <CardLabel comment>{title}</CardLabel>
-          <h3 className="text-lg font-heading font-semibold tracking-tight">
-            {title} Commands
-          </h3>
+          <h3 className="font-heading text-lg font-semibold tracking-tight">{title} Commands</h3>
         </div>
       </div>
       {/* Mobile: Grid layout, Desktop: Linear list */}
-      <div className="grid grid-cols-1 md:grid-cols-1 gap-2">
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-1">
         {transactions.map((tx) => (
           <TransactionCard
             key={tx.id}
@@ -249,7 +257,14 @@ export default function ListMultisigTxs({
     // Use stable primitive dependencies - chain object is needed for API call but
     // we track changes via chainId to avoid unnecessary rerenders
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [multisigAddress, chainId, walletInfo?.address, walletInfo?.type, verify, verificationSignature]);
+  }, [
+    multisigAddress,
+    chainId,
+    walletInfo?.address,
+    walletInfo?.type,
+    verify,
+    verificationSignature,
+  ]);
 
   // Auto-fetch pending transactions on mount (no verification needed)
   useEffect(() => {
@@ -316,13 +331,13 @@ export default function ListMultisigTxs({
       <div className="flex items-center justify-between">
         <div>
           <CardLabel comment>Transactions</CardLabel>
-          <h3 className="text-xl font-heading font-semibold tracking-tight">
+          <h3 className="font-heading text-xl font-semibold tracking-tight">
             {showAll ? "All Transactions" : "Pending Transactions"}
           </h3>
         </div>
         <div className="flex items-center gap-4">
           {/* Compact status legend */}
-          <div className="hidden sm:flex items-center gap-3 text-xs text-muted-foreground">
+          <div className="hidden items-center gap-3 text-xs text-muted-foreground sm:flex">
             <span className="flex items-center gap-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-green-accent"></span>
               <span className="font-mono text-[10px]">done</span>
@@ -339,7 +354,7 @@ export default function ListMultisigTxs({
           <div className="flex items-center gap-2">
             <Tooltip>
               <TooltipTrigger asChild>
-                <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
                   <Switch
                     id="show-all"
                     checked={showAll}
@@ -351,9 +366,7 @@ export default function ListMultisigTxs({
                 </label>
               </TooltipTrigger>
               {!walletInfo && (
-                <TooltipContent>
-                  Connect wallet to view all transactions
-                </TooltipContent>
+                <TooltipContent>Connect wallet to view all transactions</TooltipContent>
               )}
             </Tooltip>
             <Button
@@ -370,7 +383,7 @@ export default function ListMultisigTxs({
 
       {/* Loading state */}
       {(loadingTxs || isVerifying) && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground py-8">
+        <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
           <span className="font-mono text-xs uppercase tracking-wider">
             {isVerifying ? "Verifying wallet..." : "Loading..."}
@@ -381,7 +394,7 @@ export default function ListMultisigTxs({
       {/* Empty states */}
       {!loadingTxs && !isVerifying && displayTxs && displayTxs.length === 0 && (
         <div className="py-12 text-center">
-          <p className="text-sm text-muted-foreground font-mono uppercase tracking-wider">
+          <p className="font-mono text-sm uppercase tracking-wider text-muted-foreground">
             {showAll ? "No transactions found" : "No pending transactions"}
           </p>
         </div>

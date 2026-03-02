@@ -1,15 +1,22 @@
 /**
  * Contract Vote Panel
- * 
+ *
  * File: components/dataViews/ContractVotePanel.tsx
- * 
+ *
  * Panel for viewing proposal details and casting votes.
  * Shows vote breakdown, current status, and voting buttons.
  */
 
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -134,7 +141,7 @@ export default function ContractVotePanel({
   const [isExecuting, setIsExecuting] = useState(false);
   const [selectedVote, setSelectedVote] = useState<VoteOption | null>(null);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Phase 3: Credential verification state
   const [credentialStatus, setCredentialStatus] = useState<CredentialStatusType>("loading");
   const [credentialRole, setCredentialRole] = useState<string | undefined>(undefined);
@@ -151,7 +158,7 @@ export default function ContractVotePanel({
     setIsCheckingCredential(true);
     try {
       const response = await fetch(
-        `/api/chain/${chainId}/credentials/verify?teamAddress=${contractAddress}&signerAddress=${userAddress}`
+        `/api/chain/${chainId}/credentials/verify?teamAddress=${contractAddress}&signerAddress=${userAddress}`,
       );
 
       if (!response.ok) {
@@ -166,7 +173,7 @@ export default function ContractVotePanel({
         true,
       );
       setCredentialStatus(status);
-      
+
       if (data.credential) {
         setCredentialRole(data.credential.role);
       }
@@ -203,11 +210,11 @@ export default function ContractVotePanel({
                 proposalId,
                 voterAddress: userAddress,
               }),
-            }
+            },
           );
 
           const verifyData = await verifyResponse.json();
-          
+
           if (verifyData.result?.chainData) {
             const chainData = verifyData.result.chainData;
             setProposal({
@@ -216,8 +223,10 @@ export default function ContractVotePanel({
               description: chainData.proposal?.description || "",
               status: chainData.proposal?.status || "pending",
               proposer: chainData.proposal?.proposer || "",
-              expiresAt: chainData.proposal?.expires?.at_time 
-                ? new Date(parseInt(chainData.proposal.expires.at_time, 10) / 1_000_000).toISOString()
+              expiresAt: chainData.proposal?.expires?.at_time
+                ? new Date(
+                    parseInt(chainData.proposal.expires.at_time, 10) / 1_000_000,
+                  ).toISOString()
                 : null,
               threshold: chainData.threshold || 0,
               totalWeight: chainData.totalWeight || 0,
@@ -261,7 +270,7 @@ export default function ContractVotePanel({
       });
 
       // Get signer from wallet context
-      const signer = await getDirectSigner() || await getAminoSigner();
+      const signer = (await getDirectSigner()) || (await getAminoSigner());
       if (!signer) {
         toast.error("Failed to get wallet signer", {
           description: "Please reconnect your wallet and try again",
@@ -321,7 +330,7 @@ export default function ContractVotePanel({
       });
 
       // Get signer from wallet context
-      const signer = await getDirectSigner() || await getAminoSigner();
+      const signer = (await getDirectSigner()) || (await getAminoSigner());
       if (!signer) {
         toast.error("Failed to get wallet signer", {
           description: "Please reconnect your wallet and try again",
@@ -374,7 +383,7 @@ export default function ContractVotePanel({
   // Get time remaining
   const getTimeRemaining = (): string => {
     if (!proposal?.expiresAt) return "No expiration";
-    
+
     try {
       const expiry = new Date(proposal.expiresAt);
       if (expiry < new Date()) {
@@ -401,7 +410,7 @@ export default function ContractVotePanel({
   if (error || !proposal) {
     return (
       <Card>
-        <CardContent className="flex flex-col items-center justify-center py-12 gap-4">
+        <CardContent className="flex flex-col items-center justify-center gap-4 py-12">
           <XCircle className="h-8 w-8 text-destructive" />
           <p className="text-sm text-muted-foreground">{error || "Failed to load proposal"}</p>
         </CardContent>
@@ -414,7 +423,7 @@ export default function ContractVotePanel({
       <CardHeader>
         <div className="flex items-start justify-between">
           <div>
-            <div className="flex items-center gap-2 mb-2">
+            <div className="mb-2 flex items-center gap-2">
               <Badge variant="outline" className="font-mono">
                 #{proposal.id}
               </Badge>
@@ -430,7 +439,7 @@ export default function ContractVotePanel({
         </div>
 
         {/* Proposer and Expiration */}
-        <div className="flex items-center gap-4 text-sm text-muted-foreground mt-4">
+        <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
             <User className="h-4 w-4" />
             <span className="font-mono text-xs">
@@ -455,7 +464,7 @@ export default function ContractVotePanel({
           </div>
           <Progress value={getVoteProgress()} className="h-3" />
           {proposal.yesWeight >= proposal.threshold && (
-            <Alert className="bg-green-accent/10 border-green-accent/30">
+            <Alert className="border-green-accent/30 bg-green-accent/10">
               <ShieldCheck className="h-4 w-4 text-green-accent" />
               <AlertDescription className="text-green-accent">
                 Threshold reached! This proposal can be executed.
@@ -469,28 +478,28 @@ export default function ContractVotePanel({
         {/* Vote Breakdown */}
         <div className="grid grid-cols-4 gap-4 text-center">
           <div>
-            <div className="flex items-center justify-center gap-1 text-green-accent mb-1">
+            <div className="mb-1 flex items-center justify-center gap-1 text-green-accent">
               <CheckCircle2 className="h-4 w-4" />
               <span className="font-bold">{proposal.yesWeight}</span>
             </div>
             <span className="text-xs text-muted-foreground">Yes</span>
           </div>
           <div>
-            <div className="flex items-center justify-center gap-1 text-red-500 mb-1">
+            <div className="mb-1 flex items-center justify-center gap-1 text-red-500">
               <XCircle className="h-4 w-4" />
               <span className="font-bold">{proposal.noWeight}</span>
             </div>
             <span className="text-xs text-muted-foreground">No</span>
           </div>
           <div>
-            <div className="flex items-center justify-center gap-1 text-gray-500 mb-1">
+            <div className="mb-1 flex items-center justify-center gap-1 text-gray-500">
               <MinusCircle className="h-4 w-4" />
               <span className="font-bold">{proposal.abstainWeight}</span>
             </div>
             <span className="text-xs text-muted-foreground">Abstain</span>
           </div>
           <div>
-            <div className="flex items-center justify-center gap-1 text-yellow-500 mb-1">
+            <div className="mb-1 flex items-center justify-center gap-1 text-yellow-500">
               <AlertTriangle className="h-4 w-4" />
               <span className="font-bold">{proposal.vetoWeight}</span>
             </div>
@@ -512,32 +521,35 @@ export default function ContractVotePanel({
 
         {/* Phase 3: Credential Status for Credential-Gated Multisigs */}
         {isCredentialGated && userAddress && (
-          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+          <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
             <div className="flex items-center gap-2">
               <Shield className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">Credential Status</span>
             </div>
-            <CredentialBadge
-              status={credentialStatus}
-              role={credentialRole}
-              showTooltip
-            />
+            <CredentialBadge status={credentialStatus} role={credentialRole} showTooltip />
           </div>
         )}
 
         {/* Phase 3: Credential Warning */}
-        {isCredentialGated && credentialStatus !== "valid" && credentialStatus !== "not_required" && credentialStatus !== "loading" && userAddress && (
-          <Alert variant="destructive">
-            <Shield className="h-4 w-4" />
-            <AlertDescription>
-              {credentialStatus === "missing" && "You need a valid credential to vote on this proposal."}
-              {credentialStatus === "expired" && "Your credential has expired. Please request a new one."}
-              {credentialStatus === "frozen" && "Your credential is frozen and cannot be used."}
-              {credentialStatus === "revoked" && "Your credential has been revoked."}
-              {credentialStatus === "wrong_role" && "Your credential does not have the required role."}
-            </AlertDescription>
-          </Alert>
-        )}
+        {isCredentialGated &&
+          credentialStatus !== "valid" &&
+          credentialStatus !== "not_required" &&
+          credentialStatus !== "loading" &&
+          userAddress && (
+            <Alert variant="destructive">
+              <Shield className="h-4 w-4" />
+              <AlertDescription>
+                {credentialStatus === "missing" &&
+                  "You need a valid credential to vote on this proposal."}
+                {credentialStatus === "expired" &&
+                  "Your credential has expired. Please request a new one."}
+                {credentialStatus === "frozen" && "Your credential is frozen and cannot be used."}
+                {credentialStatus === "revoked" && "Your credential has been revoked."}
+                {credentialStatus === "wrong_role" &&
+                  "Your credential does not have the required role."}
+              </AlertDescription>
+            </Alert>
+          )}
 
         {/* Voting Buttons */}
         {proposal.canVote && !proposal.userVote && (
@@ -597,13 +609,9 @@ export default function ContractVotePanel({
             Close
           </Button>
         )}
-        
+
         {proposal.canExecute && (
-          <Button 
-            onClick={handleExecute}
-            disabled={isExecuting}
-            className="gap-2"
-          >
+          <Button onClick={handleExecute} disabled={isExecuting} className="gap-2">
             {isExecuting ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
@@ -616,4 +624,3 @@ export default function ContractVotePanel({
     </Card>
   );
 }
-

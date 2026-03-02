@@ -98,7 +98,7 @@ const MsgVoteForm = ({ senderAddress, setMsgGetter, deleteMsg }: MsgVoteFormProp
       >
         <X className="h-4 w-4" />
       </Button>
-      <h2 className="text-xl font-heading font-semibold mb-4">MsgVote</h2>
+      <h2 className="mb-4 font-heading text-xl font-semibold">MsgVote</h2>
       <div className="space-y-4">
         <Input
           variant="institutional"

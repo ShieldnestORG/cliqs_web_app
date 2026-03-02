@@ -91,18 +91,26 @@ const TransactionInfo = ({ tx, currentOnChainSequence, compact }: TransactionInf
           const msgType = msg.typeUrl.split(".").pop()?.replace("Msg", "") || msg.typeUrl;
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const msgValue = msg.value as Record<string, any>;
-          
+
           // Extract key fields based on message type
           const getMessageFields = () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const fields: Array<{ label: string; value: any; isAddress?: boolean }> = [];
-            
+
             // Common address fields
             if (msgValue.validatorAddress) {
-              fields.push({ label: "Validator Address", value: msgValue.validatorAddress, isAddress: true });
+              fields.push({
+                label: "Validator Address",
+                value: msgValue.validatorAddress,
+                isAddress: true,
+              });
             }
             if (msgValue.delegatorAddress) {
-              fields.push({ label: "Delegator Address", value: msgValue.delegatorAddress, isAddress: true });
+              fields.push({
+                label: "Delegator Address",
+                value: msgValue.delegatorAddress,
+                isAddress: true,
+              });
             }
             if (msgValue.fromAddress) {
               fields.push({ label: "From Address", value: msgValue.fromAddress, isAddress: true });
@@ -116,18 +124,23 @@ const TransactionInfo = ({ tx, currentOnChainSequence, compact }: TransactionInf
             if (msgValue.receiver) {
               fields.push({ label: "Receiver", value: msgValue.receiver, isAddress: true });
             }
-            
+
             // Amount fields
             if (msgValue.amount) {
               if (Array.isArray(msgValue.amount)) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const amounts = msgValue.amount.map((a: any) => `${a.amount} ${a.denom}`).join(", ");
+                const amounts = msgValue.amount
+                  .map((a: any) => `${a.amount} ${a.denom}`)
+                  .join(", ");
                 fields.push({ label: "Amount", value: amounts });
               } else if (msgValue.amount.amount) {
-                fields.push({ label: "Amount", value: `${msgValue.amount.amount} ${msgValue.amount.denom}` });
+                fields.push({
+                  label: "Amount",
+                  value: `${msgValue.amount.amount} ${msgValue.amount.denom}`,
+                });
               }
             }
-            
+
             // Other common fields
             if (msgValue.contract) {
               fields.push({ label: "Contract", value: msgValue.contract, isAddress: true });
@@ -141,25 +154,27 @@ const TransactionInfo = ({ tx, currentOnChainSequence, compact }: TransactionInf
             if (msgValue.option) {
               fields.push({ label: "Option", value: String(msgValue.option) });
             }
-            
+
             return fields;
           };
-          
+
           const fields = getMessageFields();
-          
+
           return (
             <div key={index} className="space-y-3">
-              <div className="text-xs uppercase tracking-wide text-muted-foreground font-mono mb-3">
+              <div className="mb-3 font-mono text-xs uppercase tracking-wide text-muted-foreground">
                 {msgType}
               </div>
               {fields.length > 0 ? (
                 <div className="space-y-3">
                   {fields.map((field, fieldIndex) => (
                     <div key={fieldIndex} className="space-y-1">
-                      <div className="text-xs uppercase tracking-wide text-muted-foreground font-mono">
+                      <div className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
                         {field.label}:
                       </div>
-                      <div className={`font-mono text-sm p-2 rounded-lg bg-muted/20 border border-border/50 ${field.isAddress ? 'break-all' : ''}`}>
+                      <div
+                        className={`rounded-lg border border-border/50 bg-muted/20 p-2 font-mono text-sm ${field.isAddress ? "break-all" : ""}`}
+                      >
                         {field.isAddress ? (
                           <HashView hash={field.value} />
                         ) : (
@@ -170,7 +185,7 @@ const TransactionInfo = ({ tx, currentOnChainSequence, compact }: TransactionInf
                   ))}
                 </div>
               ) : (
-                <div className="text-sm text-muted-foreground italic">No additional details</div>
+                <div className="text-sm italic text-muted-foreground">No additional details</div>
               )}
             </div>
           );
@@ -200,9 +215,7 @@ const TransactionInfo = ({ tx, currentOnChainSequence, compact }: TransactionInf
               <label>Tx Sequence:</label>
               <div>{tx.sequence}</div>
               {hasSequenceMismatch && (
-                <span className="mismatch-indicator">
-                  ⚠️ Chain is at {currentOnChainSequence}
-                </span>
+                <span className="mismatch-indicator">⚠️ Chain is at {currentOnChainSequence}</span>
               )}
             </li>
             {currentOnChainSequence !== undefined && (

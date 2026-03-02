@@ -94,7 +94,9 @@ async function usesMongo(): Promise<boolean> {
   if (_mongoAvailable) {
     console.log("[DB] Using MongoDB Atlas");
   } else {
-    console.log("[DB] MongoDB connection failed – will not fall back to local DB when MONGODB_URI is set");
+    console.log(
+      "[DB] MongoDB connection failed – will not fall back to local DB when MONGODB_URI is set",
+    );
   }
 
   return _mongoAvailable;
@@ -111,7 +113,7 @@ async function requireMongoOrLocalDb(): Promise<"mongo" | "local"> {
     if (!available) {
       throw new Error(
         "MongoDB is configured (MONGODB_URI) but connection failed. " +
-          "Verify the connection string, network access, and that your MongoDB Atlas IP allowlist includes Vercel (or use 0.0.0.0/0 for serverless)."
+          "Verify the connection string, network access, and that your MongoDB Atlas IP allowlist includes Vercel (or use 0.0.0.0/0 for serverless).",
       );
     }
     return "mongo";
@@ -146,9 +148,7 @@ const COL = {
 /**
  * De-duplicate multisig arrays by address, preferring records with a creator.
  */
-function dedupeMultisigs<T extends { address: string; creator?: string | null }>(
-  items: T[],
-): T[] {
+function _dedupeMultisigs<T extends { address: string; creator?: string | null }>(items: T[]): T[] {
   const map = new Map<string, T>();
   for (const item of items) {
     const existing = map.get(item.address);
@@ -223,9 +223,7 @@ export const getBelongedMultisigs = async (chainId: string, memberPubkey: string
         const parsed = JSON.parse(doc.pubkeyJSON);
         const pubkeys: { value?: string; key?: string }[] =
           parsed?.value?.pubkeys || parsed?.pubkeys || [];
-        return pubkeys.some(
-          (pk) => pk.value === memberPubkey || pk.key === memberPubkey,
-        );
+        return pubkeys.some((pk) => pk.value === memberPubkey || pk.key === memberPubkey);
       } catch {
         return true;
       }
@@ -412,7 +410,8 @@ export const updateTransactionPayloadHash = async (
   }
 
   const backend = await requireMongoOrLocalDb();
-  if (backend === "mongo") return mongoDb.updateTransactionPayloadHash(transactionId, payloadHash, signDocHash);
+  if (backend === "mongo")
+    return mongoDb.updateTransactionPayloadHash(transactionId, payloadHash, signDocHash);
   return localDb.updateTransactionPayloadHash(transactionId, payloadHash, signDocHash);
 };
 
@@ -488,11 +487,7 @@ export const createOrUpdateNonce = async (chainId: string, address: string, nonc
   const byodb = await getByodbInstance();
   if (byodb) {
     const col = byodb.collection<BNonce>(COL.NONCES);
-    await col.updateOne(
-      { chainId, address },
-      { $set: { nonce } },
-      { upsert: true },
-    );
+    await col.updateOne({ chainId, address }, { $set: { nonce } }, { upsert: true });
     return;
   }
 
@@ -510,9 +505,7 @@ export const wipeCompletedTransactions = async (multisigId: string) => {
   if (byodb) {
     const txCol = byodb.collection<BTransaction>(COL.TRANSACTIONS);
     const sigCol = byodb.collection<BSignature>(COL.SIGNATURES);
-    const broadcastTxs = await txCol
-      .find({ creatorId: multisigId, status: "broadcast" })
-      .toArray();
+    const broadcastTxs = await txCol.find({ creatorId: multisigId, status: "broadcast" }).toArray();
     const txIds = broadcastTxs.map((t) => docId(t));
     const sigResult = await sigCol.deleteMany({ transactionId: { $in: txIds } });
     const txResult = await txCol.deleteMany({ creatorId: multisigId, status: "broadcast" });
@@ -669,7 +662,9 @@ async function migrateLocalMultisigsToMongo(): Promise<void> {
         migrated++;
       } catch (e) {
         // Skip duplicates or other errors for individual records
-        console.log(`[DB] Migration skipped ${m.address}: ${e instanceof Error ? e.message : "unknown"}`);
+        console.log(
+          `[DB] Migration skipped ${m.address}: ${e instanceof Error ? e.message : "unknown"}`,
+        );
       }
     }
 

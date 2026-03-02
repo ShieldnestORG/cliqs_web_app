@@ -1,18 +1,18 @@
 /**
  * ContractMultisigEngine Implementation
- * 
+ *
  * File: lib/multisig/contract-engine.ts
- * 
+ *
  * This implementation wraps CW3-style contract multisig operations.
  * It provides a unified interface for creating proposals, voting,
  * and executing through on-chain contract state.
- * 
+ *
  * Key differences from PubKeyMultisigEngine:
  * - Proposals are stored on-chain (not off-chain)
  * - Approvals are on-chain votes (not signature collection)
  * - Address is stable (key rotation doesn't change address)
  * - State is queried from contract (DB is advisory cache)
- * 
+ *
  * Phase 2 additions:
  * - Supports both "fixed" (CW3-Fixed) and "flex" (CW3-Flex) multisig styles
  * - Flex style delegates membership to a GroupProvider (CW4-group or custom)
@@ -23,11 +23,7 @@ import { sha256 } from "@cosmjs/crypto";
 import { toBase64 } from "@cosmjs/encoding";
 import { EncodeObject } from "@cosmjs/proto-signing";
 
-import {
-  MultisigEngine,
-  SignBytesResult,
-  EngineConfig,
-} from "./engine";
+import { MultisigEngine, SignBytesResult, EngineConfig } from "./engine";
 import {
   ApprovalReceipt,
   Member,
@@ -54,11 +50,7 @@ import { CW3Client } from "../contract/cw3-client";
 import { GroupProvider } from "../group/provider";
 import { GroupMember } from "../group/types";
 import * as localDb from "../localDb";
-import {
-  PolicyEvaluator,
-  PolicyContext,
-  PolicyEvaluationResult,
-} from "../policies/types";
+import { PolicyEvaluator, PolicyContext, PolicyEvaluationResult } from "../policies/types";
 
 // ============================================================================
 // Contract Engine Configuration
@@ -87,10 +79,7 @@ export interface CredentialVerifier {
     verifiedAtHeight: number;
     verifiedAt: string;
   }>;
-  hasValidCredential(
-    teamAddress: string,
-    signerAddress: string,
-  ): Promise<boolean>;
+  hasValidCredential(teamAddress: string, signerAddress: string): Promise<boolean>;
 }
 
 export interface ContractEngineConfig extends EngineConfig {
@@ -150,17 +139,13 @@ export class ContractMultisigEngine implements MultisigEngine {
     this.multisigAddress = config.multisigAddress;
     this.nodeAddress = config.nodeAddress;
     this.nodeAddresses = config.nodeAddresses ?? [config.nodeAddress];
-    this.cw3Client = new CW3Client(
-      config.nodeAddress,
-      config.multisigAddress,
-      config.chainId,
-    );
-    
+    this.cw3Client = new CW3Client(config.nodeAddress, config.multisigAddress, config.chainId);
+
     // Phase 2: Initialize flex-style support
     this.multisigStyle = config.multisigStyle ?? "fixed";
     this.groupAddress = config.groupAddress ?? null;
     this.groupProvider = config.groupProvider ?? null;
-    
+
     // Phase 3: Initialize credential-gated support
     this.credentialClassId = config.credentialClassId ?? null;
     this.credentialVerifier = config.credentialVerifier ?? null;
@@ -229,7 +214,7 @@ export class ContractMultisigEngine implements MultisigEngine {
 
   /**
    * Verify a signer's credential
-   * 
+   *
    * @param signerAddress - Address to verify
    * @param requiredRole - Optional required role
    * @returns Verification result
@@ -291,7 +276,7 @@ export class ContractMultisigEngine implements MultisigEngine {
     // Get current config for threshold info
     const config = await this.getConfig();
     const threshold = this.extractThreshold(config.threshold);
-    const totalWeight = config.voters.reduce((sum, v) => sum + v.weight, 0);
+    const _totalWeight = config.voters.reduce((sum, v) => sum + v.weight, 0);
 
     // Extract recipient addresses from messages
     const recipientAddresses = this.extractRecipientAddresses(proposal.content.msgs);
@@ -446,14 +431,17 @@ export class ContractMultisigEngine implements MultisigEngine {
 
   /**
    * Create a new proposal on the contract
-   * 
+   *
    * Note: For contract multisig, we need to submit a tx to create the proposal.
    * This method builds the propose message - the actual tx must be signed and
    * broadcast by the caller.
-   * 
+   *
    * Phase 2: For flex-style multisigs, captures member snapshot at proposal creation
    */
-  async createProposal(input: ProposalInput, policyContext?: Partial<PolicyContext>): Promise<Proposal> {
+  async createProposal(
+    input: ProposalInput,
+    policyContext?: Partial<PolicyContext>,
+  ): Promise<Proposal> {
     // Phase 4: Pre-validate against policies before creating proposal
     if (this.policyEvaluator) {
       // Create a draft proposal for policy evaluation
@@ -476,12 +464,12 @@ export class ContractMultisigEngine implements MultisigEngine {
       };
 
       const policyResult = await this.evaluatePoliciesForProposal(draftProposal, policyContext);
-      
+
       if (policyResult && !policyResult.allowed) {
         const violationMessages = policyResult.violations
           .map((v) => `${v.policyType}: ${v.message}`)
           .join("; ");
-        
+
         throw new MultisigEngineError(
           `Proposal violates policies: ${violationMessages}`,
           "PROPOSAL_NOT_PENDING",
@@ -541,9 +529,9 @@ export class ContractMultisigEngine implements MultisigEngine {
 
   /**
    * Vote on a proposal (approve = vote yes)
-   * 
+   *
    * For contract multisig, approval is an on-chain vote transaction
-   * 
+   *
    * Phase 3: For credential-gated multisigs, verifies credential before voting
    */
   async approveProposal(
@@ -553,7 +541,7 @@ export class ContractMultisigEngine implements MultisigEngine {
     _signDocHash: string, // Not used for contract multisig
   ): Promise<ApprovalReceipt> {
     const numericProposalId = parseInt(proposalId, 10);
-    
+
     // Phase 3: Verify credential for credential-gated multisigs
     if (this.isCredentialGated() && this.credentialVerifier) {
       const credentialResult = await this.credentialVerifier.verifyCredential(
@@ -570,14 +558,11 @@ export class ContractMultisigEngine implements MultisigEngine {
         );
       }
     }
-    
+
     // Verify the proposal exists and is open
     const proposal = await this.cw3Client.queryProposal(numericProposalId);
     if (!proposal) {
-      throw new MultisigEngineError(
-        `Proposal ${proposalId} not found`,
-        "PROPOSAL_NOT_FOUND",
-      );
+      throw new MultisigEngineError(`Proposal ${proposalId} not found`, "PROPOSAL_NOT_FOUND");
     }
 
     if (proposal.status !== "pending" && proposal.status !== "open") {
@@ -600,11 +585,9 @@ export class ContractMultisigEngine implements MultisigEngine {
     const result = await this.cw3Client.vote(numericProposalId, "yes");
 
     if (!result.success) {
-      throw new MultisigEngineError(
-        `Failed to vote: ${result.error}`,
-        "CONTRACT_EXECUTE_FAILED",
-        { rawLog: result.rawLog },
-      );
+      throw new MultisigEngineError(`Failed to vote: ${result.error}`, "CONTRACT_EXECUTE_FAILED", {
+        rawLog: result.rawLog,
+      });
     }
 
     // Phase 2: Capture vote snapshot for audit trail
@@ -629,14 +612,11 @@ export class ContractMultisigEngine implements MultisigEngine {
 
   /**
    * Revoke vote from a proposal
-   * 
+   *
    * Note: Standard CW3 contracts don't support vote revocation.
    * This is a placeholder for custom contracts that may support it.
    */
-  async revokeApproval(
-    proposalId: string,
-    _signer: SignerInfo,
-  ): Promise<RevokeReceipt> {
+  async revokeApproval(proposalId: string, _signer: SignerInfo): Promise<RevokeReceipt> {
     throw new MultisigEngineError(
       "Vote revocation is not supported by CW3 contracts",
       "VOTING_CLOSED",
@@ -646,9 +626,9 @@ export class ContractMultisigEngine implements MultisigEngine {
 
   /**
    * Execute a passed proposal
-   * 
+   *
    * Phase 3: For credential-gated multisigs, verifies executor credential
-   * 
+   *
    * @param proposalId - Proposal to execute
    * @param executorAddress - Optional: address of the executor (for credential check)
    */
@@ -670,7 +650,7 @@ export class ContractMultisigEngine implements MultisigEngine {
           executorAddress,
           "member",
         );
-        
+
         if (!memberResult.isValid) {
           throw new MultisigEngineError(
             `Executor ${executorAddress} does not hold a valid credential: ${memberResult.reason || "unknown"}`,
@@ -694,7 +674,7 @@ export class ContractMultisigEngine implements MultisigEngine {
     if (this.policyEvaluator && proposal) {
       // Get stored proposal to build context
       const storedProposal = localDb.getContractProposal(this.multisigAddress, numericProposalId);
-      
+
       if (storedProposal) {
         // Build a Proposal object for policy evaluation
         const proposalForPolicy: Proposal = {
@@ -716,7 +696,7 @@ export class ContractMultisigEngine implements MultisigEngine {
         };
 
         // Calculate time since queue for timelock enforcement
-        const queuedAt = storedProposal.createdAt 
+        const queuedAt = storedProposal.createdAt
           ? Math.floor(new Date(storedProposal.createdAt).getTime() / 1000)
           : null;
         const currentTimestamp = Math.floor(Date.now() / 1000);
@@ -727,12 +707,12 @@ export class ContractMultisigEngine implements MultisigEngine {
           timeSinceQueue,
           currentTimestamp,
         });
-        
+
         if (policyResult && !policyResult.allowed) {
           const violationMessages = policyResult.violations
             .map((v) => `${v.policyType}: ${v.message}`)
             .join("; ");
-          
+
           throw new MultisigEngineError(
             `Execution blocked by policies: ${violationMessages}`,
             "PROPOSAL_NOT_PASSED",
@@ -742,10 +722,7 @@ export class ContractMultisigEngine implements MultisigEngine {
       }
     }
     if (!proposal) {
-      throw new MultisigEngineError(
-        `Proposal ${proposalId} not found`,
-        "PROPOSAL_NOT_FOUND",
-      );
+      throw new MultisigEngineError(`Proposal ${proposalId} not found`, "PROPOSAL_NOT_FOUND");
     }
 
     if (proposal.status !== "passed") {
@@ -772,7 +749,7 @@ export class ContractMultisigEngine implements MultisigEngine {
 
   /**
    * Cancel a proposal (close it)
-   * 
+   *
    * Note: CW3 uses "close" for expired/rejected proposals
    */
   async cancelProposal(proposalId: string): Promise<void> {
@@ -798,10 +775,7 @@ export class ContractMultisigEngine implements MultisigEngine {
     const proposal = await this.cw3Client.queryProposal(numericProposalId);
 
     if (!proposal) {
-      throw new MultisigEngineError(
-        `Proposal ${proposalId} not found`,
-        "PROPOSAL_NOT_FOUND",
-      );
+      throw new MultisigEngineError(`Proposal ${proposalId} not found`, "PROPOSAL_NOT_FOUND");
     }
 
     return this.contractProposalToProposalState(proposal, numericProposalId);
@@ -815,9 +789,7 @@ export class ContractMultisigEngine implements MultisigEngine {
       filtered = proposals.filter((p) => this.mapContractStatus(p.status) === status);
     }
 
-    return Promise.all(
-      filtered.map((p) => this.contractProposalToProposalState(p, p.id)),
-    );
+    return Promise.all(filtered.map((p) => this.contractProposalToProposalState(p, p.id)));
   }
 
   async getPolicy(): Promise<MultisigPolicy> {
@@ -860,21 +832,15 @@ export class ContractMultisigEngine implements MultisigEngine {
 
   /**
    * Get sign bytes for voting on a proposal
-   * 
+   *
    * For contract multisig, the "sign bytes" is the vote execute message
    */
-  async getSignBytes(
-    proposalId: string,
-    _signMode: "amino" | "direct",
-  ): Promise<SignBytesResult> {
+  async getSignBytes(proposalId: string, _signMode: "amino" | "direct"): Promise<SignBytesResult> {
     const numericProposalId = parseInt(proposalId, 10);
     const proposal = await this.cw3Client.queryProposal(numericProposalId);
 
     if (!proposal) {
-      throw new MultisigEngineError(
-        `Proposal ${proposalId} not found`,
-        "PROPOSAL_NOT_FOUND",
-      );
+      throw new MultisigEngineError(`Proposal ${proposalId} not found`, "PROPOSAL_NOT_FOUND");
     }
 
     // For contract multisig, we return the vote message as sign bytes
@@ -888,14 +854,16 @@ export class ContractMultisigEngine implements MultisigEngine {
       bodyBytes: signBytes,
       signMode: "direct",
       summary: {
-        actions: [{
-          type: "Vote",
-          description: `Vote Yes on proposal #${proposalId}`,
-          details: {
-            proposal_id: proposalId,
-            vote: "yes",
+        actions: [
+          {
+            type: "Vote",
+            description: `Vote Yes on proposal #${proposalId}`,
+            details: {
+              proposal_id: proposalId,
+              vote: "yes",
+            },
           },
-        }],
+        ],
         fee: "Gas fees determined by wallet",
         memo: proposal.description,
       },
@@ -941,10 +909,7 @@ export class ContractMultisigEngine implements MultisigEngine {
   async getContractProposalState(proposalId: number): Promise<ContractProposalState> {
     const proposal = await this.cw3Client.queryProposal(proposalId);
     if (!proposal) {
-      throw new MultisigEngineError(
-        `Proposal ${proposalId} not found`,
-        "PROPOSAL_NOT_FOUND",
-      );
+      throw new MultisigEngineError(`Proposal ${proposalId} not found`, "PROPOSAL_NOT_FOUND");
     }
 
     const votes = await this.cw3Client.queryVotes(proposalId);
@@ -953,7 +918,9 @@ export class ContractMultisigEngine implements MultisigEngine {
 
     const yesWeight = votes.filter((v) => v.vote === "yes").reduce((sum, v) => sum + v.weight, 0);
     const noWeight = votes.filter((v) => v.vote === "no").reduce((sum, v) => sum + v.weight, 0);
-    const abstainWeight = votes.filter((v) => v.vote === "abstain").reduce((sum, v) => sum + v.weight, 0);
+    const abstainWeight = votes
+      .filter((v) => v.vote === "abstain")
+      .reduce((sum, v) => sum + v.weight, 0);
     const vetoWeight = votes.filter((v) => v.vote === "veto").reduce((sum, v) => sum + v.weight, 0);
 
     return {
@@ -1086,10 +1053,15 @@ export class ContractMultisigEngine implements MultisigEngine {
     }
     if (threshold.absolute_percentage) {
       // Convert percentage to weight (simplified)
-      return Math.ceil(parseFloat(threshold.absolute_percentage.percentage) * threshold.absolute_percentage.total_weight);
+      return Math.ceil(
+        parseFloat(threshold.absolute_percentage.percentage) *
+          threshold.absolute_percentage.total_weight,
+      );
     }
     if (threshold.threshold_quorum) {
-      return Math.ceil(parseFloat(threshold.threshold_quorum.threshold) * threshold.threshold_quorum.total_weight);
+      return Math.ceil(
+        parseFloat(threshold.threshold_quorum.threshold) * threshold.threshold_quorum.total_weight,
+      );
     }
     return 1;
   }
@@ -1195,7 +1167,7 @@ export class ContractMultisigEngine implements MultisigEngine {
 
   /**
    * Capture member snapshot at proposal creation
-   * 
+   *
    * This captures the full member set at the time a proposal is created,
    * enabling audit of who was eligible to vote when.
    */
@@ -1206,17 +1178,19 @@ export class ContractMultisigEngine implements MultisigEngine {
 
     try {
       const snapshot = await this.groupProvider.snapshotMembers();
-      
+
       localDb.createMemberSnapshot({
         contractAddress: this.multisigAddress,
         proposalId,
         groupAddress: this.groupAddress ?? "",
         snapshotHeight: snapshot.snapshotHeight,
         snapshotTime: snapshot.snapshotTime,
-        membersJSON: JSON.stringify(snapshot.members.map((m: GroupMember) => ({
-          addr: m.address,
-          weight: m.weight,
-        }))),
+        membersJSON: JSON.stringify(
+          snapshot.members.map((m: GroupMember) => ({
+            addr: m.address,
+            weight: m.weight,
+          })),
+        ),
         totalWeight: snapshot.totalWeight,
       });
     } catch (error) {
@@ -1227,10 +1201,10 @@ export class ContractMultisigEngine implements MultisigEngine {
 
   /**
    * Capture vote snapshot at vote time
-   * 
+   *
    * This records the voter's weight at the exact moment they voted,
    * enabling accurate threshold calculations even if membership changes.
-   * 
+   *
    * Phase 3: Also records credential validity at vote time for audit trail.
    */
   private async captureVoteSnapshot(
@@ -1287,7 +1261,7 @@ export class ContractMultisigEngine implements MultisigEngine {
     snapshotTime: string;
   } | null> {
     const snapshot = localDb.getMemberSnapshot(this.multisigAddress, proposalId);
-    
+
     if (!snapshot) {
       return null;
     }
@@ -1303,15 +1277,17 @@ export class ContractMultisigEngine implements MultisigEngine {
   /**
    * Get vote snapshots for a proposal
    */
-  async getVoteSnapshots(proposalId: number): Promise<Array<{
-    voter: string;
-    weightAtVote: number;
-    credentialValid: boolean;
-    voteHeight: number;
-    voteTime: string;
-  }>> {
+  async getVoteSnapshots(proposalId: number): Promise<
+    Array<{
+      voter: string;
+      weightAtVote: number;
+      credentialValid: boolean;
+      voteHeight: number;
+      voteTime: string;
+    }>
+  > {
     const snapshots = localDb.getVoteSnapshots(this.multisigAddress, proposalId);
-    
+
     return snapshots.map((s) => ({
       voter: s.voter,
       weightAtVote: s.weightAtVote,
@@ -1323,7 +1299,7 @@ export class ContractMultisigEngine implements MultisigEngine {
 
   /**
    * Get vote weight calculation using snapshots
-   * 
+   *
    * Uses vote-time weights for accurate threshold evaluation
    */
   async getVoteWeightFromSnapshots(proposalId: number): Promise<{
@@ -1367,4 +1343,3 @@ export async function isContractMultisig(
     return false;
   }
 }
-

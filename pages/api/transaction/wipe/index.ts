@@ -22,10 +22,7 @@ interface WipeBody {
   mode: "completed" | "all";
 }
 
-async function apiWipeTransactions(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+async function apiWipeTransactions(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     res.status(405).end();
     return;
@@ -60,9 +57,7 @@ async function apiWipeTransactions(
     });
   } catch (err: unknown) {
     console.error("[Wipe] Error:", err);
-    res.status(400).send(
-      err instanceof Error ? `Wipe failed: ${err.message}` : "Wipe failed",
-    );
+    res.status(400).send(err instanceof Error ? `Wipe failed: ${err.message}` : "Wipe failed");
   }
 }
 

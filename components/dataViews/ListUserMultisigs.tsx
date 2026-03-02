@@ -6,7 +6,7 @@ import { MultisigThresholdPubkey } from "@cosmjs/amino";
 import { Loader2, MoveRightIcon, RefreshCw } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
@@ -16,17 +16,17 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 export default function ListUserMultisigs() {
   const { chain } = useChains();
-  const { 
-    walletInfo, 
-    loading: walletLoading, 
-    connectKeplr, 
+  const {
+    walletInfo,
+    loading: walletLoading,
+    connectKeplr,
     isConnecting,
     verify,
     verificationSignature,
     isVerified,
-    isVerifying 
+    isVerifying,
   } = useWallet();
-  
+
   const [loadingMultisigs, setLoadingMultisigs] = useState(false);
   const [showBelonged, setShowBelonged] = useState(false);
   const [multisigs, setMultisigs] = useState<FetchedMultisigs | null>(null);
@@ -101,39 +101,39 @@ export default function ListUserMultisigs() {
             {walletLoading.keplr ? (
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
             ) : (
-              <Image
-                alt=""
-                src="/assets/icons/keplr.svg"
-                width={20}
-                height={20}
-                className="mr-2"
-              />
+              <Image alt="" src="/assets/icons/keplr.svg" width={20} height={20} className="mr-2" />
             )}
             Connect Keplr
           </Button>
         ) : null}
-        
+
         {/* Connected but not verified - Keplr only */}
-        {walletInfo && walletInfo.type === "Keplr" && !isVerified && !multisigs && !loadingMultisigs && !isVerifying ? (
-          <Button onClick={handleVerifyAndFetch} disabled={loadingMultisigs || isVerifying} variant="outline">
-            <Image
-              alt=""
-              src="/assets/icons/keplr.svg"
-              width={20}
-              height={20}
-              className="mr-2"
-            />
+        {walletInfo &&
+        walletInfo.type === "Keplr" &&
+        !isVerified &&
+        !multisigs &&
+        !loadingMultisigs &&
+        !isVerifying ? (
+          <Button
+            onClick={handleVerifyAndFetch}
+            disabled={loadingMultisigs || isVerifying}
+            variant="outline"
+          >
+            <Image alt="" src="/assets/icons/keplr.svg" width={20} height={20} className="mr-2" />
             Verify identity to see multisigs
           </Button>
         ) : null}
-        
+
         {/* Ledger connected - can't easily verify */}
         {walletInfo && walletInfo.type === "Ledger" && !multisigs ? (
-          <div className="text-sm text-muted-foreground p-4 border border-border rounded-lg">
-            <p>Ledger wallet connected. To view your multisigs, please use Keplr to verify your identity.</p>
+          <div className="rounded-lg border border-border p-4 text-sm text-muted-foreground">
+            <p>
+              Ledger wallet connected. To view your multisigs, please use Keplr to verify your
+              identity.
+            </p>
           </div>
         ) : null}
-        
+
         {/* Loading states */}
         {(loadingMultisigs || isVerifying) && (
           <div className="flex items-center gap-2">
@@ -141,7 +141,7 @@ export default function ListUserMultisigs() {
             <p>{isVerifying ? "Verifying wallet..." : "Loading multisigs"}</p>
           </div>
         )}
-        
+
         {/* Empty states */}
         {multisigs && !showBelonged && !multisigs.created.length && (
           <p className="text-sm text-muted-foreground">You have not created any multisig</p>
@@ -149,9 +149,9 @@ export default function ListUserMultisigs() {
         {multisigs && showBelonged && !multisigs.belonged.length && (
           <p className="text-sm text-muted-foreground">You are not a member of any multisig</p>
         )}
-        
+
         {/* Multisig list */}
-        {(multisigs?.created.length || multisigs?.belonged.length) ? (
+        {multisigs?.created.length || multisigs?.belonged.length ? (
           <>
             <div className="flex items-center justify-between">
               {multisigs.created.length !== multisigs.belonged.length ? (
@@ -163,14 +163,16 @@ export default function ListUserMultisigs() {
                   />
                   <Label htmlFor="multisigs-type">Show all multisigs I'm a member of</Label>
                 </div>
-              ) : <div />}
+              ) : (
+                <div />
+              )}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={fetchMultisigs}
                 disabled={loadingMultisigs || isVerifying}
               >
-                <RefreshCw className={`h-4 w-4 mr-1 ${loadingMultisigs ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`mr-1 h-4 w-4 ${loadingMultisigs ? "animate-spin" : ""}`} />
                 Refresh
               </Button>
             </div>

@@ -1,9 +1,9 @@
 /**
  * Debug API: Compare SignDoc between CLI and App
- * 
+ *
  * This endpoint helps diagnose signature verification failures by comparing
  * what the app generates vs what the CLI generates.
- * 
+ *
  * POST /api/debug/compare-signdoc
  * Body: {
  *   cliTxJson: string,  // Raw JSON from: cored tx ... --generate-only -o json
@@ -63,10 +63,7 @@ interface CLITransaction {
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -82,9 +79,7 @@ export default async function handler(
     const aminoTypes = new AminoTypes(aminoConverters);
 
     // Generate SignDoc from app transaction
-    const appAminoMsgs: AminoMsg[] = appTx.msgs.map((msg) =>
-      aminoTypes.toAmino(msg)
-    );
+    const appAminoMsgs: AminoMsg[] = appTx.msgs.map((msg) => aminoTypes.toAmino(msg));
 
     const appSignDoc = makeSignDoc(
       appAminoMsgs,
@@ -92,7 +87,7 @@ export default async function handler(
       appTx.chainId,
       appTx.memo,
       String(appTx.accountNumber),
-      String(appTx.sequence)
+      String(appTx.sequence),
     );
 
     const appSignDocBytes = serializeSignDoc(appSignDoc);
@@ -117,7 +112,7 @@ export default async function handler(
     // Check message count
     if (cliTx.body.messages.length !== appTx.msgs.length) {
       comparison.differences.push(
-        `Message count: CLI=${cliTx.body.messages.length} vs App=${appTx.msgs.length}`
+        `Message count: CLI=${cliTx.body.messages.length} vs App=${appTx.msgs.length}`,
       );
     }
 
@@ -129,7 +124,7 @@ export default async function handler(
       if (cliMsg && appMsg) {
         if (cliMsg["@type"] !== appMsg.typeUrl) {
           comparison.differences.push(
-            `Message[${i}] typeUrl: CLI="${cliMsg["@type"]}" vs App="${appMsg.typeUrl}"`
+            `Message[${i}] typeUrl: CLI="${cliMsg["@type"]}" vs App="${appMsg.typeUrl}"`,
           );
         }
       }
@@ -138,39 +133,34 @@ export default async function handler(
     // Check fee
     if (cliTx.auth_info.fee.gas_limit !== appTx.fee.gas) {
       comparison.differences.push(
-        `Gas: CLI="${cliTx.auth_info.fee.gas_limit}" vs App="${appTx.fee.gas}"`
+        `Gas: CLI="${cliTx.auth_info.fee.gas_limit}" vs App="${appTx.fee.gas}"`,
       );
     }
 
     const cliFeeStr = JSON.stringify(cliTx.auth_info.fee.amount);
     const appFeeStr = JSON.stringify(appTx.fee.amount);
     if (cliFeeStr !== appFeeStr) {
-      comparison.differences.push(
-        `Fee amount: CLI=${cliFeeStr} vs App=${appFeeStr}`
-      );
+      comparison.differences.push(`Fee amount: CLI=${cliFeeStr} vs App=${appFeeStr}`);
     }
 
     // Check memo
     if ((cliTx.body.memo || "") !== (appTx.memo || "")) {
-      comparison.differences.push(
-        `Memo: CLI="${cliTx.body.memo}" vs App="${appTx.memo}"`
-      );
+      comparison.differences.push(`Memo: CLI="${cliTx.body.memo}" vs App="${appTx.memo}"`);
     }
 
     // Check Amino message type strings
     comparison.differences.push("--- Amino Message Type Comparison ---");
     appAminoMsgs.forEach((aminoMsg, i) => {
-      comparison.differences.push(
-        `App Amino[${i}].type = "${aminoMsg.type}"`
-      );
+      comparison.differences.push(`App Amino[${i}].type = "${aminoMsg.type}"`);
     });
 
     res.status(200).json({
       success: true,
       comparison,
-      verdict: comparison.differences.filter(d => !d.startsWith("---")).length === 0
-        ? "✅ No structural differences found"
-        : `❌ Found ${comparison.differences.filter(d => !d.startsWith("---")).length} differences`,
+      verdict:
+        comparison.differences.filter((d) => !d.startsWith("---")).length === 0
+          ? "✅ No structural differences found"
+          : `❌ Found ${comparison.differences.filter((d) => !d.startsWith("---")).length} differences`,
     });
   } catch (error) {
     console.error("SignDoc comparison error:", error);
@@ -180,4 +170,3 @@ export default async function handler(
     });
   }
 }
-

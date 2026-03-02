@@ -62,10 +62,7 @@ function getSubtleCrypto(): SubtleCrypto {
 /**
  * Derive an AES-256-GCM key from a passphrase using PBKDF2.
  */
-async function deriveKeyFromPassphrase(
-  passphrase: string,
-  salt: Uint8Array,
-): Promise<CryptoKey> {
+async function deriveKeyFromPassphrase(passphrase: string, salt: Uint8Array): Promise<CryptoKey> {
   const subtle = getSubtleCrypto();
   const encoder = new TextEncoder();
 
@@ -268,9 +265,7 @@ export async function decryptCredential(
  * Generate a fingerprint (SHA-256 hash) of a connection string.
  * Used to verify correctness without storing the plaintext.
  */
-export async function fingerprintConnectionString(
-  connectionString: string,
-): Promise<string> {
+export async function fingerprintConnectionString(connectionString: string): Promise<string> {
   const subtle = getSubtleCrypto();
   const encoder = new TextEncoder();
   const hash = await subtle.digest("SHA-256", encoder.encode(connectionString));

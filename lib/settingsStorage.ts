@@ -1,8 +1,8 @@
 /**
  * Settings Storage Utility
- * 
+ *
  * File: lib/settingsStorage.ts
- * 
+ *
  * Manages user security preferences stored in localStorage
  */
 

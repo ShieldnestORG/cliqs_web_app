@@ -9,14 +9,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardLabel } from "@/components/ui/card";
 import { ValidatorDashboardData } from "@/lib/validatorHelpers";
 import { useChains } from "@/context/ChainsContext";
-import { 
-  TrendingUp, 
-  Users, 
-  Award, 
-  Percent, 
-  Coins,
-  BarChart3
-} from "lucide-react";
+import { TrendingUp, Users, Award, Percent, Coins, BarChart3 } from "lucide-react";
 
 interface ValidatorPerformanceCardProps {
   data: ValidatorDashboardData;
@@ -34,7 +27,7 @@ export default function ValidatorPerformanceCard({ data }: ValidatorPerformanceC
     if (!amount || amount === "0") return "0";
     const num = parseInt(amount, 10);
     const formatted = num / Math.pow(10, decimals);
-    
+
     if (formatted >= 1_000_000) {
       return `${(formatted / 1_000_000).toFixed(2)}M`;
     }
@@ -98,33 +91,25 @@ export default function ValidatorPerformanceCard({ data }: ValidatorPerformanceC
     <Card variant="institutional" className="h-full">
       <CardHeader>
         <CardLabel comment>Metrics</CardLabel>
-        <CardTitle className="text-xl font-heading font-bold">
-          Validator Performance
-        </CardTitle>
+        <CardTitle className="font-heading text-xl font-bold">Validator Performance</CardTitle>
       </CardHeader>
 
       <CardContent>
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
               <div
                 key={index}
-                className="p-4 rounded-lg bg-muted/30 border border-border/50 space-y-2"
+                className="space-y-2 rounded-lg border border-border/50 bg-muted/30 p-4"
               >
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Icon className="h-4 w-4" />
-                  <span className="text-xs font-mono uppercase tracking-wider">
-                    {stat.label}
-                  </span>
+                  <span className="font-mono text-xs uppercase tracking-wider">{stat.label}</span>
                 </div>
                 <div>
-                  <span className="text-2xl font-heading font-bold tabular-nums">
-                    {stat.value}
-                  </span>
-                  <span className="text-sm text-muted-foreground ml-1">
-                    {stat.subtext}
-                  </span>
+                  <span className="font-heading text-2xl font-bold tabular-nums">{stat.value}</span>
+                  <span className="ml-1 text-sm text-muted-foreground">{stat.subtext}</span>
                 </div>
               </div>
             );
@@ -133,7 +118,7 @@ export default function ValidatorPerformanceCard({ data }: ValidatorPerformanceC
 
         {/* Min Self-Delegation Info */}
         {validator.minSelfDelegation && validator.minSelfDelegation !== "1" && (
-          <div className="mt-4 p-3 rounded-lg bg-muted/20 border border-border/30">
+          <div className="mt-4 rounded-lg border border-border/30 bg-muted/20 p-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Min Self-Delegation</span>
               <span className="font-mono text-foreground">
@@ -146,4 +131,3 @@ export default function ValidatorPerformanceCard({ data }: ValidatorPerformanceC
     </Card>
   );
 }
-

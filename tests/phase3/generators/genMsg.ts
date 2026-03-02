@@ -2,12 +2,39 @@ import { RNG } from "./rng";
 import { genAmount, genBech32LikeAddress, genDenom } from "./chainPrimitives";
 
 export type CosmosMsg =
-  | { type: "bank/send"; value: { fromAddress: string; toAddress: string; amount: { denom: string; amount: string }[] } }
-  | { type: "staking/delegate"; value: { delegatorAddress: string; validatorAddress: string; amount: { denom: string; amount: string } } }
-  | { type: "staking/undelegate"; value: { delegatorAddress: string; validatorAddress: string; amount: { denom: string; amount: string } } }
-  | { type: "distribution/withdraw_rewards"; value: { delegatorAddress: string; validatorAddress: string } }
+  | {
+      type: "bank/send";
+      value: {
+        fromAddress: string;
+        toAddress: string;
+        amount: { denom: string; amount: string }[];
+      };
+    }
+  | {
+      type: "staking/delegate";
+      value: {
+        delegatorAddress: string;
+        validatorAddress: string;
+        amount: { denom: string; amount: string };
+      };
+    }
+  | {
+      type: "staking/undelegate";
+      value: {
+        delegatorAddress: string;
+        validatorAddress: string;
+        amount: { denom: string; amount: string };
+      };
+    }
+  | {
+      type: "distribution/withdraw_rewards";
+      value: { delegatorAddress: string; validatorAddress: string };
+    }
   | { type: "distribution/withdraw_validator_commission"; value: { validatorAddress: string } }
-  | { type: "wasm/execute"; value: { contract: string; msg: any; funds: { denom: string; amount: string }[] } }
+  | {
+      type: "wasm/execute";
+      value: { contract: string; msg: any; funds: { denom: string; amount: string }[] };
+    }
   | { type: "custom/unknown"; value: any };
 
 export const COSMOS_MSG_TYPES = [
@@ -104,7 +131,10 @@ export function genDisallowedMsg(rng: RNG): CosmosMsg {
   };
 }
 
-export function genMsgBatch(rng: RNG, opts?: { maxMsgs?: number; includeDisallowedChance?: number }): CosmosMsg[] {
+export function genMsgBatch(
+  rng: RNG,
+  opts?: { maxMsgs?: number; includeDisallowedChance?: number },
+): CosmosMsg[] {
   const maxMsgs = opts?.maxMsgs ?? 10;
   const includeDisallowedChance = opts?.includeDisallowedChance ?? 0.05;
 

@@ -31,7 +31,9 @@ async function apiListMultisigs(req: NextApiRequest, res: NextApiResponse) {
 
     // Validate that nodeAddress is provided
     if (!body.chain.nodeAddress) {
-      throw new Error("Chain nodeAddress is not configured. Please wait for the chain to finish loading.");
+      throw new Error(
+        "Chain nodeAddress is not configured. Please wait for the chain to finish loading.",
+      );
     }
 
     // Support both signature-based (verified) and direct address/pubkey (unverified) requests
@@ -54,11 +56,16 @@ async function apiListMultisigs(req: NextApiRequest, res: NextApiResponse) {
           signatureVerified = await verifyKeplrSignature(body.signature, body.chain, dbNonce);
         }
       } catch (e) {
-        console.log(`[list] Nonce verification issue for ${address}:`, e instanceof Error ? e.message : e);
+        console.log(
+          `[list] Nonce verification issue for ${address}:`,
+          e instanceof Error ? e.message : e,
+        );
       }
 
       if (!signatureVerified) {
-        console.log(`[list] Signature verification failed for ${address}, using pubkey from signature directly`);
+        console.log(
+          `[list] Signature verification failed for ${address}, using pubkey from signature directly`,
+        );
       }
 
       const { pubkey: decodedPubKey } = decodeSignature(body.signature);
@@ -72,10 +79,7 @@ async function apiListMultisigs(req: NextApiRequest, res: NextApiResponse) {
     }
 
     const [dbResult, chainResult] = await Promise.allSettled([
-      Promise.all([
-        getCreatedMultisigs(chainId, address),
-        getBelongedMultisigs(chainId, pubkey),
-      ]),
+      Promise.all([getCreatedMultisigs(chainId, address), getBelongedMultisigs(chainId, pubkey)]),
       getMultisigsFromChainWhereMember(body.chain, address, pubkey),
     ]);
 

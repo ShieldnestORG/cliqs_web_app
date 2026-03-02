@@ -6,7 +6,7 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 const nextConfig = {
   reactStrictMode: true,
   eslint: { ignoreDuringBuilds: true },
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer: _isServer }) => {
     // Handle missing 'starknet' dependency in @keplr-wallet/crypto
     // This is a transitive dependency that isn't needed for Cosmos functionality
     config.resolve.fallback = {

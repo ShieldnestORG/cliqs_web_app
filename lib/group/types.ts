@@ -1,12 +1,12 @@
 /**
  * Group Provider Types
- * 
+ *
  * File: lib/group/types.ts
- * 
+ *
  * Types for group membership management, supporting both CW4-group contracts
  * and future custom group modules. These types power the GroupProvider abstraction
  * that enables dynamic membership in CW3-Flex multisigs.
- * 
+ *
  * Phase 2: Group-Backed Multisig
  */
 
@@ -93,7 +93,7 @@ export interface MemberUpdateResult {
 
 /**
  * A snapshot of the member set at a specific point in time
- * 
+ *
  * Used for:
  * - Proposal-time snapshots (who was eligible when proposal was created)
  * - Audit trails (reconstruct authority state at any point)
@@ -117,7 +117,7 @@ export interface MemberSnapshot {
 
 /**
  * A snapshot of a single vote at the time it was cast
- * 
+ *
  * Used for:
  * - Vote-time weight tracking
  * - Credential validity at vote time (Phase 3)
@@ -236,10 +236,7 @@ export interface GroupRecord {
 /**
  * Types of group events
  */
-export type GroupEventType = 
-  | "members_changed"
-  | "admin_changed"
-  | "hooks_changed";
+export type GroupEventType = "members_changed" | "admin_changed" | "hooks_changed";
 
 /**
  * A group event from the chain
@@ -348,4 +345,3 @@ export interface GroupTxResult extends TxResult {
     readonly admin: string | null;
   };
 }
-

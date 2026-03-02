@@ -15,9 +15,9 @@ export default function AccountPage() {
   const { chain } = useChains();
 
   return (
-    <div className="container mx-auto px-[0.75in] py-8 max-w-[1600px]">
+    <div className="container mx-auto max-w-[1600px] px-[0.75in] py-8">
       <Head title={`Account - ${chain.chainDisplayName || "Cosmos Hub"}`} />
-      
+
       <div className="space-y-6">
         <Breadcrumb>
           <BreadcrumbList>
@@ -32,7 +32,7 @@ export default function AccountPage() {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-        
+
         <AccountView />
       </div>
     </div>

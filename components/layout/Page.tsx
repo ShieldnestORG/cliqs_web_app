@@ -17,25 +17,19 @@ interface PageProps {
   readonly showPattern?: boolean;
 }
 
-const Page = ({ 
-  title, 
-  goBack, 
-  children, 
-  variant = "default",
-  showPattern = true 
-}: PageProps) => {
+const Page = ({ title, goBack, children, variant = "default", showPattern = true }: PageProps) => {
   const router = useRouter();
   const [showConfirm, setShowConfirm] = useState(false);
 
   const handleBack = (e: React.MouseEvent) => {
     if (!goBack) return;
-    
+
     if (goBack.needsConfirm && !showConfirm) {
       e.preventDefault();
       setShowConfirm(true);
       return;
     }
-    
+
     router.push(goBack.pathname);
   };
 
@@ -46,33 +40,37 @@ const Page = ({
   };
 
   return (
-    <div className={`flex-1 w-full ${showPattern ? "bg-pattern-dots" : "gradient-bg"}`}>
+    <div className={`w-full flex-1 ${showPattern ? "bg-pattern-dots" : "gradient-bg"}`}>
       <Head title={title || "Cosmos Multisig Manager"} />
-      
-      <main className={cn(
-        "mx-auto px-[0.75in] py-8 transition-all duration-300",
-        containerClasses[variant]
-      )}>
+
+      <main
+        className={cn(
+          "mx-auto px-[0.75in] py-8 transition-all duration-300",
+          containerClasses[variant],
+        )}
+      >
         {/* Back Button */}
         {goBack && (
-          <div className="mb-6 animate-in fade-in slide-up">
+          <div className="slide-up mb-6 animate-in fade-in">
             <Button
               variant="ghost"
               size="sm"
               onClick={handleBack}
-              className="gap-2 text-muted-foreground hover:text-foreground group"
+              className="group gap-2 text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-              <span className="font-mono text-xs uppercase tracking-wide">Back to {goBack.title}</span>
+              <span className="font-mono text-xs uppercase tracking-wide">
+                Back to {goBack.title}
+              </span>
             </Button>
-            
+
             {showConfirm && (
-              <div className="mt-3 p-4 rounded-lg bg-destructive/10 border-2 border-destructive/30 text-sm animate-in slide-up">
-                <p className="text-destructive font-semibold flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
+              <div className="slide-up mt-3 rounded-lg border-2 border-destructive/30 bg-destructive/10 p-4 text-sm animate-in">
+                <p className="flex items-center gap-2 font-semibold text-destructive">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-destructive" />
                   Changes to any form will be lost if you go back
                 </p>
-                <p className="text-muted-foreground mt-1.5 text-xs">
+                <p className="mt-1.5 text-xs text-muted-foreground">
                   Click the back button again to confirm
                 </p>
               </div>
@@ -81,28 +79,26 @@ const Page = ({
         )}
 
         {/* Main Content */}
-        <div className="space-y-6 animate-in fade-in">
-          {children}
-        </div>
+        <div className="space-y-6 animate-in fade-in">{children}</div>
       </main>
 
       {/* Footer */}
-      <footer className="fixed bottom-0 right-0 p-4 z-40">
-        <a 
-          href="https://github.com/cosmos/cosmos-multisig-ui" 
+      <footer className="fixed bottom-0 right-0 z-40 p-4">
+        <a
+          href="https://github.com/cosmos/cosmos-multisig-ui"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-card/80 backdrop-blur-sm border border-border/50 text-xs text-muted-foreground hover:text-foreground hover:border-border transition-all group"
+          className="group flex items-center gap-2 rounded-lg border border-border/50 bg-card/80 px-3 py-2 text-xs text-muted-foreground backdrop-blur-sm transition-all hover:border-border hover:text-foreground"
         >
           <Github className="h-4 w-4" />
-          <span className="hidden sm:inline font-mono uppercase tracking-wide">GitHub</span>
-          <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <span className="hidden font-mono uppercase tracking-wide sm:inline">GitHub</span>
+          <ExternalLink className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
         </a>
       </footer>
 
       {/* Decorative Elements */}
-      <div className="fixed top-20 left-4 w-px h-32 bg-gradient-to-b from-border to-transparent opacity-50 hidden lg:block" />
-      <div className="fixed top-20 right-4 w-px h-32 bg-gradient-to-b from-border to-transparent opacity-50 hidden lg:block" />
+      <div className="fixed left-4 top-20 hidden h-32 w-px bg-gradient-to-b from-border to-transparent opacity-50 lg:block" />
+      <div className="fixed right-4 top-20 hidden h-32 w-px bg-gradient-to-b from-border to-transparent opacity-50 lg:block" />
     </div>
   );
 };

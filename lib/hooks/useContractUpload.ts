@@ -14,19 +14,18 @@ import { useState, useCallback } from "react";
 import { SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import { GasPrice } from "@cosmjs/stargate";
 import { OfflineSigner } from "@cosmjs/proto-signing";
-import { loadBundledWasm, formatWasmSize, type BundledContractType } from "@/lib/contract/bundledWasm";
+import {
+  loadBundledWasm,
+  formatWasmSize,
+  type BundledContractType,
+} from "@/lib/contract/bundledWasm";
 import { appendDeploymentLog } from "@/lib/deploymentLog";
 import { getGasAdjustment, saveUserCodeIds } from "@/lib/contract/codeRegistry";
 import { ensureProtocol } from "@/lib/utils";
 
 export type UploadSource = "bundled" | "custom";
 
-export type UploadStatus =
-  | "idle"
-  | "loading-wasm"
-  | "uploading"
-  | "uploaded"
-  | "error";
+export type UploadStatus = "idle" | "loading-wasm" | "uploading" | "uploaded" | "error";
 
 export interface UploadResult {
   codeId: number;

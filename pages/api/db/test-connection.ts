@@ -15,10 +15,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { testConnection } from "@/lib/byodb/dynamicMongo";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -32,10 +29,7 @@ export default async function handler(
   }
 
   // Basic validation
-  if (
-    !connectionUri.startsWith("mongodb://") &&
-    !connectionUri.startsWith("mongodb+srv://")
-  ) {
+  if (!connectionUri.startsWith("mongodb://") && !connectionUri.startsWith("mongodb+srv://")) {
     res.status(400).json({
       error: "Invalid connection string",
       message: "Must start with mongodb:// or mongodb+srv://",

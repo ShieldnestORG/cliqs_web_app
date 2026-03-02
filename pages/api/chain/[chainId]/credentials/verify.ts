@@ -1,12 +1,12 @@
 /**
  * Verify Credential API
- * 
+ *
  * File: pages/api/chain/[chainId]/credentials/verify.ts
- * 
+ *
  * API route for verifying credential validity.
- * 
+ *
  * GET - Verify if an address holds a valid credential for a team
- * 
+ *
  * Phase 3: Identity NFTs (Credential-Gated Multisig)
  */
 
@@ -142,4 +142,3 @@ export default async function handler(
     });
   }
 }
-

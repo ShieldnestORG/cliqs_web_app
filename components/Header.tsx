@@ -1,7 +1,19 @@
 import { useChains } from "@/context/ChainsContext";
 import { useWallet } from "@/context/WalletContext";
 import { usePendingTransactions } from "@/lib/hooks/usePendingTransactions";
-import { LayoutDashboard, ShieldPlus, Menu, X, Wallet, Unplug, Loader2, Settings, AlertCircle, Terminal, BookOpen } from "lucide-react";
+import {
+  LayoutDashboard,
+  ShieldPlus,
+  Menu,
+  X,
+  Wallet,
+  Unplug,
+  Loader2,
+  Settings,
+  AlertCircle,
+  Terminal,
+  BookOpen,
+} from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/router";
@@ -20,10 +32,11 @@ import { cn } from "@/lib/utils";
 export default function Header() {
   const { pathname } = useRouter();
   const { chain } = useChains();
-  const { walletInfo, loading, connectKeplr, connectLedger, disconnect, isConnecting } = useWallet();
+  const { walletInfo, loading, connectKeplr, connectLedger, disconnect, isConnecting } =
+    useWallet();
   const { hasPendingTransactions, totalPendingCount } = usePendingTransactions();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
+
   // We are now locked to dark theme
   const logoPath = "/assets/icons/cliq LIGHT.svg";
 
@@ -46,11 +59,11 @@ export default function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-[0.75in]">
         {/* Logo / Brand */}
         <div className="flex items-center gap-4">
-          <Link 
+          <Link
             href={chain.registryName ? `/${chain.registryName}` : "/"}
-            className="flex items-center gap-3 font-heading font-bold text-lg hover:opacity-80 transition-opacity group"
+            className="group flex items-center gap-3 font-heading text-lg font-bold transition-opacity hover:opacity-80"
           >
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center transition-transform group-hover:scale-105">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg transition-transform group-hover:scale-105">
               <Image
                 src={logoPath}
                 alt="CLIQ Logo"
@@ -59,9 +72,9 @@ export default function Header() {
                 className="object-contain"
               />
             </div>
-            <span className="hidden sm:inline cliqs-brand">CLIQS</span>
+            <span className="cliqs-brand hidden sm:inline">CLIQS</span>
           </Link>
-          
+
           {/* Chain Connect - Desktop */}
           <div className="hidden md:block">
             <ChainConnect />
@@ -69,28 +82,29 @@ export default function Header() {
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-1">
-          {chain.registryName && navItems.map((item) => {
-            const isActive = pathname === item.href;
-            const Icon = item.icon;
+        <nav className="hidden items-center gap-1 md:flex">
+          {chain.registryName &&
+            navItems.map((item) => {
+              const isActive = pathname === item.href;
+              const Icon = item.icon;
 
-            return (
-              <Link key={item.href} href={item.href}>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={`gap-2 transition-all duration-200 ${
-                    isActive
-                      ? "bg-muted text-foreground font-semibold"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span>{item.label}</span>
-                </Button>
-              </Link>
-            );
-          })}
+              return (
+                <Link key={item.href} href={item.href}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`gap-2 transition-all duration-200 ${
+                      isActive
+                        ? "bg-muted font-semibold text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span>{item.label}</span>
+                  </Button>
+                </Link>
+              );
+            })}
 
           {/* Pending Transactions Notification */}
           {hasPendingTransactions && chain.registryName && (
@@ -98,46 +112,40 @@ export default function Header() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="gap-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/20 relative"
-                title={`${totalPendingCount} pending transaction${totalPendingCount !== 1 ? 's' : ''}`}
+                className="relative gap-2 text-amber-600 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-amber-950/20"
+                title={`${totalPendingCount} pending transaction${totalPendingCount !== 1 ? "s" : ""}`}
               >
                 <AlertCircle className="h-4 w-4" />
                 <span className="hidden lg:inline">Pending</span>
                 {/* Blinking dot */}
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+                <span className="absolute -right-1 -top-1 h-2 w-2 animate-pulse rounded-full bg-amber-500" />
               </Button>
             </Link>
           )}
 
           {/* Separator */}
-          {chain.registryName && (
-            <div className="w-px h-6 bg-border mx-2" />
-          )}
-          
+          {chain.registryName && <div className="mx-2 h-6 w-px bg-border" />}
+
           {/* Wallet Connection Button/Dropdown */}
           {walletInfo ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="gap-2"
-                >
+                <Button variant="outline" size="sm" className="gap-2">
                   <Image
                     alt=""
                     src={`/assets/icons/${walletInfo.type.toLowerCase()}.svg`}
                     width={16}
                     height={16}
-                    className={cn(walletInfo.type === "Ledger" && "bg-white p-0.5 rounded-sm")}
+                    className={cn(walletInfo.type === "Ledger" && "rounded-sm bg-white p-0.5")}
                   />
-                  <span className="hidden lg:inline font-mono text-xs">{truncatedAddress}</span>
+                  <span className="hidden font-mono text-xs lg:inline">{truncatedAddress}</span>
                   <span className="lg:hidden">Connected</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <div className="px-2 py-1.5">
                   <p className="text-xs text-muted-foreground">Connected with {walletInfo.type}</p>
-                  <p className="font-mono text-xs truncate">{truncatedAddress}</p>
+                  <p className="truncate font-mono text-xs">{truncatedAddress}</p>
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
@@ -173,9 +181,9 @@ export default function Header() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={disconnect}
-                  className="text-destructive focus:text-destructive cursor-pointer"
+                  className="cursor-pointer text-destructive focus:text-destructive"
                 >
                   <Unplug className="mr-2 h-4 w-4" />
                   Disconnect
@@ -185,12 +193,7 @@ export default function Header() {
           ) : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="action" 
-                  size="action-sm" 
-                  className="gap-2"
-                  disabled={isConnecting}
-                >
+                <Button variant="action" size="action-sm" className="gap-2" disabled={isConnecting}>
                   {isConnecting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
@@ -200,7 +203,7 @@ export default function Header() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={connectKeplr}
                   disabled={loading.keplr || loading.ledger}
                   className="cursor-pointer"
@@ -218,7 +221,7 @@ export default function Header() {
                   )}
                   Keplr
                 </DropdownMenuItem>
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={connectLedger}
                   disabled={loading.keplr || loading.ledger}
                   className="cursor-pointer"
@@ -231,7 +234,7 @@ export default function Header() {
                       src="/assets/icons/ledger.svg"
                       width={16}
                       height={16}
-                      className="mr-2 bg-white p-0.5 rounded-sm"
+                      className="mr-2 rounded-sm bg-white p-0.5"
                     />
                   )}
                   Ledger
@@ -266,11 +269,7 @@ export default function Header() {
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle menu"
           >
-            {mobileMenuOpen ? (
-              <X className="h-5 w-5" />
-            ) : (
-              <Menu className="h-5 w-5" />
-            )}
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>
       </div>
@@ -279,35 +278,34 @@ export default function Header() {
       {mobileMenuOpen && (
         <>
           {/* Backdrop */}
-          <div 
-            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 md:hidden"
+          <div
+            className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm md:hidden"
             onClick={() => setMobileMenuOpen(false)}
           />
-          
-          {/* Menu Panel */}
-          <div className="fixed top-16 left-0 right-0 bg-card border-b-2 border-border shadow-lg z-50 md:hidden animate-in slide-up">
-            <nav className="container mx-auto px-[0.75in] py-4 space-y-2">
-              {chain.registryName && navItems.map((item) => {
-                const isActive = pathname === item.href;
-                const Icon = item.icon;
 
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <div className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                      isActive
-                        ? "bg-muted text-foreground font-semibold border-l-4 border-l-green-accent"
-                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                    }`}>
-                      <Icon className="h-5 w-5" />
-                      <span>{item.label}</span>
-                    </div>
-                  </Link>
-                );
-              })}
+          {/* Menu Panel */}
+          <div className="slide-up fixed left-0 right-0 top-16 z-50 border-b-2 border-border bg-card shadow-lg animate-in md:hidden">
+            <nav className="container mx-auto space-y-2 px-[0.75in] py-4">
+              {chain.registryName &&
+                navItems.map((item) => {
+                  const isActive = pathname === item.href;
+                  const Icon = item.icon;
+
+                  return (
+                    <Link key={item.href} href={item.href} onClick={() => setMobileMenuOpen(false)}>
+                      <div
+                        className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-all ${
+                          isActive
+                            ? "border-l-4 border-l-green-accent bg-muted font-semibold text-foreground"
+                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                        }`}
+                      >
+                        <Icon className="h-5 w-5" />
+                        <span>{item.label}</span>
+                      </div>
+                    </Link>
+                  );
+                })}
 
               {/* Pending Transactions Notification - Mobile */}
               {hasPendingTransactions && chain.registryName && (
@@ -315,18 +313,18 @@ export default function Header() {
                   href={`/${chain.registryName}/dashboard?tab=cliqs`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <div className="flex items-center gap-3 px-4 py-3 rounded-lg text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20 transition-colors relative">
+                  <div className="relative flex items-center gap-3 rounded-lg px-4 py-3 text-amber-600 transition-colors hover:bg-amber-50 dark:hover:bg-amber-950/20">
                     <AlertCircle className="h-5 w-5" />
                     <span>Pending Transactions ({totalPendingCount})</span>
                     {/* Blinking dot */}
-                    <span className="absolute top-2 right-2 w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+                    <span className="absolute right-2 top-2 h-2 w-2 animate-pulse rounded-full bg-amber-500" />
                   </div>
                 </Link>
               )}
 
               {/* Separator */}
-              <div className="h-px bg-border my-3" />
-              
+              <div className="my-3 h-px bg-border" />
+
               {/* Wallet Section - Mobile */}
               {walletInfo ? (
                 <>
@@ -341,17 +339,17 @@ export default function Header() {
                     }
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-3 rounded-lg bg-muted/50 px-4 py-3">
                       <Image
                         alt=""
                         src={`/assets/icons/${walletInfo.type.toLowerCase()}.svg`}
                         width={20}
                         height={20}
-                        className={cn(walletInfo.type === "Ledger" && "bg-white p-0.5 rounded-sm")}
+                        className={cn(walletInfo.type === "Ledger" && "rounded-sm bg-white p-0.5")}
                       />
-                      <div className="flex-1 min-w-0">
+                      <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium">Connected to {walletInfo.type}</p>
-                        <p className="text-xs text-muted-foreground font-mono truncate">
+                        <p className="truncate font-mono text-xs text-muted-foreground">
                           {truncatedAddress}
                         </p>
                       </div>
@@ -368,7 +366,7 @@ export default function Header() {
                     }
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    <div className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors">
+                    <div className="flex items-center gap-3 rounded-lg px-4 py-3 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground">
                       <Settings className="h-5 w-5" />
                       <span>Settings</span>
                     </div>
@@ -378,7 +376,7 @@ export default function Header() {
                       disconnect();
                       setMobileMenuOpen(false);
                     }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-destructive hover:bg-destructive/10 w-full transition-colors"
+                    className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-destructive transition-colors hover:bg-destructive/10"
                   >
                     <Unplug className="h-5 w-5" />
                     <span>Disconnect Wallet</span>
@@ -392,17 +390,12 @@ export default function Header() {
                       setMobileMenuOpen(false);
                     }}
                     disabled={isConnecting}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg bg-foreground text-background font-medium transition-all w-full disabled:opacity-50"
+                    className="flex w-full items-center gap-3 rounded-lg bg-foreground px-4 py-3 font-medium text-background transition-all disabled:opacity-50"
                   >
                     {loading.keplr ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
                     ) : (
-                      <Image
-                        alt=""
-                        src="/assets/icons/keplr.svg"
-                        width={20}
-                        height={20}
-                      />
+                      <Image alt="" src="/assets/icons/keplr.svg" width={20} height={20} />
                     )}
                     <span>Connect Keplr</span>
                   </button>
@@ -412,7 +405,7 @@ export default function Header() {
                       setMobileMenuOpen(false);
                     }}
                     disabled={isConnecting}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg border border-border text-foreground font-medium transition-all w-full disabled:opacity-50 hover:bg-muted/50"
+                    className="flex w-full items-center gap-3 rounded-lg border border-border px-4 py-3 font-medium text-foreground transition-all hover:bg-muted/50 disabled:opacity-50"
                   >
                     {loading.ledger ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
@@ -422,7 +415,7 @@ export default function Header() {
                         src="/assets/icons/ledger.svg"
                         width={20}
                         height={20}
-                        className="bg-white p-0.5 rounded-sm"
+                        className="rounded-sm bg-white p-0.5"
                       />
                     )}
                     <span>Connect Ledger</span>

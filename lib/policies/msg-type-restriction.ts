@@ -1,12 +1,12 @@
 /**
  * Message Type Restriction Policy
- * 
+ *
  * File: lib/policies/msg-type-restriction.ts
- * 
+ *
  * Priority 3 policy - Controls attack surface before enabling spending.
  * Allows blocking/allowing specific message types and requiring
  * higher thresholds for certain operations.
- * 
+ *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards
  */
 
@@ -32,10 +32,10 @@ import {
  * High-risk message types that might need extra scrutiny
  */
 export const HIGH_RISK_MSG_TYPES: readonly MsgTypeUrl[] = [
-  MsgTypeUrls.UpdateAdmin,       // Changing contract admin
-  MsgTypeUrls.MigrateContract,   // Upgrading contract code
-  MsgTypeUrls.CreateValidator,   // Creating a validator
-  MsgTypeUrls.EditValidator,     // Editing validator params
+  MsgTypeUrls.UpdateAdmin, // Changing contract admin
+  MsgTypeUrls.MigrateContract, // Upgrading contract code
+  MsgTypeUrls.CreateValidator, // Creating a validator
+  MsgTypeUrls.EditValidator, // Editing validator params
 ];
 
 /**
@@ -65,7 +65,7 @@ export class MsgTypePolicy implements Policy {
   readonly name: string;
   readonly enabled: boolean;
   readonly priority: number;
-  
+
   private readonly config: MsgTypePolicyConfig;
 
   constructor(
@@ -78,21 +78,19 @@ export class MsgTypePolicy implements Policy {
     this.name = name;
     this.enabled = options.enabled ?? true;
     this.priority = options.priority ?? 30; // After timelock and emergency
-    
+
     this.config = {
       allowedMsgTypes: config.allowedMsgTypes ?? DEFAULT_CONFIG.allowedMsgTypes,
       blockedMsgTypes: config.blockedMsgTypes ?? DEFAULT_CONFIG.blockedMsgTypes,
-      requiresHigherThreshold: config.requiresHigherThreshold ?? DEFAULT_CONFIG.requiresHigherThreshold,
+      requiresHigherThreshold:
+        config.requiresHigherThreshold ?? DEFAULT_CONFIG.requiresHigherThreshold,
     };
   }
 
   /**
    * Evaluate for proposal creation
    */
-  async evaluateProposal(
-    proposal: Proposal,
-    context: PolicyContext,
-  ): Promise<PolicyDecision> {
+  async evaluateProposal(proposal: Proposal, context: PolicyContext): Promise<PolicyDecision> {
     const violations: PolicyViolation[] = [];
 
     for (const msg of proposal.content.msgs) {
@@ -140,9 +138,9 @@ export class MsgTypePolicy implements Policy {
             "MSG_TYPE_REQUIRES_HIGHER_THRESHOLD",
             `Message type ${this.formatMsgType(msgType)} requires threshold of ${requiredThreshold} (current: ${context.normalThreshold})`,
             "medium",
-            { 
-              msgType, 
-              requiredThreshold, 
+            {
+              msgType,
+              requiredThreshold,
               currentThreshold: context.normalThreshold,
             },
           ),
@@ -160,10 +158,7 @@ export class MsgTypePolicy implements Policy {
   /**
    * Evaluate for proposal execution
    */
-  async evaluateExecution(
-    proposal: Proposal,
-    context: PolicyContext,
-  ): Promise<PolicyDecision> {
+  async evaluateExecution(proposal: Proposal, context: PolicyContext): Promise<PolicyDecision> {
     // Re-evaluate at execution time in case policies changed
     const violations: PolicyViolation[] = [];
 
@@ -202,10 +197,11 @@ export class MsgTypePolicy implements Policy {
 
       // Check threshold requirement
       const requiredThreshold = this.getRequiredThreshold(msgType);
-      const effectiveThreshold = context.isSafeMode && context.elevatedThreshold 
-        ? context.elevatedThreshold 
-        : context.normalThreshold;
-        
+      const effectiveThreshold =
+        context.isSafeMode && context.elevatedThreshold
+          ? context.elevatedThreshold
+          : context.normalThreshold;
+
       if (requiredThreshold !== null && requiredThreshold > effectiveThreshold) {
         violations.push(
           createViolation(
@@ -214,9 +210,9 @@ export class MsgTypePolicy implements Policy {
             "MSG_TYPE_REQUIRES_HIGHER_THRESHOLD",
             `Execution requires threshold of ${requiredThreshold} for ${this.formatMsgType(msgType)}`,
             "high",
-            { 
-              msgType, 
-              requiredThreshold, 
+            {
+              msgType,
+              requiredThreshold,
               effectiveThreshold,
             },
           ),
@@ -316,25 +312,26 @@ export class MsgTypePolicy implements Policy {
  */
 export function createMsgTypePolicy(stored: StoredPolicy): MsgTypePolicy {
   const parsedConfig = JSON.parse(stored.configJSON);
-  
+
   // Convert requiresHigherThreshold from object to Map if needed
   let requiresHigherThreshold = parsedConfig.requiresHigherThreshold;
   if (requiresHigherThreshold && !(requiresHigherThreshold instanceof Map)) {
     const thresholds = requiresHigherThreshold as unknown as Record<string, number>;
-    requiresHigherThreshold = new Map(Object.entries(thresholds)) as ReadonlyMap<MsgTypeUrl, number>;
+    requiresHigherThreshold = new Map(Object.entries(thresholds)) as ReadonlyMap<
+      MsgTypeUrl,
+      number
+    >;
   }
-  
+
   const config: MsgTypePolicyConfig = {
     ...parsedConfig,
     requiresHigherThreshold,
   };
-  
-  return new MsgTypePolicy(
-    stored.id,
-    stored.name,
-    config,
-    { enabled: stored.enabled, priority: stored.priority },
-  );
+
+  return new MsgTypePolicy(stored.id, stored.name, config, {
+    enabled: stored.enabled,
+    priority: stored.priority,
+  });
 }
 
 /**
@@ -374,7 +371,7 @@ export function createHighSecurityMsgTypePolicy(
   normalThreshold: number,
 ): MsgTypePolicy {
   const elevatedThreshold = normalThreshold + 1;
-  
+
   return new MsgTypePolicy(id, "High Security Message Types", {
     allowedMsgTypes: [], // Allow all except blocked
     blockedMsgTypes: [
@@ -388,4 +385,3 @@ export function createHighSecurityMsgTypePolicy(
     ]),
   });
 }
-

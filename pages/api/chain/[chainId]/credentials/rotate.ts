@@ -1,12 +1,12 @@
 /**
  * Rotate Signer API
- * 
+ *
  * File: pages/api/chain/[chainId]/credentials/rotate.ts
- * 
+ *
  * API route for rotating a signer's credential.
- * 
+ *
  * POST - Rotate a signer (revoke old credential, issue new one)
- * 
+ *
  * Phase 3: Identity NFTs (Credential-Gated Multisig)
  */
 
@@ -136,12 +136,7 @@ export default async function handler(
     const newVersion = oldCredential.version + 1;
 
     // Step 1: Revoke old credential
-    localDb.updateCredentialStatus(
-      oldCredential.classId,
-      oldCredential.tokenId,
-      "revoked",
-      now,
-    );
+    localDb.updateCredentialStatus(oldCredential.classId, oldCredential.tokenId, "revoked", now);
 
     // Step 2: Create new credential
     localDb.createCredential({
@@ -193,4 +188,3 @@ export default async function handler(
     });
   }
 }
-

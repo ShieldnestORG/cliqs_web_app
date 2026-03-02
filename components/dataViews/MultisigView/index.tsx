@@ -89,9 +89,7 @@ export default function MultisigView() {
         </CardHeader>
         <CardContent className="flex flex-col gap-5">
           {multisigAddress ? (
-            <div
-              className="flex items-center space-x-4 rounded-md border p-4 transition-colors bg-muted/30"
-            >
+            <div className="flex items-center space-x-4 rounded-md border bg-muted/30 p-4 transition-colors">
               <CopyButton value={multisigAddress} copyLabel="multisig address" />
               <div className="flex-1 space-y-1">
                 <p className="text-sm font-medium leading-none">Multisig address</p>
@@ -126,7 +124,7 @@ export default function MultisigView() {
                   return (
                     <div
                       key={memberAddress}
-                      className="flex items-center space-x-2 rounded-md border p-2 transition-colors bg-muted/30"
+                      className="flex items-center space-x-2 rounded-md border bg-muted/30 p-2 transition-colors"
                     >
                       <CopyButton value={memberAddress} copyLabel="member address" />
                       <div className="flex-1 space-y-1">

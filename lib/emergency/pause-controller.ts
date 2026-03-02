@@ -1,17 +1,17 @@
 /**
  * Pause Controller - Emergency Pause Mechanism
- * 
+ *
  * File: lib/emergency/pause-controller.ts
- * 
+ *
  * Implements the emergency pause mechanism for multisigs.
  * This is a Priority 2 feature that provides a "kill switch" for operations.
- * 
+ *
  * Key Design Rules:
  * - Pause blocks new approvals and execution
  * - Queries are still allowed
  * - Credential checks are NOT bypassed
  * - Unpause requires higher threshold (N+1) OR timelocked admin action
- * 
+ *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards
  */
 
@@ -70,7 +70,7 @@ export class PauseController {
    */
   getState(multisigAddress: string, chainId: string): EmergencyState {
     const dbState = localDb.getEmergencyState(multisigAddress, chainId);
-    
+
     if (!dbState) {
       return DEFAULT_EMERGENCY_STATE;
     }
@@ -79,7 +79,7 @@ export class PauseController {
     if (dbState.isPaused && dbState.autoUnpauseAt) {
       const autoUnpauseTimestamp = new Date(dbState.autoUnpauseAt).getTime() / 1000;
       const now = Math.floor(Date.now() / 1000);
-      
+
       if (now >= autoUnpauseTimestamp) {
         // Auto-unpause has triggered
         localDb.updateEmergencyState(multisigAddress, chainId, {
@@ -89,7 +89,7 @@ export class PauseController {
           pauseReason: null,
           autoUnpauseAt: null,
         });
-        
+
         localDb.recordEmergencyEvent({
           multisigAddress,
           chainId,
@@ -100,7 +100,7 @@ export class PauseController {
           height: null,
           autoUnpauseAt: null,
         });
-        
+
         this.emitEvent({
           type: "EMERGENCY_UNPAUSED",
           multisigAddress,
@@ -109,7 +109,7 @@ export class PauseController {
           timestamp: now,
           details: { reason: "auto_unpause" },
         });
-        
+
         return DEFAULT_EMERGENCY_STATE;
       }
     }
@@ -119,11 +119,13 @@ export class PauseController {
       pausedAt: dbState.pausedAt ? new Date(dbState.pausedAt).getTime() / 1000 : null,
       pausedBy: dbState.pausedBy,
       pauseReason: dbState.pauseReason,
-      autoUnpauseAt: dbState.autoUnpauseAt ? new Date(dbState.autoUnpauseAt).getTime() / 1000 : null,
+      autoUnpauseAt: dbState.autoUnpauseAt
+        ? new Date(dbState.autoUnpauseAt).getTime() / 1000
+        : null,
       isSafeMode: dbState.isSafeMode,
       safeModeThreshold: dbState.safeModeThreshold,
-      safeModeActivatedAt: dbState.safeModeActivatedAt 
-        ? new Date(dbState.safeModeActivatedAt).getTime() / 1000 
+      safeModeActivatedAt: dbState.safeModeActivatedAt
+        ? new Date(dbState.safeModeActivatedAt).getTime() / 1000
         : null,
     };
   }
@@ -141,31 +143,26 @@ export class PauseController {
 
   /**
    * Pause operations for a multisig
-   * 
+   *
    * When paused:
    * - No new approvals allowed
    * - No execution allowed
    * - Queries still work
    * - Credential checks still enforced
    */
-  async pause(
-    multisigAddress: string,
-    chainId: string,
-    input: PauseInput,
-  ): Promise<PauseResult> {
+  async pause(multisigAddress: string, chainId: string, input: PauseInput): Promise<PauseResult> {
     const currentState = this.getState(multisigAddress, chainId);
-    
+
     // Check if already paused
     if (currentState.isPaused) {
-      throw new EmergencyError(
-        "Multisig is already paused",
-        "ALREADY_PAUSED",
-        { pausedAt: currentState.pausedAt, pausedBy: currentState.pausedBy },
-      );
+      throw new EmergencyError("Multisig is already paused", "ALREADY_PAUSED", {
+        pausedAt: currentState.pausedAt,
+        pausedBy: currentState.pausedBy,
+      });
     }
 
     const now = Math.floor(Date.now() / 1000);
-    
+
     // Calculate auto-unpause time
     let autoUnpauseAt: number | null = null;
     if (input.durationSeconds !== undefined) {
@@ -216,7 +213,7 @@ export class PauseController {
 
   /**
    * Unpause operations for a multisig
-   * 
+   *
    * Unpause requires:
    * - Higher threshold (N+1) OR
    * - Timelocked admin action (24h minimum)
@@ -227,13 +224,10 @@ export class PauseController {
     input: UnpauseInput,
   ): Promise<UnpauseResult> {
     const currentState = this.getState(multisigAddress, chainId);
-    
+
     // Check if not paused
     if (!currentState.isPaused) {
-      throw new EmergencyError(
-        "Multisig is not paused",
-        "NOT_PAUSED",
-      );
+      throw new EmergencyError("Multisig is not paused", "NOT_PAUSED");
     }
 
     const now = Math.floor(Date.now() / 1000);
@@ -313,7 +307,7 @@ export class PauseController {
     }
 
     const state = this.getState(multisigAddress, chainId);
-    
+
     if (state.isPaused) {
       return {
         blocked: true,
@@ -374,9 +368,7 @@ export class PauseController {
 /**
  * Create a new pause controller
  */
-export function createPauseController(
-  config?: Partial<PauseControllerConfig>,
-): PauseController {
+export function createPauseController(config?: Partial<PauseControllerConfig>): PauseController {
   return new PauseController(config);
 }
 
@@ -402,4 +394,3 @@ export function getPauseController(): PauseController {
 export function setPauseController(controller: PauseController): void {
   globalPauseController = controller;
 }
-

@@ -21,7 +21,11 @@ import {
   corruptBytes,
   setSeed,
 } from "../generators/genTx";
-import { assertReplayInvariants, ReplayContext, hashTxBytes as oracleHashTxBytes } from "../oracle/invariantOracle";
+import {
+  assertReplayInvariants,
+  ReplayContext,
+  hashTxBytes as oracleHashTxBytes,
+} from "../oracle/invariantOracle";
 import { getWalletFlow } from "../../../__tests__/adapters/walletFlow.adapter";
 import { MockWalletSigner } from "../../../__tests__/mocks/MockWalletSigner";
 import { MockBroadcaster } from "../../../__tests__/mocks/MockBroadcaster";
@@ -48,7 +52,7 @@ describe("PHASE 3 FUZZ: Transaction Processing", () => {
         const tx = genTx(i);
         const bytes = txToBytes(tx);
 
-        expect(bytes instanceof Uint8Array || bytes.constructor.name === 'Uint8Array').toBe(true);
+        expect(bytes instanceof Uint8Array || bytes.constructor.name === "Uint8Array").toBe(true);
         expect(bytes.length).toBeGreaterThan(0);
 
         // Hash should be deterministic
@@ -135,7 +139,7 @@ describe("PHASE 3 FUZZ: Transaction Processing", () => {
               break;
           }
         }
-      }
+      },
     );
 
     test("500 malformed transactions do not crash serialization", () => {
@@ -289,9 +293,7 @@ describe("PHASE 3 FUZZ: Transaction Processing", () => {
         expect(tx._malformationType).toBe("stale_signature");
 
         // Verify the mismatch
-        const isStale = tx.signatures.some(
-          (sig) => parseInt(sig.sequence) < parseInt(tx.sequence)
-        );
+        const isStale = tx.signatures.some((sig) => parseInt(sig.sequence) < parseInt(tx.sequence));
         expect(isStale).toBe(true);
       }
     });
@@ -391,4 +393,3 @@ describe("PHASE 3 FUZZ: Transaction Processing", () => {
     });
   });
 });
-

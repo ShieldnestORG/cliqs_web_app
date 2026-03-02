@@ -1,8 +1,8 @@
 /**
  * Event Emission Guarantee Tests
- * 
+ *
  * File: __tests__/monitoring/event-emission.test.ts
- * 
+ *
  * Tests for Phase 4 guaranteed event emission
  */
 
@@ -70,16 +70,10 @@ describe("EventStream", () => {
 
   describe("guaranteed events", () => {
     it("emits PROPOSAL_QUEUED with required attributes", async () => {
-      await stream.emitProposalEvent(
-        "PROPOSAL_QUEUED",
-        "cosmos1test...",
-        "cosmoshub-4",
-        "42",
-        {
-          queuedAt: Math.floor(Date.now() / 1000),
-          executeAfter: Math.floor(Date.now() / 1000) + 3600,
-        },
-      );
+      await stream.emitProposalEvent("PROPOSAL_QUEUED", "cosmos1test...", "cosmoshub-4", "42", {
+        queuedAt: Math.floor(Date.now() / 1000),
+        executeAfter: Math.floor(Date.now() / 1000) + 3600,
+      });
 
       const events = memorySink.getEventsByType("PROPOSAL_QUEUED");
       expect(events).toHaveLength(1);
@@ -89,16 +83,10 @@ describe("EventStream", () => {
     });
 
     it("emits PROPOSAL_EXECUTED with required attributes", async () => {
-      await stream.emitProposalEvent(
-        "PROPOSAL_EXECUTED",
-        "cosmos1test...",
-        "cosmoshub-4",
-        "42",
-        {
-          txHash: "ABC123",
-          executor: "cosmos1executor...",
-        },
-      );
+      await stream.emitProposalEvent("PROPOSAL_EXECUTED", "cosmos1test...", "cosmoshub-4", "42", {
+        txHash: "ABC123",
+        executor: "cosmos1executor...",
+      });
 
       const events = memorySink.getEventsByType("PROPOSAL_EXECUTED");
       expect(events).toHaveLength(1);
@@ -108,16 +96,10 @@ describe("EventStream", () => {
     });
 
     it("emits PROPOSAL_FAILED with required attributes", async () => {
-      await stream.emitProposalEvent(
-        "PROPOSAL_FAILED",
-        "cosmos1test...",
-        "cosmoshub-4",
-        "42",
-        {
-          errorCode: "INSUFFICIENT_FUNDS",
-          errorMsg: "Not enough tokens",
-        },
-      );
+      await stream.emitProposalEvent("PROPOSAL_FAILED", "cosmos1test...", "cosmoshub-4", "42", {
+        errorCode: "INSUFFICIENT_FUNDS",
+        errorMsg: "Not enough tokens",
+      });
 
       const events = memorySink.getEventsByType("PROPOSAL_FAILED");
       expect(events).toHaveLength(1);
@@ -305,7 +287,7 @@ describe("EventStream", () => {
   describe("sink management", () => {
     it("adds and removes sinks", () => {
       const sink2 = createMemorySink("sink-2", "Second Sink");
-      
+
       stream.addSink(sink2);
       expect(stream.getSinks()).toHaveLength(2);
 
@@ -460,4 +442,3 @@ describe("MemorySink", () => {
     expect(healthy).toBe(true);
   });
 });
-

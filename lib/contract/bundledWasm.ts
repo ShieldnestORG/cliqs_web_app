@@ -56,7 +56,7 @@ export async function loadBundledWasm(contractType: BundledContractType): Promis
   if (!response.ok) {
     throw new Error(
       `Failed to load bundled WASM for ${contractType}: ${response.status} ${response.statusText}. ` +
-      `Run "scripts/download-wasm.sh" to download the binaries.`,
+        `Run "scripts/download-wasm.sh" to download the binaries.`,
     );
   }
 
@@ -67,7 +67,7 @@ export async function loadBundledWasm(contractType: BundledContractType): Promis
   if (bytes.length < minSize || bytes.length > maxSize) {
     console.warn(
       `[bundledWasm] ${contractType} size ${bytes.length} bytes is outside expected range ` +
-      `[${minSize}, ${maxSize}]. The file may be corrupted or a different version.`,
+        `[${minSize}, ${maxSize}]. The file may be corrupted or a different version.`,
     );
   }
 
@@ -85,7 +85,9 @@ export function getBundledContractInfo(contractType: BundledContractType): Bundl
 /**
  * Check if bundled WASM binaries are available (HEAD request).
  */
-export async function checkBundledWasmAvailable(contractType: BundledContractType): Promise<boolean> {
+export async function checkBundledWasmAvailable(
+  contractType: BundledContractType,
+): Promise<boolean> {
   try {
     const info = BUNDLED_CONTRACTS[contractType];
     const response = await fetch(info.path, { method: "HEAD" });
@@ -115,14 +117,17 @@ export interface WasmManifest {
   optimizerImage: string;
   buildMethod: string;
   allCoreumSafe: boolean;
-  contracts: Record<string, {
-    file: string;
-    sizeBytes: number;
-    sha256: string;
-    hasBulkMemory: boolean;
-    coreumSafe: boolean;
-    bulkMemoryOpcodes?: Array<{ name: string; count: number }>;
-  }>;
+  contracts: Record<
+    string,
+    {
+      file: string;
+      sizeBytes: number;
+      sha256: string;
+      hasBulkMemory: boolean;
+      coreumSafe: boolean;
+      bulkMemoryOpcodes?: Array<{ name: string; count: number }>;
+    }
+  >;
 }
 
 const MANIFEST_CONTRACT_KEYS: Record<BundledContractType, string> = {
@@ -153,9 +158,7 @@ export async function loadWasmManifest(): Promise<WasmManifest | null> {
  * Check if a bundled contract is safe for a specific chain scenario.
  * Uses the manifest (no binary download needed).
  */
-export async function isBundledWasmCoreumSafe(
-  contractType: BundledContractType,
-): Promise<boolean> {
+export async function isBundledWasmCoreumSafe(contractType: BundledContractType): Promise<boolean> {
   const manifest = await loadWasmManifest();
   if (!manifest) return false;
   const key = MANIFEST_CONTRACT_KEYS[contractType];

@@ -24,7 +24,13 @@ export interface WalletFlow {
  */
 export function getWalletFlow(): WalletFlow {
   return {
-    async buildTxBytes({ msgs, memo }: { msgs: readonly EncodeObject[]; memo?: string }): Promise<Uint8Array> {
+    async buildTxBytes({
+      msgs,
+      memo,
+    }: {
+      msgs: readonly EncodeObject[];
+      memo?: string;
+    }): Promise<Uint8Array> {
       // Mock tx building - create deterministic bytes based on input
       const input = JSON.stringify({ msgs, memo, timestamp: Date.now() });
       const bytes = new TextEncoder().encode(input);
@@ -38,7 +44,10 @@ export function getWalletFlow(): WalletFlow {
       return new Uint8Array(Buffer.concat([txBytes, sigBytes]));
     },
 
-    async broadcastSignedTx(txBytes: Uint8Array, broadcaster: Broadcaster): Promise<BroadcastResult> {
+    async broadcastSignedTx(
+      txBytes: Uint8Array,
+      broadcaster: Broadcaster,
+    ): Promise<BroadcastResult> {
       return broadcaster.broadcastTx(txBytes);
     },
 
@@ -47,10 +56,12 @@ export function getWalletFlow(): WalletFlow {
       const config = {
         chainId: "test-chain",
         minConfirmations: 1,
-        endpoints: [{
-          url: "http://test-rpc",
-          priority: "primary" as const,
-        }]
+        endpoints: [
+          {
+            url: "http://test-rpc",
+            priority: "primary" as const,
+          },
+        ],
       };
 
       const verifier = new MultiRpcVerifier(config);

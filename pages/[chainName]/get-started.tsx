@@ -18,11 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useChains } from "@/context/ChainsContext";
-import {
-  userJourneys,
-  journeyCategories,
-  type UserJourney,
-} from "@/lib/userJourneys";
+import { userJourneys, journeyCategories, type UserJourney } from "@/lib/userJourneys";
 import {
   ArrowLeft,
   ArrowRight,
@@ -42,7 +38,10 @@ import { cn } from "@/lib/utils";
 
 const difficultyConfig = {
   beginner: { label: "Beginner", color: "text-green-500 bg-green-500/10 border-green-500/20" },
-  intermediate: { label: "Intermediate", color: "text-amber-500 bg-amber-500/10 border-amber-500/20" },
+  intermediate: {
+    label: "Intermediate",
+    color: "text-amber-500 bg-amber-500/10 border-amber-500/20",
+  },
   advanced: { label: "Advanced", color: "text-red-400 bg-red-400/10 border-red-400/20" },
 };
 
@@ -58,7 +57,7 @@ function JourneyCard({
 
   return (
     <Card
-      className="group cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-primary/40 hover:-translate-y-0.5 bg-card border-border"
+      className="group cursor-pointer border-border bg-card transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg"
       onClick={() => onSelect(journey)}
       role="button"
       tabIndex={0}
@@ -66,20 +65,18 @@ function JourneyCard({
     >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <div className="p-2.5 rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary/20">
+          <div className="rounded-xl bg-primary/10 p-2.5 text-primary transition-colors group-hover:bg-primary/20">
             <Icon className="h-5 w-5" />
           </div>
-          <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
+          <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
         </div>
-        <CardTitle className="text-base mt-3">{journey.title}</CardTitle>
+        <CardTitle className="mt-3 text-base">{journey.title}</CardTitle>
         <CardDescription className="text-xs">{journey.subtitle}</CardDescription>
       </CardHeader>
       <CardContent className="pt-0">
-        <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-          {journey.description}
-        </p>
+        <p className="mb-4 line-clamp-2 text-sm text-muted-foreground">{journey.description}</p>
         <div className="flex items-center gap-3 text-xs">
-          <span className={cn("px-2 py-0.5 rounded-full border font-medium", diff.color)}>
+          <span className={cn("rounded-full border px-2 py-0.5 font-medium", diff.color)}>
             {diff.label}
           </span>
           <span className="flex items-center gap-1 text-muted-foreground">
@@ -109,14 +106,11 @@ function JourneyWalkthrough({
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const Icon = journey.icon;
   const diff = difficultyConfig[journey.difficulty];
-  const step = journey.steps[currentStep];
+  const _step = journey.steps[currentStep];
 
-  const markCompleted = useCallback(
-    (idx: number) => {
-      setCompletedSteps((prev) => new Set(prev).add(idx));
-    },
-    [],
-  );
+  const markCompleted = useCallback((idx: number) => {
+    setCompletedSteps((prev) => new Set(prev).add(idx));
+  }, []);
 
   const goNext = useCallback(() => {
     markCompleted(currentStep);
@@ -133,9 +127,7 @@ function JourneyWalkthrough({
 
   const isLastStep = currentStep === journey.steps.length - 1;
   const allCompleted = completedSteps.size === journey.steps.length;
-  const navigateHref = journey.navigateTo
-    ? `/${chainName}${journey.navigateTo}`
-    : undefined;
+  const navigateHref = journey.navigateTo ? `/${chainName}${journey.navigateTo}` : undefined;
 
   return (
     <div className="space-y-6">
@@ -144,9 +136,9 @@ function JourneyWalkthrough({
         <Button variant="ghost" size="icon" onClick={onBack} className="mt-1 shrink-0">
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-xl bg-primary/10 text-primary">
+        <div className="min-w-0 flex-1">
+          <div className="mb-2 flex items-center gap-3">
+            <div className="rounded-xl bg-primary/10 p-2 text-primary">
               <Icon className="h-5 w-5" />
             </div>
             <div>
@@ -154,8 +146,8 @@ function JourneyWalkthrough({
               <p className="text-sm text-muted-foreground">{journey.subtitle}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3 text-xs mt-3">
-            <span className={cn("px-2 py-0.5 rounded-full border font-medium", diff.color)}>
+          <div className="mt-3 flex items-center gap-3 text-xs">
+            <span className={cn("rounded-full border px-2 py-0.5 font-medium", diff.color)}>
               {diff.label}
             </span>
             <span className="flex items-center gap-1 text-muted-foreground">
@@ -168,16 +160,16 @@ function JourneyWalkthrough({
 
       {/* Prerequisites */}
       {journey.prerequisites.length > 0 && (
-        <Card className="bg-muted/30 border-border">
+        <Card className="border-border bg-muted/30">
           <CardContent className="p-4">
-            <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
+            <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
               <CheckCircle2 className="h-4 w-4 text-primary" />
               Before You Start
             </h3>
             <ul className="space-y-1.5">
               {journey.prerequisites.map((prereq, i) => (
-                <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                  <span className="text-primary mt-0.5">•</span>
+                <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                  <span className="mt-0.5 text-primary">•</span>
                   {prereq}
                 </li>
               ))}
@@ -187,13 +179,10 @@ function JourneyWalkthrough({
       )}
 
       {/* Step Tabs */}
-      <Tabs
-        value={String(currentStep)}
-        onValueChange={(v) => setCurrentStep(Number(v))}
-      >
+      <Tabs value={String(currentStep)} onValueChange={(v) => setCurrentStep(Number(v))}>
         {/* Step Progress Bar */}
         <div className="relative">
-          <TabsList className="w-full h-auto p-1.5 bg-muted/50 flex-wrap gap-1 justify-start">
+          <TabsList className="h-auto w-full flex-wrap justify-start gap-1 bg-muted/50 p-1.5">
             {journey.steps.map((s, i) => {
               const isCompleted = completedSteps.has(i);
               const isCurrent = i === currentStep;
@@ -203,13 +192,13 @@ function JourneyWalkthrough({
                   key={i}
                   value={String(i)}
                   className={cn(
-                    "flex items-center gap-2 text-xs px-3 py-2 transition-all data-[state=active]:shadow-sm",
+                    "flex items-center gap-2 px-3 py-2 text-xs transition-all data-[state=active]:shadow-sm",
                     isCompleted && !isCurrent && "text-primary",
                   )}
                 >
                   <span
                     className={cn(
-                      "flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold shrink-0 transition-colors",
+                      "flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold transition-colors",
                       isCurrent
                         ? "bg-primary text-primary-foreground"
                         : isCompleted
@@ -217,13 +206,9 @@ function JourneyWalkthrough({
                           : "bg-muted-foreground/20 text-muted-foreground",
                     )}
                   >
-                    {isCompleted ? (
-                      <CheckCircle2 className="h-3 w-3" />
-                    ) : (
-                      i + 1
-                    )}
+                    {isCompleted ? <CheckCircle2 className="h-3 w-3" /> : i + 1}
                   </span>
-                  <span className="hidden sm:inline truncate max-w-[120px]">{s.title}</span>
+                  <span className="hidden max-w-[120px] truncate sm:inline">{s.title}</span>
                 </TabsTrigger>
               );
             })}
@@ -236,7 +221,7 @@ function JourneyWalkthrough({
             <Card className="border-border">
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold shrink-0">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
                     {i + 1}
                   </span>
                   <div>
@@ -250,7 +235,7 @@ function JourneyWalkthrough({
                 <ul className="space-y-3">
                   {s.details.map((detail, j) => (
                     <li key={j} className="flex items-start gap-3 text-sm">
-                      <ArrowRight className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                      <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                       <span className="text-foreground/90">{detail}</span>
                     </li>
                   ))}
@@ -258,10 +243,10 @@ function JourneyWalkthrough({
 
                 {/* Tip */}
                 {s.tip && (
-                  <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
-                    <Lightbulb className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                  <div className="flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+                    <Lightbulb className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
                     <div>
-                      <p className="text-xs font-semibold text-amber-500 uppercase tracking-wider mb-1">
+                      <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-amber-500">
                         Pro Tip
                       </p>
                       <p className="text-sm text-foreground/80">{s.tip}</p>
@@ -276,12 +261,7 @@ function JourneyWalkthrough({
 
       {/* Navigation Buttons */}
       <div className="flex items-center justify-between pt-2">
-        <Button
-          variant="outline"
-          onClick={goPrev}
-          disabled={currentStep === 0}
-          className="gap-2"
-        >
+        <Button variant="outline" onClick={goPrev} disabled={currentStep === 0} className="gap-2">
           <ArrowLeft className="h-4 w-4" />
           Previous
         </Button>
@@ -289,9 +269,7 @@ function JourneyWalkthrough({
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           Step {currentStep + 1} of {journey.steps.length}
           {completedSteps.size > 0 && (
-            <span className="text-primary">
-              ({completedSteps.size} completed)
-            </span>
+            <span className="text-primary">({completedSteps.size} completed)</span>
           )}
         </div>
 
@@ -326,18 +304,16 @@ function JourneyWalkthrough({
 
       {/* All Completed Banner */}
       {allCompleted && (
-        <Card className="bg-primary/5 border-primary/20">
-          <CardContent className="p-6 flex items-center gap-4">
-            <div className="p-3 rounded-full bg-primary/10">
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="flex items-center gap-4 p-6">
+            <div className="rounded-full bg-primary/10 p-3">
               <Sparkles className="h-6 w-6 text-primary" />
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-foreground">Journey Complete!</h3>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="mt-1 text-sm text-muted-foreground">
                 You&apos;ve reviewed all steps.{" "}
-                {navigateHref
-                  ? "Ready to get started for real?"
-                  : "You're all set!"}
+                {navigateHref ? "Ready to get started for real?" : "You're all set!"}
               </p>
             </div>
             {navigateHref && (
@@ -375,7 +351,7 @@ export default function GetStartedPage() {
       : userJourneys.filter((j) => j.category === categoryFilter);
 
   return (
-    <div className="container mx-auto px-[0.75in] py-8 max-w-[1600px]">
+    <div className="container mx-auto max-w-[1600px] px-[0.75in] py-8">
       <Head title={`Get Started - ${chain.chainDisplayName || "CLIQS"}`} />
 
       <div className="space-y-6">
@@ -389,10 +365,7 @@ export default function GetStartedPage() {
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               {selectedJourney ? (
-                <BreadcrumbLink
-                  className="cursor-pointer"
-                  onClick={() => setSelectedJourney(null)}
-                >
+                <BreadcrumbLink className="cursor-pointer" onClick={() => setSelectedJourney(null)}>
                   Get Started
                 </BreadcrumbLink>
               ) : (
@@ -423,19 +396,19 @@ export default function GetStartedPage() {
           <>
             {/* Page Header */}
             <div className="space-y-2">
-              <h1 className="text-3xl font-heading font-bold flex items-center gap-3">
+              <h1 className="flex items-center gap-3 font-heading text-3xl font-bold">
                 <BookOpen className="h-8 w-8 text-primary" />
                 Get Started
               </h1>
-              <p className="text-muted-foreground max-w-2xl">
+              <p className="max-w-2xl text-muted-foreground">
                 Choose a guided walkthrough to learn how CLIQS works. Each journey takes you
-                step-by-step through a specific flow — from creating your first multisig to
-                managing your own database.
+                step-by-step through a specific flow — from creating your first multisig to managing
+                your own database.
               </p>
             </div>
 
             {/* Category Filter */}
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 variant={categoryFilter === "all" ? "default" : "outline"}
                 size="sm"
@@ -463,19 +436,15 @@ export default function GetStartedPage() {
             </div>
 
             {/* Journey Cards Grid */}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {filteredJourneys.map((journey) => (
-                <JourneyCard
-                  key={journey.id}
-                  journey={journey}
-                  onSelect={setSelectedJourney}
-                />
+                <JourneyCard key={journey.id} journey={journey} onSelect={setSelectedJourney} />
               ))}
             </div>
 
             {filteredJourneys.length === 0 && (
-              <div className="text-center py-12 text-muted-foreground">
-                <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <div className="py-12 text-center text-muted-foreground">
+                <BookOpen className="mx-auto mb-4 h-12 w-12 opacity-50" />
                 <p>No journeys found for this category.</p>
               </div>
             )}

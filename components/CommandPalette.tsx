@@ -33,7 +33,10 @@ interface CommandPaletteProps {
   onOpenChange?: (open: boolean) => void;
 }
 
-export default function CommandPalette({ open: controlledOpen, onOpenChange }: CommandPaletteProps) {
+export default function CommandPalette({
+  open: controlledOpen,
+  onOpenChange,
+}: CommandPaletteProps) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const { chain } = useChains();
@@ -59,7 +62,7 @@ export default function CommandPalette({ open: controlledOpen, onOpenChange }: C
       setIsOpen(false);
       command();
     },
-    [setIsOpen]
+    [setIsOpen],
   );
 
   const navigationItems = [
@@ -135,7 +138,7 @@ export default function CommandPalette({ open: controlledOpen, onOpenChange }: C
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-3xl w-[90vw] p-0 gap-0 overflow-hidden">
+      <DialogContent className="w-[90vw] max-w-3xl gap-0 overflow-hidden p-0">
         {/* Custom close button */}
         <button
           onClick={() => setIsOpen(false)}
@@ -150,12 +153,12 @@ export default function CommandPalette({ open: controlledOpen, onOpenChange }: C
           <div className="flex items-center gap-3 border-b px-6 py-4">
             <Search className="h-5 w-5 text-muted-foreground" />
             <div className="flex-1">
-              <CommandInput 
-                placeholder="Type a command or search..." 
-                className="h-12 text-lg border-0 focus:ring-0 px-0"
+              <CommandInput
+                placeholder="Type a command or search..."
+                className="h-12 border-0 px-0 text-lg focus:ring-0"
               />
             </div>
-            <kbd className="hidden sm:inline-flex h-8 select-none items-center gap-1 rounded-md border bg-muted px-3 font-mono text-sm font-medium text-muted-foreground">
+            <kbd className="hidden h-8 select-none items-center gap-1 rounded-md border bg-muted px-3 font-mono text-sm font-medium text-muted-foreground sm:inline-flex">
               ESC
             </kbd>
           </div>
@@ -163,7 +166,7 @@ export default function CommandPalette({ open: controlledOpen, onOpenChange }: C
           <CommandList className="max-h-[500px] overflow-y-auto p-4">
             <CommandEmpty className="py-12 text-center">
               <div className="flex flex-col items-center gap-3">
-                <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
                   <Search className="h-6 w-6 text-muted-foreground" />
                 </div>
                 <p className="text-lg font-medium">No results found</p>
@@ -177,11 +180,11 @@ export default function CommandPalette({ open: controlledOpen, onOpenChange }: C
                   <CommandItem
                     key={item.label}
                     onSelect={() => runCommand(item.action)}
-                    className="flex items-center gap-4 px-4 py-4 rounded-xl cursor-pointer"
+                    className="flex cursor-pointer items-center gap-4 rounded-xl px-4 py-4"
                   >
                     <item.icon className="h-6 w-6" />
                     <span className="flex-1 text-base font-medium">{item.label}</span>
-                    <CommandShortcut className="text-sm px-2 py-1 rounded-md bg-muted">
+                    <CommandShortcut className="rounded-md bg-muted px-2 py-1 text-sm">
                       {item.shortcut}
                     </CommandShortcut>
                   </CommandItem>
@@ -197,7 +200,7 @@ export default function CommandPalette({ open: controlledOpen, onOpenChange }: C
                   <CommandItem
                     key={item.label}
                     onSelect={() => runCommand(item.action)}
-                    className="flex items-center gap-4 px-4 py-4 rounded-xl cursor-pointer"
+                    className="flex cursor-pointer items-center gap-4 rounded-xl px-4 py-4"
                   >
                     <item.icon className="h-6 w-6" />
                     <div className="flex-1">
@@ -218,7 +221,7 @@ export default function CommandPalette({ open: controlledOpen, onOpenChange }: C
                   <CommandItem
                     key={item.label}
                     onSelect={() => runCommand(item.action)}
-                    className="flex items-center gap-4 px-4 py-4 rounded-xl cursor-pointer"
+                    className="flex cursor-pointer items-center gap-4 rounded-xl px-4 py-4"
                   >
                     <item.icon className="h-6 w-6" />
                     <div className="flex-1">
@@ -232,18 +235,18 @@ export default function CommandPalette({ open: controlledOpen, onOpenChange }: C
           </CommandList>
 
           {/* Footer */}
-          <div className="flex items-center justify-between gap-4 border-t px-6 py-4 bg-muted/30">
+          <div className="flex items-center justify-between gap-4 border-t bg-muted/30 px-6 py-4">
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <span className="flex items-center gap-2">
-                <kbd className="px-2 py-0.5 rounded bg-muted font-mono text-xs">↑↓</kbd>
+                <kbd className="rounded bg-muted px-2 py-0.5 font-mono text-xs">↑↓</kbd>
                 Navigate
               </span>
               <span className="flex items-center gap-2">
-                <kbd className="px-2 py-0.5 rounded bg-muted font-mono text-xs">↵</kbd>
+                <kbd className="rounded bg-muted px-2 py-0.5 font-mono text-xs">↵</kbd>
                 Select
               </span>
               <span className="flex items-center gap-2">
-                <kbd className="px-2 py-0.5 rounded bg-muted font-mono text-xs">ESC</kbd>
+                <kbd className="rounded bg-muted px-2 py-0.5 font-mono text-xs">ESC</kbd>
                 Close
               </span>
             </div>
@@ -263,11 +266,11 @@ export function CommandPaletteTrigger({ onClick }: { onClick?: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border/50 text-xs text-muted-foreground hover:text-foreground hover:bg-muted hover:border-border transition-all group"
+      className="group hidden items-center gap-2 rounded-lg border border-border/50 bg-muted/50 px-3 py-1.5 text-xs text-muted-foreground transition-all hover:border-border hover:bg-muted hover:text-foreground md:flex"
     >
       <Search className="h-3.5 w-3.5" />
       <span className="font-mono">Search...</span>
-      <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-border bg-background px-1.5 font-mono text-[10px] font-medium opacity-70 group-hover:opacity-100">
+      <kbd className="pointer-events-none ml-2 inline-flex h-5 select-none items-center gap-1 rounded border border-border bg-background px-1.5 font-mono text-[10px] font-medium opacity-70 group-hover:opacity-100">
         <CommandIcon className="h-3 w-3" />K
       </kbd>
     </button>

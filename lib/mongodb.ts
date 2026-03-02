@@ -208,9 +208,7 @@ export const getBelongedMultisigs = async (
       const parsed = JSON.parse(doc.pubkeyJSON);
       const pubkeys: { value?: string; key?: string }[] =
         parsed?.value?.pubkeys || parsed?.pubkeys || [];
-      return pubkeys.some(
-        (pk) => pk.value === memberPubkey || pk.key === memberPubkey,
-      );
+      return pubkeys.some((pk) => pk.value === memberPubkey || pk.key === memberPubkey);
     } catch {
       // Fallback: keep the regex match if JSON parsing fails
       return true;
@@ -254,9 +252,7 @@ export const createMultisig = async (multisig: {
       );
       return existing.address;
     }
-    throw new Error(
-      `Cliq already exists on ${multisig.chainId} with address ${multisig.address}`,
-    );
+    throw new Error(`Cliq already exists on ${multisig.chainId} with address ${multisig.address}`);
   }
 
   const doc: MongoMultisig = {
@@ -476,11 +472,7 @@ export const createOrUpdateNonce = async (
   if (!db) throw new Error("MongoDB not available");
 
   const col = db.collection<MongoNonce>(Collections.NONCES);
-  await col.updateOne(
-    { chainId, address },
-    { $set: { nonce } },
-    { upsert: true },
-  );
+  await col.updateOne({ chainId, address }, { $set: { nonce } }, { upsert: true });
 };
 
 // ============================================================================
@@ -501,9 +493,7 @@ export const wipeCompletedTransactions = async (
   const sigCol = db.collection<MongoSignature>(Collections.SIGNATURES);
 
   // Find all broadcast transactions for this multisig
-  const broadcastTxs = await txCol
-    .find({ creatorId: multisigId, status: "broadcast" })
-    .toArray();
+  const broadcastTxs = await txCol.find({ creatorId: multisigId, status: "broadcast" }).toArray();
 
   const txIds = broadcastTxs.map((t) => docId(t));
 
@@ -556,9 +546,7 @@ export const wipeAllTransactions = async (
  * Export all transactions for a multisig as a JSON array.
  * Users can download this before wiping.
  */
-export const exportTransactionHistory = async (
-  multisigId: string,
-): Promise<object[]> => {
+export const exportTransactionHistory = async (multisigId: string): Promise<object[]> => {
   const db = await getDb();
   if (!db) return [];
 
@@ -667,10 +655,7 @@ export const ensureIndexes = async (): Promise<void> => {
 
   const sigCol = db.collection(Collections.SIGNATURES);
   await sigCol.createIndex({ transactionId: 1 });
-  await sigCol.createIndex(
-    { transactionId: 1, address: 1 },
-    { unique: true },
-  );
+  await sigCol.createIndex({ transactionId: 1, address: 1 }, { unique: true });
 
   const nonceCol = db.collection(Collections.NONCES);
   await nonceCol.createIndex({ chainId: 1, address: 1 }, { unique: true });

@@ -41,16 +41,19 @@ describe("PHASE 3 FUZZ: Policy Engine", () => {
         setSeed(i);
         const ctx = genPolicyCtx(i);
 
-        const result = await evaluatePoliciesMinimal({
-          policyVersion: ctx.policyVersion,
-          expectedPolicyVersion: ctx.expectedPolicyVersion,
-          isPaused: ctx.emergencyPaused,
-          isSafeMode: ctx.safeMode,
-          credential: ctx.credential,
-          timelock: ctx.timelock,
-          nowMs: ctx.nowMs,
-          spend: ctx.spend,
-        }, 'execution');
+        const result = await evaluatePoliciesMinimal(
+          {
+            policyVersion: ctx.policyVersion,
+            expectedPolicyVersion: ctx.expectedPolicyVersion,
+            isPaused: ctx.emergencyPaused,
+            isSafeMode: ctx.safeMode,
+            credential: ctx.credential,
+            timelock: ctx.timelock,
+            nowMs: ctx.nowMs,
+            spend: ctx.spend,
+          },
+          "execution",
+        );
 
         // Check if any forbidden condition exists
         const hasForbiddenCondition =
@@ -77,18 +80,21 @@ describe("PHASE 3 FUZZ: Policy Engine", () => {
       for (let i = 0; i < 1000; i++) {
         const ctx = genHostilePolicyCtx(i);
 
-        const result = await evaluatePoliciesMinimal({
-          policyVersion: ctx.policyVersion,
-          expectedPolicyVersion: ctx.expectedPolicyVersion,
-          isPaused: ctx.emergencyPaused,
-          isSafeMode: ctx.safeMode,
-          credential: ctx.credential,
-          timelock: ctx.timelock,
-          nowMs: ctx.nowMs,
-          spend: ctx.spend,
-          signaturesRequired: ctx.signaturesRequired,
-          signaturesCollected: ctx.signaturesCollected,
-        }, 'execution');
+        const result = await evaluatePoliciesMinimal(
+          {
+            policyVersion: ctx.policyVersion,
+            expectedPolicyVersion: ctx.expectedPolicyVersion,
+            isPaused: ctx.emergencyPaused,
+            isSafeMode: ctx.safeMode,
+            credential: ctx.credential,
+            timelock: ctx.timelock,
+            nowMs: ctx.nowMs,
+            spend: ctx.spend,
+            signaturesRequired: ctx.signaturesRequired,
+            signaturesCollected: ctx.signaturesCollected,
+          },
+          "execution",
+        );
 
         expect(result.allowed).toBe(false);
       }
@@ -113,19 +119,22 @@ describe("PHASE 3 FUZZ: Policy Engine", () => {
           setSeed(i);
           const ctx = genPolicyCtx(i);
 
-          const result = await evaluatePoliciesMinimal({
-            policyVersion: ctx.policyVersion,
-            expectedPolicyVersion: ctx.expectedPolicyVersion,
-            isPaused: emergencyPaused,
-            isSafeMode: safeMode,
-            credential: ctx.credential,
-            timelock: ctx.timelock,
-            nowMs: ctx.nowMs,
-          }, 'execution');
+          const result = await evaluatePoliciesMinimal(
+            {
+              policyVersion: ctx.policyVersion,
+              expectedPolicyVersion: ctx.expectedPolicyVersion,
+              isPaused: emergencyPaused,
+              isSafeMode: safeMode,
+              credential: ctx.credential,
+              timelock: ctx.timelock,
+              nowMs: ctx.nowMs,
+            },
+            "execution",
+          );
 
           expect(result.allowed).toBe(false);
         }
-      }
+      },
     );
   });
 
@@ -138,13 +147,16 @@ describe("PHASE 3 FUZZ: Policy Engine", () => {
       for (let version = 0; version < 100; version++) {
         if (version === 1) continue; // Skip matching version
 
-        const result = await evaluatePoliciesMinimal({
-          policyVersion: version,
-          expectedPolicyVersion: 1,
-          isPaused: false,
-          isSafeMode: false,
-          credential: { holder: "cosmos1test", valid: true, role: "member" },
-        }, 'execution');
+        const result = await evaluatePoliciesMinimal(
+          {
+            policyVersion: version,
+            expectedPolicyVersion: 1,
+            isPaused: false,
+            isSafeMode: false,
+            credential: { holder: "cosmos1test", valid: true, role: "member" },
+          },
+          "execution",
+        );
 
         expect(result.allowed).toBe(false);
       }
@@ -156,13 +168,16 @@ describe("PHASE 3 FUZZ: Policy Engine", () => {
         const version = Math.floor(Math.random() * 10);
         const expected = Math.floor(Math.random() * 10);
 
-        const result = await evaluatePoliciesMinimal({
-          policyVersion: version,
-          expectedPolicyVersion: expected,
-          isPaused: false,
-          isSafeMode: false,
-          credential: { holder: "cosmos1test", valid: true, role: "member" },
-        }, 'execution');
+        const result = await evaluatePoliciesMinimal(
+          {
+            policyVersion: version,
+            expectedPolicyVersion: expected,
+            isPaused: false,
+            isSafeMode: false,
+            credential: { holder: "cosmos1test", valid: true, role: "member" },
+          },
+          "execution",
+        );
 
         if (version !== expected) {
           expect(result.allowed).toBe(false);
@@ -187,15 +202,18 @@ describe("PHASE 3 FUZZ: Policy Engine", () => {
         const offset = Math.floor(Math.random() * 172800000) - 86400000;
         const unlockAtMs = baseTime + offset;
 
-        const result = await evaluatePoliciesMinimal({
-          policyVersion: 1,
-          expectedPolicyVersion: 1,
-          isPaused: false,
-          isSafeMode: false,
-          credential: { holder: "cosmos1test", valid: true, role: "member" },
-          timelock: { unlockAtMs },
-          nowMs: baseTime,
-        }, 'execution');
+        const result = await evaluatePoliciesMinimal(
+          {
+            policyVersion: 1,
+            expectedPolicyVersion: 1,
+            isPaused: false,
+            isSafeMode: false,
+            credential: { holder: "cosmos1test", valid: true, role: "member" },
+            timelock: { unlockAtMs },
+            nowMs: baseTime,
+          },
+          "execution",
+        );
 
         if (baseTime < unlockAtMs) {
           expect(result.allowed).toBe(false);
@@ -208,12 +226,15 @@ describe("PHASE 3 FUZZ: Policy Engine", () => {
     test("exact boundary: now === unlockAt should allow", async () => {
       const now = Date.now();
 
-      const result = await evaluatePoliciesMinimal({
-        policyVersion: 1,
-        expectedPolicyVersion: 1,
-        timelock: { unlockAtMs: now },
-        nowMs: now,
-      }, 'execution');
+      const result = await evaluatePoliciesMinimal(
+        {
+          policyVersion: 1,
+          expectedPolicyVersion: 1,
+          timelock: { unlockAtMs: now },
+          nowMs: now,
+        },
+        "execution",
+      );
 
       expect(result.allowed).toBe(true);
     });
@@ -221,12 +242,15 @@ describe("PHASE 3 FUZZ: Policy Engine", () => {
     test("1ms before unlock is denied", async () => {
       const now = Date.now();
 
-      const result = await evaluatePoliciesMinimal({
-        policyVersion: 1,
-        expectedPolicyVersion: 1,
-        timelock: { unlockAtMs: now + 1 },
-        nowMs: now,
-      }, 'execution');
+      const result = await evaluatePoliciesMinimal(
+        {
+          policyVersion: 1,
+          expectedPolicyVersion: 1,
+          timelock: { unlockAtMs: now + 1 },
+          nowMs: now,
+        },
+        "execution",
+      );
 
       expect(result.allowed).toBe(false);
     });
@@ -244,13 +268,16 @@ describe("PHASE 3 FUZZ: Policy Engine", () => {
         setSeed(i);
         const amount = Math.floor(Math.random() * 5000);
 
-        const result = await evaluatePoliciesMinimal({
-          policyVersion: 1,
-          expectedPolicyVersion: 1,
-          isPaused: false,
-          isSafeMode: false,
-          spend: [{ amount: String(amount), denom: "ucore" }],
-        }, 'execution');
+        const result = await evaluatePoliciesMinimal(
+          {
+            policyVersion: 1,
+            expectedPolicyVersion: 1,
+            isPaused: false,
+            isSafeMode: false,
+            spend: [{ amount: String(amount), denom: "ucore" }],
+          },
+          "execution",
+        );
 
         if (amount > limit) {
           expect(result.allowed).toBe(false);
@@ -261,21 +288,27 @@ describe("PHASE 3 FUZZ: Policy Engine", () => {
     });
 
     test("exact spend limit boundary should allow", async () => {
-      const result = await evaluatePoliciesMinimal({
-        policyVersion: 1,
-        expectedPolicyVersion: 1,
-        spend: [{ amount: "1000", denom: "ucore" }],
-      }, 'execution');
+      const result = await evaluatePoliciesMinimal(
+        {
+          policyVersion: 1,
+          expectedPolicyVersion: 1,
+          spend: [{ amount: "1000", denom: "ucore" }],
+        },
+        "execution",
+      );
 
       expect(result.allowed).toBe(true);
     });
 
     test("1 over spend limit is denied", async () => {
-      const result = await evaluatePoliciesMinimal({
-        policyVersion: 1,
-        expectedPolicyVersion: 1,
-        spend: [{ amount: "1001", denom: "ucore" }],
-      }, 'execution');
+      const result = await evaluatePoliciesMinimal(
+        {
+          policyVersion: 1,
+          expectedPolicyVersion: 1,
+          spend: [{ amount: "1001", denom: "ucore" }],
+        },
+        "execution",
+      );
 
       expect(result.allowed).toBe(false);
     });
@@ -292,17 +325,20 @@ describe("PHASE 3 FUZZ: Policy Engine", () => {
         const isValid = Math.random() > 0.5;
         const role = ["admin", "member", "readonly", "unknown"][Math.floor(Math.random() * 4)];
 
-        const result = await evaluatePoliciesMinimal({
-          policyVersion: 1,
-          expectedPolicyVersion: 1,
-          isPaused: false,
-          isSafeMode: false,
-          credential: {
-            holder: `cosmos1test${i}`,
-            valid: isValid,
-            role: role as any,
+        const result = await evaluatePoliciesMinimal(
+          {
+            policyVersion: 1,
+            expectedPolicyVersion: 1,
+            isPaused: false,
+            isSafeMode: false,
+            credential: {
+              holder: `cosmos1test${i}`,
+              valid: isValid,
+              role: role as any,
+            },
           },
-        }, 'execution');
+          "execution",
+        );
 
         if (!isValid) {
           expect(result.allowed).toBe(false);
@@ -335,21 +371,24 @@ describe("PHASE 3 FUZZ: Policy Engine", () => {
 
         const now = Date.now();
 
-        const result = await evaluatePoliciesMinimal({
-          policyVersion: versionMismatch ? 2 : 1,
-          expectedPolicyVersion: 1,
-          isPaused: emergencyPaused,
-          isSafeMode: safeMode,
-          credential: {
-            holder: "cosmos1test",
-            valid: !invalidCredential,
-            role: "member",
+        const result = await evaluatePoliciesMinimal(
+          {
+            policyVersion: versionMismatch ? 2 : 1,
+            expectedPolicyVersion: 1,
+            isPaused: emergencyPaused,
+            isSafeMode: safeMode,
+            credential: {
+              holder: "cosmos1test",
+              valid: !invalidCredential,
+              role: "member",
+            },
+            timelock: {
+              unlockAtMs: timelockActive ? now + 3600000 : now - 3600000,
+            },
+            nowMs: now,
           },
-          timelock: {
-            unlockAtMs: timelockActive ? now + 3600000 : now - 3600000,
-          },
-          nowMs: now,
-        }, 'execution');
+          "execution",
+        );
 
         // At least one hostile flag is set, so must be denied
         expect(result.allowed).toBe(false);
@@ -369,15 +408,18 @@ describe("PHASE 3 FUZZ: Policy Engine", () => {
         setSeed(i);
         const ctx = genPolicyCtx(i);
 
-        const result = await evaluatePoliciesMinimal({
-          policyVersion: ctx.policyVersion,
-          expectedPolicyVersion: ctx.expectedPolicyVersion,
-          isPaused: ctx.emergencyPaused,
-          isSafeMode: ctx.safeMode,
-          credential: ctx.credential,
-          timelock: ctx.timelock,
-          nowMs: ctx.nowMs,
-        }, 'execution');
+        const result = await evaluatePoliciesMinimal(
+          {
+            policyVersion: ctx.policyVersion,
+            expectedPolicyVersion: ctx.expectedPolicyVersion,
+            isPaused: ctx.emergencyPaused,
+            isSafeMode: ctx.safeMode,
+            credential: ctx.credential,
+            timelock: ctx.timelock,
+            nowMs: ctx.nowMs,
+          },
+          "execution",
+        );
 
         // Build invariant context
         const policyCtx: PolicyContext = {
@@ -407,15 +449,18 @@ describe("PHASE 3 FUZZ: Policy Engine", () => {
       const batch = genPolicyCtxBatch(1000, 99999);
 
       for (const ctx of batch) {
-        const result = await evaluatePoliciesMinimal({
-          policyVersion: ctx.policyVersion,
-          expectedPolicyVersion: ctx.expectedPolicyVersion,
-          isPaused: ctx.emergencyPaused,
-          isSafeMode: ctx.safeMode,
-          credential: ctx.credential,
-          timelock: ctx.timelock,
-          nowMs: ctx.nowMs,
-        }, 'execution');
+        const result = await evaluatePoliciesMinimal(
+          {
+            policyVersion: ctx.policyVersion,
+            expectedPolicyVersion: ctx.expectedPolicyVersion,
+            isPaused: ctx.emergencyPaused,
+            isSafeMode: ctx.safeMode,
+            credential: ctx.credential,
+            timelock: ctx.timelock,
+            nowMs: ctx.nowMs,
+          },
+          "execution",
+        );
 
         // Result should be boolean
         expect(typeof result.allowed).toBe("boolean");
@@ -423,4 +468,3 @@ describe("PHASE 3 FUZZ: Policy Engine", () => {
     });
   });
 });
-

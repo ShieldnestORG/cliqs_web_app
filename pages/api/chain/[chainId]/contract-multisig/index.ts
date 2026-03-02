@@ -1,8 +1,8 @@
 /**
  * Contract Multisig API - Create/List
- * 
+ *
  * File: pages/api/chain/[chainId]/contract-multisig/index.ts
- * 
+ *
  * POST: Instantiate a new CW3 contract multisig
  * GET: List contract multisigs for a user
  */
@@ -52,10 +52,7 @@ interface _ListContractMultisigsBody {
 // Handler
 // ============================================================================
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const chainId = req.query.chainId;
 
   if (typeof chainId !== "string" || !chainId) {
@@ -76,11 +73,7 @@ export default async function handler(
 // POST: Create Contract Multisig
 // ============================================================================
 
-async function handleCreate(
-  req: NextApiRequest,
-  res: NextApiResponse,
-  chainId: string
-) {
+async function handleCreate(req: NextApiRequest, res: NextApiResponse, chainId: string) {
   try {
     const body: CreateContractMultisigBody = req.body;
 
@@ -146,11 +139,7 @@ async function handleCreate(
 // GET: List Contract Multisigs
 // ============================================================================
 
-async function handleList(
-  req: NextApiRequest,
-  res: NextApiResponse,
-  chainId: string
-) {
+async function handleList(req: NextApiRequest, res: NextApiResponse, chainId: string) {
   try {
     const address = req.query.address as string;
 
@@ -160,7 +149,7 @@ async function handleList(
 
     // Get multisigs where user is a member
     const memberMultisigs = localDb.getContractMultisigsByMember(chainId, address);
-    
+
     // Get multisigs created by user
     const createdMultisigs = localDb.getContractMultisigsByCreator(chainId, address);
 
@@ -194,4 +183,3 @@ async function handleList(
     });
   }
 }
-

@@ -1,8 +1,8 @@
 /**
  * Page Head Component
- * 
+ *
  * File: components/head.tsx
- * 
+ *
  * This component sets page-specific meta tags (title, description, OG tags).
  * Note: Google Fonts, favicons, and theme-color are now in pages/_document.tsx
  * to avoid Next.js 15 warnings about stylesheets in next/head.

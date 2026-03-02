@@ -31,7 +31,10 @@ export default function DevToolsQuery({ chain, onLog }: DevToolsQueryProps) {
   const [loading, setLoading] = useState(false);
 
   const network = chain.chainId.toLowerCase().includes("testnet") ? "testnet" : "mainnet";
-  const canRun = useMemo(() => Boolean(contractAddress.trim() && queryMsg.trim()), [contractAddress, queryMsg]);
+  const canRun = useMemo(
+    () => Boolean(contractAddress.trim() && queryMsg.trim()),
+    [contractAddress, queryMsg],
+  );
 
   const applyTemplate = (id: string) => {
     setTemplateId(id);
@@ -72,7 +75,9 @@ export default function DevToolsQuery({ chain, onLog }: DevToolsQueryProps) {
           <SearchCode className="h-5 w-5 text-purple-accent" />
           Query Contract
         </CardTitle>
-        <CardDescription>Run read-only CosmWasm queries against the active network.</CardDescription>
+        <CardDescription>
+          Run read-only CosmWasm queries against the active network.
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -113,8 +118,17 @@ export default function DevToolsQuery({ chain, onLog }: DevToolsQueryProps) {
           />
         </div>
 
-        <Button variant="action" className="w-full gap-2" onClick={runQuery} disabled={loading || !canRun}>
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <SearchCode className="h-4 w-4" />}
+        <Button
+          variant="action"
+          className="w-full gap-2"
+          onClick={runQuery}
+          disabled={loading || !canRun}
+        >
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <SearchCode className="h-4 w-4" />
+          )}
           {loading ? "Running Query..." : "Run Query"}
         </Button>
 

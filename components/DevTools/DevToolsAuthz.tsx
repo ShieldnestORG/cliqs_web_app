@@ -6,7 +6,10 @@ import { OfflineSigner } from "@cosmjs/proto-signing";
 import { AminoTypes, GasPrice, SigningStargateClient } from "@cosmjs/stargate";
 import { GenericAuthorization } from "cosmjs-types/cosmos/authz/v1beta1/authz";
 import { MsgExec, MsgGrant, MsgRevoke } from "cosmjs-types/cosmos/authz/v1beta1/tx";
-import { MsgSetWithdrawAddress, MsgWithdrawDelegatorReward } from "cosmjs-types/cosmos/distribution/v1beta1/tx";
+import {
+  MsgSetWithdrawAddress,
+  MsgWithdrawDelegatorReward,
+} from "cosmjs-types/cosmos/distribution/v1beta1/tx";
 import { MsgDelegate, MsgUndelegate } from "cosmjs-types/cosmos/staking/v1beta1/tx";
 import { MsgSend } from "cosmjs-types/cosmos/bank/v1beta1/tx";
 import { Timestamp } from "cosmjs-types/google/protobuf/timestamp";
@@ -160,10 +163,14 @@ export default function DevToolsAuthz({
             : "Amino signer is unavailable.",
         );
       }
-      const client = await SigningStargateClient.connectWithSigner(ensureProtocol(chain.nodeAddress), signer, {
-        gasPrice: GasPrice.fromString(chain.gasPrice),
-        aminoTypes: authzAminoTypes,
-      });
+      const client = await SigningStargateClient.connectWithSigner(
+        ensureProtocol(chain.nodeAddress),
+        signer,
+        {
+          gasPrice: GasPrice.fromString(chain.gasPrice),
+          aminoTypes: authzAminoTypes,
+        },
+      );
       const expirySeconds = BigInt(
         Math.floor(new Date(`${expirationDate}T00:00:00Z`).getTime() / 1000),
       );
@@ -184,7 +191,12 @@ export default function DevToolsAuthz({
         }),
       };
 
-      const result = await client.signAndBroadcast(actorAddress, [grantMsg], "auto", "DevTools authz grant");
+      const result = await client.signAndBroadcast(
+        actorAddress,
+        [grantMsg],
+        "auto",
+        "DevTools authz grant",
+      );
       if (result.code !== 0) {
         throw new Error(result.rawLog || "Grant transaction failed");
       }
@@ -229,10 +241,14 @@ export default function DevToolsAuthz({
             : "Amino signer is unavailable.",
         );
       }
-      const client = await SigningStargateClient.connectWithSigner(ensureProtocol(chain.nodeAddress), signer, {
-        gasPrice: GasPrice.fromString(chain.gasPrice),
-        aminoTypes: authzAminoTypes,
-      });
+      const client = await SigningStargateClient.connectWithSigner(
+        ensureProtocol(chain.nodeAddress),
+        signer,
+        {
+          gasPrice: GasPrice.fromString(chain.gasPrice),
+          aminoTypes: authzAminoTypes,
+        },
+      );
       const targets = existingGrants.filter((grant) => selectedRevoke.has(getGrantKey(grant)));
       const revokeMsgs = targets.map((grant) => ({
         typeUrl: "/cosmos.authz.v1beta1.MsgRevoke",
@@ -281,13 +297,19 @@ export default function DevToolsAuthz({
       case "/cosmos.distribution.v1beta1.MsgSetWithdrawAddress": {
         const addr = execWithdrawAddress.trim();
         if (!addr) return null;
-        const msg = MsgSetWithdrawAddress.fromPartial({ delegatorAddress: granter, withdrawAddress: addr });
+        const msg = MsgSetWithdrawAddress.fromPartial({
+          delegatorAddress: granter,
+          withdrawAddress: addr,
+        });
         return { typeUrl: execMsgType, encoded: MsgSetWithdrawAddress.encode(msg).finish() };
       }
       case "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward": {
         const val = execValidatorAddress.trim();
         if (!val) return null;
-        const msg = MsgWithdrawDelegatorReward.fromPartial({ delegatorAddress: granter, validatorAddress: val });
+        const msg = MsgWithdrawDelegatorReward.fromPartial({
+          delegatorAddress: granter,
+          validatorAddress: val,
+        });
         return { typeUrl: execMsgType, encoded: MsgWithdrawDelegatorReward.encode(msg).finish() };
       }
       case "/cosmos.staking.v1beta1.MsgDelegate":
@@ -296,7 +318,11 @@ export default function DevToolsAuthz({
         const amt = execAmount.trim();
         const denom = execDenom.trim() || chain.displayDenom?.toLowerCase() || "uatom";
         if (!val || !amt) return null;
-        const partial = { delegatorAddress: granter, validatorAddress: val, amount: { denom, amount: amt } };
+        const partial = {
+          delegatorAddress: granter,
+          validatorAddress: val,
+          amount: { denom, amount: amt },
+        };
         if (execMsgType.includes("Delegate") && !execMsgType.includes("Undelegate")) {
           const msg = MsgDelegate.fromPartial(partial);
           return { typeUrl: execMsgType, encoded: MsgDelegate.encode(msg).finish() };
@@ -309,7 +335,11 @@ export default function DevToolsAuthz({
         const amt = execAmount.trim();
         const denom = execDenom.trim() || chain.displayDenom?.toLowerCase() || "uatom";
         if (!to || !amt) return null;
-        const msg = MsgSend.fromPartial({ fromAddress: granter, toAddress: to, amount: [{ denom, amount: amt }] });
+        const msg = MsgSend.fromPartial({
+          fromAddress: granter,
+          toAddress: to,
+          amount: [{ denom, amount: amt }],
+        });
         return { typeUrl: execMsgType, encoded: MsgSend.encode(msg).finish() };
       }
       case "/coreum.asset.nft.v1.MsgBurn": {
@@ -323,7 +353,18 @@ export default function DevToolsAuthz({
       default:
         return null;
     }
-  }, [execMsgType, execGranterAddress, execWithdrawAddress, execValidatorAddress, execRecipientAddress, execAmount, execDenom, execClassId, execTokenId, chain.displayDenom]);
+  }, [
+    execMsgType,
+    execGranterAddress,
+    execWithdrawAddress,
+    execValidatorAddress,
+    execRecipientAddress,
+    execAmount,
+    execDenom,
+    execClassId,
+    execTokenId,
+    chain.displayDenom,
+  ]);
 
   const handleExecute = async () => {
     if (!actorAddress || !isWalletSelected) return;
@@ -343,10 +384,14 @@ export default function DevToolsAuthz({
             : "Amino signer is unavailable.",
         );
       }
-      const client = await SigningStargateClient.connectWithSigner(ensureProtocol(chain.nodeAddress), signer, {
-        gasPrice: GasPrice.fromString(chain.gasPrice),
-        aminoTypes: authzAminoTypes,
-      });
+      const client = await SigningStargateClient.connectWithSigner(
+        ensureProtocol(chain.nodeAddress),
+        signer,
+        {
+          gasPrice: GasPrice.fromString(chain.gasPrice),
+          aminoTypes: authzAminoTypes,
+        },
+      );
 
       const execMsg = {
         typeUrl: "/cosmos.authz.v1beta1.MsgExec",
@@ -356,7 +401,12 @@ export default function DevToolsAuthz({
         }),
       };
 
-      const result = await client.signAndBroadcast(actorAddress, [execMsg], "auto", "DevTools authz exec");
+      const result = await client.signAndBroadcast(
+        actorAddress,
+        [execMsg],
+        "auto",
+        "DevTools authz exec",
+      );
       if (result.code !== 0) {
         throw new Error(result.rawLog || "Authz exec transaction failed");
       }
@@ -390,16 +440,15 @@ export default function DevToolsAuthz({
     }
   };
 
-  const canGrant = useMemo(() => isWalletSelected && !!granteeAddress && !!activeMsgType, [
-    isWalletSelected,
-    granteeAddress,
-    activeMsgType,
-  ]);
+  const canGrant = useMemo(
+    () => isWalletSelected && !!granteeAddress && !!activeMsgType,
+    [isWalletSelected, granteeAddress, activeMsgType],
+  );
 
-  const canExecute = useMemo(() => isWalletSelected && !!buildExecInnerMsg(), [
-    isWalletSelected,
-    buildExecInnerMsg,
-  ]);
+  const canExecute = useMemo(
+    () => isWalletSelected && !!buildExecInnerMsg(),
+    [isWalletSelected, buildExecInnerMsg],
+  );
 
   return (
     <Card variant="institutional" bracket="purple-round" className="border-border/60">
@@ -420,13 +469,25 @@ export default function DevToolsAuthz({
         )}
 
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant={mode === "grant" ? "default" : "outline"} size="sm" onClick={() => setMode("grant")}>
+          <Button
+            variant={mode === "grant" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setMode("grant")}
+          >
             Grant
           </Button>
-          <Button variant={mode === "execute" ? "default" : "outline"} size="sm" onClick={() => setMode("execute")}>
+          <Button
+            variant={mode === "execute" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setMode("execute")}
+          >
             Execute
           </Button>
-          <Button variant={mode === "revoke" ? "default" : "outline"} size="sm" onClick={() => setMode("revoke")}>
+          <Button
+            variant={mode === "revoke" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setMode("revoke")}
+          >
             Revoke
           </Button>
           <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
@@ -454,9 +515,16 @@ export default function DevToolsAuthz({
           <div className="space-y-4">
             <div className="rounded-lg border border-border bg-muted/10 p-3 text-xs text-muted-foreground">
               <p className="mb-1 font-semibold text-foreground">Step 1 of 2 — Grant Permission</p>
-              Allow another address (the grantee) to perform a specific action on your behalf.
-              After granting, switch to the <button type="button" onClick={() => setMode("execute")} className="font-semibold text-purple-accent underline underline-offset-2">Execute</button> tab
-              to carry out the action (e.g. set a withdrawal address).
+              Allow another address (the grantee) to perform a specific action on your behalf. After
+              granting, switch to the{" "}
+              <button
+                type="button"
+                onClick={() => setMode("execute")}
+                className="font-semibold text-purple-accent underline underline-offset-2"
+              >
+                Execute
+              </button>{" "}
+              tab to carry out the action (e.g. set a withdrawal address).
             </div>
             <div className="space-y-2">
               <Label htmlFor="authz-grantee">Grantee Address</Label>
@@ -513,7 +581,11 @@ export default function DevToolsAuthz({
               onClick={handleGrant}
               disabled={!canGrant || working}
             >
-              {working ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
+              {working ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <KeyRound className="h-4 w-4" />
+              )}
               {working ? "Granting..." : "Grant Permission"}
             </Button>
           </div>
@@ -523,13 +595,14 @@ export default function DevToolsAuthz({
           <div className="space-y-4">
             <div className="rounded-lg border border-border bg-muted/10 p-3 text-xs text-muted-foreground">
               <p className="mb-1 font-semibold text-foreground">Step 2 of 2 — Execute on Behalf</p>
-              Use an existing grant to perform an action as the granter.
-              Your connected wallet is the <strong>grantee</strong> (executor).
-              The <strong>granter</strong> is the account that gave you permission.
+              Use an existing grant to perform an action as the granter. Your connected wallet is
+              the <strong>grantee</strong> (executor). The <strong>granter</strong> is the account
+              that gave you permission.
               {execMsgType === "/cosmos.distribution.v1beta1.MsgSetWithdrawAddress" && (
                 <span className="mt-1 block">
-                  The <strong>withdrawal address</strong> below is where rewards will be sent — it can be any address
-                  (a different wallet, a smart contract, etc.), independent of both granter and grantee.
+                  The <strong>withdrawal address</strong> below is where rewards will be sent — it
+                  can be any address (a different wallet, a smart contract, etc.), independent of
+                  both granter and grantee.
                 </span>
               )}
             </div>
@@ -591,7 +664,8 @@ export default function DevToolsAuthz({
                   variant="institutional"
                 />
                 <p className="text-xs text-muted-foreground">
-                  This is the destination for staking rewards — separate from both the granter and your wallet.
+                  This is the destination for staking rewards — separate from both the granter and
+                  your wallet.
                 </p>
               </div>
             )}
@@ -715,7 +789,11 @@ export default function DevToolsAuthz({
               onClick={handleExecute}
               disabled={!canExecute || working}
             >
-              {working ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+              {working ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Play className="h-4 w-4" />
+              )}
               {working ? "Executing..." : "Execute via Authz"}
             </Button>
           </div>
@@ -734,7 +812,9 @@ export default function DevToolsAuthz({
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading grants...
               </div>
             ) : existingGrants.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No grants found for the selected wallet.</p>
+              <p className="text-sm text-muted-foreground">
+                No grants found for the selected wallet.
+              </p>
             ) : (
               <div className="max-h-[240px] space-y-2 overflow-y-auto pr-1">
                 {existingGrants.map((grant) => {
@@ -758,10 +838,10 @@ export default function DevToolsAuthz({
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <p className="font-mono text-xs break-all">{grant.grantee}</p>
+                        <p className="break-all font-mono text-xs">{grant.grantee}</p>
                         {selected && <Badge variant="destructive">Selected</Badge>}
                       </div>
-                      <p className="mt-1 font-mono text-xs text-muted-foreground break-all">
+                      <p className="mt-1 break-all font-mono text-xs text-muted-foreground">
                         {grant.authorization.msg || grant.authorization["@type"]}
                       </p>
                     </button>
@@ -775,7 +855,11 @@ export default function DevToolsAuthz({
               onClick={handleRevoke}
               disabled={selectedRevoke.size === 0 || working || !isWalletSelected}
             >
-              {working ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldAlert className="h-4 w-4" />}
+              {working ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ShieldAlert className="h-4 w-4" />
+              )}
               {working ? "Revoking..." : `Revoke Selected (${selectedRevoke.size})`}
             </Button>
           </div>
@@ -784,7 +868,7 @@ export default function DevToolsAuthz({
         {lastTxHash && (
           <div className="rounded-lg border border-green-accent/30 bg-green-accent/10 p-3">
             <p className="text-xs font-semibold text-green-accent">Last Transaction</p>
-            <p className="font-mono text-xs text-muted-foreground break-all">{lastTxHash}</p>
+            <p className="break-all font-mono text-xs text-muted-foreground">{lastTxHash}</p>
           </div>
         )}
       </CardContent>

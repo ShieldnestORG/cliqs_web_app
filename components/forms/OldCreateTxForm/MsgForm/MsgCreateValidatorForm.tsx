@@ -24,12 +24,14 @@ import { useBalance } from "@/lib/hooks/useBalance";
 const convertToValidatorAddress = (delegatorAddress: string, addressPrefix: string): string => {
   try {
     const decoded = fromBech32(delegatorAddress);
-    const validatorPrefix = addressPrefix.startsWith("cosmos") 
-      ? "cosmosvaloper" 
+    const validatorPrefix = addressPrefix.startsWith("cosmos")
+      ? "cosmosvaloper"
       : `${addressPrefix}valoper`;
     return toBech32(validatorPrefix, decoded.data);
   } catch (e) {
-    throw new Error(`Failed to convert to validator address: ${e instanceof Error ? e.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to convert to validator address: ${e instanceof Error ? e.message : "Unknown error"}`,
+    );
   }
 };
 
@@ -40,7 +42,12 @@ interface MsgCreateValidatorFormProps {
   readonly gasLimit?: number;
 }
 
-const MsgCreateValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLimit }: MsgCreateValidatorFormProps) => {
+const MsgCreateValidatorForm = ({
+  senderAddress,
+  setMsgGetter,
+  deleteMsg,
+  gasLimit,
+}: MsgCreateValidatorFormProps) => {
   const { chain } = useChains();
   const categoryInfo = getMessageCategory(MsgTypeUrls.CreateValidator);
   const { availableBalance } = useBalance({
@@ -54,12 +61,12 @@ const MsgCreateValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLim
     identity: "",
     website: "",
     securityContact: "",
-    details: ""
+    details: "",
   });
   const [commission, setCommission] = useState({
     rate: "0.200000000000000000",
     maxRate: "0.200000000000000000",
-    maxChangeRate: "0.010000000000000000"
+    maxChangeRate: "0.010000000000000000",
   });
   const [minSelfDelegation, setMinSelfDelegation] = useState("20000000000");
   const [validatorAddress, setValidatorAddress] = useState("");
@@ -76,7 +83,7 @@ const MsgCreateValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLim
     minSelfDelegation,
     pubkey,
     ...description,
-    ...commission
+    ...commission,
   });
 
   useEffect(() => {
@@ -89,14 +96,12 @@ const MsgCreateValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLim
       setPubkeyError("");
 
       // Validate validator address format and checksum
-      const validatorPrefix = chain.addressPrefix.startsWith("cosmos") 
-        ? "cosmosvaloper" 
+      const validatorPrefix = chain.addressPrefix.startsWith("cosmos")
+        ? "cosmosvaloper"
         : `${chain.addressPrefix}valoper`;
-      
+
       if (!validatorAddress.startsWith(validatorPrefix)) {
-        setValidatorAddressError(
-          `Validator address must start with ${validatorPrefix}`,
-        );
+        setValidatorAddressError(`Validator address must start with ${validatorPrefix}`);
         return false;
       }
 
@@ -105,7 +110,7 @@ const MsgCreateValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLim
         fromBech32(validatorAddress);
       } catch (e) {
         setValidatorAddressError(
-          `Invalid validator address checksum. ${e instanceof Error ? e.message : ''}`,
+          `Invalid validator address checksum. ${e instanceof Error ? e.message : ""}`,
         );
         return false;
       }
@@ -126,15 +131,18 @@ const MsgCreateValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLim
       // Validate against available balance
       if (availableBalance && availableBalance.amount !== "0") {
         try {
-          const userAmountCoin = displayCoinToBaseCoin({ denom: chain.displayDenom, amount }, chain.assets);
+          const userAmountCoin = displayCoinToBaseCoin(
+            { denom: chain.displayDenom, amount },
+            chain.assets,
+          );
           const userAmountDecimal = Decimal.fromAtomics(userAmountCoin.amount, 0);
           const availableAmountDecimal = Decimal.fromAtomics(availableBalance.amount, 0);
-          
+
           if (userAmountDecimal.isGreaterThan(availableAmountDecimal)) {
             setAmountError(`Amount exceeds available balance`);
             return false;
           }
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (_: unknown) {
           // If conversion fails, continue with other validation
         }
@@ -163,7 +171,10 @@ const MsgCreateValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLim
         console.log("  - microCoin result:", result);
         return result;
       } catch (error) {
-        console.error("🔍 DECIMAL DEBUG: MsgCreateValidatorForm - delegation conversion error:", error);
+        console.error(
+          "🔍 DECIMAL DEBUG: MsgCreateValidatorForm - delegation conversion error:",
+          error,
+        );
         return { denom: chain.displayDenom, amount: "0" };
       }
     })();
@@ -184,16 +195,20 @@ const MsgCreateValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLim
 
     console.log("🔍 DECIMAL DEBUG: pubkey encoding");
     console.log("  - pubkey input (base64):", pubkey);
-    
+
     // Properly encode the pubkey with protobuf wrapper
     // encodePubkey expects a base64 string and adds the protobuf wrapper (34 bytes)
     const encodedPubkey = encodePubkey({
       type: "tendermint/PubKeyEd25519",
-      value: pubkey  // Pass base64 string directly
+      value: pubkey, // Pass base64 string directly
     });
-    
+
     console.log("  - encodedPubkey.typeUrl:", encodedPubkey.typeUrl);
-    console.log("  - encodedPubkey.value.length:", encodedPubkey.value.length, "(should be 34 bytes with protobuf wrapper)");
+    console.log(
+      "  - encodedPubkey.value.length:",
+      encodedPubkey.value.length,
+      "(should be 34 bytes with protobuf wrapper)",
+    );
 
     const msgValue = MsgCodecs[MsgTypeUrls.CreateValidator].fromPartial({
       description: {
@@ -201,12 +216,12 @@ const MsgCreateValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLim
         identity: descAndComm.identity,
         website: descAndComm.website,
         securityContact: descAndComm.securityContact,
-        details: descAndComm.details
+        details: descAndComm.details,
       },
       commission: {
         rate: rateAtomics,
         maxRate: maxRateAtomics,
-        maxChangeRate: maxChangeRateAtomics
+        maxChangeRate: maxChangeRateAtomics,
       },
       minSelfDelegation,
       delegatorAddress: senderAddress,
@@ -218,7 +233,10 @@ const MsgCreateValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLim
     console.log("🔍 DECIMAL DEBUG: MsgCreateValidatorForm - msgValue created");
     console.log("  - msgValue.commission:", msgValue.commission);
 
-    const msg: MsgCreateValidatorEncodeObject = { typeUrl: MsgTypeUrls.CreateValidator, value: msgValue };
+    const msg: MsgCreateValidatorEncodeObject = {
+      typeUrl: MsgTypeUrls.CreateValidator,
+      value: msgValue,
+    };
 
     setMsgGetter({ isMsgValid, msg });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -234,23 +252,18 @@ const MsgCreateValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLim
   ]);
 
   return (
-    <StackableContainer 
-      variant="institutional" 
-      lessPadding 
-      lessMargin
-      accent={categoryInfo.accent}
-    >
+    <StackableContainer variant="institutional" lessPadding lessMargin accent={categoryInfo.accent}>
       <Button
         variant="ghost"
         size="icon-sm"
         onClick={() => deleteMsg()}
-        className="absolute right-4 top-4 h-8 w-8 text-muted-foreground hover:text-foreground z-10"
+        className="absolute right-4 top-4 z-10 h-8 w-8 text-muted-foreground hover:text-foreground"
       >
         <X className="h-4 w-4" />
       </Button>
       <div className="mb-4">
         <CardLabel comment>{categoryInfo.label}</CardLabel>
-        <h2 className="text-xl font-heading font-semibold">MsgCreateValidator</h2>
+        <h2 className="font-heading text-xl font-semibold">MsgCreateValidator</h2>
       </div>
       <div className="space-y-4">
         <BalanceDisplay
@@ -263,7 +276,7 @@ const MsgCreateValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLim
           label="Moniker"
           name="moniker"
           value={description.moniker}
-          onChange={({ target }) => setDescription(prev => ({ ...prev, moniker: target.value }))}
+          onChange={({ target }) => setDescription((prev) => ({ ...prev, moniker: target.value }))}
           placeholder="Validator name"
         />
         <Input
@@ -271,7 +284,7 @@ const MsgCreateValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLim
           label="Identity"
           name="identity"
           value={description.identity}
-          onChange={({ target }) => setDescription(prev => ({ ...prev, identity: target.value }))}
+          onChange={({ target }) => setDescription((prev) => ({ ...prev, identity: target.value }))}
           placeholder="Keybase identity"
         />
         <Input
@@ -279,7 +292,7 @@ const MsgCreateValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLim
           label="Website"
           name="website"
           value={description.website}
-          onChange={({ target }) => setDescription(prev => ({ ...prev, website: target.value }))}
+          onChange={({ target }) => setDescription((prev) => ({ ...prev, website: target.value }))}
           placeholder="https://validator.com"
         />
         <Input
@@ -287,7 +300,9 @@ const MsgCreateValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLim
           label="Security Contact"
           name="security-contact"
           value={description.securityContact}
-          onChange={({ target }) => setDescription(prev => ({ ...prev, securityContact: target.value }))}
+          onChange={({ target }) =>
+            setDescription((prev) => ({ ...prev, securityContact: target.value }))
+          }
           placeholder="security@validator.com"
         />
         <Input
@@ -295,7 +310,7 @@ const MsgCreateValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLim
           label="Details"
           name="details"
           value={description.details}
-          onChange={({ target }) => setDescription(prev => ({ ...prev, details: target.value }))}
+          onChange={({ target }) => setDescription((prev) => ({ ...prev, details: target.value }))}
           placeholder="Validator description"
         />
         <Input
@@ -303,7 +318,7 @@ const MsgCreateValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLim
           label="Commission Rate"
           name="commission-rate"
           value={commission.rate}
-          onChange={({ target }) => setCommission(prev => ({ ...prev, rate: target.value }))}
+          onChange={({ target }) => setCommission((prev) => ({ ...prev, rate: target.value }))}
           placeholder="0.100000000000000000"
         />
         <Input
@@ -311,7 +326,7 @@ const MsgCreateValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLim
           label="Max Commission Rate"
           name="max-commission-rate"
           value={commission.maxRate}
-          onChange={({ target }) => setCommission(prev => ({ ...prev, maxRate: target.value }))}
+          onChange={({ target }) => setCommission((prev) => ({ ...prev, maxRate: target.value }))}
           placeholder="0.200000000000000000"
         />
         <Input
@@ -319,7 +334,9 @@ const MsgCreateValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLim
           label="Max Commission Change Rate"
           name="max-commission-change-rate"
           value={commission.maxChangeRate}
-          onChange={({ target }) => setCommission(prev => ({ ...prev, maxChangeRate: target.value }))}
+          onChange={({ target }) =>
+            setCommission((prev) => ({ ...prev, maxChangeRate: target.value }))
+          }
           placeholder="0.010000000000000000"
         />
         <Input
@@ -343,7 +360,7 @@ const MsgCreateValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLim
             error={validatorAddressError}
             placeholder={`E.g. ${chain.addressPrefix}valoper...`}
           />
-          <Button 
+          <Button
             type="button"
             variant="action-outline"
             size="action-sm"
@@ -353,7 +370,7 @@ const MsgCreateValidatorForm = ({ senderAddress, setMsgGetter, deleteMsg, gasLim
                 setValidatorAddress(converted);
                 setValidatorAddressError("");
               } catch (e) {
-                setValidatorAddressError(e instanceof Error ? e.message : 'Conversion failed');
+                setValidatorAddressError(e instanceof Error ? e.message : "Conversion failed");
               }
             }}
             className="w-full"

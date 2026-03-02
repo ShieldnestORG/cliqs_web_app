@@ -48,9 +48,7 @@ describe("PHASE 3 INVARIANTS: Execution", () => {
         executionSucceeded: true, // This should never happen
       };
 
-      expect(() => assertExecutionInvariants(ctx)).toThrow(
-        /INVARIANT VIOLATION.*emergency pause/
-      );
+      expect(() => assertExecutionInvariants(ctx)).toThrow(/INVARIANT VIOLATION.*emergency pause/);
     });
 
     test("execution blocked during emergency pause is valid", () => {
@@ -71,11 +69,14 @@ describe("PHASE 3 INVARIANTS: Execution", () => {
         const policyCtx = genPolicyCtx(i);
         policyCtx.emergencyPaused = true;
 
-        const result = await evaluatePoliciesMinimal({
-          isPaused: true,
-          policyVersion: 1,
-          expectedPolicyVersion: 1,
-        }, 'execution');
+        const result = await evaluatePoliciesMinimal(
+          {
+            isPaused: true,
+            policyVersion: 1,
+            expectedPolicyVersion: 1,
+          },
+          "execution",
+        );
 
         expect(result.allowed).toBe(false);
       }
@@ -97,9 +98,7 @@ describe("PHASE 3 INVARIANTS: Execution", () => {
         executionSucceeded: true, // This should never happen
       };
 
-      expect(() => assertExecutionInvariants(ctx)).toThrow(
-        /INVARIANT VIOLATION.*safe mode/
-      );
+      expect(() => assertExecutionInvariants(ctx)).toThrow(/INVARIANT VIOLATION.*safe mode/);
     });
 
     test("execution blocked during safe mode is valid", () => {
@@ -120,11 +119,14 @@ describe("PHASE 3 INVARIANTS: Execution", () => {
         const policyCtx = genPolicyCtx(i);
         policyCtx.safeMode = true;
 
-        const result = await evaluatePoliciesMinimal({
-          isSafeMode: true,
-          policyVersion: 1,
-          expectedPolicyVersion: 1,
-        }, 'execution');
+        const result = await evaluatePoliciesMinimal(
+          {
+            isSafeMode: true,
+            policyVersion: 1,
+            expectedPolicyVersion: 1,
+          },
+          "execution",
+        );
 
         expect(result.allowed).toBe(false);
       }
@@ -149,9 +151,7 @@ describe("PHASE 3 INVARIANTS: Execution", () => {
         executionSucceeded: true, // This should never happen
       };
 
-      expect(() => assertExecutionInvariants(ctx)).toThrow(
-        /INVARIANT VIOLATION.*policy denial/
-      );
+      expect(() => assertExecutionInvariants(ctx)).toThrow(/INVARIANT VIOLATION.*policy denial/);
     });
 
     test("execution blocked by policy denial is valid", () => {
@@ -205,9 +205,7 @@ describe("PHASE 3 INVARIANTS: Execution", () => {
         executionSucceeded: true, // This should never happen
       };
 
-      expect(() => assertExecutionInvariants(ctx)).toThrow(
-        /INVARIANT VIOLATION.*[Ss]pend limit/
-      );
+      expect(() => assertExecutionInvariants(ctx)).toThrow(/INVARIANT VIOLATION.*[Ss]pend limit/);
     });
 
     test("execution within spend limit is valid", () => {
@@ -254,18 +252,21 @@ describe("PHASE 3 INVARIANTS: Execution", () => {
         const ctx = genHostilePolicyCtx(i);
 
         // All hostile contexts should be denied
-        const result = await evaluatePoliciesMinimal({
-          isPaused: ctx.emergencyPaused,
-          isSafeMode: ctx.safeMode,
-          policyVersion: ctx.policyVersion,
-          expectedPolicyVersion: ctx.expectedPolicyVersion,
-          credential: ctx.credential,
-          timelock: ctx.timelock,
-          spend: ctx.spend,
-          nowMs: ctx.nowMs,
-          signaturesRequired: ctx.signaturesRequired,
-          signaturesCollected: ctx.signaturesCollected,
-        }, 'execution');
+        const result = await evaluatePoliciesMinimal(
+          {
+            isPaused: ctx.emergencyPaused,
+            isSafeMode: ctx.safeMode,
+            policyVersion: ctx.policyVersion,
+            expectedPolicyVersion: ctx.expectedPolicyVersion,
+            credential: ctx.credential,
+            timelock: ctx.timelock,
+            spend: ctx.spend,
+            nowMs: ctx.nowMs,
+            signaturesRequired: ctx.signaturesRequired,
+            signaturesCollected: ctx.signaturesCollected,
+          },
+          "execution",
+        );
 
         if (result.allowed) {
           allowedCount++;
@@ -274,7 +275,7 @@ describe("PHASE 3 INVARIANTS: Execution", () => {
               index: i,
               ctx,
               result,
-              generator: ctx._generator
+              generator: ctx._generator,
             };
           }
         }
@@ -282,7 +283,7 @@ describe("PHASE 3 INVARIANTS: Execution", () => {
 
       if (allowedCount > 0) {
         console.log(`Found ${allowedCount} contexts that were allowed when they should be denied`);
-        console.log('First failure:', firstFailure);
+        console.log("First failure:", firstFailure);
       }
 
       expect(allowedCount).toBe(0);
@@ -292,15 +293,18 @@ describe("PHASE 3 INVARIANTS: Execution", () => {
       for (let i = 0; i < 100; i++) {
         const ctx = genValidPolicyCtx(i);
 
-        const result = await evaluatePoliciesMinimal({
-          isPaused: ctx.emergencyPaused,
-          isSafeMode: ctx.safeMode,
-          policyVersion: ctx.policyVersion,
-          expectedPolicyVersion: ctx.expectedPolicyVersion,
-          credential: ctx.credential,
-          timelock: { unlockAtMs: ctx.timelock.unlockAtMs },
-          nowMs: ctx.nowMs,
-        }, 'execution');
+        const result = await evaluatePoliciesMinimal(
+          {
+            isPaused: ctx.emergencyPaused,
+            isSafeMode: ctx.safeMode,
+            policyVersion: ctx.policyVersion,
+            expectedPolicyVersion: ctx.expectedPolicyVersion,
+            credential: ctx.credential,
+            timelock: { unlockAtMs: ctx.timelock.unlockAtMs },
+            nowMs: ctx.nowMs,
+          },
+          "execution",
+        );
 
         expect(result.allowed).toBe(true);
       }
@@ -318,16 +322,19 @@ describe("PHASE 3 INVARIANTS: Execution", () => {
       let deniedCount = 0;
 
       for (const ctx of contexts) {
-        const result = await evaluatePoliciesMinimal({
-          isPaused: ctx.emergencyPaused,
-          isSafeMode: ctx.safeMode,
-          policyVersion: ctx.policyVersion,
-          expectedPolicyVersion: ctx.expectedPolicyVersion,
-          credential: ctx.credential,
-          timelock: ctx.timelock,
-          spend: ctx.spend,
-          nowMs: ctx.nowMs,
-        }, 'execution');
+        const result = await evaluatePoliciesMinimal(
+          {
+            isPaused: ctx.emergencyPaused,
+            isSafeMode: ctx.safeMode,
+            policyVersion: ctx.policyVersion,
+            expectedPolicyVersion: ctx.expectedPolicyVersion,
+            credential: ctx.credential,
+            timelock: ctx.timelock,
+            spend: ctx.spend,
+            nowMs: ctx.nowMs,
+          },
+          "execution",
+        );
 
         if (result.allowed) {
           allowedCount++;
@@ -389,4 +396,3 @@ describe("PHASE 3 INVARIANTS: Execution", () => {
     });
   });
 });
-

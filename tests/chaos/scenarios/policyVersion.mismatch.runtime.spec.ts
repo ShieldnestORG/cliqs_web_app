@@ -17,11 +17,14 @@ describe("CHAOS: policyVersion mismatch at runtime", () => {
           faultController.state.policyVersion = 1;
           faultController.state.expectedPolicyVersion = 1;
 
-          const res = await evaluatePoliciesMinimal({
-            timelock: { unlockAtMs: 0 },
-            emergencyPaused: false,
-            safeMode: false,
-          }, 'execution');
+          const res = await evaluatePoliciesMinimal(
+            {
+              timelock: { unlockAtMs: 0 },
+              emergencyPaused: false,
+              safeMode: false,
+            },
+            "execution",
+          );
 
           // may be allowed depending on other policies; just ensure decision exists
           expect(res).toHaveProperty("allowed");
@@ -33,11 +36,14 @@ describe("CHAOS: policyVersion mismatch at runtime", () => {
         });
 
         hh.schedule(hh.now() + 2, "execute denied", async () => {
-          const res = await evaluatePoliciesMinimal({
-            timelock: { unlockAtMs: 0 },
-            emergencyPaused: false,
-            safeMode: false,
-          }, 'execution');
+          const res = await evaluatePoliciesMinimal(
+            {
+              timelock: { unlockAtMs: 0 },
+              emergencyPaused: false,
+              safeMode: false,
+            },
+            "execution",
+          );
 
           expect(res.allowed).toBe(false);
         });

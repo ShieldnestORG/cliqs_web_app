@@ -80,13 +80,10 @@ export default function WithdrawAddressCard({
     if (isCliqMode && cliqAddress) {
       try {
         setIsSubmitting(true);
-        
+
         const loadingToast = toast.loading("Creating transaction...");
-        
-        const messages = buildSetWithdrawAddressMsg(
-          validator.delegatorAddress,
-          newAddress
-        );
+
+        const messages = buildSetWithdrawAddressMsg(validator.delegatorAddress, newAddress);
 
         const result = await createCliqTransaction({
           chain,
@@ -129,11 +126,9 @@ export default function WithdrawAddressCard({
         throw new Error("Failed to get signer");
       }
 
-      const client = await SigningStargateClient.connectWithSigner(
-        chain.nodeAddress,
-        signer,
-        { gasPrice: GasPrice.fromString(chain.gasPrice) },
-      );
+      const client = await SigningStargateClient.connectWithSigner(chain.nodeAddress, signer, {
+        gasPrice: GasPrice.fromString(chain.gasPrice),
+      });
 
       const messages = [
         {
@@ -148,18 +143,13 @@ export default function WithdrawAddressCard({
       // Calculate fee based on gas price
       const gasPriceNum = parseFloat(chain.gasPrice) || 0.0625;
       const feeAmount = Math.ceil(gasPriceNum * 100_000).toString();
-      
+
       const fee = {
         amount: [{ denom: chain.denom, amount: feeAmount }],
         gas: "100000",
       };
 
-      const result = await client.signAndBroadcast(
-        validator.delegatorAddress,
-        messages,
-        fee,
-        ""
-      );
+      const result = await client.signAndBroadcast(validator.delegatorAddress, messages, fee, "");
 
       if (result.code !== 0) {
         throw new Error(`Transaction failed: ${result.rawLog}`);
@@ -172,7 +162,7 @@ export default function WithdrawAddressCard({
           onClick: () => {
             const explorerLink = chain.explorerLinks.tx?.replace(
               "${txHash}",
-              result.transactionHash
+              result.transactionHash,
             );
             if (explorerLink) {
               window.open(explorerLink, "_blank");
@@ -203,9 +193,7 @@ export default function WithdrawAddressCard({
     <Card variant="institutional" className="h-full">
       <CardHeader>
         <CardLabel comment>Distribution</CardLabel>
-        <CardTitle className="text-lg font-heading font-bold">
-          Withdraw Address
-        </CardTitle>
+        <CardTitle className="font-heading text-lg font-bold">Withdraw Address</CardTitle>
       </CardHeader>
 
       <CardContent className="space-y-4">
@@ -221,22 +209,15 @@ export default function WithdrawAddressCard({
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <code className="flex-1 text-sm font-mono text-foreground bg-muted/30 px-3 py-2 rounded truncate">
+                <code className="flex-1 truncate rounded bg-muted/30 px-3 py-2 font-mono text-sm text-foreground">
                   {truncateAddress(withdrawAddress)}
                 </code>
-                <CopyButton
-                  value={withdrawAddress}
-                  copyLabel="withdraw address"
-                />
+                <CopyButton value={withdrawAddress} copyLabel="withdraw address" />
               </div>
             </div>
 
             {/* Change Button */}
-            <Button
-              variant="outline"
-              className="w-full gap-2"
-              onClick={() => setIsEditing(true)}
-            >
+            <Button variant="outline" className="w-full gap-2" onClick={() => setIsEditing(true)}>
               {isCliqMode ? <Users className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
               Change Withdraw Address
               {isCliqMode && <span className="text-xs opacity-70">(via CLIQ)</span>}
@@ -247,9 +228,7 @@ export default function WithdrawAddressCard({
             {/* Edit Form */}
             <div className="space-y-3">
               <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  New Withdraw Address
-                </label>
+                <label className="text-sm font-medium">New Withdraw Address</label>
                 <Input
                   value={newAddress}
                   onChange={(e) => setNewAddress(e.target.value)}
@@ -303,4 +282,3 @@ export default function WithdrawAddressCard({
     </Card>
   );
 }
-

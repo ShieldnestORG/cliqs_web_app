@@ -1,11 +1,11 @@
 /**
  * Event Streaming System - Guaranteed Event Emission
- * 
+ *
  * File: lib/monitoring/event-stream.ts
- * 
+ *
  * Implements the guaranteed event emission system for Phase 4.
  * Events are emitted to multiple sinks (webhook, WebSocket, etc.)
- * 
+ *
  * Guaranteed Events (per Phase 4 requirements):
  * - PROPOSAL_QUEUED
  * - PROPOSAL_EXECUTED
@@ -20,7 +20,7 @@
  * - SAFE_MODE_ACTIVATED
  * - SAFE_MODE_DEACTIVATED
  * - POLICY_VIOLATION
- * 
+ *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards
  */
 
@@ -148,7 +148,7 @@ export class WebhookSink implements EventSink {
 
   async emit(event: MultisigEvent): Promise<void> {
     let lastError: Error | null = null;
-    
+
     for (let attempt = 0; attempt < (this.config.retries || 1); attempt++) {
       try {
         const response = await fetch(this.config.url, {
@@ -209,7 +209,7 @@ export class MemorySink implements EventSink {
 
   async emit(event: MultisigEvent): Promise<void> {
     this.events.push(event);
-    
+
     // Trim old events
     if (this.events.length > this.maxEvents) {
       this.events = this.events.slice(-this.maxEvents);
@@ -253,7 +253,7 @@ export class ConsoleSink implements EventSink {
 
   async emit(event: MultisigEvent): Promise<void> {
     const message = `[${event.type}] ${event.multisigAddress.slice(0, 12)}... - ${JSON.stringify(event.data)}`;
-    
+
     switch (this.logLevel) {
       case "debug":
         console.debug(message);
@@ -318,11 +318,11 @@ export class EventStream {
    */
   async checkHealth(): Promise<Map<string, boolean>> {
     const results = new Map<string, boolean>();
-    
+
     for (const [id, sink] of this.sinks) {
       results.set(id, await sink.isHealthy());
     }
-    
+
     return results;
   }
 
@@ -332,7 +332,7 @@ export class EventStream {
 
   /**
    * Emit an event to all sinks
-   * 
+   *
    * This is the main method for guaranteed event emission.
    * Events are buffered and processed asynchronously.
    */
@@ -344,7 +344,7 @@ export class EventStream {
 
     // Add to buffer
     this.eventBuffer.push(fullEvent);
-    
+
     // Trim buffer if too large
     if (this.eventBuffer.length > this.maxBufferSize) {
       this.eventBuffer.shift();
@@ -360,7 +360,13 @@ export class EventStream {
    * Emit a proposal event
    */
   async emitProposalEvent(
-    type: "PROPOSAL_CREATED" | "PROPOSAL_QUEUED" | "PROPOSAL_APPROVED" | "PROPOSAL_EXECUTED" | "PROPOSAL_FAILED" | "PROPOSAL_CANCELLED",
+    type:
+      | "PROPOSAL_CREATED"
+      | "PROPOSAL_QUEUED"
+      | "PROPOSAL_APPROVED"
+      | "PROPOSAL_EXECUTED"
+      | "PROPOSAL_FAILED"
+      | "PROPOSAL_CANCELLED",
     multisigAddress: string,
     chainId: string,
     proposalId: string,
@@ -418,7 +424,11 @@ export class EventStream {
    * Emit an emergency event
    */
   async emitEmergencyEvent(
-    type: "EMERGENCY_PAUSED" | "EMERGENCY_UNPAUSED" | "SAFE_MODE_ACTIVATED" | "SAFE_MODE_DEACTIVATED",
+    type:
+      | "EMERGENCY_PAUSED"
+      | "EMERGENCY_UNPAUSED"
+      | "SAFE_MODE_ACTIVATED"
+      | "SAFE_MODE_DEACTIVATED",
     multisigAddress: string,
     chainId: string,
     actor: string,
@@ -493,18 +503,14 @@ export class EventStream {
    * Get events by type from buffer
    */
   getEventsByType(type: MultisigEventType, limit: number = 50): MultisigEvent[] {
-    return this.eventBuffer
-      .filter((e) => e.type === type)
-      .slice(-limit);
+    return this.eventBuffer.filter((e) => e.type === type).slice(-limit);
   }
 
   /**
    * Get events by multisig from buffer
    */
   getEventsByMultisig(multisigAddress: string, limit: number = 50): MultisigEvent[] {
-    return this.eventBuffer
-      .filter((e) => e.multisigAddress === multisigAddress)
-      .slice(-limit);
+    return this.eventBuffer.filter((e) => e.multisigAddress === multisigAddress).slice(-limit);
   }
 
   // ============================================================================
@@ -547,11 +553,7 @@ export function createWebhookSink(
 /**
  * Create a memory sink
  */
-export function createMemorySink(
-  id: string,
-  name: string,
-  maxEvents?: number,
-): MemorySink {
+export function createMemorySink(id: string, name: string, maxEvents?: number): MemorySink {
   return new MemorySink(id, name, maxEvents);
 }
 
@@ -588,4 +590,3 @@ export function getEventStream(): EventStream {
 export function setEventStream(stream: EventStream): void {
   globalEventStream = stream;
 }
-

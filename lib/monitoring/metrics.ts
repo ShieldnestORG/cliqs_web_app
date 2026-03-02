@@ -1,11 +1,11 @@
 /**
  * Metrics Collector - Observability Infrastructure
- * 
+ *
  * File: lib/monitoring/metrics.ts
- * 
+ *
  * Collects and exports metrics for monitoring and observability.
  * Supports counters, gauges, and histograms.
- * 
+ *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards
  */
 
@@ -45,7 +45,7 @@ export class Counter implements Metric {
   readonly type = "counter" as const;
   readonly description: string;
   readonly labels: readonly string[];
-  
+
   private values: Map<string, number> = new Map();
 
   constructor(name: string, description: string, labels: string[] = []) {
@@ -76,14 +76,14 @@ export class Counter implements Metric {
    */
   getAll(): { labels: Record<string, string>; value: number }[] {
     const results: { labels: Record<string, string>; value: number }[] = [];
-    
+
     for (const [key, value] of this.values) {
       results.push({
         labels: this.parseKey(key),
         value,
       });
     }
-    
+
     return results;
   }
 
@@ -110,7 +110,7 @@ export class Gauge implements Metric {
   readonly type = "gauge" as const;
   readonly description: string;
   readonly labels: readonly string[];
-  
+
   private values: Map<string, number> = new Map();
 
   constructor(name: string, description: string, labels: string[] = []) {
@@ -158,14 +158,14 @@ export class Gauge implements Metric {
    */
   getAll(): { labels: Record<string, string>; value: number }[] {
     const results: { labels: Record<string, string>; value: number }[] = [];
-    
+
     for (const [key, value] of this.values) {
       results.push({
         labels: this.parseKey(key),
         value,
       });
     }
-    
+
     return results;
   }
 
@@ -193,7 +193,7 @@ export class Histogram implements Metric {
   readonly description: string;
   readonly labels: readonly string[];
   readonly buckets: readonly number[];
-  
+
   private bucketValues: Map<string, number[]> = new Map();
   private sums: Map<string, number> = new Map();
   private counts: Map<string, number> = new Map();
@@ -215,22 +215,22 @@ export class Histogram implements Metric {
    */
   observe(value: number, labels?: Record<string, string>): void {
     const key = this.getKey(labels);
-    
+
     // Update sum
     const currentSum = this.sums.get(key) ?? 0;
     this.sums.set(key, currentSum + value);
-    
+
     // Update count
     const currentCount = this.counts.get(key) ?? 0;
     this.counts.set(key, currentCount + 1);
-    
+
     // Update buckets
     let bucketCounts = this.bucketValues.get(key);
     if (!bucketCounts) {
       bucketCounts = new Array(this.buckets.length).fill(0);
       this.bucketValues.set(key, bucketCounts);
     }
-    
+
     for (let i = 0; i < this.buckets.length; i++) {
       if (value <= this.buckets[i]) {
         bucketCounts[i]++;
@@ -300,14 +300,14 @@ export class MetricsRegistry {
   counter(name: string, description: string, labels: string[] = []): Counter {
     const fullName = `${this.prefix}_${name}`;
     const existing = this.metrics.get(fullName);
-    
+
     if (existing) {
       if (existing.type !== "counter") {
         throw new Error(`Metric ${fullName} already exists with different type`);
       }
       return existing as Counter;
     }
-    
+
     const counter = new Counter(fullName, description, labels);
     this.metrics.set(fullName, counter);
     return counter;
@@ -319,14 +319,14 @@ export class MetricsRegistry {
   gauge(name: string, description: string, labels: string[] = []): Gauge {
     const fullName = `${this.prefix}_${name}`;
     const existing = this.metrics.get(fullName);
-    
+
     if (existing) {
       if (existing.type !== "gauge") {
         throw new Error(`Metric ${fullName} already exists with different type`);
       }
       return existing as Gauge;
     }
-    
+
     const gauge = new Gauge(fullName, description, labels);
     this.metrics.set(fullName, gauge);
     return gauge;
@@ -343,14 +343,14 @@ export class MetricsRegistry {
   ): Histogram {
     const fullName = `${this.prefix}_${name}`;
     const existing = this.metrics.get(fullName);
-    
+
     if (existing) {
       if (existing.type !== "histogram") {
         throw new Error(`Metric ${fullName} already exists with different type`);
       }
       return existing as Histogram;
     }
-    
+
     const histogram = new Histogram(fullName, description, labels, buckets);
     this.metrics.set(fullName, histogram);
     return histogram;
@@ -376,7 +376,7 @@ export class MetricsRegistry {
    */
   export(): Record<string, unknown> {
     const result: Record<string, unknown> = {};
-    
+
     for (const [name, metric] of this.metrics) {
       if (metric.type === "counter" || metric.type === "gauge") {
         const m = metric as Counter | Gauge;
@@ -398,7 +398,7 @@ export class MetricsRegistry {
         };
       }
     }
-    
+
     return result;
   }
 }
@@ -452,16 +452,11 @@ export function createStandardMetrics(registry: MetricsRegistry): {
       "Total number of emergency pauses",
       ["chain_id"],
     ),
-    activeMultisigs: registry.gauge(
-      "active_multisigs",
-      "Number of active multisigs",
-      ["chain_id"],
-    ),
-    pendingProposals: registry.gauge(
-      "pending_proposals",
-      "Number of pending proposals",
-      ["chain_id", "multisig_address"],
-    ),
+    activeMultisigs: registry.gauge("active_multisigs", "Number of active multisigs", ["chain_id"]),
+    pendingProposals: registry.gauge("pending_proposals", "Number of pending proposals", [
+      "chain_id",
+      "multisig_address",
+    ]),
     executionLatency: registry.histogram(
       "execution_latency_seconds",
       "Time from proposal creation to execution",
@@ -493,4 +488,3 @@ export function getMetricsRegistry(): MetricsRegistry {
 export function setMetricsRegistry(registry: MetricsRegistry): void {
   globalRegistry = registry;
 }
-

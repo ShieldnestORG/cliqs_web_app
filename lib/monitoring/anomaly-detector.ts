@@ -1,17 +1,17 @@
 /**
  * Anomaly Detector - Rule-Based Anomaly Detection
- * 
+ *
  * File: lib/monitoring/anomaly-detector.ts
- * 
+ *
  * Detects suspicious patterns and triggers alerts.
  * Supports configurable rules and thresholds.
- * 
+ *
  * Detection patterns:
  * - Sudden membership churn
  * - Repeated failed executions
  * - Suspicious proposal frequency
  * - Unusual spending patterns
- * 
+ *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards
  */
 
@@ -63,19 +63,16 @@ export interface DetectionRule {
   readonly enabled: boolean;
   readonly severity: AnomalySeverity;
   readonly cooldownSeconds: number;
-  
+
   /**
    * Check if rule applies to an event
    */
   applies(event: MultisigEvent): boolean;
-  
+
   /**
    * Evaluate the rule against recent events
    */
-  evaluate(
-    event: MultisigEvent,
-    recentEvents: readonly MultisigEvent[],
-  ): AnomalyResult | null;
+  evaluate(event: MultisigEvent, recentEvents: readonly MultisigEvent[]): AnomalyResult | null;
 }
 
 export type AnomalyResult = {
@@ -100,17 +97,19 @@ export class MembershipChurnRule implements DetectionRule {
   readonly enabled: boolean;
   readonly severity: AnomalySeverity;
   readonly cooldownSeconds: number;
-  
+
   private readonly threshold: number;
   private readonly windowSeconds: number;
 
-  constructor(config: {
-    enabled?: boolean;
-    severity?: AnomalySeverity;
-    cooldownSeconds?: number;
-    threshold?: number;
-    windowSeconds?: number;
-  } = {}) {
+  constructor(
+    config: {
+      enabled?: boolean;
+      severity?: AnomalySeverity;
+      cooldownSeconds?: number;
+      threshold?: number;
+      windowSeconds?: number;
+    } = {},
+  ) {
     this.enabled = config.enabled ?? true;
     this.severity = config.severity ?? "high";
     this.cooldownSeconds = config.cooldownSeconds ?? 3600;
@@ -124,7 +123,7 @@ export class MembershipChurnRule implements DetectionRule {
 
   evaluate(event: MultisigEvent, recentEvents: readonly MultisigEvent[]): AnomalyResult | null {
     const windowStart = event.timestamp - this.windowSeconds;
-    
+
     const membershipEvents = recentEvents.filter(
       (e) =>
         e.multisigAddress === event.multisigAddress &&
@@ -160,17 +159,19 @@ export class RepeatedFailuresRule implements DetectionRule {
   readonly enabled: boolean;
   readonly severity: AnomalySeverity;
   readonly cooldownSeconds: number;
-  
+
   private readonly threshold: number;
   private readonly windowSeconds: number;
 
-  constructor(config: {
-    enabled?: boolean;
-    severity?: AnomalySeverity;
-    cooldownSeconds?: number;
-    threshold?: number;
-    windowSeconds?: number;
-  } = {}) {
+  constructor(
+    config: {
+      enabled?: boolean;
+      severity?: AnomalySeverity;
+      cooldownSeconds?: number;
+      threshold?: number;
+      windowSeconds?: number;
+    } = {},
+  ) {
     this.enabled = config.enabled ?? true;
     this.severity = config.severity ?? "medium";
     this.cooldownSeconds = config.cooldownSeconds ?? 1800;
@@ -184,7 +185,7 @@ export class RepeatedFailuresRule implements DetectionRule {
 
   evaluate(event: MultisigEvent, recentEvents: readonly MultisigEvent[]): AnomalyResult | null {
     const windowStart = event.timestamp - this.windowSeconds;
-    
+
     const failedEvents = recentEvents.filter(
       (e) =>
         e.multisigAddress === event.multisigAddress &&
@@ -220,17 +221,19 @@ export class HighProposalFrequencyRule implements DetectionRule {
   readonly enabled: boolean;
   readonly severity: AnomalySeverity;
   readonly cooldownSeconds: number;
-  
+
   private readonly threshold: number;
   private readonly windowSeconds: number;
 
-  constructor(config: {
-    enabled?: boolean;
-    severity?: AnomalySeverity;
-    cooldownSeconds?: number;
-    threshold?: number;
-    windowSeconds?: number;
-  } = {}) {
+  constructor(
+    config: {
+      enabled?: boolean;
+      severity?: AnomalySeverity;
+      cooldownSeconds?: number;
+      threshold?: number;
+      windowSeconds?: number;
+    } = {},
+  ) {
     this.enabled = config.enabled ?? true;
     this.severity = config.severity ?? "medium";
     this.cooldownSeconds = config.cooldownSeconds ?? 3600;
@@ -244,7 +247,7 @@ export class HighProposalFrequencyRule implements DetectionRule {
 
   evaluate(event: MultisigEvent, recentEvents: readonly MultisigEvent[]): AnomalyResult | null {
     const windowStart = event.timestamp - this.windowSeconds;
-    
+
     const proposalEvents = recentEvents.filter(
       (e) =>
         e.multisigAddress === event.multisigAddress &&
@@ -279,17 +282,19 @@ export class CredentialRevocationSpikeRule implements DetectionRule {
   readonly enabled: boolean;
   readonly severity: AnomalySeverity;
   readonly cooldownSeconds: number;
-  
+
   private readonly threshold: number;
   private readonly windowSeconds: number;
 
-  constructor(config: {
-    enabled?: boolean;
-    severity?: AnomalySeverity;
-    cooldownSeconds?: number;
-    threshold?: number;
-    windowSeconds?: number;
-  } = {}) {
+  constructor(
+    config: {
+      enabled?: boolean;
+      severity?: AnomalySeverity;
+      cooldownSeconds?: number;
+      threshold?: number;
+      windowSeconds?: number;
+    } = {},
+  ) {
     this.enabled = config.enabled ?? true;
     this.severity = config.severity ?? "critical";
     this.cooldownSeconds = config.cooldownSeconds ?? 1800;
@@ -303,7 +308,7 @@ export class CredentialRevocationSpikeRule implements DetectionRule {
 
   evaluate(event: MultisigEvent, recentEvents: readonly MultisigEvent[]): AnomalyResult | null {
     const windowStart = event.timestamp - this.windowSeconds;
-    
+
     const revocationEvents = recentEvents.filter(
       (e) =>
         e.multisigAddress === event.multisigAddress &&
@@ -344,7 +349,7 @@ export class AnomalyDetector {
 
   constructor(maxEvents: number = 1000) {
     this.maxEvents = maxEvents;
-    
+
     // Register default rules
     this.registerRule(new MembershipChurnRule());
     this.registerRule(new RepeatedFailuresRule());
@@ -394,7 +399,7 @@ export class AnomalyDetector {
   processEvent(event: MultisigEvent): Anomaly[] {
     // Add to recent events
     this.recentEvents.push(event);
-    
+
     // Trim if too large
     if (this.recentEvents.length > this.maxEvents) {
       this.recentEvents.shift();
@@ -415,7 +420,7 @@ export class AnomalyDetector {
 
       // Evaluate rule
       const result = rule.evaluate(event, this.recentEvents);
-      
+
       if (result) {
         const anomaly: Anomaly = {
           id: this.generateAnomalyId(),
@@ -432,7 +437,7 @@ export class AnomalyDetector {
 
         detectedAnomalies.push(anomaly);
         this.cooldowns.set(cooldownKey, event.timestamp);
-        
+
         // Notify listeners
         this.notifyListeners(anomaly);
       }
@@ -477,18 +482,14 @@ export class AnomalyDetector {
    * Get recent events for a multisig
    */
   getRecentEvents(multisigAddress: string, limit: number = 50): MultisigEvent[] {
-    return this.recentEvents
-      .filter((e) => e.multisigAddress === multisigAddress)
-      .slice(-limit);
+    return this.recentEvents.filter((e) => e.multisigAddress === multisigAddress).slice(-limit);
   }
 
   /**
    * Get events by type
    */
   getEventsByType(type: MultisigEventType, limit: number = 50): MultisigEvent[] {
-    return this.recentEvents
-      .filter((e) => e.type === type)
-      .slice(-limit);
+    return this.recentEvents.filter((e) => e.type === type).slice(-limit);
   }
 
   // ============================================================================
@@ -521,16 +522,16 @@ export function createCustomAnomalyDetector(
   maxEvents?: number,
 ): AnomalyDetector {
   const detector = new AnomalyDetector(maxEvents);
-  
+
   // Clear default rules and add custom ones
   for (const rule of detector.getRules()) {
     detector.unregisterRule(rule.id);
   }
-  
+
   for (const rule of rules) {
     detector.registerRule(rule);
   }
-  
+
   return detector;
 }
 
@@ -556,4 +557,3 @@ export function getAnomalyDetector(): AnomalyDetector {
 export function setAnomalyDetector(detector: AnomalyDetector): void {
   globalAnomalyDetector = detector;
 }
-

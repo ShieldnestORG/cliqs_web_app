@@ -71,7 +71,7 @@ describe("PHASE 3 FUZZ: Proposal Lifecycle", () => {
       }
 
       console.log(
-        `Tested ${totalSequences} sequences, ${sequencesWithErrors} had rejected actions, ${invariantViolations} had invariant violations`
+        `Tested ${totalSequences} sequences, ${sequencesWithErrors} had rejected actions, ${invariantViolations} had invariant violations`,
       );
 
       // With proper state machine handling, random sequences should NOT produce invariant violations
@@ -152,7 +152,7 @@ describe("PHASE 3 FUZZ: Proposal Lifecycle", () => {
             expect(() => assertProposalInvariants(result.history)).not.toThrow();
           }
         }
-      }
+      },
     );
 
     test("100 double-execute attempts all fail", async () => {
@@ -163,7 +163,7 @@ describe("PHASE 3 FUZZ: Proposal Lifecycle", () => {
 
         // Should have error for second execution
         expect(result.errors.some((e) => e.includes("terminal") || e.includes("already"))).toBe(
-          true
+          true,
         );
       }
     });
@@ -247,11 +247,14 @@ describe("PHASE 3 FUZZ: Proposal Lifecycle", () => {
 
           faultController.state.emergencyPaused = true;
 
-          const result = await evaluatePoliciesMinimal({
-            isPaused: true,
-            policyVersion: 1,
-            expectedPolicyVersion: 1,
-          }, 'execution');
+          const result = await evaluatePoliciesMinimal(
+            {
+              isPaused: true,
+              policyVersion: 1,
+              expectedPolicyVersion: 1,
+            },
+            "execution",
+          );
 
           expect(result.allowed).toBe(false);
 
@@ -279,21 +282,27 @@ describe("PHASE 3 FUZZ: Proposal Lifecycle", () => {
         // Start with valid credential
         faultController.state.credentialValid = true;
 
-        const voteResult = await evaluatePoliciesMinimal({
-          policyVersion: 1,
-          expectedPolicyVersion: 1,
-          credential: { holder: "cosmos1test", valid: true, role: "member" },
-        }, 'proposal');
+        const voteResult = await evaluatePoliciesMinimal(
+          {
+            policyVersion: 1,
+            expectedPolicyVersion: 1,
+            credential: { holder: "cosmos1test", valid: true, role: "member" },
+          },
+          "proposal",
+        );
 
         expect(voteResult.allowed).toBe(true);
 
         // Revoke credential
         faultController.state.credentialValid = false;
 
-        const execResult = await evaluatePoliciesMinimal({
-          policyVersion: 1,
-          expectedPolicyVersion: 1,
-        }, 'execution');
+        const execResult = await evaluatePoliciesMinimal(
+          {
+            policyVersion: 1,
+            expectedPolicyVersion: 1,
+          },
+          "execution",
+        );
 
         expect(execResult.allowed).toBe(false);
 
@@ -342,9 +351,9 @@ describe("PHASE 3 FUZZ: Proposal Lifecycle", () => {
         // Second execution fails
         const executedProposal = { ...proposal, currentState: "EXECUTED" as ProposalState };
         const secondExec = simulateActionSequence(executedProposal, ["EXECUTE"]);
-        expect(
-          secondExec.errors.some(e => e.includes("terminal") || e.includes("already"))
-        ).toBe(true);
+        expect(secondExec.errors.some((e) => e.includes("terminal") || e.includes("already"))).toBe(
+          true,
+        );
       }
     });
   });
@@ -404,4 +413,3 @@ describe("PHASE 3 FUZZ: Proposal Lifecycle", () => {
     });
   });
 });
-

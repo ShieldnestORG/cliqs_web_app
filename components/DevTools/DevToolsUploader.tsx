@@ -141,7 +141,9 @@ export default function DevToolsUploader({
           <div className="rounded-lg border border-green-accent/30 bg-green-accent/10 p-3 text-sm">
             <p className="font-semibold text-green-accent">Upload Complete</p>
             <p className="text-xs text-muted-foreground">Code ID: {uploadResult.codeId}</p>
-            <p className="font-mono text-xs text-muted-foreground break-all">{uploadResult.txHash}</p>
+            <p className="break-all font-mono text-xs text-muted-foreground">
+              {uploadResult.txHash}
+            </p>
           </div>
         )}
 
@@ -151,7 +153,11 @@ export default function DevToolsUploader({
           onClick={handleUpload}
           disabled={isUploading || !fileBytes || !canUpload}
         >
-          {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
+          {isUploading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <UploadCloud className="h-4 w-4" />
+          )}
           {isUploading ? "Uploading..." : "Upload to Chain"}
         </Button>
       </CardContent>

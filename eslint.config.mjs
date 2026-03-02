@@ -99,4 +99,37 @@ export default [
       radix: "off",
     },
   },
+  // Test files and chaos/fuzz harnesses: mocks use any, node-mocks-http pattern
+  {
+    files: ["__tests__/**/*.{js,jsx,ts,tsx}", "tests/chaos/**/*.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/ban-ts-comment": "off",
+      "@typescript-eslint/no-require-imports": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      radix: "off",
+      "react/display-name": "off",
+    },
+  },
+  // Jest setup/polyfills: require() needed for Node util in CJS context
+  {
+    files: ["jest.setup.js", "jest.polyfills.js"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+      "react/display-name": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+    },
+  },
+  // Low-level libs: bitwise ops used for encoding/parsing
+  {
+    files: [
+      "lib/byodb/dynamicMongo.ts",
+      "lib/contract/wasmValidator.ts",
+      "lib/msg.ts",
+      "lib/tokenMetadata.ts",
+    ],
+    rules: {
+      "no-bitwise": "off",
+    },
+  },
 ];

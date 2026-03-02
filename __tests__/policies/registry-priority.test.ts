@@ -73,7 +73,6 @@ describe("Policy Registry: priority + fail-closed", () => {
     expect(res.reason).toContain("paused");
   });
 
-
   test("Multiple policies are evaluated in priority order", async () => {
     // High priority policy (timelock - priority 10)
     const timelockPolicy = new TimelockPolicy("timelock-1", "Timelock Policy", {

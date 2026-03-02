@@ -56,7 +56,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       const clean = <T extends Record<string, unknown>>(docs: T[]) =>
         docs.map(({ _id, ...rest }) => {
           void _id;
-          return { id: (_id as { toHexString(): string })?.toHexString?.() ?? String(_id), ...rest };
+          return {
+            id: (_id as { toHexString(): string })?.toHexString?.() ?? String(_id),
+            ...rest,
+          };
         });
 
       res.status(200).json({
@@ -83,8 +86,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         exportedAt: new Date().toISOString(),
         source: "default",
         stats,
-        message:
-          "Full export from default database. Use BYODB mode to export your personal data.",
+        message: "Full export from default database. Use BYODB mode to export your personal data.",
       });
     }
   } catch (err) {

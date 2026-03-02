@@ -1,10 +1,10 @@
 /**
  * Direct Mode Multisig Transaction Builder
- * 
+ *
  * This module provides support for SIGN_MODE_DIRECT in multisig transactions.
  * TX (and some other chains) require SIGN_MODE_DIRECT for certain message types
  * like MsgWithdrawValidatorCommission.
- * 
+ *
  * For Direct mode signing:
  * 1. The AuthInfo (with fee and signer_infos) must be pre-constructed
  * 2. Each signer signs: SHA256(SignDoc) where SignDoc = { bodyBytes, authInfoBytes, chainId, accountNumber }
@@ -15,7 +15,10 @@ import { MultisigThresholdPubkey, pubkeyToAddress } from "@cosmjs/amino";
 import { fromBech32, toBase64 } from "@cosmjs/encoding";
 import { encodePubkey } from "@cosmjs/proto-signing";
 import { StdFee } from "@cosmjs/stargate";
-import { CompactBitArray, MultiSignature } from "cosmjs-types/cosmos/crypto/multisig/v1beta1/multisig";
+import {
+  CompactBitArray,
+  MultiSignature,
+} from "cosmjs-types/cosmos/crypto/multisig/v1beta1/multisig";
 import { SignMode } from "cosmjs-types/cosmos/tx/signing/v1beta1/signing";
 import { AuthInfo, SignDoc, TxRaw } from "cosmjs-types/cosmos/tx/v1beta1/tx";
 import { sha256 } from "@cosmjs/crypto";
@@ -27,7 +30,7 @@ function makeCompactBitArray(bits: readonly boolean[]): CompactBitArray {
   const byteCount = Math.ceil(bits.length / 8);
   const extraBits = bits.length - Math.floor(bits.length / 8) * 8;
   const bytes = new Uint8Array(byteCount);
-  
+
   bits.forEach((value, index) => {
     const bytePos = Math.floor(index / 8);
     const bitPos = index % 8;
@@ -36,7 +39,7 @@ function makeCompactBitArray(bits: readonly boolean[]): CompactBitArray {
       bytes[bytePos] |= 0b1 << (8 - 1 - bitPos);
     }
   });
-  
+
   return CompactBitArray.fromPartial({ elems: bytes, extraBitsStored: extraBits });
 }
 
@@ -58,9 +61,7 @@ export function makeDirectModeAuthInfo(
       multi: {
         // The bitarray will be filled in when we know which signers have signed
         // For pre-construction, we assume all will sign
-        bitarray: makeCompactBitArray(
-          multisigPubkey.value.pubkeys.map(() => true)
-        ),
+        bitarray: makeCompactBitArray(multisigPubkey.value.pubkeys.map(() => true)),
         modeInfos: multisigPubkey.value.pubkeys.map(() => ({
           single: { mode: SignMode.SIGN_MODE_DIRECT },
         })),
@@ -108,13 +109,13 @@ export function makeDirectSignDoc(
 /**
  * Assembles a multisig transaction from Direct mode signatures.
  * Similar to makeMultisignedTxBytes but uses SIGN_MODE_DIRECT.
- * 
+ *
  * WARNING: This function currently has a fundamental limitation for the
  * "sign independently" workflow. For SIGN_MODE_DIRECT, the authInfoBytes
  * (which include bitarray indicating who signed) are part of what gets signed.
  * Since we don't know who will sign until they actually sign, this creates
  * a mismatch between signing-time authInfo and broadcast-time authInfo.
- * 
+ *
  * This function should only be used when ALL signers are known beforehand
  * and sign with a consistent authInfo. For independent signing workflows,
  * use Amino mode (makeMultisignedTxBytes) instead.
@@ -128,11 +129,11 @@ export function makeMultisignedTxBytesDirect(
 ): Uint8Array {
   const addresses = Array.from(signatures.keys());
   const prefix = fromBech32(addresses[0]).prefix;
-  
+
   // Determine which pubkeys have signatures
   const signers: boolean[] = Array(multisigPubkey.value.pubkeys.length).fill(false);
   const signaturesList: Uint8Array[] = [];
-  
+
   for (let i = 0; i < multisigPubkey.value.pubkeys.length; i++) {
     const signerAddress = pubkeyToAddress(multisigPubkey.value.pubkeys[i], prefix);
     const signature = signatures.get(signerAddress);
@@ -170,9 +171,7 @@ export function makeMultisignedTxBytesDirect(
     bodyBytes,
     authInfoBytes,
     signatures: [
-      MultiSignature.encode(
-        MultiSignature.fromPartial({ signatures: signaturesList })
-      ).finish(),
+      MultiSignature.encode(MultiSignature.fromPartial({ signatures: signaturesList })).finish(),
     ],
   });
 
@@ -190,13 +189,13 @@ export function logDirectSignDocDebug(
   label: string = "Direct SignDoc Debug",
 ): void {
   const { signDocHash } = makeDirectSignDoc(bodyBytes, authInfoBytes, chainId, accountNumber);
-  
+
   console.log(`\n${"=".repeat(60)}`);
   console.log(`📜 ${label}`);
   console.log("=".repeat(60));
   console.log("\n🔑 Direct SignDoc Hash:");
   console.log(`  Base64: ${toBase64(signDocHash)}`);
-  console.log(`  Hex:    ${Buffer.from(signDocHash).toString('hex')}`);
+  console.log(`  Hex:    ${Buffer.from(signDocHash).toString("hex")}`);
   console.log("\n📄 SignDoc Components:");
   console.log(`  bodyBytes length: ${bodyBytes.length}`);
   console.log(`  authInfoBytes length: ${authInfoBytes.length}`);
@@ -207,36 +206,33 @@ export function logDirectSignDocDebug(
 
 /**
  * Check if a transaction should use Direct mode based on message types.
- * 
+ *
  * IMPORTANT: Direct mode for multisig requires all signers to sign the same
  * authInfoBytes, which includes a bitarray indicating which members signed.
  * This creates a chicken-and-egg problem for "sign independently" workflows
  * where we don't know who will sign until they actually sign.
- * 
+ *
  * For now, we disable Direct mode for multisig transactions and use Amino mode
  * instead. Amino mode doesn't include authInfoBytes in the signed data, so it
  * works with independent signing.
- * 
+ *
  * If a specific chain truly requires Direct mode for certain messages, we would
  * need to implement a "commit phase" where signers agree on who will sign before
  * any signing occurs.
  */
 export function shouldUseDirectMode(msgs: readonly { typeUrl: string }[]): boolean {
   // Direct mode is REQUIRED for certain message types on some chains.
-  // 
+  //
   // IMPORTANT: Direct mode for multisig has a constraint - the authInfoBytes include
   // a bitarray indicating which members signed. We pre-construct this assuming ALL
   // threshold members will sign. This works when:
   // 1. All members sign (bitarray at signing time = bitarray at broadcast time)
   // 2. The multisig threshold equals the total number of members (e.g., 3-of-3)
-  // 
+  //
   // For partial signing (e.g., 2-of-3 where only 2 sign), the bitarray will differ
   // and signatures will fail. In that case, Amino mode should be used.
   //
   // MsgWithdrawValidatorCommission requires Direct mode on Coreum and other chains.
-  const directModeRequiredTypes = [
-    "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission",
-  ];
+  const directModeRequiredTypes = ["/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission"];
   return msgs.some((msg) => directModeRequiredTypes.includes(msg.typeUrl));
 }
-

@@ -58,7 +58,9 @@ async function apiCreateTransaction(req: NextApiRequest, res: NextApiResponse) {
     console.log("DEBUG: fetching multisig", body.chainId, body.creator);
     const multisig = await getMultisig(body.chainId, body.creator);
     if (!multisig) {
-      console.error(`DEBUG: multisig not found with address ${body.creator} on chain ${body.chainId}`);
+      console.error(
+        `DEBUG: multisig not found with address ${body.creator} on chain ${body.chainId}`,
+      );
       throw new Error(`multisig not found with address ${body.creator} on chain ${body.chainId}`);
     }
     console.log("DEBUG: multisig found", multisig.id);
@@ -66,7 +68,7 @@ async function apiCreateTransaction(req: NextApiRequest, res: NextApiResponse) {
     // Safely serialize dataJSON, handling BigInt values
     console.log("🔍 DECIMAL DEBUG: serializing dataJSON for DB storage");
     const serializedDataJSON = JSON.stringify(body.dataJSON, (key, value) => {
-      if (typeof value === 'bigint') {
+      if (typeof value === "bigint") {
         console.log(`🔍 DECIMAL DEBUG: converting BigInt to string:`, value.toString());
         return value.toString();
       }
