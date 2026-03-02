@@ -12,6 +12,7 @@
  * - Users can download history before deletion
  */
 
+import escapeStringRegexp from "escape-string-regexp";
 import { ObjectId, WithId, Document, MongoClient, Db } from "mongodb";
 
 const uri = process.env.MONGODB_URI || "";
@@ -193,9 +194,10 @@ export const getBelongedMultisigs = async (
   const col = db.collection<MongoMultisig>(Collections.MULTISIGS);
 
   // Use $regex to narrow candidates, then filter with exact JSON match
-  // to avoid false positives from substring matching
+  // to avoid false positives from substring matching.
+  // Escape memberPubkey since base64 uses + and / which are regex metacharacters.
   const candidates = await col
-    .find({ chainId, pubkeyJSON: { $regex: memberPubkey } })
+    .find({ chainId, pubkeyJSON: { $regex: escapeStringRegexp(memberPubkey) } })
     .toArray();
 
   const exactMatches = candidates.filter((doc) => {

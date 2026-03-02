@@ -302,7 +302,16 @@ export default function ListUserCliqs() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium truncate">{cliq.address}</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">
+                            {cliq.name || cliq.address}
+                          </p>
+                          {cliq.name && (
+                            <p className="text-xs text-muted-foreground truncate mt-0.5">
+                              {cliq.address}
+                            </p>
+                          )}
+                        </div>
                         {pendingCount > 0 && (
                           <Badge variant="outline" className="h-5 bg-amber-500/10 text-amber-500 border-amber-500/20 gap-1 px-1.5 ml-auto sm:ml-0">
                             <Clock className="h-3 w-3" />

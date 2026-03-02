@@ -115,7 +115,18 @@ export default function SettingsPage() {
           </Card>
 
           {/* Database Settings (BYODB) */}
-          <DatabaseSettings />
+          <div id="database-config" className="scroll-mt-8">
+            <p className="text-sm text-muted-foreground mb-4">
+              New to BYODB?{" "}
+              <Link
+                href={chain.registryName ? `/${chain.registryName}/get-started?journey=setup-byodb` : "#"}
+                className="underline hover:text-foreground"
+              >
+                See our step-by-step guide
+              </Link>
+            </p>
+            <DatabaseSettings />
+          </div>
         </div>
       </div>
     </div>
