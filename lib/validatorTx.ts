@@ -10,6 +10,7 @@
 import { ChainInfo } from "@/context/ChainsContext/types";
 import { DbTransactionParsedDataJson } from "@/graphql";
 import { createDbTx } from "@/lib/api";
+import { ensureChainMultisigInDb } from "@/lib/multisigHelpers";
 import { exportMsgToJson, gasOfTx } from "@/lib/txMsgHelpers";
 import { MsgTypeUrl, MsgTypeUrls } from "@/types/txMsg";
 import { EncodeObject } from "@cosmjs/proto-signing";
@@ -69,6 +70,10 @@ export async function createCliqTransaction(
       fee,
       memo,
     };
+
+    // Ensure chain-only multisig is registered in DB before creating tx (handles race with
+    // validator view useEffect and direct navigations that skip the CLIQ page)
+    await ensureChainMultisigInDb(cliqAddress, chain);
 
     // Create the transaction in the database
     const txId = await createDbTx(cliqAddress, chain.chainId, txData);

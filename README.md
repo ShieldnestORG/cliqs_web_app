@@ -12,7 +12,7 @@ cp .env.sample .env.local    # Edit as needed
 npm run dev                   # Runs on http://localhost:3003
 ```
 
-See [SETUP.md](SETUP.md) for detailed local setup, including MongoDB Atlas, local JSON database, and BYODB (Bring Your Own Database).
+**New Docs**: [PRD.md](docs/PRD.md), [User Guide](docs/App%20User%20Guide.md), [Appendix](docs/Appendix/). See [SETUP.md](SETUP.md) for dev/prod., including MongoDB Atlas, local JSON database, and BYODB (Bring Your Own Database).
 
 ## Architecture
 

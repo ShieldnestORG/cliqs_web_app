@@ -147,29 +147,24 @@ const importMsgFromJson = (msg: EncodeObject): EncodeObject => {
     const parsedValue = MsgCodecs[msg.typeUrl].fromJSON(normalizedValue);
 
     if (msg.typeUrl === MsgTypeUrls.CreateValidator) {
+      const validatorValue = parsedValue as {
+        commission?: unknown;
+        pubkey?: { typeUrl: string; value: Uint8Array };
+      };
       console.log("  - parsed value after fromJSON:", parsedValue);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      console.log("  - parsed value.commission:", (parsedValue as any).commission);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      console.log("  - parsed value.pubkey:", (parsedValue as any).pubkey);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      console.log(
-        "  - parsed value.pubkey.value length:",
-        (parsedValue as any).pubkey?.value?.length,
-      );
+      console.log("  - parsed value.commission:", validatorValue.commission);
+      console.log("  - parsed value.pubkey:", validatorValue.pubkey);
+      console.log("  - parsed value.pubkey.value length:", validatorValue.pubkey?.value?.length);
 
       // Critical fix: fromJSON returns a 32-byte raw pubkey, but amino converter needs
       // the full protobuf-encoded format (34 bytes with wrapper).
       // We need to re-encode it using encodePubkey to add the protobuf wrapper.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if ((parsedValue as any).pubkey && (parsedValue as any).pubkey.value.length === 32) {
+      if (validatorValue.pubkey && validatorValue.pubkey.value.length === 32) {
         console.log(
           "🔍 DECIMAL DEBUG: Re-encoding pubkey with protobuf wrapper for amino compatibility",
         );
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const rawPubkeyBytes = (parsedValue as any).pubkey.value;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const pubkeyType = (parsedValue as any).pubkey.typeUrl;
+        const rawPubkeyBytes = validatorValue.pubkey.value;
+        const pubkeyType = validatorValue.pubkey.typeUrl;
 
         // Determine the amino type based on the typeUrl
         let aminoType = "tendermint/PubKeyEd25519";

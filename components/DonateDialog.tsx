@@ -3,12 +3,13 @@ import { useWallet } from "@/context/WalletContext";
 import { useBalance } from "@/lib/hooks/useBalance";
 import { displayCoinToBaseCoin } from "@/lib/coinHelpers";
 import { MsgTypeUrls } from "@/types/txMsg";
-import { GasPrice, SigningStargateClient } from "@cosmjs/stargate";
+import { AminoTypes, GasPrice, SigningStargateClient } from "@cosmjs/stargate";
 import { fromBech32, toBech32 } from "@cosmjs/encoding";
 import { Decimal } from "@cosmjs/math";
 import { MsgGrant } from "cosmjs-types/cosmos/authz/v1beta1/tx";
-import { GenericAuthorization } from "cosmjs-types/cosmos/authz/v1beta1/authz";
+import { SendAuthorization } from "cosmjs-types/cosmos/bank/v1beta1/authz";
 import { Timestamp } from "cosmjs-types/google/protobuf/timestamp";
+import { aminoConverters } from "@/lib/msg";
 import {
   Heart,
   Copy,
@@ -387,8 +388,18 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
 
       const client = await SigningStargateClient.connectWithSigner(chain.nodeAddress, signer, {
         gasPrice: GasPrice.fromString(chain.gasPrice),
+        aminoTypes: new AminoTypes(aminoConverters),
       });
 
+      let baseCoin;
+      try {
+        baseCoin = displayCoinToBaseCoin({ denom: selectedToken.symbol, amount }, chain.assets);
+      } catch {
+        const dec = Decimal.fromUserInput(amount, selectedToken.exponent);
+        baseCoin = { denom: selectedToken.baseDenom, amount: dec.atomics };
+      }
+
+      const totalBaseAmount = (BigInt(baseCoin.amount) * BigInt(periodsCount)).toString();
       const expirySeconds = BigInt(Math.floor(expirationDate.getTime() / 1000));
 
       const grantMsg = {
@@ -398,10 +409,11 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
           grantee: donateAddress,
           grant: {
             authorization: {
-              typeUrl: "/cosmos.authz.v1beta1.GenericAuthorization",
-              value: GenericAuthorization.encode(
-                GenericAuthorization.fromPartial({
-                  msg: "/cosmos.bank.v1beta1.MsgSend",
+              typeUrl: "/cosmos.bank.v1beta1.SendAuthorization",
+              value: SendAuthorization.encode(
+                SendAuthorization.fromPartial({
+                  spendLimit: [{ denom: baseCoin.denom, amount: totalBaseAmount }],
+                  allowList: [donateAddress],
                 }),
               ).finish(),
             },
@@ -1006,10 +1018,14 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
                     <Shield className="h-5 w-5 text-white" />
                   </div>
                   <p className="text-sm leading-relaxed text-muted-foreground">
-                    This transaction creates an on-chain{" "}
-                    <span className="font-bold text-foreground">authz</span> grant. CLIQS will be
-                    authorized to execute sends to the donation address on your behalf. Your funds
-                    stay in your wallet until each period.
+                    This creates a{" "}
+                    <span className="font-bold text-foreground">spend-limited</span> authz grant.
+                    CLIQS can only send up to{" "}
+                    <span className="font-bold text-foreground">
+                      {totalDisplayAmount} {selectedToken?.symbol}
+                    </span>{" "}
+                    to the donation address on your behalf. No other amounts, tokens, or recipients
+                    are permitted. Your funds stay in your wallet until each period.
                   </p>
                 </div>
               )}
