@@ -202,10 +202,9 @@ export function parseCliTransaction(cliTxJson: string): {
 /**
  * Convert CLI message format to EncodeObject format
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function cliMsgToEncodeObject(cliMsg: {
   "@type": string;
-  [key: string]: any;
+  [key: string]: unknown;
 }): EncodeObject {
   const typeUrl = cliMsg["@type"];
   const value = { ...cliMsg };

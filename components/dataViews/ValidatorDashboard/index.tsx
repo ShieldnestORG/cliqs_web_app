@@ -252,6 +252,8 @@ export default function ValidatorDashboard() {
         });
       }
     })();
+    // chain object is passed to helpers but only these specific fields trigger re-registration
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCliqMode, cliqAddress, walletInfo, chain.chainId, chain.nodeAddress, chain.addressPrefix]);
 
   // Fetch associated validators (CLIQs) when:

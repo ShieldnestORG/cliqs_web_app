@@ -2,6 +2,7 @@ import { txCosmJsTypes } from "@/types/cosmjs-types";
 import { createWasmAminoConverters } from "@cosmjs/cosmwasm-stargate";
 import { AminoConverters, createDefaultAminoConverters } from "@cosmjs/stargate";
 import { GenericAuthorization } from "cosmjs-types/cosmos/authz/v1beta1/authz";
+import { SendAuthorization } from "cosmjs-types/cosmos/bank/v1beta1/authz";
 import { MsgExec, MsgGrant, MsgRevoke } from "cosmjs-types/cosmos/authz/v1beta1/tx";
 import { MsgSend } from "cosmjs-types/cosmos/bank/v1beta1/tx";
 import {
@@ -130,11 +131,10 @@ const EXEC_INNER_CODECS: Record<string, InnerMsgCodec> = {
       };
     },
     fromAmino: (v) =>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       MsgDelegate.fromPartial({
         delegatorAddress: v.delegator_address as string,
         validatorAddress: v.validator_address as string,
-        amount: v.amount as any,
+        amount: v.amount as { denom: string; amount: string },
       }),
   },
   "/cosmos.staking.v1beta1.MsgUndelegate": {
@@ -150,11 +150,10 @@ const EXEC_INNER_CODECS: Record<string, InnerMsgCodec> = {
       };
     },
     fromAmino: (v) =>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       MsgUndelegate.fromPartial({
         delegatorAddress: v.delegator_address as string,
         validatorAddress: v.validator_address as string,
-        amount: v.amount as any,
+        amount: v.amount as { denom: string; amount: string },
       }),
   },
   "/cosmos.bank.v1beta1.MsgSend": {
@@ -170,11 +169,10 @@ const EXEC_INNER_CODECS: Record<string, InnerMsgCodec> = {
       };
     },
     fromAmino: (v) =>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       MsgSend.fromPartial({
         fromAddress: v.from_address as string,
         toAddress: v.to_address as string,
-        amount: v.amount as any,
+        amount: v.amount as { denom: string; amount: string }[],
       }),
   },
   "/coreum.asset.nft.v1.MsgBurn": {
@@ -244,6 +242,17 @@ function makeAuthzAminoConverters(): AminoConverters {
             aminoAuth = { type: "cosmos-sdk/GenericAuthorization", value: { msg: decoded.msg } };
             break;
           }
+          case "/cosmos.bank.v1beta1.SendAuthorization": {
+            const decoded = SendAuthorization.decode(authorization.value);
+            aminoAuth = {
+              type: "cosmos-sdk/SendAuthorization",
+              value: {
+                spend_limit: decoded.spendLimit.map((c) => ({ denom: c.denom, amount: c.amount })),
+                allow_list: decoded.allowList,
+              },
+            };
+            break;
+          }
           default:
             throw new Error(
               `Unsupported authorization type for amino signing: ${authorization.typeUrl}`,
@@ -280,6 +289,20 @@ function makeAuthzAminoConverters(): AminoConverters {
               typeUrl: "/cosmos.authz.v1beta1.GenericAuthorization",
               value: GenericAuthorization.encode(
                 GenericAuthorization.fromPartial({ msg: grant.authorization.value.msg as string }),
+              ).finish(),
+            };
+            break;
+          case "cosmos-sdk/SendAuthorization":
+            protoAuth = {
+              typeUrl: "/cosmos.bank.v1beta1.SendAuthorization",
+              value: SendAuthorization.encode(
+                SendAuthorization.fromPartial({
+                  spendLimit: grant.authorization.value.spend_limit as {
+                    denom: string;
+                    amount: string;
+                  }[],
+                  allowList: (grant.authorization.value.allow_list as string[]) ?? [],
+                }),
               ).finish(),
             };
             break;

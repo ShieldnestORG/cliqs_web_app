@@ -128,9 +128,8 @@ const TransactionInfo = ({ tx, currentOnChainSequence, compact }: TransactionInf
             // Amount fields
             if (msgValue.amount) {
               if (Array.isArray(msgValue.amount)) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const amounts = msgValue.amount
-                  .map((a: any) => `${a.amount} ${a.denom}`)
+                  .map((a: { amount: string; denom: string }) => `${a.amount} ${a.denom}`)
                   .join(", ");
                 fields.push({ label: "Amount", value: amounts });
               } else if (msgValue.amount.amount) {

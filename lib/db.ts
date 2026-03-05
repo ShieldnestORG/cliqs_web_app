@@ -410,8 +410,9 @@ export const updateTransactionPayloadHash = async (
   }
 
   const backend = await requireMongoOrLocalDb();
-  if (backend === "mongo")
+  if (backend === "mongo") {
     return mongoDb.updateTransactionPayloadHash(transactionId, payloadHash, signDocHash);
+  }
   return localDb.updateTransactionPayloadHash(transactionId, payloadHash, signDocHash);
 };
 
