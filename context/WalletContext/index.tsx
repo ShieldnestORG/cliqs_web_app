@@ -101,12 +101,20 @@ export const WalletProvider = ({ children }: WalletProviderProps) => {
 
       setVerificationSignature(signature);
       return signature;
-    } catch (e) {
-      console.error("Verification failed:", e);
-      toastError({
-        description: "Failed to verify wallet ownership",
-        fullError: e instanceof Error ? e : undefined,
-      });
+    } catch (e: any) {
+      if (e?.isByodbLocked || e?.message?.includes("Database Locked")) {
+        console.warn("Verification skipped: Database is locked.");
+        toastError({
+          title: "Database Locked",
+          description: "Please unlock your custom database in Settings.",
+        });
+      } else {
+        console.error("Verification failed:", e);
+        toastError({
+          description: "Failed to verify wallet ownership",
+          fullError: e instanceof Error ? e : undefined,
+        });
+      }
       return null;
     } finally {
       setIsVerifying(false);

@@ -4,17 +4,36 @@ export type RequestConfig = Omit<RequestInit, "body"> & {
   timeout?: number;
 };
 
-/**
- * Try to inject BYODB headers if the module is loaded and active.
- * This is a safe dynamic import so it doesn't break if called server-side.
- */
+// ---------------------------------------------------------------------------
+// BYODB header injection (lazy-loaded, client-only)
+//
+// We use a cached dynamic require() instead of a top-level static import
+// because storage.ts → crypto.ts references browser-only APIs (SubtleCrypto).
+// A static import pulls them into the server bundle and can break SSR / the
+// client compilation in Next.js 15.
+// ---------------------------------------------------------------------------
+
+let _getByodbHeaders: (() => Record<string, string>) | null = null;
+
 function getByodbHeadersSafe(): Record<string, string> {
   if (typeof window === "undefined") return {};
+
+  // Lazy-load on first call, then cache the function reference
+  if (!_getByodbHeaders) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const mod = require("@/lib/byodb/storage");
+      _getByodbHeaders = mod.getByodbHeaders;
+    } catch (err) {
+      console.warn("[BYODB] Could not load storage module:", err);
+      return {};
+    }
+  }
+
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { getByodbHeaders } = require("@/lib/byodb/storage");
-    return getByodbHeaders();
-  } catch {
+    return _getByodbHeaders!();
+  } catch (err) {
+    console.warn("[BYODB] getByodbHeaders threw:", err);
     return {};
   }
 }
@@ -25,8 +44,14 @@ export const requestJson = async (
   endpoint: string,
   { method, headers, body, timeout = DEFAULT_TIMEOUT_MS, ...restConfig }: RequestConfig = {},
 ) => {
-  // Auto-inject BYODB headers when active
-  const byodbHeaders = getByodbHeadersSafe();
+  // Auto-inject BYODB headers when active, BUT ONLY for internal API calls.
+  // We do not want to send user's DB credentials to 3rd party APIs (like GitHub) 
+  // nor trigger CORS preflight errors with foreign servers.
+  const isInternalServer =
+    endpoint.startsWith("/") ||
+    (typeof window !== "undefined" && endpoint.includes(window.location.host));
+
+  const byodbHeaders = isInternalServer ? getByodbHeadersSafe() : {};
 
   const config: RequestInit = {
     method: (method ?? body) ? "POST" : "GET",
@@ -48,7 +73,26 @@ export const requestJson = async (
       return await response.json();
     } else {
       const errorText = await response.text();
-      return Promise.reject(new Error(errorText));
+      let errorMessage = errorText;
+      let isByodbLocked = false;
+      try {
+        const errorJson = JSON.parse(errorText);
+        if (errorJson.message) {
+          errorMessage = errorJson.message;
+        } else if (errorJson.error) {
+          errorMessage = errorJson.error;
+        }
+        if (errorJson.error === "Database Locked") {
+          isByodbLocked = true;
+          errorMessage = `Database Locked: ${errorJson.message}`;
+        }
+      } catch {
+        // Not JSON, use plain text
+      }
+
+      const error = new Error(errorMessage);
+      (error as any).isByodbLocked = isByodbLocked;
+      return Promise.reject(error);
     }
   } catch (error) {
     clearTimeout(timeoutId);
@@ -56,6 +100,11 @@ export const requestJson = async (
       return Promise.reject(
         new Error(`Request to ${endpoint} timed out after ${timeout / 1000} seconds`),
       );
+    }
+    // "Failed to fetch" can be thrown by browser extensions (e.g. Keplr)
+    // that patch window.fetch. Log but re-throw so callers can handle it.
+    if (error instanceof TypeError && error.message === "Failed to fetch") {
+      console.warn(`[request] Network error for ${endpoint} – this may be caused by a browser extension intercepting fetch.`);
     }
     throw error;
   }

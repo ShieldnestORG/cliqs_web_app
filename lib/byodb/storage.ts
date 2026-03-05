@@ -102,6 +102,9 @@ export async function saveCredential(
   level: SecurityLevel,
   material?: string | Uint8Array,
 ): Promise<ByodbMeta> {
+  // Strip trailing newlines/whitespace common when pasting from MongoDB Atlas
+  connectionString = connectionString.replace(/[\n\r]/g, "").trim();
+
   let encrypted: EncryptedCredential;
 
   if (level === 0) {
@@ -249,8 +252,20 @@ export { HEADER_NAME as BYODB_HEADER_NAME };
  * Call this when making API requests.
  */
 export function getByodbHeaders(): Record<string, string> {
+  const status = getByodbStatus();
+
+  // If the user has BYODB configured but it's locked (e.g. requires password),
+  // we MUST NOT silently omit the header. Otherwise, the backend will route
+  // the transaction to the default app database, separating their data!
+  if (status.enabled && status.needsUnlock) {
+    return { "x-byodb-locked": "true" };
+  }
+
   if (!_decryptedUri) return {};
-  return { [HEADER_NAME]: _decryptedUri };
+
+  // Trim the URI carefully, as pasting Mongo strings often carries invisible newlines 
+  // which will cause a fatal 'TypeError: Failed to execute fetch on Window: Invalid value'
+  return { [HEADER_NAME]: _decryptedUri.replace(/[\n\r]/g, "").trim() };
 }
 
 /**
