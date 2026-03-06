@@ -15,6 +15,14 @@ import { createSignature } from "@/graphql/signature";
 import { createTransaction } from "@/graphql/transaction";
 import { parseResponseData } from "../helpers";
 
+jest.mock("@/lib/dbInit", () => ({
+  ensureDbReady: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock("@/lib/byodb/middleware", () => ({
+  withByodbMiddleware: (handler: unknown) => handler,
+}));
+
 // Mock GraphQL functions
 jest.mock("@/graphql/multisig", () => ({
   getMultisig: jest.fn(),
@@ -81,13 +89,18 @@ describe("API: POST /api/transaction - Create Transaction: P0", () => {
     expect(data.txId).toBe(mockTxId);
     expect(mockGetMultisig).toHaveBeenCalledWith("cosmoshub-4", "cosmos1multisig");
     expect(mockCreateTransaction).toHaveBeenCalled();
-    expect(mockCreateTransaction).toHaveBeenCalledWith({
-      creator: { id: "multisig-id-123" },
-      dataJSON: JSON.stringify({
-        ...validImportedTx,
-        accountNumber: 1,
-        sequence: 0,
+    expect(mockCreateTransaction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        creator: { id: "multisig-id-123" },
       }),
+    );
+
+    const createTransactionArg = mockCreateTransaction.mock.calls[0]?.[0];
+    expect(createTransactionArg).toBeDefined();
+    expect(JSON.parse(createTransactionArg.dataJSON)).toEqual({
+      ...validImportedTx,
+      accountNumber: 1,
+      sequence: 0,
     });
   });
 

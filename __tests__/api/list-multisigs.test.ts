@@ -17,7 +17,14 @@ import {
 } from "@/lib/chainMultisigDiscovery";
 import { parseResponseData } from "../helpers";
 import { getNonce, incrementNonce } from "@/graphql/nonce";
-import { StargateClient } from "@cosmjs/stargate";
+
+jest.mock("@/lib/dbInit", () => ({
+  ensureDbReady: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock("@/lib/byodb/middleware", () => ({
+  withByodbMiddleware: (handler: unknown) => handler,
+}));
 
 // Mock GraphQL functions
 jest.mock("@/graphql/multisig", () => ({
@@ -33,12 +40,6 @@ jest.mock("@/graphql/nonce", () => ({
 jest.mock("@/lib/chainMultisigDiscovery", () => ({
   discoverMultisigsWhereMember: jest.fn().mockResolvedValue([]),
   registerDiscoveredMultisigs: jest.fn().mockResolvedValue(undefined),
-}));
-
-jest.mock("@cosmjs/stargate", () => ({
-  StargateClient: {
-    connect: jest.fn(),
-  },
 }));
 
 jest.mock("@/lib/keplr", () => ({
@@ -59,22 +60,10 @@ const mockDiscoverMultisigsWhereMember = discoverMultisigsWhereMember as jest.Mo
 const mockRegisterDiscoveredMultisigs = registerDiscoveredMultisigs as jest.MockedFunction<
   typeof registerDiscoveredMultisigs
 >;
-const mockStargateConnect = StargateClient.connect as jest.MockedFunction<
-  typeof StargateClient.connect
->;
 
 describe("API: POST /api/chain/[chainId]/multisig/list - List Multisigs: P0", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-
-    // Mock Stargate client
-    mockStargateConnect.mockResolvedValue({
-      getAccount: jest.fn().mockResolvedValue({
-        address: "cosmos1test",
-        accountNumber: 1,
-        sequence: 0,
-      }),
-    } as any);
     mockDiscoverMultisigsWhereMember.mockResolvedValue([]);
   });
 
@@ -215,11 +204,7 @@ describe("API: POST /api/chain/[chainId]/multisig/list - List Multisigs: P0", ()
     expect(res._getStatusCode()).toBe(400);
   });
 
-  it("should return 400 when account not found on chain", async () => {
-    mockStargateConnect.mockResolvedValue({
-      getAccount: jest.fn().mockResolvedValue(null),
-    } as any);
-
+  it("should return 400 when nodeAddress is missing", async () => {
     const { req, res } = createMocks({
       method: "POST",
       query: { chainId: "cosmoshub-4" },
@@ -227,9 +212,8 @@ describe("API: POST /api/chain/[chainId]/multisig/list - List Multisigs: P0", ()
         chain: {
           chainId: "cosmoshub-4",
           addressPrefix: "cosmos",
-          nodeAddress: "https://rpc.cosmos.network",
         },
-        address: "cosmos1nonexistent",
+        address: "cosmos1test",
         pubkey: "test-pubkey",
       },
     });

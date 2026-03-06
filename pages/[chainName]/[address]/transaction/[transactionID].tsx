@@ -50,7 +50,7 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (context)
   assert(transactionID, "Transaction ID missing");
   const tx = await getTransaction(transactionID);
   if (!tx) {
-    throw new Error("Transaction not found");
+    return { notFound: true };
   }
 
   return {
@@ -152,6 +152,8 @@ const TransactionPage = ({
 
   const broadcastTx = async () => {
     const loadingToastId = toast.loading("Broadcasting transaction");
+    let client: StargateClient | null = null;
+    let verifier: ReturnType<typeof createMultiRpcVerifier> | null = null;
 
     try {
       setIsBroadcasting(true);
@@ -167,7 +169,7 @@ const TransactionPage = ({
 
       // CRITICAL: Re-fetch the current on-chain account state right before broadcasting
       // This catches cases where the sequence changed since the page was loaded
-      const client = await StargateClient.connect(chain.nodeAddress);
+      client = await StargateClient.connect(chain.nodeAddress);
       const currentAccountOnChain = await client.getAccount(multisigAddress);
 
       if (!currentAccountOnChain) {
@@ -351,7 +353,7 @@ const TransactionPage = ({
 
       // Phase 0: Use MultiRpcVerifier for hardened broadcast
       setVerificationStatus("verifying");
-      const verifier = createMultiRpcVerifier(
+      verifier = createMultiRpcVerifier(
         chain.chainId,
         chain.nodeAddress,
         chain.nodeAddresses,
@@ -370,13 +372,10 @@ const TransactionPage = ({
       }
 
       setVerificationStatus("verified");
-
-      // Disconnect the verifier's clients
-      await verifier.disconnect();
-
       await updateDbTxHash(transactionID, verifiedResult.txHash);
       toastSuccess("Transaction broadcasted and verified", verifiedResult.txHash);
       setTransactionHash(verifiedResult.txHash);
+      setTransactionStatus("broadcast");
 
       // Notify pending transactions hook to refresh (removes the indicator)
       dispatchTransactionStatusChanged();
@@ -406,17 +405,21 @@ const TransactionPage = ({
       ) {
         // Re-fetch the current sequence to update UI
         try {
-          const client = await StargateClient.connect(chain.nodeAddress);
-          const currentAccount = await client.getAccount(multisigAddress!);
-          if (currentAccount && txInfo) {
-            setAccountOnChain(currentAccount);
-            if (currentAccount.sequence !== txInfo.sequence) {
-              setSequenceMismatch({
-                expected: txInfo.sequence,
-                actual: currentAccount.sequence,
-              });
-              setSequenceVerified(false);
+          const refreshClient = await StargateClient.connect(chain.nodeAddress);
+          try {
+            const currentAccount = await refreshClient.getAccount(multisigAddress!);
+            if (currentAccount && txInfo) {
+              setAccountOnChain(currentAccount);
+              if (currentAccount.sequence !== txInfo.sequence) {
+                setSequenceMismatch({
+                  expected: txInfo.sequence,
+                  actual: currentAccount.sequence,
+                });
+                setSequenceVerified(false);
+              }
             }
+          } finally {
+            refreshClient.disconnect();
           }
         } catch (fetchErr) {
           console.error("[broadcastTx] Failed to re-fetch account state:", fetchErr);
@@ -449,6 +452,12 @@ const TransactionPage = ({
         });
       }
     } finally {
+      if (verifier) {
+        await verifier.disconnect();
+      }
+      if (client) {
+        client.disconnect();
+      }
       setIsBroadcasting(false);
       toast.dismiss(loadingToastId);
     }

@@ -8,11 +8,16 @@
  */
 
 import { render, screen, waitFor } from "@testing-library/react";
-import TransactionViewPage from "@/pages/[chainName]/[address]/transaction/[transactionID]";
+import TransactionViewPage, {
+  getServerSideProps,
+} from "@/pages/[chainName]/[address]/transaction/[transactionID]";
+import { getTransaction } from "@/graphql/transaction";
 
 jest.mock("@/graphql/transaction", () => ({
   getTransaction: jest.fn(),
 }));
+
+const mockGetTransaction = getTransaction as jest.MockedFunction<typeof getTransaction>;
 
 // Mock components that are used by TransactionViewPage
 jest.mock("@/components/dataViews/TransactionInfo", () => {
@@ -88,6 +93,16 @@ const importedSignatures = [
 describe("View Transaction Route (/[chainName]/[address]/transaction/[id]): P0", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  it("returns notFound when the transaction does not exist", async () => {
+    mockGetTransaction.mockResolvedValue(null);
+
+    const result = await getServerSideProps({
+      params: { transactionID: "missing-transaction" },
+    } as never);
+
+    expect(result).toEqual({ notFound: true });
   });
 
   it("should load transaction view page", async () => {
