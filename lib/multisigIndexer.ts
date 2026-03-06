@@ -1,11 +1,12 @@
 import { ChainInfo } from "@/context/ChainsContext/types";
-import { DbMultisig, DbMultisigDraft } from "@/graphql";
+import { DbMultisig } from "@/graphql";
 import { sha256 } from "@cosmjs/crypto";
 import { fromBase64, fromBech32, toHex } from "@cosmjs/encoding";
 import {
   createMultisigThresholdPubkey,
   isMultisigThresholdPubkey,
   isSecp256k1Pubkey,
+  type Pubkey,
   pubkeyToAddress,
 } from "@cosmjs/amino";
 import { normalizePubkey } from "./multisigAmino";
@@ -48,6 +49,15 @@ type MultisigIndexerSyncOptions = {
   readonly source?: MultisigIndexerImportSource;
 };
 
+type MultisigIndexerSyncInput = {
+  readonly chainId: string;
+  readonly address: string;
+  readonly pubkeyJSON: string;
+  readonly name?: string | null | undefined;
+  readonly description?: string | null | undefined;
+  readonly creator?: string | null | undefined;
+};
+
 const DEFAULT_TIMEOUT_MS = 8000;
 const DEFAULT_BY_ADDRESS_PATH = "/v1/multisigs/by-address/:address";
 const DEFAULT_BY_PUBKEY_PATH = "/v1/multisigs/by-pubkey/:pubkeyFingerprint";
@@ -55,6 +65,9 @@ const DEFAULT_IMPORT_PATH = "/v1/multisigs/import";
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
+
+const isAminoPubkey = (value: unknown): value is Pubkey =>
+  isRecord(value) && typeof value.type === "string" && "value" in value;
 
 function getIndexerConfig() {
   const baseUrl = process.env.MULTISIG_INDEXER_URL?.trim();
@@ -195,7 +208,7 @@ function tryBuildMultisigPubkey(value: unknown): string | null {
   const candidate = typeof value === "string" ? safeJsonParse(value) : value;
   if (!isRecord(candidate)) return null;
 
-  if (isMultisigThresholdPubkey(candidate)) {
+  if (isAminoPubkey(candidate) && isMultisigThresholdPubkey(candidate)) {
     return JSON.stringify(normalizePubkey(candidate));
   }
 
@@ -306,7 +319,7 @@ function flattenMemberPubkeys(
   addressPrefix: string,
   members: MultisigIndexerMember[],
 ): void {
-  if (isMultisigThresholdPubkey(pubkey)) {
+  if (isAminoPubkey(pubkey) && isMultisigThresholdPubkey(pubkey)) {
     for (const nested of pubkey.value.pubkeys) {
       flattenMemberPubkeys(nested, addressPrefix, members);
     }
@@ -328,14 +341,11 @@ function flattenMemberPubkeys(
 }
 
 export function buildMultisigIndexerImportPayload(
-  multisig: Pick<
-    DbMultisigDraft,
-    "chainId" | "address" | "pubkeyJSON" | "name" | "description" | "creator"
-  >,
+  multisig: MultisigIndexerSyncInput,
   options: MultisigIndexerSyncOptions = {},
 ): MultisigIndexerImportPayload {
   const parsedPubkey = safeJsonParse(multisig.pubkeyJSON);
-  if (!isMultisigThresholdPubkey(parsedPubkey)) {
+  if (!isAminoPubkey(parsedPubkey) || !isMultisigThresholdPubkey(parsedPubkey)) {
     throw new Error("Only native amino multisigs can be synced to the indexer.");
   }
 
@@ -359,10 +369,7 @@ export function buildMultisigIndexerImportPayload(
 }
 
 export async function syncMultisigToIndexer(
-  multisig: Pick<
-    DbMultisigDraft,
-    "chainId" | "address" | "pubkeyJSON" | "name" | "description" | "creator"
-  >,
+  multisig: MultisigIndexerSyncInput,
   options: MultisigIndexerSyncOptions = {},
 ): Promise<void> {
   const { baseUrl, importPath } = getIndexerConfig();
