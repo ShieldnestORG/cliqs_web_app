@@ -10,6 +10,7 @@ import {
   shouldUseDirectMode,
 } from "@/lib/multisigDirect";
 import { generateSignDocDebugInfo, logSignDocDebug } from "@/lib/signDocDebug";
+import { normalizeDbTransactionJson } from "@/lib/transactionJson";
 import { toastError, toastSuccess } from "@/lib/utils";
 import { SigningStatus } from "@/types/signing";
 import { MultisigThresholdPubkey } from "@cosmjs/amino";
@@ -90,14 +91,15 @@ const TransactionSigning = (props: TransactionSigningProps) => {
 
     try {
       setSigningInProgress(true);
+      const validatedTx = normalizeDbTransactionJson(props.tx, { requireNonEmptyMsgs: true });
 
       const signerAddress = walletInfo?.address;
       assert(signerAddress, "Missing signer address");
 
       // CRITICAL: Verify chainId matches to prevent invalid signatures
-      if (props.tx.chainId && props.tx.chainId !== chain.chainId) {
+      if (validatedTx.chainId && validatedTx.chainId !== chain.chainId) {
         throw new Error(
-          `Chain ID mismatch! Transaction was created for chain "${props.tx.chainId}" ` +
+          `Chain ID mismatch! Transaction was created for chain "${validatedTx.chainId}" ` +
             `but you're connected to "${chain.chainId}". Please switch to the correct chain.`,
         );
       }
@@ -115,8 +117,8 @@ const TransactionSigning = (props: TransactionSigningProps) => {
         const txBodyEncodeObject: TxBodyEncodeObject = {
           typeUrl: "/cosmos.tx.v1beta1.TxBody",
           value: {
-            messages: props.tx.msgs,
-            memo: props.tx.memo,
+            messages: validatedTx.msgs,
+            memo: validatedTx.memo,
           },
         };
         bodyBytes = registry.encode(txBodyEncodeObject);
@@ -124,39 +126,40 @@ const TransactionSigning = (props: TransactionSigningProps) => {
         // 2. Construct AuthInfo with MULTISIG pubkey and SIGN_MODE_DIRECT
         const { authInfoBytes } = makeDirectModeAuthInfo(
           props.pubkey,
-          props.tx.sequence,
-          props.tx.fee,
+          validatedTx.sequence,
+          validatedTx.fee,
         );
 
         // 3. Construct the Direct SignDoc for the multisig
         const { signDocHash: _signDocHash } = makeDirectSignDoc(
           bodyBytes,
           authInfoBytes,
-          props.tx.chainId,
-          props.tx.accountNumber,
+          validatedTx.chainId,
+          validatedTx.accountNumber,
         );
 
         // Log the Direct SignDoc debug info
         logDirectSignDocDebug(
           bodyBytes,
           authInfoBytes,
-          props.tx.chainId,
-          props.tx.accountNumber,
+          validatedTx.chainId,
+          validatedTx.accountNumber,
           "SIGNING Direct SignDoc (MULTISIG)",
         );
 
-        // 4. Get configured Keplr (sets defaultOptions before enable to avoid double popup)
-        const keplr = await getKeplr(props.tx.chainId);
+        // 4. Get configured Keplr (sets defaultOptions before enable to avoid double popup).
+        // Pass chain so the suggestion flow works for testnets not built into Keplr.
+        const keplr = await getKeplr(validatedTx.chainId, chain);
 
         // Create the SignDoc in the format Keplr expects
         const signDoc = {
           bodyBytes,
           authInfoBytes,
-          chainId: props.tx.chainId,
-          accountNumber: Long.fromNumber(props.tx.accountNumber),
+          chainId: validatedTx.chainId,
+          accountNumber: Long.fromNumber(validatedTx.accountNumber),
         };
 
-        const signResponse = await keplr.signDirect(props.tx.chainId, signerAddress, signDoc);
+        const signResponse = await keplr.signDirect(validatedTx.chainId, signerAddress, signDoc);
 
         signatureBytes = fromBase64(signResponse.signature.signature);
       } else {
@@ -173,29 +176,29 @@ const TransactionSigning = (props: TransactionSigningProps) => {
         });
 
         const signerData = {
-          accountNumber: props.tx.accountNumber,
-          sequence: props.tx.sequence,
-          chainId: props.tx.chainId,
+          accountNumber: validatedTx.accountNumber,
+          sequence: validatedTx.sequence,
+          chainId: validatedTx.chainId,
         };
 
         // Log the Amino SignDoc for comparison
         const aminoTypesForDebug = new AminoTypes(aminoConverters);
         const signTimeDebugInfo = generateSignDocDebugInfo(
-          props.tx.msgs,
-          props.tx.fee,
-          props.tx.chainId,
-          props.tx.memo,
-          props.tx.accountNumber,
-          props.tx.sequence,
+          validatedTx.msgs,
+          validatedTx.fee,
+          validatedTx.chainId,
+          validatedTx.memo,
+          validatedTx.accountNumber,
+          validatedTx.sequence,
           aminoTypesForDebug,
         );
         logSignDocDebug(signTimeDebugInfo, "SIGNING SignDoc (AMINO mode)");
 
         const signResult = await signingClient.sign(
           signerAddress,
-          props.tx.msgs,
-          props.tx.fee,
-          props.tx.memo,
+          validatedTx.msgs,
+          validatedTx.fee,
+          validatedTx.memo,
           signerData,
         );
 
@@ -203,7 +206,16 @@ const TransactionSigning = (props: TransactionSigningProps) => {
         signatureBytes = signResult.signatures[0];
       }
 
-      // Check for duplicate signatures
+      // Check for duplicate by address first — the DB also blocks it, but catching it
+      // client-side gives a cleaner error message before a round-trip.
+      const addressAlreadySigned = props.signatures.some(
+        (signature) => signature.address === signerAddress,
+      );
+      if (addressAlreadySigned) {
+        throw new Error("This address has already signed this transaction.");
+      }
+
+      // Secondary check by exact signature bytes (deterministic ECDSA guard)
       const base64EncodedSignature = toBase64(signatureBytes);
       const base64EncodedBodyBytes = toBase64(bodyBytes);
       const prevSigMatch = props.signatures.findIndex(

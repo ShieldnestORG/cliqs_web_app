@@ -14,6 +14,7 @@
 import { MultisigThresholdPubkey, pubkeyToAddress } from "@cosmjs/amino";
 import { fromBech32, toBase64 } from "@cosmjs/encoding";
 import { encodePubkey } from "@cosmjs/proto-signing";
+import { normalizePubkey, normalizeFee } from "./multisigAmino";
 import { StdFee } from "@cosmjs/stargate";
 import {
   CompactBitArray,
@@ -53,16 +54,20 @@ export function makeDirectModeAuthInfo(
   sequence: number,
   fee: StdFee,
 ): { authInfo: AuthInfo; authInfoBytes: Uint8Array } {
+  // Normalize to prevent "str.match is not a function" from Uint53.fromString(threshold)
+  const pubkey = normalizePubkey(multisigPubkey);
+  const normalizedFee = normalizeFee(fee);
+
   // For multisig, we create a single signer_info with the multisig pubkey
   // The mode_info is "multi" with SIGN_MODE_DIRECT for each individual signer
   const signerInfo = {
-    publicKey: encodePubkey(multisigPubkey),
+    publicKey: encodePubkey(pubkey),
     modeInfo: {
       multi: {
         // The bitarray will be filled in when we know which signers have signed
         // For pre-construction, we assume all will sign
-        bitarray: makeCompactBitArray(multisigPubkey.value.pubkeys.map(() => true)),
-        modeInfos: multisigPubkey.value.pubkeys.map(() => ({
+        bitarray: makeCompactBitArray(pubkey.value.pubkeys.map(() => true)),
+        modeInfos: pubkey.value.pubkeys.map(() => ({
           single: { mode: SignMode.SIGN_MODE_DIRECT },
         })),
       },
@@ -73,8 +78,8 @@ export function makeDirectModeAuthInfo(
   const authInfo = AuthInfo.fromPartial({
     signerInfos: [signerInfo],
     fee: {
-      amount: [...fee.amount],
-      gasLimit: BigInt(fee.gas),
+      amount: [...normalizedFee.amount],
+      gasLimit: BigInt(normalizedFee.gas),
     },
   });
 
@@ -127,15 +132,19 @@ export function makeMultisignedTxBytesDirect(
   bodyBytes: Uint8Array,
   signatures: Map<string, Uint8Array>,
 ): Uint8Array {
+  // Normalize to prevent "str.match is not a function" from Uint53.fromString(threshold)
+  const pubkey = normalizePubkey(multisigPubkey);
+  const normalizedFee = normalizeFee(fee);
+
   const addresses = Array.from(signatures.keys());
   const prefix = fromBech32(addresses[0]).prefix;
 
   // Determine which pubkeys have signatures
-  const signers: boolean[] = Array(multisigPubkey.value.pubkeys.length).fill(false);
+  const signers: boolean[] = Array(pubkey.value.pubkeys.length).fill(false);
   const signaturesList: Uint8Array[] = [];
 
-  for (let i = 0; i < multisigPubkey.value.pubkeys.length; i++) {
-    const signerAddress = pubkeyToAddress(multisigPubkey.value.pubkeys[i], prefix);
+  for (let i = 0; i < pubkey.value.pubkeys.length; i++) {
+    const signerAddress = pubkeyToAddress(pubkey.value.pubkeys[i], prefix);
     const signature = signatures.get(signerAddress);
     if (signature) {
       signers[i] = true;
@@ -145,7 +154,7 @@ export function makeMultisignedTxBytesDirect(
 
   // Create the signer info with SIGN_MODE_DIRECT for each signer
   const signerInfo = {
-    publicKey: encodePubkey(multisigPubkey),
+    publicKey: encodePubkey(pubkey),
     modeInfo: {
       multi: {
         bitarray: makeCompactBitArray(signers),
@@ -160,8 +169,8 @@ export function makeMultisignedTxBytesDirect(
   const authInfo = AuthInfo.fromPartial({
     signerInfos: [signerInfo],
     fee: {
-      amount: [...fee.amount],
-      gasLimit: BigInt(fee.gas),
+      amount: [...normalizedFee.amount],
+      gasLimit: BigInt(normalizedFee.gas),
     },
   });
 

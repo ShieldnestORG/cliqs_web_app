@@ -53,6 +53,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { isMultisigThresholdPubkey } from "@cosmjs/amino";
+import { fromBech32, toBech32 } from "@cosmjs/encoding";
 import { assert } from "@cosmjs/utils";
 import ValidatorIdentityCard from "./ValidatorIdentityCard";
 import PendingRewardsCard from "./PendingRewardsCard";
@@ -80,6 +81,29 @@ export default function ValidatorDashboard() {
 
   const addressParam = router.query.address as string;
   const effectiveAddress = addressParam || walletInfo?.address;
+
+  // Normalize effectiveAddress to the current chain's address prefix.
+  // This handles the case where the wallet was connected on mainnet (core1...) but
+  // the user has since switched to testnet (testcore1...) without reconnecting.
+  // The underlying keypair bytes are identical across prefixes, so the conversion
+  // is safe and the validator lookup will target the correct network.
+  const { normalizedEffectiveAddress, addressPrefixMismatch } = useMemo(() => {
+    if (!effectiveAddress || !chain.addressPrefix) {
+      return { normalizedEffectiveAddress: effectiveAddress, addressPrefixMismatch: false };
+    }
+    try {
+      const decoded = fromBech32(effectiveAddress);
+      if (decoded.prefix === chain.addressPrefix) {
+        return { normalizedEffectiveAddress: effectiveAddress, addressPrefixMismatch: false };
+      }
+      return {
+        normalizedEffectiveAddress: toBech32(chain.addressPrefix, decoded.data),
+        addressPrefixMismatch: true,
+      };
+    } catch {
+      return { normalizedEffectiveAddress: effectiveAddress, addressPrefixMismatch: false };
+    }
+  }, [effectiveAddress, chain.addressPrefix]);
 
   // Network switching logic (mainnet/testnet)
   const currentNetwork: DevNetwork = chain.chainId.toLowerCase().includes("testnet")
@@ -136,7 +160,7 @@ export default function ValidatorDashboard() {
   // Fetch validator data
   const fetchData = useCallback(
     async (showRefreshIndicator = false) => {
-      if (!effectiveAddress || !chain.nodeAddress || !chain.addressPrefix) {
+      if (!normalizedEffectiveAddress || !chain.nodeAddress || !chain.addressPrefix) {
         return;
       }
 
@@ -150,7 +174,7 @@ export default function ValidatorDashboard() {
 
         const data = await getValidatorDashboardData(
           chain.nodeAddress,
-          effectiveAddress,
+          normalizedEffectiveAddress,
           chain.addressPrefix,
         );
 
@@ -169,23 +193,32 @@ export default function ValidatorDashboard() {
         setIsRefreshing(false);
       }
     },
-    [effectiveAddress, chain.nodeAddress, chain.addressPrefix],
+    [normalizedEffectiveAddress, chain.nodeAddress, chain.addressPrefix],
   );
 
   // Fetch data when wallet connects or address param changes
   useEffect(() => {
-    if (effectiveAddress) {
+    if (normalizedEffectiveAddress) {
       fetchData();
     } else {
       setLoadingState("idle");
       setDashboardData(null);
     }
-  }, [effectiveAddress, fetchData]);
+  }, [normalizedEffectiveAddress, fetchData]);
 
   // Verification is triggered lazily by CLIQ-related effects (associated validator
   // lookup and CLIQ membership check) rather than eagerly on every wallet connect.
   // This avoids a second Keplr signing popup appearing immediately after the
   // connection approval popup when the user navigates to the validator page.
+
+  // Reset dashboard state when chain switches so stale "not-validator"/"loaded" state
+  // from the previous chain does not trigger CLIQ lookups before the new chain's
+  // nodeAddress is resolved. fetchData will re-run once nodeAddress is ready.
+  useEffect(() => {
+    setLoadingState("idle");
+    setDashboardData(null);
+    setAssociatedValidators([]);
+  }, [chain.chainId]);
 
   // Verify CLIQ membership when in CLIQ mode.
   // Lazily requests a verification signature only when actually needed.
@@ -193,7 +226,7 @@ export default function ValidatorDashboard() {
     let cancelled = false;
 
     async function verifyCliqMembership() {
-      if (!isCliqMode || !walletInfo?.address || !walletInfo.pubKey) {
+      if (!isCliqMode || !walletInfo?.address || !walletInfo.pubKey || !chain.nodeAddress) {
         setIsCliqMember(null);
         return;
       }
@@ -287,12 +320,13 @@ export default function ValidatorDashboard() {
   const shouldFetchAssociated =
     !addressParam &&
     !!walletInfo?.address &&
+    !!chain.nodeAddress &&
     (loadingState === "not-validator" ||
       (loadingState === "loaded" && effectiveAddress === walletInfo.address));
 
   const cliqOnlyValidators = useMemo(
-    () => associatedValidators.filter((v) => v.address !== effectiveAddress),
-    [associatedValidators, effectiveAddress],
+    () => associatedValidators.filter((v) => v.address !== normalizedEffectiveAddress),
+    [associatedValidators, normalizedEffectiveAddress],
   );
 
   useEffect(() => {
@@ -325,7 +359,9 @@ export default function ValidatorDashboard() {
 
         const multisigs = await getDbUserMultisigs(
           chain,
-          sig ? { signature: sig } : { address: walletInfo.address, pubkey: walletInfo.pubKey },
+          sig
+            ? { signature: sig }
+            : { address: normalizedEffectiveAddress ?? walletInfo.address, pubkey: walletInfo.pubKey },
         );
 
         if (fetchId !== associatedFetchId.current) return;
@@ -391,7 +427,7 @@ export default function ValidatorDashboard() {
   };
 
   // Chain initializing (waiting for nodeAddress / RPC)
-  const isChainInitializing = effectiveAddress && chain.chainId && !chain.nodeAddress;
+  const isChainInitializing = normalizedEffectiveAddress && chain.chainId && !chain.nodeAddress;
   if (isChainInitializing) {
     return (
       <div className="space-y-6">
@@ -545,7 +581,7 @@ export default function ValidatorDashboard() {
   // Not a validator state
   if (loadingState === "not-validator") {
     const validatorAddress = delegatorToValidatorAddress(
-      effectiveAddress || "",
+      normalizedEffectiveAddress || "",
       chain.addressPrefix,
     );
 
@@ -557,6 +593,27 @@ export default function ValidatorDashboard() {
           onNetworkChange={onNetworkChange}
           testnetAvailable={hasTestnetVariant}
         />
+
+        {/* Address prefix mismatch warning */}
+        {addressPrefixMismatch && effectiveAddress && (
+          <Card variant="institutional" className="mx-auto max-w-4xl border-yellow-500/30">
+            <CardContent className="py-4">
+              <div className="flex items-start gap-3">
+                <Info className="mt-0.5 h-5 w-5 shrink-0 text-yellow-500" />
+                <div>
+                  <p className="text-sm font-medium text-yellow-500">Network Address Mismatch</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Your wallet address uses the <code className="font-mono">{fromBech32(effectiveAddress).prefix}</code> prefix
+                    but you are viewing the <strong>{chain.chainDisplayName || "current"}</strong> chain which uses <code className="font-mono">{chain.addressPrefix}</code>.
+                    The address has been automatically converted to{" "}
+                    <code className="font-mono break-all">{normalizedEffectiveAddress}</code> for this lookup.
+                    To resolve this permanently, reconnect your wallet after switching networks.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Show associated validators (CLIQs) if found */}
         {associatedValidators.length > 0 && (
@@ -673,7 +730,7 @@ export default function ValidatorDashboard() {
                 <div className="rounded-lg border border-border/50 bg-muted/30 p-4">
                   <p className="mb-2 text-sm text-muted-foreground">Checked Address:</p>
                   <code className="break-all font-mono text-xs text-foreground">
-                    {effectiveAddress}
+                    {normalizedEffectiveAddress}
                   </code>
                 </div>
 
@@ -765,6 +822,25 @@ export default function ValidatorDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Address prefix mismatch warning (dashboard loaded state) */}
+      {addressPrefixMismatch && effectiveAddress && (
+        <Card variant="institutional" className="border-yellow-500/30">
+          <CardContent className="py-4">
+            <div className="flex items-start gap-3">
+              <Info className="mt-0.5 h-5 w-5 shrink-0 text-yellow-500" />
+              <div>
+                <p className="text-sm font-medium text-yellow-500">Network Address Mismatch</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  The address uses the <code className="font-mono">{fromBech32(effectiveAddress).prefix}</code> prefix
+                  but you are on <strong>{chain.chainDisplayName || "this chain"}</strong> which uses <code className="font-mono">{chain.addressPrefix}</code>.
+                  It was automatically converted for this lookup. Reconnect your wallet to resolve this.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* CLIQ membership warning */}
       {isCliqMode && isCliqMember === false && !isVerifyingMembership && (
         <Card variant="institutional" className="border-yellow-500/30">
@@ -786,7 +862,7 @@ export default function ValidatorDashboard() {
 
       {/* You also manage via CLIQ - when viewing direct validator and user has CLIQ validators */}
       {!isCliqMode &&
-        effectiveAddress === walletInfo?.address &&
+        !addressParam &&
         chain.registryName &&
         cliqOnlyValidators.length > 0 && (
           <Card variant="institutional" bracket="green" className="border-green-accent/30">

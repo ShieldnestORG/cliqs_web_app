@@ -1,4 +1,5 @@
 import { DbTransactionParsedDataJson } from "@/graphql";
+import { parseDbTransactionJson } from "@/lib/transactionJson";
 import { MsgCodecs, MsgTypeUrl, MsgTypeUrls } from "@/types/txMsg";
 import { encodePubkey, EncodeObject } from "@cosmjs/proto-signing";
 
@@ -202,12 +203,22 @@ const importMsgFromJson = (msg: EncodeObject): EncodeObject => {
   throw new Error("Unknown msg type");
 };
 
-export const dbTxFromJson = (txJson: string): DbTransactionParsedDataJson | null => {
+export const msgsFromJson = (msgs: readonly EncodeObject[]): EncodeObject[] =>
+  msgs.map((msg) => importMsgFromJson(msg));
+
+export const parseDbTxFromJson = (
+  txJson: string,
+): { tx: DbTransactionParsedDataJson; error?: never } | { tx?: never; error: string } => {
   console.log("🔍 DECIMAL DEBUG: dbTxFromJson - parsing transaction from DB");
   console.log("  - txJson length:", txJson.length);
 
   try {
-    const parsedDbTx: DbTransactionParsedDataJson = JSON.parse(txJson);
+    const normalizedResult = parseDbTransactionJson(txJson);
+    if (normalizedResult.error || !normalizedResult.tx) {
+      return { error: normalizedResult.error ?? "Failed to normalize transaction JSON." };
+    }
+
+    const parsedDbTx = normalizedResult.tx;
     console.log("🔍 DECIMAL DEBUG: parsed transaction data");
     console.log("  - accountNumber:", parsedDbTx.accountNumber);
     console.log("  - sequence:", parsedDbTx.sequence);
@@ -241,7 +252,10 @@ export const dbTxFromJson = (txJson: string): DbTransactionParsedDataJson | null
     console.log("  - fee:", parsedDbTx.fee);
     console.log("  - memo:", parsedDbTx.memo);
 
-    const dbTx = { ...parsedDbTx, msgs: parsedDbTx.msgs.map(importMsgFromJson) };
+    const dbTx: DbTransactionParsedDataJson = {
+      ...parsedDbTx,
+      msgs: msgsFromJson(parsedDbTx.msgs),
+    };
 
     console.log("🔍 DECIMAL DEBUG: dbTx after importMsgFromJson");
     console.log("  - dbTx.msgs count:", dbTx.msgs?.length || 0);
@@ -270,17 +284,22 @@ export const dbTxFromJson = (txJson: string): DbTransactionParsedDataJson | null
       });
     }
 
-    return dbTx;
+    return { tx: dbTx };
   } catch (error) {
     console.error("🔍 DECIMAL DEBUG: Error when parsing tx JSON from DB:", error);
     if (error instanceof Error) {
       console.error("🔍 DECIMAL DEBUG:", error.message);
+      return { error: error.message };
     } else {
       console.error("🔍 DECIMAL DEBUG: Error when parsing tx JSON from DB");
+      return { error: "Failed to parse transaction JSON from storage." };
     }
-
-    return null;
   }
+};
+
+export const dbTxFromJson = (txJson: string): DbTransactionParsedDataJson | null => {
+  const result = parseDbTxFromJson(txJson);
+  return result.error || !result.tx ? null : result.tx;
 };
 
 interface MsgTypeCount {

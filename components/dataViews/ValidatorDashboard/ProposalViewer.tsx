@@ -28,7 +28,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { GasPrice, SigningStargateClient } from "@cosmjs/stargate";
 import { MsgTypeUrls } from "@/types/txMsg";
@@ -72,6 +72,9 @@ export default function ProposalViewer({
 
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [isVoting, setIsVoting] = useState(false);
+  // Synchronous ref guard so rapid double-clicks can't enqueue two requests before
+  // React re-renders with isVoting: true.
+  const isVotingRef = useRef(false);
   const [isVoteDialogOpen, setIsVoteDialogOpen] = useState(false);
 
   const getVoteLabel = (proposalId: number) => {
@@ -99,10 +102,12 @@ export default function ProposalViewer({
   };
 
   const submitVote = async (proposalId: number, option: number) => {
-    // Prevent duplicate submissions
-    if (isVoting) {
+    // Prevent duplicate submissions — check both the React state and the synchronous ref
+    // so rapid double-clicks can't race before the state re-render takes effect.
+    if (isVoting || isVotingRef.current) {
       return;
     }
+    isVotingRef.current = true;
 
     if (!walletInfo) {
       toast.error("Please connect your wallet first");
@@ -157,6 +162,7 @@ export default function ProposalViewer({
         });
       } finally {
         setIsVoting(false);
+        isVotingRef.current = false;
       }
       return;
     }
@@ -220,6 +226,7 @@ export default function ProposalViewer({
       });
     } finally {
       setIsVoting(false);
+      isVotingRef.current = false;
     }
   };
 

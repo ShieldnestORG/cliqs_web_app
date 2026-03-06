@@ -17,12 +17,15 @@ export const getChainsFromStorage = () => {
   }
 
   const { mainnets, testnets, localnets } = JSON.parse(storedChains);
-  const testnetsEnabled = isTestnetsEnabled();
 
   const chains: ChainItems = {
     mainnets: new Map(mainnets),
-    // Return empty testnets map when testnets are disabled
-    testnets: testnetsEnabled ? new Map(testnets) : new Map(),
+    // Always return testnets regardless of the NEXT_PUBLIC_TESTNETS_ENABLED flag.
+    // Testnets are needed for the validator dashboard network toggle even when they
+    // are not displayed in the chain picker. Display-layer code (ChooseChain.tsx,
+    // getChainFromStorage, getRecentChainsFromStorage) already gates on isTestnetsEnabled()
+    // independently.
+    testnets: new Map(testnets),
     localnets: new Map(localnets),
   };
 

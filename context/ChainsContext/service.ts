@@ -1,4 +1,4 @@
-import { getChainsFromRegistry, getShaFromRegistry, isTestnetsEnabled } from "@/lib/chainRegistry";
+import { getChainsFromRegistry, getShaFromRegistry } from "@/lib/chainRegistry";
 import { toastError, ensureProtocol } from "@/lib/utils";
 import { StargateClient } from "@cosmjs/stargate";
 import { useEffect, useState } from "react";
@@ -25,11 +25,10 @@ export const useChainsFromRegistry = () => {
 
   useEffect(() => {
     (async function () {
-      const testnetsEnabled = isTestnetsEnabled();
-      // When testnets are disabled, we only need mainnets to be populated
-      const chainsPopulated = testnetsEnabled
-        ? chainItems.mainnets.size && chainItems.testnets.size
-        : chainItems.mainnets.size;
+      // Both mainnets and testnets must be present. Testnets are always fetched so
+      // that the validator dashboard network toggle works regardless of the
+      // NEXT_PUBLIC_TESTNETS_ENABLED setting.
+      const chainsPopulated = chainItems.mainnets.size && chainItems.testnets.size;
 
       if (chainsPopulated) {
         return;
@@ -41,9 +40,10 @@ export const useChainsFromRegistry = () => {
         const storedSha = getShaFromStorage();
         const registrySha = await getShaFromRegistry();
 
-        const storedChainsPopulated = testnetsEnabled
-          ? storedChains.mainnets.size && storedChains.testnets.size
-          : storedChains.mainnets.size;
+        // Require testnets in cached data. Old caches that only contain mainnets
+        // will not satisfy this check and will trigger a fresh registry fetch,
+        // which always includes both mainnets and testnets.
+        const storedChainsPopulated = storedChains.mainnets.size && storedChains.testnets.size;
 
         if (storedSha === registrySha && storedChainsPopulated) {
           setChainItems(rebrandChains(storedChains));
@@ -55,9 +55,7 @@ export const useChainsFromRegistry = () => {
 
         setChainItems(chains);
 
-        const newChainsPopulated = testnetsEnabled
-          ? chains.mainnets.size && chains.testnets.size
-          : chains.mainnets.size;
+        const newChainsPopulated = chains.mainnets.size && chains.testnets.size;
 
         if (newChainsPopulated) {
           setChainsInStorage(chains);

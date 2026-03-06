@@ -13,6 +13,7 @@ export type DevCommandType =
   | "upload-wasm"
   | "query-contract"
   | "authz-manager"
-  | "execute-message";
+  | "execute-message"
+  | "import-transaction";
 
 export type DevNetwork = "mainnet" | "testnet";

@@ -25,7 +25,7 @@ export type DbMultisig = Readonly<z.infer<typeof DbMultisig>>;
 export type DbMultisigDraft = {
   readonly chainId: string;
   readonly address: string;
-  readonly creator: string;
+  readonly creator: string | null;
   readonly pubkeyJSON: string;
   readonly name?: string | null | undefined;
   readonly description?: string | null | undefined;

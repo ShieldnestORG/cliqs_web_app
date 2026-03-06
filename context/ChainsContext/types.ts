@@ -36,6 +36,10 @@ export interface ChainInfo {
   readonly gasPrice: string;
   readonly addressPrefix: string;
   readonly explorerLinks: ExplorerLinks;
+  /** BIP-44 coin type (slip44) from the chain registry. Used for Keplr chain suggestion. */
+  readonly coinType?: number;
+  /** First REST/LCD endpoint from the chain registry. Used for Keplr chain suggestion. */
+  readonly restEndpoint?: string;
 }
 
 export interface ValidatorState {

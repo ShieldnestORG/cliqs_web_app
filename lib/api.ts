@@ -97,13 +97,15 @@ export type CreateDbTxBody = {
   readonly dataJSON: DbTransactionParsedDataJson;
   readonly creator: string;
   readonly chainId: string;
+  readonly importedSignatures?: readonly CreateDbSignatureBody[];
 };
 export const createDbTx = async (
   creatorAddress: string,
   chainId: string,
   dataJSON: DbTransactionParsedDataJson,
+  importedSignatures?: readonly CreateDbSignatureBody[],
 ) => {
-  const body: CreateDbTxBody = { dataJSON, creator: creatorAddress, chainId };
+  const body: CreateDbTxBody = { dataJSON, creator: creatorAddress, chainId, importedSignatures };
   const { txId }: { txId: string } = await requestJson("/api/transaction", { body });
 
   return txId;

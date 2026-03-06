@@ -145,6 +145,7 @@ export default function DevTools() {
   const {
     walletInfo,
     getAminoSigner,
+    getAminoSignerForChain,
     getDirectSigner,
     loading: _walletLoading,
     connectKeplr,
@@ -732,9 +733,16 @@ export default function DevTools() {
               {selectedCommand === "import-transaction" && selectedAccount && (
                 <DevToolsImport
                   chain={chain}
+                  mainnetVariant={mainnetVariant}
+                  testnetVariant={testnetVariant}
                   selectedAccount={selectedAccount}
-                  getAminoSigner={getAminoSigner}
+                  getAminoSignerForChain={getAminoSignerForChain}
                   onLog={appendLog}
+                  onChainResolved={(resolvedChain) => {
+                    if (resolvedChain.chainId !== chain.chainId) {
+                      setChain(chainsDispatch, resolvedChain);
+                    }
+                  }}
                   onSuccess={(txId) => {
                     router.push(`/${chain.registryName}/${selectedAccount.address}/transaction/${txId}`);
                   }}

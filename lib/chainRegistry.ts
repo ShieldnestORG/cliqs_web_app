@@ -192,6 +192,9 @@ const getChainInfoFromJsons = (
 
   const formattedGasPrice = firstAsset ? `${gasPrice}${firstAssetDenom}` : "";
 
+  const coinType = registryChain.slip44;
+  const restEndpoint = registryChain.apis?.rest?.[0]?.address;
+
   const chain: ChainInfo = {
     registryName: isCoreum ? "tx" : registryChain.chain_name,
     logo: isCoreum ? "/tx.png" : logo,
@@ -205,6 +208,8 @@ const getChainInfoFromJsons = (
     displayDenom: isCoreum ? "TX" : displayDenom,
     displayDenomExponent,
     gasPrice: formattedGasPrice,
+    ...(coinType !== undefined && { coinType }),
+    ...(restEndpoint && { restEndpoint }),
     assets: isCoreum
       ? cdnRegistryAssets.map((asset) => {
           const isCoreAsset =

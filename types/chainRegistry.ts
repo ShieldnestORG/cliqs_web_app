@@ -35,6 +35,7 @@ export interface RegistryChainApisRpc {
 
 export interface RegistryChainApis {
   readonly rpc: readonly RegistryChainApisRpc[];
+  readonly rest?: readonly RegistryChainApisRpc[];
 }
 
 export interface RegistryChainExplorer {
@@ -64,6 +65,7 @@ export interface RegistryChain {
   readonly explorers?: readonly RegistryChainExplorer[];
   readonly fees?: RegistryChainFees;
   readonly pretty_name: string;
+  readonly slip44?: number;
   readonly logo_URIs?: {
     readonly png?: string;
     readonly svg?: string;

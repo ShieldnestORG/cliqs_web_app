@@ -24,8 +24,12 @@ jest.mock("@/components/dataViews/CompletedTransaction", () => {
 });
 
 jest.mock("@/components/forms/TransactionSigning", () => {
-  return function MockTransactionSigning() {
-    return <div data-testid="transaction-signing">Transaction Signing</div>;
+  return function MockTransactionSigning(props: { tx: { accountNumber: unknown; sequence: unknown } }) {
+    return (
+      <div data-testid="transaction-signing">
+        {`accountNumber:${String(props.tx.accountNumber)} (${typeof props.tx.accountNumber}) sequence:${String(props.tx.sequence)} (${typeof props.tx.sequence})`}
+      </div>
+    );
   };
 });
 
@@ -55,6 +59,13 @@ const mockTransactionJSON = JSON.stringify({
   fee: { amount: [], gas: "200000" },
   memo: "Test transaction",
 });
+const importedSignatures = [
+  {
+    bodyBytes: "base64-body-bytes",
+    signature: "base64-signature",
+    address: "cosmos1importedsigner",
+  },
+];
 
 describe("View Transaction Route (/[chainName]/[address]/transaction/[id]): P0", () => {
   beforeEach(() => {
@@ -68,7 +79,7 @@ describe("View Transaction Route (/[chainName]/[address]/transaction/[id]): P0",
         transactionJSON={mockTransactionJSON}
         transactionID="test-tx-id-123"
         txHash=""
-        signatures={[]}
+        signatures={importedSignatures}
         status="pending"
       />,
     );
@@ -135,6 +146,10 @@ describe("View Transaction Route (/[chainName]/[address]/transaction/[id]): P0",
         const transactionInfo = screen.queryByTestId("transaction-info");
         // Either signing component or transaction info should be present
         expect(signingComponent || transactionInfo).toBeTruthy();
+        expect(signingComponent).toHaveTextContent(
+          "accountNumber:1 (number) sequence:0 (number)",
+        );
+        expect(screen.getByText("cosmos1importedsigner")).toBeInTheDocument();
       },
       { timeout: 5000 },
     );

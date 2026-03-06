@@ -5,12 +5,11 @@ import {
   getKeplrVerifySignature,
 } from "@/lib/keplr";
 import { getConnectError } from "@/lib/errorHelpers";
-import { toastError, toastSuccess, ensureProtocol } from "@/lib/utils";
+import { toastError, toastSuccess } from "@/lib/utils";
 import { WalletInfo, WalletType, LoadingStates } from "@/types/signing";
 import { makeCosmoshubPath, StdSignature } from "@cosmjs/amino";
 import { toBase64 } from "@cosmjs/encoding";
 import { OfflineSigner } from "@cosmjs/proto-signing";
-import { StargateClient } from "@cosmjs/stargate";
 // Note: LedgerSigner and TransportWebUSB are dynamically imported in connectLedger
 // to reduce initial bundle size (~150-200 KB savings)
 import {
@@ -23,6 +22,7 @@ import {
   useState,
 } from "react";
 import { useChains } from "../ChainsContext";
+import { ChainInfo } from "../ChainsContext/types";
 import { getDbNonce } from "@/lib/api";
 
 // Storage key for persisting wallet connection preference
@@ -55,6 +55,7 @@ interface WalletContextType {
 
   // Convenience helpers
   getAminoSigner: () => Promise<OfflineSigner | null>;
+  getAminoSignerForChain: (chain: ChainInfo) => Promise<OfflineSigner | null>;
   getDirectSigner: () => Promise<OfflineSigner | null>;
 }
 
@@ -90,26 +91,13 @@ export const WalletProvider = ({ children }: WalletProviderProps) => {
       return verificationSignature;
     }
 
-    // Wait for node address to be resolved before attempting to verify
-    if (!chain.nodeAddress) {
-      console.warn("Verification skipped: chain.nodeAddress not yet available");
-      return null;
-    }
-
     try {
       setIsVerifying(true);
 
-      // Get account on chain to verify it exists
-      const client = await StargateClient.connect(ensureProtocol(chain.nodeAddress));
-      const accountOnChain = await client.getAccount(walletInfo.address);
-
-      if (!accountOnChain) {
-        throw new Error(`Account not found on chain for ${walletInfo.address}`);
-      }
-
-      // Get nonce and sign verification message
-      const nonce = await getDbNonce(accountOnChain.address, chain.chainId);
-      const signature = await getKeplrVerifySignature(accountOnChain.address, chain, nonce);
+      // Verification should not require an on-chain account.
+      // New wallets can still prove ownership by signing a nonce challenge.
+      const nonce = await getDbNonce(walletInfo.address, chain.chainId);
+      const signature = await getKeplrVerifySignature(walletInfo.address, chain, nonce);
 
       setVerificationSignature(signature);
       return signature;
@@ -128,17 +116,18 @@ export const WalletProvider = ({ children }: WalletProviderProps) => {
   }, [
     walletInfo?.address,
     walletInfo?.type,
-    chain.nodeAddress,
     chain.chainId,
     verificationSignature,
   ]);
 
-  // Connect to Keplr wallet
+  // Connect to Keplr wallet.
+  // Depend on the full chain object so the suggestion payload is never stale
+  // (suggestChainToKeplr uses nodeAddress, restEndpoint, coinType, gasPrice, etc.).
   const connectKeplr = useCallback(async () => {
     try {
       setLoading((prev) => ({ ...prev, keplr: true }));
 
-      const { bech32Address: address, pubKey: pubKeyArray } = await getKeplrKey(chain.chainId);
+      const { bech32Address: address, pubKey: pubKeyArray } = await getKeplrKey(chain.chainId, chain);
       const pubKey = toBase64(pubKeyArray);
 
       const newWalletInfo: WalletInfo = { type: "Keplr", address, pubKey };
@@ -161,7 +150,7 @@ export const WalletProvider = ({ children }: WalletProviderProps) => {
     } finally {
       setLoading((prev) => ({ ...prev, keplr: false }));
     }
-  }, [chain.chainId]);
+  }, [chain]);
 
   // Connect to Ledger wallet
   // Ledger dependencies are dynamically imported to reduce initial bundle size
@@ -215,19 +204,26 @@ export const WalletProvider = ({ children }: WalletProviderProps) => {
   }, []);
 
   // Get amino signer for transaction signing (SIGN_MODE_LEGACY_AMINO_JSON)
+  const getAminoSignerForChain = useCallback(
+    async (targetChain: ChainInfo): Promise<OfflineSigner | null> => {
+      if (!walletInfo) return null;
+
+      if (walletInfo.type === "Keplr") {
+        return getKeplrAminoSigner(targetChain.chainId, targetChain);
+      }
+
+      if (walletInfo.type === "Ledger") {
+        return ledgerSigner;
+      }
+
+      return null;
+    },
+    [walletInfo, ledgerSigner],
+  );
+
   const getAminoSigner = useCallback(async (): Promise<OfflineSigner | null> => {
-    if (!walletInfo) return null;
-
-    if (walletInfo.type === "Keplr") {
-      return getKeplrAminoSigner(chain.chainId);
-    }
-
-    if (walletInfo.type === "Ledger") {
-      return ledgerSigner;
-    }
-
-    return null;
-  }, [walletInfo, chain.chainId, ledgerSigner]);
+    return getAminoSignerForChain(chain);
+  }, [getAminoSignerForChain, chain]);
 
   // Get direct signer for transaction signing (SIGN_MODE_DIRECT)
   // This may be needed for certain message types that don't work with Amino
@@ -235,7 +231,7 @@ export const WalletProvider = ({ children }: WalletProviderProps) => {
     if (!walletInfo) return null;
 
     if (walletInfo.type === "Keplr") {
-      return getKeplrDirectSigner(chain.chainId);
+      return getKeplrDirectSigner(chain.chainId, chain);
     }
 
     if (walletInfo.type === "Ledger") {
@@ -246,7 +242,7 @@ export const WalletProvider = ({ children }: WalletProviderProps) => {
     }
 
     return null;
-  }, [walletInfo, chain.chainId]);
+  }, [walletInfo, chain]);
 
   // Stable ref to always hold the latest connectKeplr without causing effect re-runs.
   // This avoids the stale closure problem that occurred when connectKeplr was removed
@@ -333,6 +329,7 @@ export const WalletProvider = ({ children }: WalletProviderProps) => {
     disconnect,
     verify,
     getAminoSigner,
+    getAminoSignerForChain,
     getDirectSigner,
   };
 

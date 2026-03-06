@@ -1,6 +1,7 @@
 import { Coin } from "@cosmjs/stargate";
 import { StargateClient, calculateFee } from "@cosmjs/stargate";
 import { Decimal } from "@cosmjs/math";
+import { fromBech32 } from "@cosmjs/encoding";
 import { useEffect, useMemo, useState } from "react";
 import { useChains } from "../../context/ChainsContext";
 
@@ -47,6 +48,25 @@ export function useBalance({
       setError(null);
 
       try {
+        // Validate address prefix matches the current chain before querying the node
+        try {
+          const { prefix } = fromBech32(address);
+          if (prefix !== chain.addressPrefix) {
+            setError(
+              new Error(
+                `Address prefix '${prefix}' does not match chain prefix '${chain.addressPrefix}'. ` +
+                  `This address belongs to a different network.`,
+              ),
+            );
+            setLoading(false);
+            return;
+          }
+        } catch {
+          setError(new Error("Invalid address format"));
+          setLoading(false);
+          return;
+        }
+
         const client = await StargateClient.connect(chain.nodeAddress);
         const fetchedBalances = await client.getAllBalances(address);
         setBalances(fetchedBalances);
