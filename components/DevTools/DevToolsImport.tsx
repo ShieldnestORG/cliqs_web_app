@@ -274,7 +274,10 @@ export default function DevToolsImport({
       };
       const network = targetChain.chainId.toLowerCase().includes("testnet") ? "testnet" : "mainnet";
       if (selectedAccount.type === "multisig") {
-        await ensureChainMultisigInDb(selectedAccount.address, targetChain);
+        const resolved = await ensureChainMultisigInDb(selectedAccount.address, targetChain);
+        if (!resolved.multisig) {
+          throw new Error(resolved.reason ?? "Multisig address could not be resolved");
+        }
         const txId = await createDbTx(
           selectedAccount.address,
           targetChain.chainId,
@@ -324,7 +327,8 @@ export default function DevToolsImport({
       }
     } catch (error) {
       toastError({
-        description: "Failed to import transaction",
+        title: "Failed to import transaction",
+        description: error instanceof Error ? error.message : "Could not import transaction.",
         fullError: error instanceof Error ? error : undefined,
       });
     } finally {

@@ -248,6 +248,7 @@ function extractRawMultisigs(payload: unknown): readonly unknown[] {
   if (isRecord(payload) && Array.isArray(payload.multisigs)) {
     return payload.multisigs;
   }
+  if (isRecord(payload)) return [payload];
   return [];
 }
 
@@ -467,4 +468,30 @@ export async function discoverMultisigsFromIndexer(
   }
 
   return discoverViaLegacyMembershipEndpoint(context);
+}
+
+export async function discoverMultisigByAddress(
+  chain: ChainInfo,
+  address: string,
+): Promise<DbMultisig | null> {
+  if (!isMultisigIndexerConfigured()) return null;
+
+  const { byAddressPath } = getIndexerConfig();
+  const now = new Date().toISOString();
+  const payload = await fetchIndexerJson(
+    buildIndexerUrl(
+      byAddressPath,
+      { address },
+      {
+        chain: chain.chainId,
+        chainId: chain.chainId,
+      },
+    ),
+  );
+
+  const matches = extractRawMultisigs(payload)
+    .map((value) => normalizeDiscoveredMultisig(value, chain.chainId, now))
+    .filter((value): value is DbMultisig => Boolean(value));
+
+  return matches.find((multisig) => multisig.address === address) ?? matches[0] ?? null;
 }

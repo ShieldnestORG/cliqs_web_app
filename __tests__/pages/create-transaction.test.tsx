@@ -39,6 +39,10 @@ jest.mock("next/router", () => ({
 
 // Mock multisig helpers
 jest.mock("@/lib/multisigHelpers", () => ({
+  ensureChainMultisigInDb: jest.fn().mockResolvedValue({
+    multisig: { id: "mock-multisig-id", address: "cosmos1test" },
+    source: "db",
+  }),
   getHostedMultisig: jest.fn().mockResolvedValue({
     hosted: "db+chain",
     accountOnChain: {

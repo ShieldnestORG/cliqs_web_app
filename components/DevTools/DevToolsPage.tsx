@@ -17,7 +17,7 @@ import {
   loadDeploymentLog,
 } from "@/lib/deploymentLog";
 import { getUserSettings, updateUserSettings } from "@/lib/settingsStorage";
-import { ensureChainMultisigInDb, getHostedMultisig } from "@/lib/multisigHelpers";
+import { ensureChainMultisigInDb } from "@/lib/multisigHelpers";
 import { toastError, toastSuccess, ensureProtocol } from "@/lib/utils";
 import { exportMsgToJson, gasOfTx } from "@/lib/txMsgHelpers";
 import { MsgTypeUrl, MsgTypeUrls } from "@/types/txMsg";
@@ -292,14 +292,13 @@ export default function DevTools() {
 
     try {
       setManualLookupLoading(true);
-      const hostedMultisig = await getHostedMultisig(trimmedAddress, chain);
-      if (hostedMultisig.hosted === "nowhere") {
+      const resolved = await ensureChainMultisigInDb(trimmedAddress, chain);
+      if (!resolved.multisig) {
         throw new Error(
-          "That address was not found in the database or on the active chain. Verify the address and network first.",
+          resolved.reason ??
+            "That address was not found in the database or on the active chain. Verify the address and network first.",
         );
       }
-
-      await ensureChainMultisigInDb(trimmedAddress, chain);
       setSelectedAccount({
         type: "multisig",
         address: trimmedAddress,
@@ -308,7 +307,8 @@ export default function DevTools() {
       toastSuccess("Multisig selected", trimmedAddress);
     } catch (error) {
       toastError({
-        description: "Failed to use multisig address",
+        title: "Failed to use multisig address",
+        description: error instanceof Error ? error.message : "Could not resolve multisig address.",
         fullError: error instanceof Error ? error : undefined,
       });
     } finally {

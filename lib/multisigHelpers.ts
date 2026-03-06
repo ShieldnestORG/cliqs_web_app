@@ -1,15 +1,12 @@
 import { ChainInfo } from "@/context/ChainsContext/types";
 import { DbMultisigDraft } from "@/graphql";
-import { getKeplrKey } from "./keplr";
 import {
   MultisigThresholdPubkey,
   createMultisigThresholdPubkey,
   pubkeyToAddress,
 } from "@cosmjs/amino";
-import { isMultisigThresholdPubkey } from "@cosmjs/amino";
-import { assert } from "@cosmjs/utils";
 import { Account, StargateClient } from "@cosmjs/stargate";
-import { createDbMultisig, getDbMultisig } from "./api";
+import { createDbMultisig, EnsureDbMultisigResult, ensureDbMultisig, getDbMultisig } from "./api";
 import { checkAddress, explorerLinkAccount } from "./displayHelpers";
 import { ensureProtocol } from "./utils";
 
@@ -139,31 +136,8 @@ export const getHostedMultisig = async (
 export async function ensureChainMultisigInDb(
   multisigAddress: string,
   chain: ChainInfo,
-): Promise<void> {
-  if (!chain.nodeAddress || !chain.addressPrefix) return;
-
-  const hosted = await getHostedMultisig(multisigAddress, chain);
-  if (hosted.hosted !== "chain" || !hosted.accountOnChain?.pubkey) return;
-
-  assert(
-    isMultisigThresholdPubkey(hosted.accountOnChain.pubkey),
-    "Pubkey on chain is not of type MultisigThreshold",
-  );
-
-  const { bech32Address: creatorAddress } = await getKeplrKey(chain.chainId);
-  try {
-    await createMultisigFromCompressedSecp256k1Pubkeys(
-      hosted.accountOnChain.pubkey.value.pubkeys.map((p) => p.value),
-      Number(hosted.accountOnChain.pubkey.value.threshold),
-      chain.addressPrefix,
-      chain.chainId,
-      creatorAddress,
-    );
-  } catch (e) {
-    // Already exists (e.g. race with validator view useEffect) - treat as success
-    if (e instanceof Error && e.message.includes("already exists")) return;
-    throw e;
-  }
+): Promise<EnsureDbMultisigResult> {
+  return ensureDbMultisig(multisigAddress, chain);
 }
 
 export const isAccount = (account: Partial<Account> | null): account is Account =>

@@ -31,11 +31,7 @@ import {
   ValidatorInfo,
 } from "@/lib/validatorHelpers";
 import { getDbUserMultisigs } from "@/lib/api";
-import { getKeplrKey } from "@/lib/keplr";
-import {
-  createMultisigFromCompressedSecp256k1Pubkeys,
-  getHostedMultisig,
-} from "@/lib/multisigHelpers";
+import { ensureChainMultisigInDb } from "@/lib/multisigHelpers";
 import { getUserSettings } from "@/lib/settingsStorage";
 import { toastError } from "@/lib/utils";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
@@ -52,9 +48,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { isMultisigThresholdPubkey } from "@cosmjs/amino";
 import { fromBech32, toBech32 } from "@cosmjs/encoding";
-import { assert } from "@cosmjs/utils";
 import ValidatorIdentityCard from "./ValidatorIdentityCard";
 import PendingRewardsCard from "./PendingRewardsCard";
 import ValidatorPerformanceCard from "./ValidatorPerformanceCard";
@@ -275,36 +269,21 @@ export default function ValidatorDashboard() {
         if (
           !isCliqMode ||
           !cliqAddress ||
-          !walletInfo ||
           !isChainInfoFilled(chain) ||
           !chain.nodeAddress
         ) {
           return;
         }
 
-        const hostedMultisig = await getHostedMultisig(cliqAddress, chain);
-
-        if (hostedMultisig.hosted === "chain" && hostedMultisig.accountOnChain?.pubkey) {
-          assert(
-            isMultisigThresholdPubkey(hostedMultisig.accountOnChain.pubkey),
-            "Pubkey on chain is not of type MultisigThreshold",
-          );
-
-          const { bech32Address: creatorAddress } = await getKeplrKey(chain.chainId);
-
-          await createMultisigFromCompressedSecp256k1Pubkeys(
-            hostedMultisig.accountOnChain.pubkey.value.pubkeys.map((p) => p.value),
-            Number(hostedMultisig.accountOnChain.pubkey.value.threshold),
-            chain.addressPrefix,
-            chain.chainId,
-            creatorAddress,
-          );
-          // Multisig is now in DB; "Create: Claim All" will succeed. No reload needed.
+        const resolved = await ensureChainMultisigInDb(cliqAddress, chain);
+        if (!resolved.multisig) {
+          throw new Error(resolved.reason ?? "Failed to resolve multisig address");
         }
       } catch (e) {
         console.error("Failed to register chain multisig:", e);
         toastError({
-          description: "Failed to register multisig",
+          title: "Failed to register multisig",
+          description: e instanceof Error ? e.message : "Could not resolve this multisig.",
           fullError: e instanceof Error ? e : undefined,
         });
       }

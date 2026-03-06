@@ -23,7 +23,7 @@ import TransactionSigning from "../../../../components/forms/TransactionSigning"
 import Button from "../../../../components/inputs/Button";
 import Page from "../../../../components/layout/Page";
 import { useChains } from "../../../../context/ChainsContext";
-import { getHostedMultisig, isAccount } from "../../../../lib/multisigHelpers";
+import { ensureChainMultisigInDb, getHostedMultisig, isAccount } from "../../../../lib/multisigHelpers";
 import { parseDbTxFromJson } from "../../../../lib/txMsgHelpers";
 import { printableCoins } from "../../../../lib/displayHelpers";
 import {
@@ -110,6 +110,10 @@ const TransactionPage = ({
           return;
         }
 
+        const resolved = await ensureChainMultisigInDb(multisigAddress, chain);
+        if (!resolved.multisig) {
+          throw new Error(resolved.reason ?? "Multisig address could not be resolved");
+        }
         const hostedMultisig = await getHostedMultisig(multisigAddress, chain);
 
         assert(
@@ -138,7 +142,8 @@ const TransactionPage = ({
       } catch (e) {
         console.error("Failed to find multisig address:", e);
         toastError({
-          description: "Failed to find multisig address",
+          title: "Failed to find multisig address",
+          description: e instanceof Error ? e.message : "Could not resolve this multisig.",
           fullError: e instanceof Error ? e : undefined,
         });
       }

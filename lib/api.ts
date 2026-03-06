@@ -77,6 +77,27 @@ export const createDbMultisig = async (multisig: DbMultisigDraft, chainId: strin
   return dbMultisigAddress;
 };
 
+export type EnsureDbMultisigBody = {
+  readonly chain: ChainInfo;
+};
+
+export type EnsureDbMultisigResult = {
+  readonly multisig: DbMultisig | null;
+  readonly source: "db" | "chain" | "indexer" | "unresolved";
+  readonly reason?: string;
+};
+
+export const ensureDbMultisig = async (
+  multisigAddress: string,
+  chain: ChainInfo,
+): Promise<EnsureDbMultisigResult> => {
+  const body: EnsureDbMultisigBody = { chain };
+
+  return requestJson(`/api/chain/${chain.chainId}/multisig/${multisigAddress}/ensure`, {
+    body,
+  }) as Promise<EnsureDbMultisigResult>;
+};
+
 export type GetDbMultisigTxsBody = {
   readonly signature: StdSignature;
   readonly chain: ChainInfo;
