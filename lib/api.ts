@@ -27,10 +27,24 @@ export type FetchedMultisigs = {
   readonly created: readonly DbMultisig[];
   readonly belonged: readonly DbMultisig[];
 };
+
+/** Deduplicate concurrent identical multisig list requests from the same browser tab */
+const inFlightMultisigRequests = new Map<string, Promise<FetchedMultisigs>>();
+
 export const getDbUserMultisigs = async (
   chain: ChainInfo,
   options?: { signature?: StdSignature; address?: string; pubkey?: string },
-) => {
+): Promise<FetchedMultisigs> => {
+  // Signatures are one-time nonces; only deduplicate unsigned requests
+  const dedupeKey = options?.signature
+    ? null
+    : `multisigs:${chain.chainId}:${options?.address ?? ""}`;
+
+  if (dedupeKey) {
+    const existing = inFlightMultisigRequests.get(dedupeKey);
+    if (existing) return existing;
+  }
+
   const body: GetDbUserMultisigsBody = {
     ...(options?.signature && { signature: options.signature }),
     ...(options?.address && { address: options.address }),
@@ -38,12 +52,17 @@ export const getDbUserMultisigs = async (
     chain,
   };
 
-  const multisigs: FetchedMultisigs = await requestJson(
+  const promise = requestJson(
     `/api/chain/${chain.chainId}/multisig/list`,
     { body },
-  );
+  ) as Promise<FetchedMultisigs>;
 
-  return multisigs;
+  if (dedupeKey) {
+    inFlightMultisigRequests.set(dedupeKey, promise);
+    promise.finally(() => inFlightMultisigRequests.delete(dedupeKey));
+  }
+
+  return promise;
 };
 
 export type CreateDbMultisigBody = DbMultisigDraft;
@@ -56,6 +75,27 @@ export const createDbMultisig = async (multisig: DbMultisigDraft, chainId: strin
   );
 
   return dbMultisigAddress;
+};
+
+export type EnsureDbMultisigBody = {
+  readonly chain: ChainInfo;
+};
+
+export type EnsureDbMultisigResult = {
+  readonly multisig: DbMultisig | null;
+  readonly source: "db" | "chain" | "indexer" | "unresolved";
+  readonly reason?: string;
+};
+
+export const ensureDbMultisig = async (
+  multisigAddress: string,
+  chain: ChainInfo,
+): Promise<EnsureDbMultisigResult> => {
+  const body: EnsureDbMultisigBody = { chain };
+
+  return requestJson(`/api/chain/${chain.chainId}/multisig/${multisigAddress}/ensure`, {
+    body,
+  }) as Promise<EnsureDbMultisigResult>;
 };
 
 export type GetDbMultisigTxsBody = {
@@ -78,13 +118,15 @@ export type CreateDbTxBody = {
   readonly dataJSON: DbTransactionParsedDataJson;
   readonly creator: string;
   readonly chainId: string;
+  readonly importedSignatures?: readonly CreateDbSignatureBody[];
 };
 export const createDbTx = async (
   creatorAddress: string,
   chainId: string,
   dataJSON: DbTransactionParsedDataJson,
+  importedSignatures?: readonly CreateDbSignatureBody[],
 ) => {
-  const body: CreateDbTxBody = { dataJSON, creator: creatorAddress, chainId };
+  const body: CreateDbTxBody = { dataJSON, creator: creatorAddress, chainId, importedSignatures };
   const { txId }: { txId: string } = await requestJson("/api/transaction", { body });
 
   return txId;

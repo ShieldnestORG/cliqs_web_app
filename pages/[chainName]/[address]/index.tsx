@@ -17,12 +17,11 @@ import { checkAddress } from "@/lib/displayHelpers";
 import { getKeplrKey } from "@/lib/keplr";
 import {
   HostedMultisig,
-  createMultisigFromCompressedSecp256k1Pubkeys,
+  ensureChainMultisigInDb,
   getHostedMultisig,
 } from "@/lib/multisigHelpers";
 import { toastError } from "@/lib/utils";
-import { isMultisigThresholdPubkey, isSecp256k1Pubkey, pubkeyToAddress } from "@cosmjs/amino";
-import { assert } from "@cosmjs/utils";
+import { isSecp256k1Pubkey, pubkeyToAddress } from "@cosmjs/amino";
 import copy from "copy-to-clipboard";
 import {
   AlertCircle,
@@ -96,40 +95,22 @@ export default function CliqDashboardPage() {
           return;
         }
 
-        const newHostedMultisig = await getHostedMultisig(cliqAddress, chain);
-
-        // If the cliq is on chain and not on DB, automatically create it on DB and reload the view
-        if (newHostedMultisig.hosted === "chain" && newHostedMultisig.accountOnChain?.pubkey) {
-          assert(
-            isMultisigThresholdPubkey(newHostedMultisig.accountOnChain.pubkey),
-            "Pubkey on chain is not of type MultisigThreshold",
-          );
-
-          const { bech32Address: address } = await getKeplrKey(chain.chainId);
-
-          await createMultisigFromCompressedSecp256k1Pubkeys(
-            newHostedMultisig.accountOnChain.pubkey.value.pubkeys.map((p) => p.value),
-            Number(newHostedMultisig.accountOnChain.pubkey.value.threshold),
-            chain.addressPrefix,
-            chain.chainId,
-            address,
-          );
-
-          router.reload();
+        const resolved = await ensureChainMultisigInDb(cliqAddress, chain);
+        if (!resolved.multisig) {
+          throw new Error(resolved.reason ?? "Failed to resolve multisig address");
         }
+        const newHostedMultisig = await getHostedMultisig(cliqAddress, chain);
 
         setHostedMultisig(newHostedMultisig);
       } catch (e) {
         console.error("Failed to find cliq:", e);
         toastError({
-          description: "Failed to find cliq",
+          title: "Failed to find cliq",
+          description: e instanceof Error ? e.message : "Could not resolve this multisig.",
           fullError: e instanceof Error ? e : undefined,
         });
       }
     })();
-    // Note: router is intentionally excluded from deps - it changes on every render
-    // and we only use router.reload() which doesn't depend on router state
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chain.chainId, chain.nodeAddress, chain.addressPrefix, cliqAddress]);
 
   // For pubkey multisigs, use the hosted multisig's explorer link.

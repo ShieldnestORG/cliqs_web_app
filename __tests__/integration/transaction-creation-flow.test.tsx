@@ -72,6 +72,10 @@ jest.mock("@/context/ChainsContext/helpers", () => ({
 
 // Mock multisig helpers
 jest.mock("@/lib/multisigHelpers", () => ({
+  ensureChainMultisigInDb: jest.fn().mockResolvedValue({
+    multisig: { id: "mock-multisig-id", address: "core14rmczf6t6qldyrqrv4jd0zzypkuymrhvsxazxf" },
+    source: "db",
+  }),
   getHostedMultisig: jest.fn().mockResolvedValue({
     hosted: "db+chain",
     accountOnChain: {

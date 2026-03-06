@@ -1,6 +1,7 @@
 import { createMultisig } from "@/graphql/multisig";
 import { CreateDbMultisigBody } from "@/lib/api";
 import { withByodbMiddleware } from "@/lib/byodb/middleware";
+import { syncMultisigToIndexer } from "@/lib/multisigIndexer";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 const endpointErrMsg = "Failed to create multisig";
@@ -23,6 +24,16 @@ async function apiCreateMultisig(req: NextApiRequest, res: NextApiResponse) {
     }
 
     const dbMultisigAddress = await createMultisig(multisigDraft);
+
+    try {
+      await syncMultisigToIndexer(multisigDraft, { source: "app_import" });
+    } catch (error) {
+      console.log(
+        "[apiCreateMultisig] Failed to sync multisig to indexer:",
+        error instanceof Error ? error.message : error,
+      );
+    }
+
     res.status(200).send({ dbMultisigAddress });
   } catch (err: unknown) {
     console.error(err);

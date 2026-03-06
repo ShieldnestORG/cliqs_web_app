@@ -36,7 +36,7 @@ import {
   makeDirectSignDoc,
   makeMultisignedTxBytesDirect,
 } from "../multisigDirect";
-import { makeMultisignedTxBytes } from "@cosmjs/stargate";
+import { normalizePubkey, safeAminoMultisigTxBytes } from "../multisigAmino";
 
 // ============================================================================
 // PubKeyMultisigEngine
@@ -60,7 +60,9 @@ export class PubKeyMultisigEngine implements MultisigEngine {
     this.multisigAddress = config.multisigAddress;
     this.nodeAddress = config.nodeAddress;
     this.nodeAddresses = config.nodeAddresses ?? [config.nodeAddress];
-    this.multisigPubkey = multisigPubkey;
+    // Normalize threshold to string on construction to prevent "str.match is not a
+    // function" crash in Uint53.fromString(threshold) inside cosmjs encodePubkey.
+    this.multisigPubkey = normalizePubkey(multisigPubkey);
     this.registry = new Registry([...defaultRegistryTypes, ...wasmTypes]);
   }
 
@@ -459,7 +461,7 @@ export class PubKeyMultisigEngine implements MultisigEngine {
       signatures.set(sig.signerAddress, fromBase64(sig.signatureBytes));
     }
 
-    return makeMultisignedTxBytes(
+    return safeAminoMultisigTxBytes(
       this.multisigPubkey,
       proposal.content.sequence,
       proposal.content.fee,

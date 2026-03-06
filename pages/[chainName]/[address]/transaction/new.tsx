@@ -25,7 +25,7 @@ import { useCallback, useEffect, useState } from "react";
 import OldCreateTxForm from "../../../../components/forms/OldCreateTxForm";
 import { useChains } from "../../../../context/ChainsContext";
 import { useWallet } from "@/context/WalletContext";
-import { getHostedMultisig, isAccount } from "../../../../lib/multisigHelpers";
+import { ensureChainMultisigInDb, getHostedMultisig, isAccount } from "../../../../lib/multisigHelpers";
 import { useMultisigType } from "@/lib/hooks/useMultisigType";
 import { createSigningCW3ClientFromSigner } from "@/lib/contract/cw3-client";
 import { getGasAdjustment } from "@/lib/contract/codeRegistry";
@@ -324,6 +324,7 @@ export default function CreateTxPage() {
   const [showOldForm, setShowOldForm] = useState(true);
   const [accountOnChain, setAccountOnChain] = useState<Account | null>(null);
   const [hasAccountError, setHasAccountError] = useState(false);
+  const [accountErrorMessage, setAccountErrorMessage] = useState<string | null>(null);
   const [pendingTransactions, setPendingTransactions] = useState<readonly DbTransaction[]>([]);
   const router = useRouter();
   const multisigAddress = router.query.address?.toString();
@@ -347,6 +348,10 @@ export default function CreateTxPage() {
           return;
         }
 
+        const resolved = await ensureChainMultisigInDb(multisigAddress, chain);
+        if (!resolved.multisig) {
+          throw new Error(resolved.reason ?? "Multisig address could not be resolved");
+        }
         const hostedMultisig = await getHostedMultisig(multisigAddress, chain);
 
         assert(
@@ -356,6 +361,7 @@ export default function CreateTxPage() {
 
         setAccountOnChain(hostedMultisig.accountOnChain);
         setHasAccountError(false);
+        setAccountErrorMessage(null);
 
         // Fetch pending transactions
         try {
@@ -366,6 +372,9 @@ export default function CreateTxPage() {
         }
       } catch (error: unknown) {
         setHasAccountError(true);
+        setAccountErrorMessage(
+          error instanceof Error ? error.message : "Multisig address could not be found",
+        );
         console.error(
           error instanceof Error ? error.message : "Multisig address could not be found",
         );
@@ -482,6 +491,7 @@ export default function CreateTxPage() {
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Multisig Not Available</AlertTitle>
             <AlertDescription className="mt-2 space-y-2">
+              {accountErrorMessage ? <p>{accountErrorMessage}</p> : null}
               <p>
                 This multisig address&apos;s pubkeys are not available, and so it cannot be used
                 with this tool.

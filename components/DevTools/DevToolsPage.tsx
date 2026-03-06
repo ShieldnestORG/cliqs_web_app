@@ -17,6 +17,7 @@ import {
   loadDeploymentLog,
 } from "@/lib/deploymentLog";
 import { getUserSettings, updateUserSettings } from "@/lib/settingsStorage";
+import { ensureChainMultisigInDb } from "@/lib/multisigHelpers";
 import { toastError, toastSuccess, ensureProtocol } from "@/lib/utils";
 import { exportMsgToJson, gasOfTx } from "@/lib/txMsgHelpers";
 import { MsgTypeUrl, MsgTypeUrls } from "@/types/txMsg";
@@ -28,6 +29,7 @@ import {
   Code,
   FileCode,
   FileCode2,
+  FileInput,
   Layers,
   Loader2,
   SearchCode,
@@ -46,11 +48,13 @@ import MsgForm from "../forms/OldCreateTxForm/MsgForm";
 import { MsgGetter } from "../forms/OldCreateTxForm";
 import { ContractExecute } from "@/components/ContractExecute";
 import DevToolsAuthz from "./DevToolsAuthz";
+import DevToolsImport from "./DevToolsImport";
 import DevToolsLog from "./DevToolsLog";
 import DevToolsQuery from "./DevToolsQuery";
 import DevToolsUploader from "./DevToolsUploader";
 import NetworkToggle from "./NetworkToggle";
 import { DevCommandType, DevNetwork, SelectedAccount } from "./types";
+import { AddressDisplay } from "@/components/ui/address-display";
 
 interface DevCommand {
   type: DevCommandType;
@@ -124,6 +128,13 @@ const devCommands: DevCommand[] = [
     icon: <Users className="h-6 w-6" />,
     requiresAccount: true,
   },
+  {
+    type: "import-transaction",
+    name: "Import Transaction",
+    description: "Import JSON to create a signable multisig transaction",
+    icon: <FileInput className="h-6 w-6" />,
+    requiresAccount: true,
+  },
 ];
 
 const isMsgCommand = (type: DevCommandType): type is MsgTypeUrl => type.startsWith("/");
@@ -134,6 +145,7 @@ export default function DevTools() {
   const {
     walletInfo,
     getAminoSigner,
+    getAminoSignerForChain,
     getDirectSigner,
     loading: _walletLoading,
     connectKeplr,
@@ -145,6 +157,8 @@ export default function DevTools() {
   const [multisigs, setMultisigs] = useState<DbMultisig[]>([]);
   const [loadingMultisigs, setLoadingMultisigs] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<SelectedAccount | null>(null);
+  const [manualMultisigAddress, setManualMultisigAddress] = useState("");
+  const [manualLookupLoading, setManualLookupLoading] = useState(false);
   const [selectedCommand, setSelectedCommand] = useState<DevCommandType | null>(null);
   const [processing, setProcessing] = useState(false);
   const [memo, setMemo] = useState("");
@@ -200,10 +214,15 @@ export default function DevTools() {
 
   useEffect(() => {
     const fetchMultisigs = async () => {
-      if (!walletInfo || !isVerified || !verificationSignature) return;
+      if (!walletInfo) return;
       try {
         setLoadingMultisigs(true);
-        const fetched = await getDbUserMultisigs(chain, { signature: verificationSignature });
+        const fetched = isVerified && verificationSignature
+          ? await getDbUserMultisigs(chain, { signature: verificationSignature })
+          : await getDbUserMultisigs(chain, {
+              address: walletInfo.address,
+              pubkey: walletInfo.pubKey,
+            });
         const all = [...fetched.created, ...fetched.belonged];
         const unique = all.filter(
           (value, idx, arr) => arr.findIndex((item) => item.address === value.address) === idx,
@@ -261,6 +280,39 @@ export default function DevTools() {
       setGasLimit(gasOfTx([type]));
       setMsgKey(crypto.randomUUID());
       msgGetters.current = [];
+    }
+  };
+
+  const handleManualMultisigSelect = async () => {
+    const trimmedAddress = manualMultisigAddress.trim();
+    if (!trimmedAddress) {
+      toast.error("Enter a multisig address first");
+      return;
+    }
+
+    try {
+      setManualLookupLoading(true);
+      const resolved = await ensureChainMultisigInDb(trimmedAddress, chain);
+      if (!resolved.multisig) {
+        throw new Error(
+          resolved.reason ??
+            "That address was not found in the database or on the active chain. Verify the address and network first.",
+        );
+      }
+      setSelectedAccount({
+        type: "multisig",
+        address: trimmedAddress,
+        name: "Manual Multisig",
+      });
+      toastSuccess("Multisig selected", trimmedAddress);
+    } catch (error) {
+      toastError({
+        title: "Failed to use multisig address",
+        description: error instanceof Error ? error.message : "Could not resolve multisig address.",
+        fullError: error instanceof Error ? error : undefined,
+      });
+    } finally {
+      setManualLookupLoading(false);
     }
   };
 
@@ -444,6 +496,12 @@ export default function DevTools() {
                 </div>
               ) : (
                 <div className="space-y-4">
+                  <p className="text-xs text-muted-foreground">
+                    Multisig discovery is scoped to the active chain. The app now checks stored
+                    multisigs first, then external discovery when configured, then chain RPC
+                    fallback. Testnet multisigs may still need to be entered manually if they have
+                    not been indexed yet.
+                  </p>
                   <button
                     onClick={() =>
                       setSelectedAccount({
@@ -464,9 +522,11 @@ export default function DevTools() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold">Single Wallet</p>
-                        <p className="truncate font-mono text-xs text-muted-foreground">
-                          {walletInfo.address}
-                        </p>
+                        <AddressDisplay
+                          address={walletInfo.address}
+                          copyLabel="wallet address"
+                          className="text-muted-foreground"
+                        />
                       </div>
                     </div>
                   </button>
@@ -481,9 +541,15 @@ export default function DevTools() {
                   </div>
 
                   {!isVerified ? (
-                    <Button onClick={verify} className="w-full" variant="ghost" size="sm">
-                      Verify identity to see multisigs
-                    </Button>
+                    <div className="space-y-2">
+                      <Button onClick={verify} className="w-full" variant="ghost" size="sm">
+                        Verify identity for stronger lookup
+                      </Button>
+                      <p className="text-xs text-muted-foreground">
+                        Verification is chain-specific and improves lookup accuracy. If you switch
+                        between mainnet and testnet, verify again on the currently selected chain.
+                      </p>
+                    </div>
                   ) : loadingMultisigs ? (
                     <div className="flex justify-center py-4">
                       <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -509,17 +575,51 @@ export default function DevTools() {
                           <p className="truncate text-sm font-semibold">
                             {multisig.name || "Unnamed Multisig"}
                           </p>
-                          <p className="truncate font-mono text-xs text-muted-foreground">
-                            {multisig.address}
-                          </p>
+                          <AddressDisplay
+                            address={multisig.address}
+                            copyLabel="multisig address"
+                            className="text-muted-foreground"
+                          />
                         </button>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-muted-foreground">
-                      No multisigs found on this chain.
-                    </p>
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">
+                        No multisigs were discovered for this wallet on the active chain.
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        This can mean the multisig is on a different network, has not been stored or
+                        indexed yet, or is not discoverable from the current fallback RPC scan.
+                      </p>
+                    </div>
                   )}
+
+                  <div className="space-y-2 rounded-lg border border-border/60 bg-muted/20 p-3">
+                    <Label htmlFor="manual-multisig-address">Use Multisig Address Manually</Label>
+                    <Input
+                      id="manual-multisig-address"
+                      value={manualMultisigAddress}
+                      onChange={(event) => setManualMultisigAddress(event.target.value)}
+                      placeholder={`Enter a ${chain.addressPrefix} multisig address`}
+                      variant="institutional"
+                    />
+                    <Button
+                      onClick={handleManualMultisigSelect}
+                      className="w-full"
+                      variant="outline"
+                      disabled={manualLookupLoading}
+                    >
+                      {manualLookupLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Looking up multisig...
+                        </>
+                      ) : (
+                        "Use This Multisig Address"
+                      )}
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -531,9 +631,11 @@ export default function DevTools() {
                 Selected Identity
               </p>
               <p className="truncate text-sm font-bold">{selectedAccount.name}</p>
-              <p className="truncate font-mono text-xs text-muted-foreground">
-                {selectedAccount.address}
-              </p>
+              <AddressDisplay
+                address={selectedAccount.address}
+                copyLabel={`${selectedAccount.type} address`}
+                className="text-muted-foreground"
+              />
               <Badge
                 className="mt-2 capitalize"
                 variant={selectedAccount.type === "wallet" ? "default" : "outline"}
@@ -626,6 +728,25 @@ export default function DevTools() {
 
               {selectedCommand === "execute-message" && (
                 <ContractExecute selectedAccount={selectedAccount} />
+              )}
+
+              {selectedCommand === "import-transaction" && selectedAccount && (
+                <DevToolsImport
+                  chain={chain}
+                  mainnetVariant={mainnetVariant}
+                  testnetVariant={testnetVariant}
+                  selectedAccount={selectedAccount}
+                  getAminoSignerForChain={getAminoSignerForChain}
+                  onLog={appendLog}
+                  onChainResolved={(resolvedChain) => {
+                    if (resolvedChain.chainId !== chain.chainId) {
+                      setChain(chainsDispatch, resolvedChain);
+                    }
+                  }}
+                  onSuccess={(txId) => {
+                    router.push(`/${chain.registryName}/${selectedAccount.address}/transaction/${txId}`);
+                  }}
+                />
               )}
 
               {selectedCommand && isMsgCommand(selectedCommand) && selectedAccount && (

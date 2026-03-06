@@ -11,6 +11,10 @@
 import { createMocks } from "node-mocks-http";
 import apiListMultisigs from "@/pages/api/chain/[chainId]/multisig/list/index";
 import { getCreatedMultisigs, getBelongedMultisigs } from "@/graphql/multisig";
+import {
+  discoverMultisigsWhereMember,
+  registerDiscoveredMultisigs,
+} from "@/lib/chainMultisigDiscovery";
 import { parseResponseData } from "../helpers";
 import { getNonce, incrementNonce } from "@/graphql/nonce";
 import { StargateClient } from "@cosmjs/stargate";
@@ -24,6 +28,11 @@ jest.mock("@/graphql/multisig", () => ({
 jest.mock("@/graphql/nonce", () => ({
   getNonce: jest.fn(),
   incrementNonce: jest.fn(),
+}));
+
+jest.mock("@/lib/chainMultisigDiscovery", () => ({
+  discoverMultisigsWhereMember: jest.fn().mockResolvedValue([]),
+  registerDiscoveredMultisigs: jest.fn().mockResolvedValue(undefined),
 }));
 
 jest.mock("@cosmjs/stargate", () => ({
@@ -44,6 +53,12 @@ const mockGetBelongedMultisigs = getBelongedMultisigs as jest.MockedFunction<
 >;
 const mockGetNonce = getNonce as jest.MockedFunction<typeof getNonce>;
 const mockIncrementNonce = incrementNonce as jest.MockedFunction<typeof incrementNonce>;
+const mockDiscoverMultisigsWhereMember = discoverMultisigsWhereMember as jest.MockedFunction<
+  typeof discoverMultisigsWhereMember
+>;
+const mockRegisterDiscoveredMultisigs = registerDiscoveredMultisigs as jest.MockedFunction<
+  typeof registerDiscoveredMultisigs
+>;
 const mockStargateConnect = StargateClient.connect as jest.MockedFunction<
   typeof StargateClient.connect
 >;
@@ -60,6 +75,7 @@ describe("API: POST /api/chain/[chainId]/multisig/list - List Multisigs: P0", ()
         sequence: 0,
       }),
     } as any);
+    mockDiscoverMultisigsWhereMember.mockResolvedValue([]);
   });
 
   it("should list multisigs with signature successfully", async () => {
@@ -127,6 +143,49 @@ describe("API: POST /api/chain/[chainId]/multisig/list - List Multisigs: P0", ()
     const data = parseResponseData(res._getData());
     expect(data.created).toEqual(mockCreated);
     expect(data.belonged).toEqual(mockBelonged);
+  });
+
+  it("should merge discovered multisigs and register them in the DB", async () => {
+    const chainId = "cosmoshub-4";
+    const discovered = [
+      {
+        id: "chain-1",
+        chainId,
+        address: "cosmos1discovered",
+        creator: null,
+        pubkeyJSON: '{"type":"tendermint/PubKeyMultisigThreshold"}',
+        name: null,
+        description: null,
+        version: 1,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    ];
+
+    mockGetCreatedMultisigs.mockResolvedValue([]);
+    mockGetBelongedMultisigs.mockResolvedValue([]);
+    mockDiscoverMultisigsWhereMember.mockResolvedValue(discovered as any);
+
+    const { req, res } = createMocks({
+      method: "POST",
+      query: { chainId },
+      body: {
+        chain: {
+          chainId,
+          addressPrefix: "cosmos",
+          nodeAddress: "https://rpc.cosmos.network",
+        },
+        address: "cosmos1test",
+        pubkey: "test-pubkey-base64",
+      },
+    });
+
+    await apiListMultisigs(req as any, res as any);
+
+    expect(res._getStatusCode()).toBe(200);
+    const data = parseResponseData(res._getData());
+    expect(data.belonged).toEqual(discovered);
+    expect(mockRegisterDiscoveredMultisigs).toHaveBeenCalledWith(discovered);
   });
 
   it("should return 405 for non-POST methods", async () => {

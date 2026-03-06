@@ -3,12 +3,13 @@ import { DbSignatureObj } from "@/graphql";
 import { getTransaction } from "@/graphql/transaction";
 import { cancelDbTx, updateDbTxHash } from "@/lib/api";
 import { makeMultisignedTxBytesDirect, shouldUseDirectMode } from "@/lib/multisigDirect";
+import { normalizePubkey, safeAminoMultisigTxBytes } from "@/lib/multisigAmino";
 import { createMultiRpcVerifier, BroadcastResult } from "@/lib/rpc";
 import { dispatchTransactionStatusChanged } from "@/lib/hooks/usePendingTransactions";
 import { toastError, toastSuccess } from "@/lib/utils";
 import { MultisigThresholdPubkey, pubkeyToAddress } from "@cosmjs/amino";
 import { fromBase64 } from "@cosmjs/encoding";
-import { Account, StargateClient, makeMultisignedTxBytes } from "@cosmjs/stargate";
+import { Account, StargateClient } from "@cosmjs/stargate";
 import { assert } from "@cosmjs/utils";
 import type { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
@@ -22,8 +23,8 @@ import TransactionSigning from "../../../../components/forms/TransactionSigning"
 import Button from "../../../../components/inputs/Button";
 import Page from "../../../../components/layout/Page";
 import { useChains } from "../../../../context/ChainsContext";
-import { getHostedMultisig, isAccount } from "../../../../lib/multisigHelpers";
-import { dbTxFromJson } from "../../../../lib/txMsgHelpers";
+import { ensureChainMultisigInDb, getHostedMultisig, isAccount } from "../../../../lib/multisigHelpers";
+import { parseDbTxFromJson } from "../../../../lib/txMsgHelpers";
 import { printableCoins } from "../../../../lib/displayHelpers";
 import {
   BentoGrid,
@@ -92,8 +93,9 @@ const TransactionPage = ({
   const [verificationStatus, setVerificationStatus] = useState<
     "idle" | "verifying" | "verified" | "failed"
   >("idle");
-  // Memoize txInfo to prevent recalculating on every render
-  const txInfo = useMemo(() => dbTxFromJson(transactionJSON), [transactionJSON]);
+  const parsedTx = useMemo(() => parseDbTxFromJson(transactionJSON), [transactionJSON]);
+  const txInfo = parsedTx.error ? null : parsedTx.tx;
+  const txValidationError = parsedTx.error ?? null;
 
   const multisigAddress = router.query.address?.toString();
 
@@ -108,6 +110,10 @@ const TransactionPage = ({
           return;
         }
 
+        const resolved = await ensureChainMultisigInDb(multisigAddress, chain);
+        if (!resolved.multisig) {
+          throw new Error(resolved.reason ?? "Multisig address could not be resolved");
+        }
         const hostedMultisig = await getHostedMultisig(multisigAddress, chain);
 
         assert(
@@ -115,7 +121,10 @@ const TransactionPage = ({
           "Multisig address could not be found",
         );
 
-        setPubkey(hostedMultisig.pubkeyOnDb);
+        // Normalize threshold to string — cosmjs 0.35.0-rc.0 calls
+        // Uint53.fromString(threshold) which crashes with "str.match is not a
+        // function" when threshold is a JS number from JSON.parse or protobuf decode.
+        setPubkey(normalizePubkey(hostedMultisig.pubkeyOnDb));
         setAccountOnChain(hostedMultisig.accountOnChain);
 
         // Check for sequence mismatch - this happens when another tx was broadcast
@@ -133,7 +142,8 @@ const TransactionPage = ({
       } catch (e) {
         console.error("Failed to find multisig address:", e);
         toastError({
-          description: "Failed to find multisig address",
+          title: "Failed to find multisig address",
+          description: e instanceof Error ? e.message : "Could not resolve this multisig.",
           fullError: e instanceof Error ? e : undefined,
         });
       }
@@ -189,18 +199,40 @@ const TransactionPage = ({
         );
       }
 
-      const bodyBytes = fromBase64(currentSignatures[0].bodyBytes);
+      // Deduplicate signatures by address — last-in wins on accidental duplicates.
+      // The DB blocks same-address dups, but in-memory React state can accumulate them
+      // if the user double-signs during the same page session.
+      const uniqueSignaturesMap = new Map<string, DbSignatureObj>();
+      currentSignatures.forEach((s) => uniqueSignaturesMap.set(s.address, s));
+      const uniqueSignatures = Array.from(uniqueSignaturesMap.values());
 
-      // Verify all signatures have the same bodyBytes
-      const allSameBodyBytes = currentSignatures.every(
-        (s) => s.bodyBytes === currentSignatures[0].bodyBytes,
+      // Hard-validate every signer address before passing it to cosmjs.
+      // makeMultisignedTxBytes calls fromBech32() on the first address, which
+      // throws "str.match is not a function" when the value is not a string.
+      for (const s of uniqueSignatures) {
+        if (!s.address || typeof s.address !== "string") {
+          throw new Error(
+            "A stored signature has a missing or invalid signer address. " +
+              "The transaction data may be corrupt. Please cancel and create a new one.",
+          );
+        }
+      }
+
+      const bodyBytes = fromBase64(uniqueSignatures[0].bodyBytes);
+
+      // Verify all signatures were produced for the same transaction body.
+      const allSameBodyBytes = uniqueSignatures.every(
+        (s) => s.bodyBytes === uniqueSignatures[0].bodyBytes,
       );
       if (!allSameBodyBytes) {
-        console.error("Signatures have different bodyBytes");
+        throw new Error(
+          "Signatures were produced for different transaction bodies — the transaction may " +
+            "have been modified after some members signed. Please cancel and create a new one.",
+        );
       }
 
       // Build signature map - cosmjs 0.35.0+ extracts prefix from first address automatically
-      const detectedPrefix = currentSignatures[0]?.address?.split("1")[0] || "unknown";
+      const detectedPrefix = uniqueSignatures[0]?.address?.split("1")[0] || "unknown";
 
       // CRITICAL: Verify pubkey -> address derivation matches signature addresses
       const derivedAddresses: string[] = [];
@@ -210,7 +242,7 @@ const TransactionPage = ({
       });
 
       const signatureMap = new Map<string, Uint8Array>();
-      currentSignatures.forEach((s) => {
+      uniqueSignatures.forEach((s) => {
         signatureMap.set(s.address, fromBase64(s.signature));
       });
 
@@ -228,8 +260,10 @@ const TransactionPage = ({
           signatureMap,
         );
       } else {
-        // Use SIGN_MODE_LEGACY_AMINO_JSON for other transactions
-        signedTxBytes = makeMultisignedTxBytes(
+        // Use SIGN_MODE_LEGACY_AMINO_JSON for other transactions.
+        // safeAminoMultisigTxBytes normalizes threshold/fee types and validates
+        // all inputs before calling cosmjs, preventing "str.match is not a function".
+        signedTxBytes = safeAminoMultisigTxBytes(
           pubkey,
           txInfo.sequence,
           txInfo.fee,
@@ -300,8 +334,8 @@ const TransactionPage = ({
       }
 
       // Verify signatures against expected hash before broadcast
-      for (let i = 0; i < currentSignatures.length; i++) {
-        const s = currentSignatures[i];
+      for (let i = 0; i < uniqueSignatures.length; i++) {
+        const s = uniqueSignatures[i];
         const sig = Secp256k1Signature.fromFixedLength(fromBase64(s.signature));
         const pubkeyIndex = derivedAddresses.indexOf(s.address);
         if (pubkeyIndex === -1) {
@@ -347,9 +381,22 @@ const TransactionPage = ({
       // Notify pending transactions hook to refresh (removes the indicator)
       dispatchTransactionStatusChanged();
     } catch (e) {
-      console.error("Failed to broadcast tx:", e);
-
       const errorMessage = e instanceof Error ? e.message : String(e);
+
+      // Emit sanitized diagnostic metadata (types and counts only, no sensitive values)
+      console.error("[broadcastTx] Failed:", {
+        error: errorMessage,
+        pubkeyThresholdType: typeof pubkey?.value?.threshold,
+        pubkeyThreshold: pubkey?.value?.threshold,
+        pubkeyCount: pubkey?.value?.pubkeys?.length,
+        feeGasType: typeof txInfo?.fee?.gas,
+        feeGas: txInfo?.fee?.gas,
+        signatureCount: currentSignatures.length,
+        uniqueSignatureAddressTypes: [
+          ...new Map(currentSignatures.map((s) => [s.address, s])).keys(),
+        ].map((a) => typeof a),
+        sequence: txInfo?.sequence,
+      });
 
       // Check for sequence mismatch error from chain
       if (
@@ -372,7 +419,7 @@ const TransactionPage = ({
             }
           }
         } catch (fetchErr) {
-          console.error("Failed to re-fetch account state:", fetchErr);
+          console.error("[broadcastTx] Failed to re-fetch account state:", fetchErr);
         }
 
         toastError({
@@ -380,6 +427,19 @@ const TransactionPage = ({
             "Transaction rejected: the account's sequence number has changed. " +
             "This usually means another transaction was broadcast from this multisig. " +
             "Please cancel this transaction and create a new one.",
+          fullError: e instanceof Error ? e : undefined,
+        });
+      } else if (
+        errorMessage.includes("str.match") ||
+        errorMessage.includes("is not a function") ||
+        errorMessage.includes("Invalid string format") ||
+        errorMessage.includes("threshold")
+      ) {
+        toastError({
+          description:
+            "Transaction assembly failed due to a data type error. " +
+            "This has been logged for diagnostics. Please try refreshing the page. " +
+            "If the error persists, cancel this transaction and create a new one.",
           fullError: e instanceof Error ? e : undefined,
         });
       } else {
@@ -425,8 +485,14 @@ const TransactionPage = ({
     }
   };
 
+  // Count unique signers by address so duplicate in-memory entries don't falsely satisfy threshold
+  const uniqueSignerCount = useMemo(
+    () => new Set(currentSignatures.map((s) => s.address)).size,
+    [currentSignatures],
+  );
+
   const isThresholdMet = pubkey
-    ? currentSignatures.length >= Number(pubkey.value.threshold)
+    ? uniqueSignerCount >= Number(pubkey.value.threshold)
     : false;
 
   return (
@@ -450,6 +516,25 @@ const TransactionPage = ({
       </h1>
 
       {/* Status Banners */}
+      {txValidationError ? (
+        <Card variant="institutional" className="mb-6 border-red-500/50 bg-red-500/10">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="mt-0.5 h-5 w-5 text-red-400" />
+              <div>
+                <h3 className="mb-2 text-lg font-semibold text-red-400">
+                  Invalid Transaction Data
+                </h3>
+                <p className="text-sm text-foreground">
+                  This transaction cannot be signed because its stored JSON is invalid.
+                </p>
+                <p className="mt-2 text-sm text-muted-foreground">{txValidationError}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
       {transactionStatus === "cancelled" ? (
         <div className="mb-6 rounded-lg border-2 border-border bg-muted/20 p-4">
           <div className="flex items-start gap-3">
@@ -567,7 +652,7 @@ const TransactionPage = ({
                     <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4">
                       <div className="flex items-center gap-3">
                         <div className="font-heading text-3xl font-bold">
-                          {currentSignatures.length}
+                          {uniqueSignerCount}
                         </div>
                         <div className="text-muted-foreground">of</div>
                         <div className="font-heading text-3xl font-bold">
@@ -576,10 +661,10 @@ const TransactionPage = ({
                         <div className="text-sm text-muted-foreground">signatures</div>
                       </div>
                     </div>
-                    {currentSignatures.length < Number(pubkey.value.threshold) && (
+                    {uniqueSignerCount < Number(pubkey.value.threshold) && (
                       <p className="text-sm text-muted-foreground">
-                        {Number(pubkey.value.threshold) - currentSignatures.length} remaining{" "}
-                        {Number(pubkey.value.threshold) - currentSignatures.length === 1
+                        {Number(pubkey.value.threshold) - uniqueSignerCount} remaining{" "}
+                        {Number(pubkey.value.threshold) - uniqueSignerCount === 1
                           ? "signature"
                           : "signatures"}{" "}
                         needed

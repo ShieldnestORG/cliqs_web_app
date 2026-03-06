@@ -28,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { AddressDisplay } from "@/components/ui/address-display";
 
 export default function Header() {
   const { pathname } = useRouter();
@@ -142,10 +143,10 @@ export default function Header() {
                   <span className="lg:hidden">Connected</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" className="w-64">
                 <div className="px-2 py-1.5">
                   <p className="text-xs text-muted-foreground">Connected with {walletInfo.type}</p>
-                  <p className="truncate font-mono text-xs">{truncatedAddress}</p>
+                  <AddressDisplay address={walletInfo.address} copyLabel="wallet address" />
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
@@ -349,9 +350,12 @@ export default function Header() {
                       />
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium">Connected to {walletInfo.type}</p>
-                        <p className="truncate font-mono text-xs text-muted-foreground">
-                          {truncatedAddress}
-                        </p>
+                        <AddressDisplay
+                          address={walletInfo.address}
+                          copyLabel="wallet address"
+                          className="text-muted-foreground"
+                          showCopy={false}
+                        />
                       </div>
                     </div>
                   </Link>

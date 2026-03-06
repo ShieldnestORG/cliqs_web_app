@@ -21,6 +21,7 @@ import {
   denied,
   createViolation,
 } from "./types";
+import { truncateAddress } from "../displayHelpers";
 
 // ============================================================================
 // Default Configuration
@@ -120,7 +121,7 @@ export class AddressFilterPolicy implements Policy {
       return {
         allowed: false,
         code: "RECIPIENT_IN_DENYLIST",
-        message: `Recipient ${this.shortenAddress(address)} is in the denylist`,
+        message: `Recipient ${truncateAddress(address, 10, 6)} is in the denylist`,
         reason: "Address is explicitly blocked",
       };
     }
@@ -131,7 +132,7 @@ export class AddressFilterPolicy implements Policy {
         return {
           allowed: false,
           code: "RECIPIENT_NOT_IN_ALLOWLIST",
-          message: `Recipient ${this.shortenAddress(address)} is not in the allowlist`,
+          message: `Recipient ${truncateAddress(address, 10, 6)} is not in the allowlist`,
           reason: "Address must be explicitly approved",
         };
       }
@@ -157,14 +158,6 @@ export class AddressFilterPolicy implements Policy {
    */
   private isAllowed(address: string): boolean {
     return this.config.allowlist.some((entry) => entry.toLowerCase() === address);
-  }
-
-  /**
-   * Shorten an address for display
-   */
-  private shortenAddress(address: string): string {
-    if (address.length <= 20) return address;
-    return `${address.slice(0, 10)}...${address.slice(-6)}`;
   }
 
   // ============================================================================

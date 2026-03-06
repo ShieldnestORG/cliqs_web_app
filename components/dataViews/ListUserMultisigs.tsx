@@ -39,17 +39,13 @@ export default function ListUserMultisigs() {
     try {
       setLoadingMultisigs(true);
 
-      // Get or request verification signature (cached in context)
-      let signature = verificationSignature;
-      if (!signature) {
-        signature = await verify();
-        if (!signature) {
-          // User cancelled verification
-          return;
-        }
-      }
-
-      const fetchedMultisigs = await getDbUserMultisigs(chain, { signature });
+      const fetchedMultisigs =
+        isVerified && verificationSignature
+          ? await getDbUserMultisigs(chain, { signature: verificationSignature })
+          : await getDbUserMultisigs(chain, {
+              address: walletInfo.address,
+              pubkey: walletInfo.pubKey,
+            });
       setMultisigs(fetchedMultisigs);
     } catch (e: unknown) {
       console.error("Failed to fetch multisigs:", e);
@@ -60,7 +56,7 @@ export default function ListUserMultisigs() {
     } finally {
       setLoadingMultisigs(false);
     }
-  }, [chain, walletInfo, verify, verificationSignature]);
+  }, [chain, walletInfo, verificationSignature, isVerified]);
 
   // Auto-fetch multisigs when wallet is verified (user must manually verify first)
   useEffect(() => {
@@ -81,8 +77,12 @@ export default function ListUserMultisigs() {
   }, [connectKeplr]);
 
   const handleVerifyAndFetch = useCallback(async () => {
+    const signature = await verify();
+    if (!signature) {
+      return;
+    }
     await fetchMultisigs();
-  }, [fetchMultisigs]);
+  }, [fetchMultisigs, verify]);
 
   return (
     <Card>
@@ -91,7 +91,9 @@ export default function ListUserMultisigs() {
         <CardDescription>
           Your list of created multisigs on {chain.chainDisplayName}.
           {!walletInfo && " Connect your wallet to see your multisigs."}
-          {walletInfo && !isVerified && " Verify your identity to see your multisigs."}
+          {walletInfo &&
+            !isVerified &&
+            " Lookup works immediately with your connected wallet; verification improves discovery accuracy."}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
@@ -114,14 +116,19 @@ export default function ListUserMultisigs() {
         !multisigs &&
         !loadingMultisigs &&
         !isVerifying ? (
-          <Button
-            onClick={handleVerifyAndFetch}
-            disabled={loadingMultisigs || isVerifying}
-            variant="outline"
-          >
-            <Image alt="" src="/assets/icons/keplr.svg" width={20} height={20} className="mr-2" />
-            Verify identity to see multisigs
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button onClick={fetchMultisigs} disabled={loadingMultisigs} variant="outline">
+              Lookup multisigs
+            </Button>
+            <Button
+              onClick={handleVerifyAndFetch}
+              disabled={loadingMultisigs || isVerifying}
+              variant="outline"
+            >
+              <Image alt="" src="/assets/icons/keplr.svg" width={20} height={20} className="mr-2" />
+              Verify identity
+            </Button>
+          </div>
         ) : null}
 
         {/* Ledger connected - can't easily verify */}

@@ -34,6 +34,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { AddressDisplay } from "@/components/ui/address-display";
 
 // ============================================================================
 // Types
@@ -278,22 +279,8 @@ export default function ProposalAuditTrail({
                 <TableBody>
                   {votes.map((vote, i) => (
                     <TableRow key={i}>
-                      <TableCell className="font-mono text-sm">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger>
-                              {vote.voter.slice(0, 8)}...{vote.voter.slice(-6)}
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{vote.voter}</p>
-                              {vote.txHash && (
-                                <p className="mt-1 text-xs text-muted-foreground">
-                                  Tx: {vote.txHash.slice(0, 12)}...
-                                </p>
-                              )}
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                      <TableCell>
+                        <AddressDisplay address={vote.voter} copyLabel="voter address" />
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -364,8 +351,8 @@ export default function ProposalAuditTrail({
 
                       return (
                         <TableRow key={member.addr}>
-                          <TableCell className="font-mono text-sm">
-                            {member.addr.slice(0, 12)}...{member.addr.slice(-8)}
+                          <TableCell>
+                            <AddressDisplay address={member.addr} copyLabel="member address" />
                           </TableCell>
                           <TableCell className="text-right">{member.weight}</TableCell>
                           <TableCell className="text-right text-muted-foreground">

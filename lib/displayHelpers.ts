@@ -18,6 +18,21 @@ function ellideMiddle(str: string, maxOutLen: number): string {
   return str.slice(0, frontLen) + ellide + str.slice(str.length - tailLen, str.length);
 }
 
+/**
+ * Truncates an address to a given head and tail length.
+ *
+ * @param {string} address The address to truncate.
+ * @param {number} head The number of characters to show at the start.
+ * @param {number} tail The number of characters to show at the end.
+ * @return {string} The truncated address.
+ */
+function truncateAddress(address: string, head = 8, tail = 6): string {
+  if (!address || address.length <= head + tail + 3) {
+    return address;
+  }
+  return `${address.slice(0, head)}...${address.slice(-tail)}`;
+}
+
 // NARROW NO-BREAK SPACE (U+202F)
 const thinSpace = "\u202F";
 
@@ -243,4 +258,5 @@ export {
   printableCoins,
   thinSpace,
   trimStringsObj,
+  truncateAddress,
 };

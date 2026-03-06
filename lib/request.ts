@@ -1,4 +1,8 @@
-export type RequestConfig = Omit<RequestInit, "body"> & { body?: unknown };
+export type RequestConfig = Omit<RequestInit, "body"> & {
+  body?: unknown;
+  /** Override the default 30-second abort timeout for this request (ms). */
+  timeout?: number;
+};
 
 /**
  * Try to inject BYODB headers if the module is loaded and active.
@@ -15,9 +19,11 @@ function getByodbHeadersSafe(): Record<string, string> {
   }
 }
 
+const DEFAULT_TIMEOUT_MS = 30000;
+
 export const requestJson = async (
   endpoint: string,
-  { method, headers, body, ...restConfig }: RequestConfig = {},
+  { method, headers, body, timeout = DEFAULT_TIMEOUT_MS, ...restConfig }: RequestConfig = {},
 ) => {
   // Auto-inject BYODB headers when active
   const byodbHeaders = getByodbHeadersSafe();
@@ -32,7 +38,7 @@ export const requestJson = async (
   };
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   try {
     const response = await fetch(endpoint, { ...config, signal: controller.signal });
@@ -47,7 +53,9 @@ export const requestJson = async (
   } catch (error) {
     clearTimeout(timeoutId);
     if (error instanceof Error && error.name === "AbortError") {
-      return Promise.reject(new Error(`Request to ${endpoint} timed out after 30 seconds`));
+      return Promise.reject(
+        new Error(`Request to ${endpoint} timed out after ${timeout / 1000} seconds`),
+      );
     }
     throw error;
   }

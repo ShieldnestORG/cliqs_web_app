@@ -14,13 +14,13 @@ import { useWallet } from "@/context/WalletContext";
 import { ValidatorInfo } from "@/lib/validatorHelpers";
 import { createCliqTransaction, buildSetWithdrawAddressMsg } from "@/lib/validatorTx";
 import { ArrowRight, Loader2, Check, X, Users } from "lucide-react";
-import { CopyButton } from "@/components/ui/copy-button";
 import { toast } from "sonner";
 import { useState } from "react";
 import { GasPrice, SigningStargateClient } from "@cosmjs/stargate";
 import { MsgTypeUrls } from "@/types/txMsg";
-import { checkAddress } from "@/lib/displayHelpers";
+import { checkAddress, truncateAddress } from "@/lib/displayHelpers";
 import { useRouter } from "next/router";
+import { AddressDisplay } from "@/components/ui/address-display";
 
 interface WithdrawAddressCardProps {
   validator: ValidatorInfo;
@@ -47,11 +47,6 @@ export default function WithdrawAddressCard({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isSameAsOperator = withdrawAddress === validator.delegatorAddress;
-
-  const truncateAddress = (addr: string) => {
-    if (addr.length <= 20) return addr;
-    return `${addr.slice(0, 12)}...${addr.slice(-8)}`;
-  };
 
   const handleSubmit = async () => {
     // Prevent duplicate submissions
@@ -209,10 +204,11 @@ export default function WithdrawAddressCard({
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <code className="flex-1 truncate rounded bg-muted/30 px-3 py-2 font-mono text-sm text-foreground">
-                  {truncateAddress(withdrawAddress)}
-                </code>
-                <CopyButton value={withdrawAddress} copyLabel="withdraw address" />
+                <AddressDisplay
+                  address={withdrawAddress}
+                  copyLabel="withdraw address"
+                  className="rounded bg-muted/30 px-3 py-2"
+                />
               </div>
             </div>
 

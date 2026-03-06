@@ -46,6 +46,7 @@ import { useChains } from "@/context/ChainsContext";
 import { createSigningCW3ClientFromSigner } from "@/lib/contract/cw3-client";
 import { getGasAdjustment } from "@/lib/contract/codeRegistry";
 import { ensureProtocol } from "@/lib/utils";
+import { AddressDisplay } from "@/components/ui/address-display";
 
 // ============================================================================
 // Types
@@ -442,9 +443,11 @@ export default function ContractVotePanel({
         <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
             <User className="h-4 w-4" />
-            <span className="font-mono text-xs">
-              {proposal.proposer.slice(0, 12)}...{proposal.proposer.slice(-6)}
-            </span>
+            <AddressDisplay
+              address={proposal.proposer}
+              copyLabel="proposer address"
+              className="text-muted-foreground"
+            />
           </div>
           <div className="flex items-center gap-1">
             <Clock className="h-4 w-4" />

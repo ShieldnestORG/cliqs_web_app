@@ -10,6 +10,10 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import TransactionViewPage from "@/pages/[chainName]/[address]/transaction/[transactionID]";
 
+jest.mock("@/graphql/transaction", () => ({
+  getTransaction: jest.fn(),
+}));
+
 // Mock components that are used by TransactionViewPage
 jest.mock("@/components/dataViews/TransactionInfo", () => {
   return function MockTransactionInfo() {
@@ -24,14 +28,32 @@ jest.mock("@/components/dataViews/CompletedTransaction", () => {
 });
 
 jest.mock("@/components/forms/TransactionSigning", () => {
-  return function MockTransactionSigning() {
-    return <div data-testid="transaction-signing">Transaction Signing</div>;
+  return function MockTransactionSigning(props: { tx: { accountNumber: unknown; sequence: unknown } }) {
+    return (
+      <div data-testid="transaction-signing">
+        {`accountNumber:${String(props.tx.accountNumber)} (${typeof props.tx.accountNumber}) sequence:${String(props.tx.sequence)} (${typeof props.tx.sequence})`}
+      </div>
+    );
   };
 });
 
 jest.mock("@/lib/multisigHelpers", () => ({
+  ensureChainMultisigInDb: jest.fn().mockResolvedValue({
+    multisig: { id: "mock-multisig-id", address: "cosmos1test" },
+    source: "db",
+  }),
   getHostedMultisig: jest.fn().mockResolvedValue({
     hosted: "db+chain",
+    pubkeyOnDb: {
+      type: "tendermint/PubKeyMultisigThreshold",
+      value: {
+        threshold: "2",
+        pubkeys: [
+          { type: "tendermint/PubKeySecp256k1", value: "memberPubkeyOneBase64" },
+          { type: "tendermint/PubKeySecp256k1", value: "memberPubkeyTwoBase64" },
+        ],
+      },
+    },
     accountOnChain: {
       address: "cosmos1test",
       accountNumber: 1,
@@ -55,6 +77,13 @@ const mockTransactionJSON = JSON.stringify({
   fee: { amount: [], gas: "200000" },
   memo: "Test transaction",
 });
+const importedSignatures = [
+  {
+    bodyBytes: "base64-body-bytes",
+    signature: "base64-signature",
+    address: "cosmos1importedsigner",
+  },
+];
 
 describe("View Transaction Route (/[chainName]/[address]/transaction/[id]): P0", () => {
   beforeEach(() => {
@@ -68,7 +97,7 @@ describe("View Transaction Route (/[chainName]/[address]/transaction/[id]): P0",
         transactionJSON={mockTransactionJSON}
         transactionID="test-tx-id-123"
         txHash=""
-        signatures={[]}
+        signatures={importedSignatures}
         status="pending"
       />,
     );
@@ -116,25 +145,20 @@ describe("View Transaction Route (/[chainName]/[address]/transaction/[id]): P0",
     });
   });
 
-  it("should show transaction signing component for pending transactions", async () => {
+  it("should load the pending transaction view", async () => {
     render(
       <TransactionViewPage
         transactionJSON={mockTransactionJSON}
         transactionID="test-tx-id-123"
         txHash=""
-        signatures={[]}
+        signatures={importedSignatures}
         status="pending"
       />,
     );
 
     await waitFor(
       () => {
-        // Transaction signing component should be present for pending transactions
-        // It might take time to load due to async operations
-        const signingComponent = screen.queryByTestId("transaction-signing");
-        const transactionInfo = screen.queryByTestId("transaction-info");
-        // Either signing component or transaction info should be present
-        expect(signingComponent || transactionInfo).toBeTruthy();
+        expect(screen.getByTestId("transaction-info")).toBeInTheDocument();
       },
       { timeout: 5000 },
     );

@@ -73,7 +73,13 @@ export async function createCliqTransaction(
 
     // Ensure chain-only multisig is registered in DB before creating tx (handles race with
     // validator view useEffect and direct navigations that skip the CLIQ page)
-    await ensureChainMultisigInDb(cliqAddress, chain);
+    const resolved = await ensureChainMultisigInDb(cliqAddress, chain);
+    if (!resolved.multisig) {
+      return {
+        success: false,
+        error: resolved.reason ?? `CLIQ address could not be resolved: ${cliqAddress}`,
+      };
+    }
 
     // Create the transaction in the database
     const txId = await createDbTx(cliqAddress, chain.chainId, txData);

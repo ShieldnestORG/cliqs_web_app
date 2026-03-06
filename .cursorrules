@@ -1,0 +1,10 @@
+# Open Brain Memory Rules
+
+## Auto-Save Triggers (Always Capture)
+- Key decisions/trade-offs: `capture_thought content="Decided X over Y because Z" type=decision`
+- Bugs found: `capture_thought content="Bug: [desc]" type=bug tags=["fix"]`
+- Features/tasks: `capture_thought content="[plan]" type=task`
+- Ideas/reference: `type=idea/reference`
+
+## Ask Before Save
+Before major changes/plans:

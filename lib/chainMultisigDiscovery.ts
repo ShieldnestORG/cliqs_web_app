@@ -7,14 +7,41 @@
  */
 
 import { ChainInfo } from "@/context/ChainsContext/types";
-import { DbMultisig } from "@/graphql";
+import { createMultisig, DbMultisig } from "@/graphql";
 import { isMultisigThresholdPubkey } from "@cosmjs/amino";
 import { StargateClient } from "@cosmjs/stargate";
-import { QueryClient, setupStakingExtension } from "@cosmjs/stargate";
-import { connectComet } from "@cosmjs/tendermint-rpc";
 import { Validator } from "cosmjs-types/cosmos/staking/v1beta1/staking";
+import {
+  discoverMultisigsFromIndexer,
+  isMultisigIndexerConfigured,
+  syncMultisigToIndexer,
+} from "./multisigIndexer";
 import { ensureProtocol } from "./utils";
+import { getAllValidators } from "./staking";
 import { validatorToDelegatorAddress } from "./validatorHelpers";
+
+/** Number of validator accounts to query in parallel per batch */
+const BATCH_SIZE = 20;
+
+/** Cache TTL: 5 minutes — validator sets don't change frequently */
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
+/** Server-side in-memory cache for chain multisig discovery results, keyed by chainId:pubkey */
+const discoveryCache = new Map<string, { data: DbMultisig[]; expires: number }>();
+
+type DiscoverySource = "indexer" | "rpc";
+
+type DiscoveryContext = {
+  readonly chain: ChainInfo;
+  readonly address: string;
+  readonly pubkey: string;
+};
+
+type DiscoveryProvider = {
+  readonly source: DiscoverySource;
+  readonly isConfigured: () => boolean;
+  readonly discover: (context: DiscoveryContext) => Promise<DbMultisig[]>;
+};
 
 function pubkeyMatches(
   memberPubkey: string,
@@ -23,11 +50,16 @@ function pubkeyMatches(
   return pubkeys.some((pk) => pk.value === memberPubkey || pk.key === memberPubkey);
 }
 
+function dedupeMultisigs(multisigs: readonly DbMultisig[]): DbMultisig[] {
+  return Array.from(new Map(multisigs.map((multisig) => [multisig.address, multisig])).values());
+}
+
 /**
  * Discover multisigs from chain where the user (address/pubkey) is a member.
  * Only checks validator delegator accounts to keep the lookup fast.
+ * Results are cached for 5 minutes to avoid repeated RPC calls.
  */
-export async function getMultisigsFromChainWhereMember(
+async function discoverMultisigsFromRpcWhereMember(
   chain: ChainInfo,
   address: string,
   pubkey: string,
@@ -38,29 +70,38 @@ export async function getMultisigsFromChainWhereMember(
   const now = new Date().toISOString();
 
   try {
-    const cometClient = await connectComet(rpcUrl);
-    const queryClient = QueryClient.withExtensions(cometClient, setupStakingExtension);
+    // Fetch all validator statuses in parallel so we catch UNBONDING and UNBONDED
+    // validators as well. This is especially important on testnets where validators
+    // are frequently not yet bonded or are in the process of unbonding.
+    const [allValidators, stargateClient] = await Promise.all([
+      getAllValidators(rpcUrl),
+      StargateClient.connect(rpcUrl),
+    ]);
 
-    const stargateClient = await StargateClient.connect(rpcUrl);
-
-    const validators: Validator[] = [];
-    let paginationKey: Uint8Array | undefined;
-
-    do {
-      const response = await queryClient.staking.validators("BOND_STATUS_BONDED", paginationKey);
-      validators.push(...response.validators);
-      paginationKey = response.pagination?.nextKey;
-    } while (paginationKey?.length);
+    const validators: Validator[] = [
+      ...allValidators.bonded,
+      ...allValidators.unbonding,
+      ...allValidators.unbonded,
+    ];
 
     const results: DbMultisig[] = [];
 
-    for (const v of validators) {
-      try {
-        const delegatorAddr = validatorToDelegatorAddress(v.operatorAddress, chain.addressPrefix);
-        const account = await stargateClient.getAccount(delegatorAddr);
-        if (!account?.pubkey || !isMultisigThresholdPubkey(account.pubkey)) {
-          continue;
-        }
+    // Query validator delegator accounts in parallel batches instead of sequentially.
+    // A chain like Cosmos Hub has 150+ validators; sequential calls would take 30+ seconds.
+    for (let i = 0; i < validators.length; i += BATCH_SIZE) {
+      const batch = validators.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.allSettled(
+        batch.map(async (v) => {
+          const delegatorAddr = validatorToDelegatorAddress(v.operatorAddress, chain.addressPrefix);
+          const account = await stargateClient.getAccount(delegatorAddr);
+          return { account, delegatorAddr };
+        }),
+      );
+
+      for (const result of batchResults) {
+        if (result.status !== "fulfilled") continue;
+        const { account, delegatorAddr } = result.value;
+        if (!account?.pubkey || !isMultisigThresholdPubkey(account.pubkey)) continue;
 
         const pubkeys = account.pubkey.value?.pubkeys ?? [];
         if (!pubkeyMatches(pubkey, pubkeys)) continue;
@@ -77,12 +118,11 @@ export async function getMultisigsFromChainWhereMember(
           createdAt: now,
           updatedAt: now,
         });
-      } catch {
-        // Skip individual failures (e.g. account not found)
       }
     }
 
     await stargateClient.disconnect();
+
     return results;
   } catch (e) {
     console.log(
@@ -91,4 +131,92 @@ export async function getMultisigsFromChainWhereMember(
     );
     return [];
   }
+}
+
+const discoveryProviders: readonly DiscoveryProvider[] = [
+  {
+    source: "indexer",
+    isConfigured: () => isMultisigIndexerConfigured(),
+    discover: discoverMultisigsFromIndexer,
+  },
+  {
+    source: "rpc",
+    isConfigured: () => true,
+    discover: ({ chain, address, pubkey }) => discoverMultisigsFromRpcWhereMember(chain, address, pubkey),
+  },
+];
+
+export async function registerDiscoveredMultisigs(multisigs: readonly DbMultisig[]): Promise<void> {
+  await Promise.all(
+    multisigs.map(async (multisig) => {
+      try {
+        await createMultisig({
+          chainId: multisig.chainId,
+          address: multisig.address,
+          creator: multisig.creator ?? null,
+          pubkeyJSON: multisig.pubkeyJSON,
+          name: multisig.name,
+          description: multisig.description,
+        });
+      } catch (error) {
+        if (!(error instanceof Error) || !error.message.includes("already exists")) {
+          throw error;
+        }
+      }
+
+      try {
+        await syncMultisigToIndexer(multisig, { source: "account_pubkey" });
+      } catch (error) {
+        console.log(
+          "[chainMultisigDiscovery] Failed to sync discovered multisig to indexer:",
+          error instanceof Error ? error.message : error,
+        );
+      }
+    }),
+  );
+}
+
+export async function discoverMultisigsWhereMember(
+  chain: ChainInfo,
+  address: string,
+  pubkey: string,
+): Promise<DbMultisig[]> {
+  const cacheKey = `${chain.chainId}:${pubkey}`;
+  const cached = discoveryCache.get(cacheKey);
+  if (cached && cached.expires > Date.now()) {
+    console.log(`[chainMultisigDiscovery] Cache hit for ${chain.chainId}`);
+    return cached.data;
+  }
+
+  const context: DiscoveryContext = { chain, address, pubkey };
+  const results: DbMultisig[] = [];
+
+  for (const provider of discoveryProviders) {
+    if (!provider.isConfigured()) continue;
+
+    try {
+      const multisigs = dedupeMultisigs(await provider.discover(context));
+      if (multisigs.length > 0) {
+        results.push(...multisigs);
+      }
+    } catch (error) {
+      console.log(
+        `[chainMultisigDiscovery] ${provider.source} discovery failed:`,
+        error instanceof Error ? error.message : error,
+      );
+    }
+  }
+
+  const combined = dedupeMultisigs(results);
+  discoveryCache.set(cacheKey, { data: combined, expires: Date.now() + CACHE_TTL_MS });
+
+  return combined;
+}
+
+export async function getMultisigsFromChainWhereMember(
+  chain: ChainInfo,
+  address: string,
+  pubkey: string,
+): Promise<DbMultisig[]> {
+  return discoverMultisigsWhereMember(chain, address, pubkey);
 }

@@ -26,15 +26,13 @@ interface RegistryPromises {
 
 const getChainsFromRegistry = async () => {
   const chains: ChainItems = { mainnets: new Map(), testnets: new Map(), localnets: new Map() };
-  const testnetsEnabled = isTestnetsEnabled();
 
-  // Only fetch testnets if enabled
+  // Always fetch both mainnets and testnets - testnets are needed for network switching
+  // in validator dashboard and dev tools, even if not shown in chain selector
   const [mainnetGhItems, testnetGhItems]: [
     readonly GithubChainRegistryItem[],
     readonly GithubChainRegistryItem[],
-  ] = testnetsEnabled
-    ? await Promise.all([requestGhJson(mainnetsUrl), requestGhJson(testnetsUrl)])
-    : [await requestGhJson(mainnetsUrl), []];
+  ] = await Promise.all([requestGhJson(mainnetsUrl), requestGhJson(testnetsUrl)]);
 
   const mainnetPromisesMap = new Map<string, RegistryPromises>();
 
@@ -194,6 +192,9 @@ const getChainInfoFromJsons = (
 
   const formattedGasPrice = firstAsset ? `${gasPrice}${firstAssetDenom}` : "";
 
+  const coinType = registryChain.slip44;
+  const restEndpoint = registryChain.apis?.rest?.[0]?.address;
+
   const chain: ChainInfo = {
     registryName: isCoreum ? "tx" : registryChain.chain_name,
     logo: isCoreum ? "/tx.png" : logo,
@@ -207,6 +208,8 @@ const getChainInfoFromJsons = (
     displayDenom: isCoreum ? "TX" : displayDenom,
     displayDenomExponent,
     gasPrice: formattedGasPrice,
+    ...(coinType !== undefined && { coinType }),
+    ...(restEndpoint && { restEndpoint }),
     assets: isCoreum
       ? cdnRegistryAssets.map((asset) => {
           const isCoreAsset =
