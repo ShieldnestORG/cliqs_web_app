@@ -1,7 +1,10 @@
 import { getBelongedMultisigs, getCreatedMultisigs } from "@/graphql/multisig";
 import type { DbMultisig } from "@/graphql/multisig";
 import { getNonce, incrementNonce } from "@/graphql/nonce";
-import { getMultisigsFromChainWhereMember } from "@/lib/chainMultisigDiscovery";
+import {
+  discoverMultisigsWhereMember,
+  registerDiscoveredMultisigs,
+} from "@/lib/chainMultisigDiscovery";
 import { GetDbUserMultisigsBody } from "@/lib/api";
 import { withByodbMiddleware } from "@/lib/byodb/middleware";
 import { ensureDbReady } from "@/lib/dbInit";
@@ -89,10 +92,10 @@ async function apiListMultisigs(req: NextApiRequest, res: NextApiResponse) {
     // Wrap chain discovery in a timeout so a slow RPC never causes the whole
     // request to exceed the client's 30-second hard limit.
     const chainDiscoveryWithTimeout = Promise.race([
-      getMultisigsFromChainWhereMember(body.chain, address, pubkey),
+      discoverMultisigsWhereMember(body.chain, address, pubkey),
       new Promise<DbMultisig[]>((resolve) =>
         setTimeout(() => {
-          console.log("[list] Chain discovery timed out — returning DB results only");
+          console.log("[list] External discovery timed out — returning DB results only");
           resolve([]);
         }, CHAIN_DISCOVERY_TIMEOUT_MS),
       ),
@@ -106,6 +109,17 @@ async function apiListMultisigs(req: NextApiRequest, res: NextApiResponse) {
     const created = dbResult.status === "fulfilled" ? dbResult.value[0] : [];
     let belonged = dbResult.status === "fulfilled" ? dbResult.value[1] : [];
     const chainMultisigs = chainResult.status === "fulfilled" ? chainResult.value : [];
+
+    if (chainMultisigs.length > 0) {
+      try {
+        await registerDiscoveredMultisigs(chainMultisigs);
+      } catch (e) {
+        console.log(
+          "[list] Failed to register discovered multisigs in DB:",
+          e instanceof Error ? e.message : e,
+        );
+      }
+    }
 
     const existingAddresses = new Set([
       ...created.map((m) => m.address),
