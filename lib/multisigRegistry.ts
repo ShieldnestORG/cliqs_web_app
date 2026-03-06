@@ -20,7 +20,10 @@ async function persistMultisig(
   source: "account_pubkey" | "manual_admin",
 ): Promise<DbMultisig | null> {
   try {
-    await createMultisig(multisig);
+    await createMultisig({
+      ...multisig,
+      creator: multisig.creator ?? null,
+    });
   } catch (error) {
     if (!(error instanceof Error) || !error.message.includes("already exists")) {
       throw error;
@@ -64,7 +67,13 @@ export async function ensureMultisigRegistered(
       error instanceof Error ? error.message : error,
     );
   } finally {
-    await client?.disconnect().catch(() => undefined);
+    if (client) {
+      try {
+        await client.disconnect();
+      } catch {
+        // Ignore disconnect errors during best-effort cleanup.
+      }
+    }
   }
 
   if (accountOnChain?.pubkey && isMultisigThresholdPubkey(accountOnChain.pubkey)) {

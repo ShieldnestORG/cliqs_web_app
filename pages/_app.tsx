@@ -7,6 +7,7 @@ import { WalletProvider } from "@/context/WalletContext";
 import { PendingTransactionsProvider } from "@/context/PendingTransactionsContext";
 import type { AppProps } from "next/app";
 import { useRouter } from "next/router";
+import { Analytics } from "@vercel/analytics/next";
 import { ChainsProvider } from "../context/ChainsContext";
 import "@/styles/globals.css";
 
@@ -36,6 +37,7 @@ export default function MultisigApp({ Component, pageProps }: AppProps) {
             </div>
           </div>
           <Toaster closeButton />
+          <Analytics />
         </TooltipProvider>
         </PendingTransactionsProvider>
       </WalletProvider>
