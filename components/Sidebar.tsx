@@ -29,6 +29,7 @@ import DonateDialog from "./DonateDialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { AddressDisplay } from "@/components/ui/address-display";
 
 export default function Sidebar() {
   const { asPath } = useRouter();
@@ -316,9 +317,11 @@ export default function Sidebar() {
                     {walletInfo.type} Connected
                   </span>
                 </div>
-                <p className="truncate font-mono text-[11px] text-foreground/80">
-                  {truncatedAddress}
-                </p>
+                <AddressDisplay
+                  address={walletInfo.address}
+                  copyLabel="wallet address"
+                  className="text-foreground/80"
+                />
               </div>
             ) : (
               <Tooltip>

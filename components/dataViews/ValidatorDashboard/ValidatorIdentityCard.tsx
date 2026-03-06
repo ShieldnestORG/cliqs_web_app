@@ -11,9 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ValidatorInfo } from "@/lib/validatorHelpers";
 import { ExternalLink, Shield, AlertTriangle, CircleDashed } from "lucide-react";
-import { CopyButton } from "@/components/ui/copy-button";
 import { explorerLinkAccount } from "@/lib/displayHelpers";
 import { useChains } from "@/context/ChainsContext";
+import { AddressDisplay } from "@/components/ui/address-display";
 
 interface ValidatorIdentityCardProps {
   validator: ValidatorInfo;
@@ -107,12 +107,11 @@ export default function ValidatorIdentityCard({ validator }: ValidatorIdentityCa
           <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
             Operator Address
           </span>
-          <div className="flex items-center gap-2">
-            <code className="flex-1 truncate rounded bg-muted/30 px-3 py-2 font-mono text-xs text-foreground">
-              {validator.operatorAddress}
-            </code>
-            <CopyButton value={validator.operatorAddress} copyLabel="operator address" />
-          </div>
+          <AddressDisplay
+            address={validator.operatorAddress}
+            copyLabel="operator address"
+            className="rounded bg-muted/30 px-3 py-2"
+          />
         </div>
 
         {/* Account Address */}
@@ -120,12 +119,11 @@ export default function ValidatorIdentityCard({ validator }: ValidatorIdentityCa
           <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
             Account Address
           </span>
-          <div className="flex items-center gap-2">
-            <code className="flex-1 truncate rounded bg-muted/30 px-3 py-2 font-mono text-xs text-foreground">
-              {validator.delegatorAddress}
-            </code>
-            <CopyButton value={validator.delegatorAddress} copyLabel="account address" />
-          </div>
+          <AddressDisplay
+            address={validator.delegatorAddress}
+            copyLabel="account address"
+            className="rounded bg-muted/30 px-3 py-2"
+          />
         </div>
 
         {/* Explorer Link */}

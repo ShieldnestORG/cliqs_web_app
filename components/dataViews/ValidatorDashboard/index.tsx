@@ -19,7 +19,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { useChains } from "@/context/ChainsContext";
-import { isChainInfoFilled } from "@/context/ChainsContext/helpers";
+import { isChainInfoFilled, setChain } from "@/context/ChainsContext/helpers";
+import NetworkToggle from "@/components/DevTools/NetworkToggle";
+import { DevNetwork } from "@/components/DevTools/types";
 import { useWallet } from "@/context/WalletContext";
 import {
   getValidatorDashboardData,
@@ -60,6 +62,7 @@ import WithdrawAddressCard from "./WithdrawAddressCard";
 import ValidatorCommandsCard from "./ValidatorCommandsCard";
 import ValidatorDelegatorsCard from "./ValidatorDelegatorsCard";
 import ProposalViewer from "./ProposalViewer";
+import { AddressDisplay } from "@/components/ui/address-display";
 
 type LoadingState = "idle" | "loading" | "loaded" | "error" | "not-validator";
 
@@ -70,13 +73,34 @@ interface AssociatedValidator {
 }
 
 export default function ValidatorDashboard() {
-  const { chain } = useChains();
+  const { chain, chains, chainsDispatch } = useChains();
   const { walletInfo, loading, connectKeplr, connectLedger, verificationSignature, verify } =
     useWallet();
   const router = useRouter();
 
   const addressParam = router.query.address as string;
   const effectiveAddress = addressParam || walletInfo?.address;
+
+  // Network switching logic (mainnet/testnet)
+  const currentNetwork: DevNetwork = chain.chainId.toLowerCase().includes("testnet")
+    ? "testnet"
+    : "mainnet";
+  const mainnetVariant = chains.mainnets.get(chain.registryName);
+  const testnetVariant = chains.testnets.get(chain.registryName);
+  const hasTestnetVariant = Boolean(testnetVariant);
+
+  const onNetworkChange = useCallback(
+    (network: DevNetwork) => {
+      const target = network === "testnet" ? testnetVariant : mainnetVariant;
+      if (!target) {
+        return;
+      }
+      if (target.chainId !== chain.chainId) {
+        setChain(chainsDispatch, target);
+      }
+    },
+    [chain.chainId, chainsDispatch, mainnetVariant, testnetVariant],
+  );
 
   // Detect if we're managing via CLIQ (address param differs from connected wallet)
   const isCliqMode = Boolean(
@@ -409,6 +433,13 @@ export default function ValidatorDashboard() {
   if (!effectiveAddress && !walletInfo) {
     return (
       <div className="space-y-6">
+        {/* Network Toggle */}
+        <NetworkToggle
+          currentNetwork={currentNetwork}
+          onNetworkChange={onNetworkChange}
+          testnetAvailable={hasTestnetVariant}
+        />
+
         <Card variant="institutional" bracket="green" className="mx-auto max-w-4xl">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-green-accent/20">
@@ -520,6 +551,13 @@ export default function ValidatorDashboard() {
 
     return (
       <div className="space-y-6">
+        {/* Network Toggle */}
+        <NetworkToggle
+          currentNetwork={currentNetwork}
+          onNetworkChange={onNetworkChange}
+          testnetAvailable={hasTestnetVariant}
+        />
+
         {/* Show associated validators (CLIQs) if found */}
         {associatedValidators.length > 0 && (
           <Card variant="institutional" bracket="green" className="mx-auto max-w-2xl">
@@ -558,10 +596,13 @@ export default function ValidatorDashboard() {
                         <h4 className="truncate font-heading font-bold text-foreground">
                           {item.validator.moniker}
                         </h4>
-                        <p className="truncate font-mono text-xs text-muted-foreground">
-                          {item.isCliq ? "CLIQ: " : ""}
-                          {item.address.slice(0, 12)}...{item.address.slice(-8)}
-                        </p>
+                        <AddressDisplay
+                          address={item.address}
+                          copyLabel={item.isCliq ? "CLIQ address" : "validator address"}
+                          className="text-muted-foreground"
+                          head={12}
+                          tail={8}
+                        />
                       </div>
                     </div>
                     <Button
@@ -685,6 +726,13 @@ export default function ValidatorDashboard() {
   if (loadingState === "error") {
     return (
       <div className="space-y-6">
+        {/* Network Toggle */}
+        <NetworkToggle
+          currentNetwork={currentNetwork}
+          onNetworkChange={onNetworkChange}
+          testnetAvailable={hasTestnetVariant}
+        />
+
         <Card variant="institutional" className="mx-auto max-w-xl border-destructive/50">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-destructive/20">
@@ -775,9 +823,13 @@ export default function ValidatorDashboard() {
                         <h4 className="truncate font-heading text-sm font-semibold text-foreground">
                           {item.validator.moniker}
                         </h4>
-                        <p className="truncate font-mono text-xs text-muted-foreground">
-                          CLIQ: {item.address.slice(0, 12)}...{item.address.slice(-8)}
-                        </p>
+                        <AddressDisplay
+                          address={item.address}
+                          copyLabel="CLIQ address"
+                          className="text-muted-foreground"
+                          head={12}
+                          tail={8}
+                        />
                       </div>
                     </div>
                     <Button
@@ -794,6 +846,13 @@ export default function ValidatorDashboard() {
             </CardContent>
           </Card>
         )}
+
+      {/* Network Toggle */}
+      <NetworkToggle
+        currentNetwork={currentNetwork}
+        onNetworkChange={onNetworkChange}
+        testnetAvailable={hasTestnetVariant}
+      />
 
       {/* Header with Refresh */}
       <div className="flex items-center justify-between">

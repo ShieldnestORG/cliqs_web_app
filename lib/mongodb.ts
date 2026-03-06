@@ -647,6 +647,8 @@ export const ensureIndexes = async (): Promise<void> => {
   const multisigCol = db.collection(Collections.MULTISIGS);
   await multisigCol.createIndex({ chainId: 1, address: 1 }, { unique: true });
   await multisigCol.createIndex({ chainId: 1, creator: 1 });
+  // Index for getBelongedMultisigs: lets MongoDB efficiently narrow by chainId before regex-scanning pubkeyJSON
+  await multisigCol.createIndex({ chainId: 1, pubkeyJSON: 1 });
 
   const txCol = db.collection(Collections.TRANSACTIONS);
   await txCol.createIndex({ creatorId: 1 });

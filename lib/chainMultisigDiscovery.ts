@@ -16,6 +16,15 @@ import { Validator } from "cosmjs-types/cosmos/staking/v1beta1/staking";
 import { ensureProtocol } from "./utils";
 import { validatorToDelegatorAddress } from "./validatorHelpers";
 
+/** Number of validator accounts to query in parallel per batch */
+const BATCH_SIZE = 20;
+
+/** Cache TTL: 5 minutes — validator sets don't change frequently */
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
+/** Server-side in-memory cache for chain multisig discovery results, keyed by chainId:pubkey */
+const discoveryCache = new Map<string, { data: DbMultisig[]; expires: number }>();
+
 function pubkeyMatches(
   memberPubkey: string,
   pubkeys: ReadonlyArray<{ value?: string; key?: string }>,
@@ -26,6 +35,7 @@ function pubkeyMatches(
 /**
  * Discover multisigs from chain where the user (address/pubkey) is a member.
  * Only checks validator delegator accounts to keep the lookup fast.
+ * Results are cached for 5 minutes to avoid repeated RPC calls.
  */
 export async function getMultisigsFromChainWhereMember(
   chain: ChainInfo,
@@ -33,6 +43,13 @@ export async function getMultisigsFromChainWhereMember(
   pubkey: string,
 ): Promise<DbMultisig[]> {
   if (!chain.nodeAddress || !chain.addressPrefix) return [];
+
+  const cacheKey = `${chain.chainId}:${pubkey}`;
+  const cached = discoveryCache.get(cacheKey);
+  if (cached && cached.expires > Date.now()) {
+    console.log(`[chainMultisigDiscovery] Cache hit for ${chain.chainId}`);
+    return cached.data;
+  }
 
   const rpcUrl = ensureProtocol(chain.nodeAddress);
   const now = new Date().toISOString();
@@ -54,13 +71,22 @@ export async function getMultisigsFromChainWhereMember(
 
     const results: DbMultisig[] = [];
 
-    for (const v of validators) {
-      try {
-        const delegatorAddr = validatorToDelegatorAddress(v.operatorAddress, chain.addressPrefix);
-        const account = await stargateClient.getAccount(delegatorAddr);
-        if (!account?.pubkey || !isMultisigThresholdPubkey(account.pubkey)) {
-          continue;
-        }
+    // Query validator delegator accounts in parallel batches instead of sequentially.
+    // A chain like Cosmos Hub has 150+ validators; sequential calls would take 30+ seconds.
+    for (let i = 0; i < validators.length; i += BATCH_SIZE) {
+      const batch = validators.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.allSettled(
+        batch.map(async (v) => {
+          const delegatorAddr = validatorToDelegatorAddress(v.operatorAddress, chain.addressPrefix);
+          const account = await stargateClient.getAccount(delegatorAddr);
+          return { account, delegatorAddr };
+        }),
+      );
+
+      for (const result of batchResults) {
+        if (result.status !== "fulfilled") continue;
+        const { account, delegatorAddr } = result.value;
+        if (!account?.pubkey || !isMultisigThresholdPubkey(account.pubkey)) continue;
 
         const pubkeys = account.pubkey.value?.pubkeys ?? [];
         if (!pubkeyMatches(pubkey, pubkeys)) continue;
@@ -77,12 +103,13 @@ export async function getMultisigsFromChainWhereMember(
           createdAt: now,
           updatedAt: now,
         });
-      } catch {
-        // Skip individual failures (e.g. account not found)
       }
     }
 
     await stargateClient.disconnect();
+
+    discoveryCache.set(cacheKey, { data: results, expires: Date.now() + CACHE_TTL_MS });
+
     return results;
   } catch (e) {
     console.log(

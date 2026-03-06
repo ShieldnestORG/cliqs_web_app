@@ -27,10 +27,24 @@ export type FetchedMultisigs = {
   readonly created: readonly DbMultisig[];
   readonly belonged: readonly DbMultisig[];
 };
+
+/** Deduplicate concurrent identical multisig list requests from the same browser tab */
+const inFlightMultisigRequests = new Map<string, Promise<FetchedMultisigs>>();
+
 export const getDbUserMultisigs = async (
   chain: ChainInfo,
   options?: { signature?: StdSignature; address?: string; pubkey?: string },
-) => {
+): Promise<FetchedMultisigs> => {
+  // Signatures are one-time nonces; only deduplicate unsigned requests
+  const dedupeKey = options?.signature
+    ? null
+    : `multisigs:${chain.chainId}:${options?.address ?? ""}`;
+
+  if (dedupeKey) {
+    const existing = inFlightMultisigRequests.get(dedupeKey);
+    if (existing) return existing;
+  }
+
   const body: GetDbUserMultisigsBody = {
     ...(options?.signature && { signature: options.signature }),
     ...(options?.address && { address: options.address }),
@@ -38,12 +52,17 @@ export const getDbUserMultisigs = async (
     chain,
   };
 
-  const multisigs: FetchedMultisigs = await requestJson(
+  const promise = requestJson(
     `/api/chain/${chain.chainId}/multisig/list`,
     { body },
-  );
+  ) as Promise<FetchedMultisigs>;
 
-  return multisigs;
+  if (dedupeKey) {
+    inFlightMultisigRequests.set(dedupeKey, promise);
+    promise.finally(() => inFlightMultisigRequests.delete(dedupeKey));
+  }
+
+  return promise;
 };
 
 export type CreateDbMultisigBody = DbMultisigDraft;

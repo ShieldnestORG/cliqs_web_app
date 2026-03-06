@@ -26,15 +26,13 @@ interface RegistryPromises {
 
 const getChainsFromRegistry = async () => {
   const chains: ChainItems = { mainnets: new Map(), testnets: new Map(), localnets: new Map() };
-  const testnetsEnabled = isTestnetsEnabled();
 
-  // Only fetch testnets if enabled
+  // Always fetch both mainnets and testnets - testnets are needed for network switching
+  // in validator dashboard and dev tools, even if not shown in chain selector
   const [mainnetGhItems, testnetGhItems]: [
     readonly GithubChainRegistryItem[],
     readonly GithubChainRegistryItem[],
-  ] = testnetsEnabled
-    ? await Promise.all([requestGhJson(mainnetsUrl), requestGhJson(testnetsUrl)])
-    : [await requestGhJson(mainnetsUrl), []];
+  ] = await Promise.all([requestGhJson(mainnetsUrl), requestGhJson(testnetsUrl)]);
 
   const mainnetPromisesMap = new Map<string, RegistryPromises>();
 

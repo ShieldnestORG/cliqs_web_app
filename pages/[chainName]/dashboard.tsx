@@ -40,6 +40,7 @@ import { useWallet } from "@/context/WalletContext";
 import { getAssociatedValidators, ValidatorInfo } from "@/lib/validatorHelpers";
 import { getDbUserMultisigs } from "@/lib/api";
 import { getUserSettings } from "@/lib/settingsStorage";
+import { AddressDisplay } from "@/components/ui/address-display";
 
 const DashboardPage = () => {
   const { chain } = useChains();
@@ -181,11 +182,20 @@ const DashboardPage = () => {
                       Validator Associated:{" "}
                       <span className="text-green-accent">{item.validator.moniker}</span>
                     </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {item.address === walletInfo?.address
-                        ? "Detected via your connected wallet."
-                        : `Detected via CLIQ: ${item.address.slice(0, 8)}...${item.address.slice(-8)}`}
-                    </p>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      {item.address === walletInfo?.address ? (
+                        <span>Detected via your connected wallet.</span>
+                      ) : (
+                        <>
+                          <span>Detected via CLIQ:</span>
+                          <AddressDisplay
+                            address={item.address}
+                            copyLabel="CLIQ address"
+                            className="text-muted-foreground"
+                          />
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <Link href={`/${chain.registryName}/validator?address=${item.address}`}>

@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { EmergencyState } from "@/lib/emergency/types";
+import { AddressDisplay } from "@/components/ui/address-display";
 
 // ============================================================================
 // Types
@@ -164,14 +165,20 @@ export function EmergencyPanel({
           <AlertTitle>{state.isPaused ? "Operations Paused" : "Safe Mode Active"}</AlertTitle>
           <AlertDescription>
             {state.isPaused && (
-              <>
-                Operations were paused by {state.pausedBy?.slice(0, 12)}... at{" "}
-                {formatTimestamp(state.pausedAt)}
-                {state.pauseReason && <> - Reason: {state.pauseReason}</>}
+              <div className="flex flex-wrap items-center gap-x-1">
+                <span>Operations were paused by</span>
+                <AddressDisplay
+                  address={state.pausedBy || ""}
+                  copyLabel="paused by address"
+                  showCopy={false}
+                  className="inline-flex"
+                />
+                <span>at {formatTimestamp(state.pausedAt)}</span>
+                {state.pauseReason && <span>- Reason: {state.pauseReason}</span>}
                 {state.autoUnpauseAt && (
-                  <> - Auto-unpause at {formatTimestamp(state.autoUnpauseAt)}</>
+                  <span>- Auto-unpause at {formatTimestamp(state.autoUnpauseAt)}</span>
                 )}
-              </>
+              </div>
             )}
             {!state.isPaused && state.isSafeMode && (
               <>

@@ -41,7 +41,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CredentialBadge, CredentialStatusType } from "@/components/ui/credential-badge";
 import { Shield, Plus, Trash2, RefreshCw, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { CopyButton } from "@/components/ui/copy-button";
+import { AddressDisplay } from "@/components/ui/address-display";
 
 // ============================================================================
 // Types
@@ -260,11 +260,6 @@ export function CredentialManagerPanel({
     return "valid";
   };
 
-  const truncateAddress = (address: string) => {
-    if (!address) return "";
-    return `${address.slice(0, 10)}...${address.slice(-6)}`;
-  };
-
   // ============================================================================
   // Render
   // ============================================================================
@@ -347,16 +342,11 @@ export function CredentialManagerPanel({
         <div className="mb-4 space-y-2 rounded-lg bg-muted/50 p-4">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Class ID</span>
-            <div className="flex items-center gap-2">
-              <code className="rounded bg-background px-2 py-1 text-xs">
-                {truncateAddress(credentialClass.classId)}
-              </code>
-              <CopyButton
-                value={credentialClass.classId}
-                copyLabel="class ID"
-                className="h-6 w-6"
-              />
-            </div>
+            <AddressDisplay
+              address={credentialClass.classId}
+              copyLabel="class ID"
+              className="rounded bg-background px-2 py-1"
+            />
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Features</span>
@@ -394,14 +384,7 @@ export function CredentialManagerPanel({
               {credentials.map((cred) => (
                 <TableRow key={cred.id}>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <code className="text-xs">{truncateAddress(cred.ownerAddress)}</code>
-                      <CopyButton
-                        value={cred.ownerAddress}
-                        copyLabel="member address"
-                        className="h-5 w-5"
-                      />
-                    </div>
+                    <AddressDisplay address={cred.ownerAddress} copyLabel="member address" />
                   </TableCell>
                   <TableCell>
                     <span className="text-sm capitalize">{cred.role}</span>
@@ -500,12 +483,15 @@ export function CredentialManagerPanel({
             <div className="py-4">
               <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  You are about to revoke the credential for{" "}
-                  <code className="text-xs">
-                    {truncateAddress(selectedCredential.ownerAddress)}
-                  </code>
-                  . This action cannot be undone.
+                <AlertDescription className="flex flex-wrap items-center gap-x-1">
+                  <span>You are about to revoke the credential for</span>
+                  <AddressDisplay
+                    address={selectedCredential.ownerAddress}
+                    copyLabel="member address"
+                    showCopy={false}
+                    className="inline-flex"
+                  />
+                  <span>. This action cannot be undone.</span>
                 </AlertDescription>
               </Alert>
             </div>

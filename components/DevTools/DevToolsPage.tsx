@@ -51,6 +51,7 @@ import DevToolsQuery from "./DevToolsQuery";
 import DevToolsUploader from "./DevToolsUploader";
 import NetworkToggle from "./NetworkToggle";
 import { DevCommandType, DevNetwork, SelectedAccount } from "./types";
+import { AddressDisplay } from "@/components/ui/address-display";
 
 interface DevCommand {
   type: DevCommandType;
@@ -464,9 +465,11 @@ export default function DevTools() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold">Single Wallet</p>
-                        <p className="truncate font-mono text-xs text-muted-foreground">
-                          {walletInfo.address}
-                        </p>
+                        <AddressDisplay
+                          address={walletInfo.address}
+                          copyLabel="wallet address"
+                          className="text-muted-foreground"
+                        />
                       </div>
                     </div>
                   </button>
@@ -509,9 +512,11 @@ export default function DevTools() {
                           <p className="truncate text-sm font-semibold">
                             {multisig.name || "Unnamed Multisig"}
                           </p>
-                          <p className="truncate font-mono text-xs text-muted-foreground">
-                            {multisig.address}
-                          </p>
+                          <AddressDisplay
+                            address={multisig.address}
+                            copyLabel="multisig address"
+                            className="text-muted-foreground"
+                          />
                         </button>
                       ))}
                     </div>
@@ -531,9 +536,11 @@ export default function DevTools() {
                 Selected Identity
               </p>
               <p className="truncate text-sm font-bold">{selectedAccount.name}</p>
-              <p className="truncate font-mono text-xs text-muted-foreground">
-                {selectedAccount.address}
-              </p>
+              <AddressDisplay
+                address={selectedAccount.address}
+                copyLabel={`${selectedAccount.type} address`}
+                className="text-muted-foreground"
+              />
               <Badge
                 className="mt-2 capitalize"
                 variant={selectedAccount.type === "wallet" ? "default" : "outline"}

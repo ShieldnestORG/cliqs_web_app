@@ -21,6 +21,7 @@ import { useChains } from "@/context/ChainsContext";
 import { Users, Clock, ExternalLink } from "lucide-react";
 import { explorerLinkAccount } from "@/lib/displayHelpers";
 import { Button } from "@/components/ui/button";
+import { AddressDisplay } from "@/components/ui/address-display";
 
 interface ValidatorDelegatorsCardProps {
   data: ValidatorDashboardData;
@@ -92,9 +93,8 @@ export default function ValidatorDelegatorsCard({ data }: ValidatorDelegatorsCar
                         );
                         return (
                           <TableRow key={i}>
-                            <TableCell className="font-mono text-xs">
-                              {del.delegation?.delegatorAddress?.slice(0, 8)}...
-                              {del.delegation?.delegatorAddress?.slice(-8)}
+                            <TableCell>
+                              <AddressDisplay address={del.delegation?.delegatorAddress || ""} />
                             </TableCell>
                             <TableCell className="text-right font-mono">
                               {formatTokens(del.balance?.amount || "0")} {displayDenom}
@@ -158,9 +158,8 @@ export default function ValidatorDelegatorsCard({ data }: ValidatorDelegatorsCar
 
                           return (
                             <TableRow key={i}>
-                              <TableCell className="font-mono text-xs">
-                                {unb.delegatorAddress.slice(0, 6)}...
-                                {unb.delegatorAddress.slice(-6)}
+                              <TableCell>
+                                <AddressDisplay address={unb.delegatorAddress} />
                               </TableCell>
                               <TableCell className="text-right font-mono">
                                 {formatTokens(amount.toString())}

@@ -4,6 +4,7 @@ import GeneralNews from "@/components/GeneralNews";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { WalletProvider } from "@/context/WalletContext";
+import { PendingTransactionsProvider } from "@/context/PendingTransactionsContext";
 import type { AppProps } from "next/app";
 import { useRouter } from "next/router";
 import { ChainsProvider } from "../context/ChainsContext";
@@ -16,6 +17,7 @@ export default function MultisigApp({ Component, pageProps }: AppProps) {
   return (
     <ChainsProvider>
       <WalletProvider>
+        <PendingTransactionsProvider>
         <TooltipProvider>
           <div className="flex min-h-screen bg-background text-foreground">
             {!isLandingPage && <Sidebar />}
@@ -35,6 +37,7 @@ export default function MultisigApp({ Component, pageProps }: AppProps) {
           </div>
           <Toaster closeButton />
         </TooltipProvider>
+        </PendingTransactionsProvider>
       </WalletProvider>
     </ChainsProvider>
   );

@@ -1,4 +1,5 @@
 import { getBelongedMultisigs, getCreatedMultisigs } from "@/graphql/multisig";
+import type { DbMultisig } from "@/graphql/multisig";
 import { getNonce, incrementNonce } from "@/graphql/nonce";
 import { getMultisigsFromChainWhereMember } from "@/lib/chainMultisigDiscovery";
 import { GetDbUserMultisigsBody } from "@/lib/api";
@@ -8,6 +9,13 @@ import { verifyKeplrSignature } from "@/lib/keplr";
 import { decodeSignature, pubkeyToAddress } from "@cosmjs/amino";
 import { toBase64 } from "@cosmjs/encoding";
 import type { NextApiRequest, NextApiResponse } from "next";
+
+/**
+ * Maximum time to wait for on-chain multisig discovery before returning
+ * DB-only results. Chain RPC calls can be slow on public endpoints; we
+ * don't want them to block the entire response past the client timeout.
+ */
+const CHAIN_DISCOVERY_TIMEOUT_MS = 8000;
 
 const endpointErrMsg = "Failed to list multisigs";
 
@@ -78,9 +86,21 @@ async function apiListMultisigs(req: NextApiRequest, res: NextApiResponse) {
       throw new Error("Either signature or (address and pubkey) must be provided");
     }
 
+    // Wrap chain discovery in a timeout so a slow RPC never causes the whole
+    // request to exceed the client's 30-second hard limit.
+    const chainDiscoveryWithTimeout = Promise.race([
+      getMultisigsFromChainWhereMember(body.chain, address, pubkey),
+      new Promise<DbMultisig[]>((resolve) =>
+        setTimeout(() => {
+          console.log("[list] Chain discovery timed out — returning DB results only");
+          resolve([]);
+        }, CHAIN_DISCOVERY_TIMEOUT_MS),
+      ),
+    ]);
+
     const [dbResult, chainResult] = await Promise.allSettled([
       Promise.all([getCreatedMultisigs(chainId, address), getBelongedMultisigs(chainId, pubkey)]),
-      getMultisigsFromChainWhereMember(body.chain, address, pubkey),
+      chainDiscoveryWithTimeout,
     ]);
 
     const created = dbResult.status === "fulfilled" ? dbResult.value[0] : [];

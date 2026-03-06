@@ -25,6 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AddressDisplay } from "@/components/ui/address-display";
 
 // ============================================================================
 // Types
@@ -180,8 +181,8 @@ export default function MemberSnapshotView({
 
               return (
                 <TableRow key={member.addr} className={wasRemoved ? "opacity-50" : ""}>
-                  <TableCell className="font-mono text-sm">
-                    {member.addr.slice(0, 12)}...{member.addr.slice(-8)}
+                  <TableCell>
+                    <AddressDisplay address={member.addr} copyLabel="member address" />
                   </TableCell>
                   <TableCell className="text-right">
                     {member.weight}
