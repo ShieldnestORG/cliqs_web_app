@@ -43,6 +43,10 @@ if (!DATABASE_URL) {
 const pool = new Pool({
   connectionString: DATABASE_URL,
   max: Number.parseInt(process.env.MULTISIG_INDEXER_PG_POOL_SIZE || "10", 10),
+  connectionTimeoutMillis: Number.parseInt(
+    process.env.MULTISIG_INDEXER_PG_CONNECT_TIMEOUT_MS || "10000",
+    10,
+  ),
   ssl:
     process.env.MULTISIG_INDEXER_PG_SSL === "false"
       ? false
@@ -55,6 +59,8 @@ const eventClients = new Set();
 const chainConfigCache = new Map();
 let chainDirectoryCache = { expiresAt: 0, entries: [] };
 let backgroundRefreshTimer = null;
+let schemaReady = false;
+let schemaError = null;
 
 const SCHEMA_SQL = `
 CREATE SCHEMA IF NOT EXISTS multisig_indexer;
@@ -841,6 +847,17 @@ function startBackgroundRefreshWorker() {
 
 async function handleHealth(_req, res) {
   try {
+    if (!schemaReady) {
+      json(res, 200, {
+        ok: false,
+        service: "multisig-indexer",
+        database: "initializing",
+        error: schemaError,
+        time: new Date().toISOString(),
+      });
+      return;
+    }
+
     await pool.query("SELECT 1");
     json(res, 200, {
       ok: true,
@@ -1146,12 +1163,26 @@ async function route(req, res) {
 const server = createServer(route);
 
 async function start() {
-  await ensureSchema();
-  startBackgroundRefreshWorker();
-
   server.listen(PORT, HOST, () => {
     console.log(`[multisig-indexer] listening on http://${HOST}:${PORT}`);
   });
+
+  const initialize = async () => {
+    try {
+      await ensureSchema();
+      schemaReady = true;
+      schemaError = null;
+      console.log("[multisig-indexer] database schema ready");
+      startBackgroundRefreshWorker();
+    } catch (error) {
+      schemaReady = false;
+      schemaError = sanitizeError(error);
+      console.error("[multisig-indexer] schema initialization failed:", schemaError);
+      setTimeout(initialize, 10000);
+    }
+  };
+
+  void initialize();
 }
 
 process.on("SIGINT", async () => {
