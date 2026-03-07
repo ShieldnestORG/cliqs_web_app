@@ -24,7 +24,7 @@ import Button from "../../../../components/inputs/Button";
 import Page from "../../../../components/layout/Page";
 import { useChains } from "../../../../context/ChainsContext";
 import { ensureChainMultisigInDb, getHostedMultisig, isAccount } from "../../../../lib/multisigHelpers";
-import { dbTxFromJson, dbTxFromJson, parseDbTxFromJson } from "../../../../lib/txMsgHelpers";
+import { dbTxFromJson, parseDbTxFromJson } from "../../../../lib/txMsgHelpers";
 import { printableCoins } from "../../../../lib/displayHelpers";
 import {
   BentoGrid,
@@ -253,7 +253,7 @@ const TransactionPage = ({
         if (!s.address || typeof s.address !== "string") {
           throw new Error(
             "A stored signature has a missing or invalid signer address. " +
-              "The transaction data may be corrupt. Please cancel and create a new one.",
+            "The transaction data may be corrupt. Please cancel and create a new one.",
           );
         }
       }
@@ -267,7 +267,7 @@ const TransactionPage = ({
       if (!allSameBodyBytes) {
         throw new Error(
           "Signatures were produced for different transaction bodies — the transaction may " +
-            "have been modified after some members signed. Please cancel and create a new one.",
+          "have been modified after some members signed. Please cancel and create a new one.",
         );
       }
 
