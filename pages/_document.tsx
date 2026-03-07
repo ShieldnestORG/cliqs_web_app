@@ -71,7 +71,6 @@ export default function Document() {
     <Html lang="en">
       <Head>
         {/* Error overlay suppressor – must run before all other scripts */}
-        {/* eslint-disable-next-line react/no-danger */}
         <script dangerouslySetInnerHTML={{ __html: OVERLAY_SUPPRESSOR_SCRIPT }} />
 
         {/* UI4 Typography - Google Fonts */}

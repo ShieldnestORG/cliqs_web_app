@@ -101,8 +101,9 @@ export const WalletProvider = ({ children }: WalletProviderProps) => {
 
       setVerificationSignature(signature);
       return signature;
-    } catch (e: any) {
-      if (e?.isByodbLocked || e?.message?.includes("Database Locked")) {
+    } catch (e: unknown) {
+      const err = e as { isByodbLocked?: boolean; message?: string };
+      if (err?.isByodbLocked || err?.message?.includes("Database Locked")) {
         console.warn("Verification skipped: Database is locked.");
         toastError({
           title: "Database Locked",

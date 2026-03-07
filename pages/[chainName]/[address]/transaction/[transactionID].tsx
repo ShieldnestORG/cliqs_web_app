@@ -24,7 +24,7 @@ import Button from "../../../../components/inputs/Button";
 import Page from "../../../../components/layout/Page";
 import { useChains } from "../../../../context/ChainsContext";
 import { ensureChainMultisigInDb, getHostedMultisig, isAccount } from "../../../../lib/multisigHelpers";
-import { dbTxFromJson, parseDbTxFromJson } from "../../../../lib/txMsgHelpers";
+import { dbTxFromJson } from "../../../../lib/txMsgHelpers";
 import { printableCoins } from "../../../../lib/displayHelpers";
 import {
   BentoGrid,

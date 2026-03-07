@@ -13,6 +13,14 @@ import { toast } from "sonner";
 import { ChainsProvider } from "../context/ChainsContext";
 import "@/styles/globals.css";
 
+// Extend the Window interface for the error bridge injected by _document.tsx
+declare global {
+  interface Window {
+    __appToastError: ((msg: string) => void) | null;
+    __pendingErrorToasts: string[];
+  }
+}
+
 export default function MultisigApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const isLandingPage = router.asPath === "/";
@@ -30,15 +38,15 @@ export default function MultisigApp({ Component, pageProps }: AppProps) {
     };
 
     // Register the bridge so the inline script in _document.tsx can call it
-    (window as any).__appToastError = showToast;
+    window.__appToastError = showToast;
 
     // Flush any errors that arrived before React mounted
-    const pending: string[] = (window as any).__pendingErrorToasts ?? [];
+    const pending: string[] = window.__pendingErrorToasts ?? [];
     pending.forEach(showToast);
-    (window as any).__pendingErrorToasts = [];
+    window.__pendingErrorToasts = [];
 
     return () => {
-      (window as any).__appToastError = null;
+      window.__appToastError = null;
     };
   }, []);
 

@@ -103,22 +103,22 @@ export async function saveCredential(
   material?: string | Uint8Array,
 ): Promise<ByodbMeta> {
   // Strip trailing newlines/whitespace common when pasting from MongoDB Atlas
-  connectionString = connectionString.replace(/[\n\r]/g, "").trim();
+  const normalizedUri = connectionString.replace(/[\n\r]/g, "").trim();
 
   let encrypted: EncryptedCredential;
 
   if (level === 0) {
-    encrypted = encryptLevel0(connectionString);
+    encrypted = encryptLevel0(normalizedUri);
   } else if (level === 1) {
     if (typeof material !== "string") {
       throw new Error("Passphrase required for Level 1 encryption");
     }
-    encrypted = await encryptLevel1(connectionString, material);
+    encrypted = await encryptLevel1(normalizedUri, material);
   } else if (level === 2) {
     if (!(material instanceof Uint8Array)) {
       throw new Error("Wallet signature required for Level 2 encryption");
     }
-    encrypted = await encryptLevel2(connectionString, material);
+    encrypted = await encryptLevel2(normalizedUri, material);
   } else {
     throw new Error(`Invalid security level: ${level}`);
   }
@@ -127,15 +127,15 @@ export async function saveCredential(
   localStorage.setItem(STORAGE_KEY, encrypted.encoded);
 
   // Keep plaintext in memory for immediate use
-  _decryptedUri = connectionString;
+  _decryptedUri = normalizedUri;
 
   // Store metadata (non-sensitive)
-  const fingerprint = await fingerprintConnectionString(connectionString);
+  const fingerprint = await fingerprintConnectionString(normalizedUri);
   const meta: ByodbMeta = {
     enabled: true,
     securityLevel: level,
     fingerprint,
-    maskedUri: maskConnectionString(connectionString),
+    maskedUri: maskConnectionString(normalizedUri),
     savedAt: new Date().toISOString(),
     lastTestedAt: null,
     provisioned: false,

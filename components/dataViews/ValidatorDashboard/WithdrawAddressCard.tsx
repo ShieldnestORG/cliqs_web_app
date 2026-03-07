@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { GasPrice, SigningStargateClient } from "@cosmjs/stargate";
 import { MsgTypeUrls } from "@/types/txMsg";
-import { checkAddress, truncateAddress } from "@/lib/displayHelpers";
+import { checkAddress } from "@/lib/displayHelpers";
 import { useRouter } from "next/router";
 import { AddressDisplay } from "@/components/ui/address-display";
 

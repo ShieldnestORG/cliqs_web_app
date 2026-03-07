@@ -90,8 +90,7 @@ export const requestJson = async (
         // Not JSON, use plain text
       }
 
-      const error = new Error(errorMessage);
-      (error as any).isByodbLocked = isByodbLocked;
+      const error = Object.assign(new Error(errorMessage), { isByodbLocked });
       return Promise.reject(error);
     }
   } catch (error) {
