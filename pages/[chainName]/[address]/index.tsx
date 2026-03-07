@@ -111,7 +111,7 @@ export default function CliqDashboardPage() {
         });
       }
     })();
-  }, [chain.chainId, chain.nodeAddress, chain.addressPrefix, cliqAddress]);
+  }, [chain, cliqAddress]);
 
   // For pubkey multisigs, use the hosted multisig's explorer link.
   // For contract multisigs, construct from chain's explorer config.
@@ -333,9 +333,8 @@ export default function CliqDashboardPage() {
             value={hostedMultisig.hosted === "db+chain" ? "Active" : "Pending"}
             icon={
               <div
-                className={`h-3 w-3 rounded-full ${
-                  hostedMultisig.hosted === "db+chain" ? "bg-green-accent" : "bg-yellow-500"
-                }`}
+                className={`h-3 w-3 rounded-full ${hostedMultisig.hosted === "db+chain" ? "bg-green-accent" : "bg-yellow-500"
+                  }`}
               />
             }
           />
@@ -679,9 +678,8 @@ export default function CliqDashboardPage() {
                   </p>
                   <div className="flex items-center gap-2">
                     <span
-                      className={`h-2 w-2 rounded-full ${
-                        hostedMultisig.hosted === "db+chain" ? "bg-green-accent" : "bg-yellow-500"
-                      }`}
+                      className={`h-2 w-2 rounded-full ${hostedMultisig.hosted === "db+chain" ? "bg-green-accent" : "bg-yellow-500"
+                        }`}
                     />
                     <span className="text-sm">
                       {hostedMultisig.hosted === "db+chain" ? "Active on chain" : "Pending funding"}
