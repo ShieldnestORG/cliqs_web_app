@@ -9,10 +9,33 @@
 
 import { createPauseController, PauseController } from "@/lib/emergency/pause-controller";
 
+// Mock the localDb module with unshared state
+jest.mock("@/lib/localDb", () => {
+  let mockDb: Record<string, any> = {};
+
+  return {
+    getEmergencyState: jest.fn((multisigAddress: string, chainId: string) => {
+      return mockDb[`${multisigAddress}-${chainId}`] || null;
+    }),
+    updateEmergencyState: jest.fn((multisigAddress: string, chainId: string, updates: any) => {
+      const key = `${multisigAddress}-${chainId}`;
+      mockDb[key] = { ...mockDb[key], ...updates };
+      return mockDb[key];
+    }),
+    recordEmergencyEvent: jest.fn(),
+    __resetMockDb: () => {
+      mockDb = {};
+    },
+  };
+});
+
+import * as localDb from "@/lib/localDb";
+
 describe("Emergency Pause Controller", () => {
   let controller: PauseController;
 
   beforeEach(() => {
+    (localDb as any).__resetMockDb();
     controller = createPauseController();
   });
 

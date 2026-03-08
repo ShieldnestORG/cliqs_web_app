@@ -453,10 +453,10 @@ describe("SafeModeController", () => {
 
   describe("calculateElevatedThreshold", () => {
     it("calculates based on severity", () => {
-      const low = controller.calculateElevatedThreshold(2, 5, "low");
-      const medium = controller.calculateElevatedThreshold(2, 5, "medium");
-      const high = controller.calculateElevatedThreshold(2, 5, "high");
-      const critical = controller.calculateElevatedThreshold(2, 5, "critical");
+      const low = controller.calculateElevatedThreshold(2, 10, "low");
+      const medium = controller.calculateElevatedThreshold(2, 10, "medium");
+      const high = controller.calculateElevatedThreshold(2, 10, "high");
+      const critical = controller.calculateElevatedThreshold(2, 10, "critical");
 
       expect(low).toBeLessThan(medium);
       expect(medium).toBeLessThan(high);

@@ -99,7 +99,7 @@ describe("API: POST /api/transaction/[id] - Transaction Actions: P0", () => {
 
   it("should return 405 for non-POST methods", async () => {
     const { req, res } = createMocks({
-      method: "GET",
+      method: "PUT",
       query: { transactionID: "tx-id-123" },
     });
 

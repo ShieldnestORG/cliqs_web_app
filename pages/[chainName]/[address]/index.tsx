@@ -276,7 +276,7 @@ export default function CliqDashboardPage() {
             <div className="mb-3 flex items-center gap-3">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-green-accent/30 bg-gradient-to-br from-green-accent/20 to-green-accent/10">
                 <Users className="h-7 w-7 text-green-accent" />
-              </div>
+              </div>trad
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="font-heading text-2xl font-bold tracking-tight lg:text-3xl">

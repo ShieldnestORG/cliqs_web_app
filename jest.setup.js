@@ -172,21 +172,25 @@ jest.mock("@ledgerhq/hw-transport-webusb", () => ({
 }));
 
 // Mock @cosmjs/stargate
-jest.mock("@cosmjs/stargate", () => ({
-  StargateClient: {
-    connect: jest.fn().mockResolvedValue({
-      getAccount: jest.fn().mockResolvedValue({
-        address: "cosmos1test",
-        accountNumber: 1,
-        sequence: 0,
+jest.mock("@cosmjs/stargate", () => {
+  const actual = jest.requireActual("@cosmjs/stargate");
+  return {
+    ...actual,
+    StargateClient: {
+      connect: jest.fn().mockResolvedValue({
+        getAccount: jest.fn().mockResolvedValue({
+          address: "cosmos1test",
+          accountNumber: 1,
+          sequence: 0,
+        }),
+        getBalance: jest.fn().mockResolvedValue({ denom: "uatom", amount: "1000000" }),
+        getAllBalances: jest.fn().mockResolvedValue([]),
+        disconnect: jest.fn(),
       }),
-      getBalance: jest.fn().mockResolvedValue({ denom: "uatom", amount: "1000000" }),
-      getAllBalances: jest.fn().mockResolvedValue([]),
-      disconnect: jest.fn(),
-    }),
-  },
-  makeMultisignedTxBytes: jest.fn(),
-}));
+    },
+    makeMultisignedTxBytes: jest.fn(),
+  };
+});
 
 // Mock @cosmjs/amino
 jest.mock("@cosmjs/amino", () => ({
