@@ -389,6 +389,7 @@ export default function ValidatorDashboard() {
   }, [
     shouldFetchAssociated,
     loadingState,
+    normalizedEffectiveAddress,
     walletInfo?.address,
     walletInfo?.pubKey,
     effectiveAddress,

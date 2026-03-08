@@ -86,6 +86,8 @@ export interface PauseResult {
 export interface UnpauseInput {
   /** Address initiating the unpause */
   readonly actor: string;
+  /** Reason for unpause */
+  readonly reason?: string;
   /** Verification that actor has required authority */
   readonly skipThresholdCheck?: boolean;
 }

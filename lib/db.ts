@@ -113,7 +113,7 @@ async function requireMongoOrLocalDb(): Promise<"mongo" | "local"> {
     if (!available) {
       throw new Error(
         "MongoDB is configured (MONGODB_URI) but connection failed. " +
-          "Verify the connection string, network access, and that your MongoDB Atlas IP allowlist includes Vercel (or use 0.0.0.0/0 for serverless).",
+        "Verify the connection string, network access, and that your MongoDB Atlas IP allowlist includes Vercel (or use 0.0.0.0/0 for serverless).",
       );
     }
     return "mongo";

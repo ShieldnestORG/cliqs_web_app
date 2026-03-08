@@ -10,7 +10,7 @@
 // @ts-ignore - node-mocks-http types may not be available
 import { createMocks } from "node-mocks-http";
 import apiTransactionActions from "@/pages/api/transaction/[transactionID]/index";
-import { cancelTransaction, updateTxHash } from "@/graphql/transaction";
+import { cancelTransaction } from "@/graphql/transaction";
 import { parseResponseData } from "../helpers";
 
 // Mock GraphQL functions
@@ -20,7 +20,7 @@ jest.mock("@/graphql/transaction", () => ({
   updateTxHash: jest.fn(),
 }));
 
-import { getTransaction, cancelTransaction, updateTxHash } from "@/graphql/transaction";
+import { getTransaction, updateTxHash } from "@/graphql/transaction";
 
 const mockGetTransaction = getTransaction as jest.MockedFunction<typeof getTransaction>;
 const mockCancelTransaction = cancelTransaction as jest.MockedFunction<typeof cancelTransaction>;
@@ -57,7 +57,7 @@ describe("API: POST /api/transaction/[id] - Transaction Actions: P0", () => {
 
   it("should cancel transaction successfully", async () => {
     const txId = "tx-id-123";
-    mockCancelTransaction.mockResolvedValue(true);
+    mockCancelTransaction.mockResolvedValue('true');
 
     const { req, res } = createMocks({
       method: "POST",
@@ -99,7 +99,7 @@ describe("API: POST /api/transaction/[id] - Transaction Actions: P0", () => {
 
   it("should return 405 for non-POST methods", async () => {
     const { req, res } = createMocks({
-      method: "GET",
+      method: "PUT",
       query: { transactionID: "tx-id-123" },
     });
 

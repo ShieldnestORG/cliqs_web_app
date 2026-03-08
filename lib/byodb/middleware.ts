@@ -93,6 +93,14 @@ function validateMongoUri(uri: string): boolean {
  */
 export function withByodbMiddleware(handler: NextApiHandler): NextApiHandler {
   return async (req: NextApiRequest, res: NextApiResponse) => {
+    if (req.headers["x-byodb-locked"] === "true") {
+      res.status(403).json({
+        error: "Database Locked",
+        message: "Your custom database is currently locked. Please go to Settings to unlock it before interacting with your CLIQs.",
+      });
+      return;
+    }
+
     const rawUri = req.headers[HEADER_NAME];
     const uri = Array.isArray(rawUri) ? rawUri[0] : rawUri;
 
