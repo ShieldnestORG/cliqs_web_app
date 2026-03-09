@@ -111,7 +111,7 @@ export default function CliqDashboardPage() {
         });
       }
     })();
-  }, [chain.chainId, chain.nodeAddress, chain.addressPrefix, cliqAddress]);
+  }, [chain, cliqAddress]);
 
   // For pubkey multisigs, use the hosted multisig's explorer link.
   // For contract multisigs, construct from chain's explorer config.
@@ -276,7 +276,7 @@ export default function CliqDashboardPage() {
             <div className="mb-3 flex items-center gap-3">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-green-accent/30 bg-gradient-to-br from-green-accent/20 to-green-accent/10">
                 <Users className="h-7 w-7 text-green-accent" />
-              </div>
+              </div>trad
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="font-heading text-2xl font-bold tracking-tight lg:text-3xl">
@@ -333,9 +333,8 @@ export default function CliqDashboardPage() {
             value={hostedMultisig.hosted === "db+chain" ? "Active" : "Pending"}
             icon={
               <div
-                className={`h-3 w-3 rounded-full ${
-                  hostedMultisig.hosted === "db+chain" ? "bg-green-accent" : "bg-yellow-500"
-                }`}
+                className={`h-3 w-3 rounded-full ${hostedMultisig.hosted === "db+chain" ? "bg-green-accent" : "bg-yellow-500"
+                  }`}
               />
             }
           />
@@ -679,9 +678,8 @@ export default function CliqDashboardPage() {
                   </p>
                   <div className="flex items-center gap-2">
                     <span
-                      className={`h-2 w-2 rounded-full ${
-                        hostedMultisig.hosted === "db+chain" ? "bg-green-accent" : "bg-yellow-500"
-                      }`}
+                      className={`h-2 w-2 rounded-full ${hostedMultisig.hosted === "db+chain" ? "bg-green-accent" : "bg-yellow-500"
+                        }`}
                     />
                     <span className="text-sm">
                       {hostedMultisig.hosted === "db+chain" ? "Active on chain" : "Pending funding"}

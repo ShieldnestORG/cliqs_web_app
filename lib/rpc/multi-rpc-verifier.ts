@@ -126,24 +126,81 @@ export class MultiRpcVerifier {
 
     // Step 1: Broadcast to primary
     let broadcastResponse: DeliverTxResponse;
+    const client = await this.getClient(primaryEndpoint.url);
+
     try {
-      const client = await this.getClient(primaryEndpoint.url);
-      console.log(`📡 Broadcasting via primary: ${primaryEndpoint.url}`);
-      broadcastResponse = await client.broadcastTx(txBytes);
-      console.log(`✅ Broadcast response:`, {
-        code: broadcastResponse.code,
-        height: broadcastResponse.height,
-        txHash: broadcastResponse.transactionHash,
-      });
+      // First, check if somehow this transaction is already confirmed
+      const existingTx = await client.getTx(txHash);
+      if (existingTx) {
+        console.log(`✅ Transaction found already confirmed on chain!`);
+        broadcastResponse = {
+          code: existingTx.code,
+          height: existingTx.height,
+          txIndex: existingTx.txIndex,
+          transactionHash: existingTx.hash,
+          gasUsed: BigInt(existingTx.gasUsed),
+          gasWanted: BigInt(existingTx.gasWanted),
+          rawLog: existingTx.rawLog || "Recovered existing tx",
+          events: existingTx.events,
+          msgResponses: [],
+        };
+      } else {
+        console.log(`📡 Broadcasting via primary: ${primaryEndpoint.url}`);
+        broadcastResponse = await client.broadcastTx(txBytes);
+        console.log(`✅ Broadcast response:`, {
+          code: broadcastResponse.code,
+          height: broadcastResponse.height,
+          txHash: broadcastResponse.transactionHash,
+        });
+      }
     } catch (error) {
       console.error(`❌ Broadcast failed:`, error);
-      return {
-        txHash,
-        success: false,
-        error: error instanceof Error ? error.message : "Broadcast failed",
-        broadcastEndpoint: primaryEndpoint.url,
-        verifications: [],
-      };
+      const errorMsg = error instanceof Error ? error.message : String(error);
+
+      // If the node rejects it because it's already in the mempool cache,
+      // it means our transaction is valid and waiting to be included in a block.
+      // We should wait for it to be confirmed rather than crashing.
+      if (
+        errorMsg.includes("tx already exists in cache") ||
+        errorMsg.includes("transaction already exists")
+      ) {
+        console.log(`⏳ Transaction is tracking in the mempool cache. Waiting for confirmation...`);
+        const confirmResult = await this.waitForConfirmation(txHash, 15, 2000);
+
+        if (confirmResult.confirmed) {
+          console.log(`✅ Transaction finally confirmed at height ${confirmResult.height}`);
+
+          // Refetch it to get the full DeliverTxResponse equivalent
+          const finalTx = await client.getTx(txHash);
+          broadcastResponse = {
+            code: finalTx?.code || 0,
+            height: confirmResult.height || 0,
+            txIndex: finalTx?.txIndex || 0,
+            transactionHash: txHash,
+            gasUsed: BigInt(finalTx?.gasUsed || 0),
+            gasWanted: BigInt(finalTx?.gasWanted || 0),
+            rawLog: finalTx?.rawLog || "Recovered from cache after waiting",
+            events: finalTx?.events || [],
+            msgResponses: [],
+          };
+        } else {
+          return {
+            txHash,
+            success: false,
+            error: "Transaction was stuck in mempool cache but never confirmed in a block",
+            broadcastEndpoint: primaryEndpoint.url,
+            verifications: [],
+          };
+        }
+      } else {
+        return {
+          txHash,
+          success: false,
+          error: errorMsg,
+          broadcastEndpoint: primaryEndpoint.url,
+          verifications: [],
+        };
+      }
     }
 
     // Check if broadcast was rejected

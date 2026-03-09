@@ -343,7 +343,12 @@ export class SafeModeController {
         increase = Math.ceil(totalWeight * 0.5); // Require 50% more
         break;
       case "high":
-        increase = Math.ceil(totalWeight * 0.25); // Require 25% more
+        // Use 33% to ensure high > medium (which uses defaultThresholdIncrease + 1 = 2)
+        // ceil(5 * 0.33) = 2, but we need at least defaultThresholdIncrease + 2 = 3
+        increase = Math.max(
+          this.config.defaultThresholdIncrease + 2,
+          Math.ceil(totalWeight * 0.33),
+        );
         break;
       case "medium":
         increase = this.config.defaultThresholdIncrease + 1;

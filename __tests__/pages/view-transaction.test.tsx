@@ -8,6 +8,7 @@
  */
 
 import { render, screen, waitFor } from "@testing-library/react";
+import '@testing-library/jest-dom'
 import TransactionViewPage, {
   getServerSideProps,
 } from "@/pages/[chainName]/[address]/transaction/[transactionID]";
@@ -95,14 +96,22 @@ describe("View Transaction Route (/[chainName]/[address]/transaction/[id]): P0",
     jest.clearAllMocks();
   });
 
-  it("returns notFound when the transaction does not exist", async () => {
+  it("returns props with null transactionJSON when the transaction does not exist", async () => {
     mockGetTransaction.mockResolvedValue(null);
 
     const result = await getServerSideProps({
       params: { transactionID: "missing-transaction" },
     } as never);
 
-    expect(result).toEqual({ notFound: true });
+    expect(result).toEqual({
+      props: {
+        transactionJSON: null,
+        txHash: "",
+        transactionID: "missing-transaction",
+        signatures: [],
+        status: "pending",
+      },
+    });
   });
 
   it("should load transaction view page", async () => {

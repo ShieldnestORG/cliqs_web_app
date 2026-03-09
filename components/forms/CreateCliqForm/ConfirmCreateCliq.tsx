@@ -13,11 +13,11 @@ import {
   DialogClose,
   DialogContent,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { useChains } from "@/context/ChainsContext";
 import { ReloadIcon } from "@radix-ui/react-icons";
 import { Shield, Users, Check, ShieldPlus } from "lucide-react";
+import { useState } from "react";
 import { UseFormReturn, useFormState } from "react-hook-form";
 import { CreateCliqFormValues } from "./formSchema";
 
@@ -27,31 +27,44 @@ interface ConfirmCreateCliqProps {
 
 export default function ConfirmCreateCliq({ createCliqForm }: ConfirmCreateCliqProps) {
   const { chain } = useChains();
-  const { isValid, isSubmitting, isSubmitted } = useFormState(createCliqForm);
-  const { name, description, members, threshold } = createCliqForm.getValues();
+  const { isSubmitting, isSubmitted } = useFormState(createCliqForm);
+  const [open, setOpen] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
 
+  const { name, description, members, threshold } = createCliqForm.getValues();
   const loading = isSubmitting || isSubmitted;
   const filteredMembers = members.filter(({ member }) => member !== "");
 
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button
-          variant="action"
-          size="action"
-          className="gap-2"
-          onClick={(e) => {
-            createCliqForm.trigger();
+  const handleOpenDialog = async () => {
+    setIsValidating(true);
+    try {
+      const valid = await createCliqForm.trigger();
+      if (valid) {
+        setOpen(true);
+      }
+    } finally {
+      setIsValidating(false);
+    }
+  };
 
-            if (!isValid) {
-              e.preventDefault();
-            }
-          }}
-        >
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <Button
+        type="button"
+        variant="action"
+        size="action"
+        className="gap-2"
+        onClick={handleOpenDialog}
+        disabled={isValidating || loading}
+      >
+        {isValidating ? (
+          <ReloadIcon className="h-4 w-4 animate-spin" />
+        ) : (
           <ShieldPlus className="h-4 w-4" />
-          Form Your CLIQ
-        </Button>
-      </DialogTrigger>
+        )}
+        {isValidating ? "Validating..." : "Form Your CLIQ"}
+      </Button>
+
       <DialogContent className="max-w-lg overflow-y-auto">
         <DialogTitle className="flex items-center gap-2 font-heading text-xl">
           <Shield className="h-5 w-5 text-foreground" />

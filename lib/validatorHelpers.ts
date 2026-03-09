@@ -199,7 +199,8 @@ export async function getValidatorInfo(
     if (errorStr.includes("not found") || errorStr.includes("NotFound")) {
       return null;
     }
-    console.error("Failed to get validator info:", e);
+    // Log as a warning string, not a raw Error object, to prevent Next.js from spawning an error overlay.
+    console.warn(`Failed to get validator info: ${errorStr}`);
     return null;
   }
 }
@@ -609,17 +610,17 @@ function convertV1ToV1Beta1Proposal(v1: GovV1Proposal): Proposal {
     status: statusMap[v1.status] ?? 2,
     finalTallyResult: v1.final_tally_result
       ? {
-          yes: v1.final_tally_result.yes_count || "0",
-          abstain: v1.final_tally_result.abstain_count || "0",
-          no: v1.final_tally_result.no_count || "0",
-          noWithVeto: v1.final_tally_result.no_with_veto_count || "0",
-        }
+        yes: v1.final_tally_result.yes_count || "0",
+        abstain: v1.final_tally_result.abstain_count || "0",
+        no: v1.final_tally_result.no_count || "0",
+        noWithVeto: v1.final_tally_result.no_with_veto_count || "0",
+      }
       : {
-          yes: "0",
-          abstain: "0",
-          no: "0",
-          noWithVeto: "0",
-        },
+        yes: "0",
+        abstain: "0",
+        no: "0",
+        noWithVeto: "0",
+      },
     submitTime: v1.submit_time
       ? { seconds: BigInt(Math.floor(new Date(v1.submit_time).getTime() / 1000)), nanos: 0 }
       : { seconds: 0n, nanos: 0 },
