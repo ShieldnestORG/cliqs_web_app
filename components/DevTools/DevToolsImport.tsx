@@ -111,6 +111,7 @@ export default function DevToolsImport({
   const [importing, setImporting] = useState(false);
   const [fetchingSequence, setFetchingSequence] = useState(false);
   const lastAutofilledAccountKey = useRef<string | null>(null);
+  const autofillInFlightKey = useRef<string | null>(null);
 
   const resolveChainBySelectedAddressPrefix = (): ChainInfo | null => {
     if (selectedAccount.address.startsWith(chain.addressPrefix)) {
@@ -179,59 +180,74 @@ export default function DevToolsImport({
     return ensureProtocol(nodeAddress);
   };
 
+  const accountNotFoundMessage =
+    "Selected account was not found on chain yet. Fund/init this account first, or provide account number and sequence manually.";
+
+  const writeAccountState = (targetChain: ChainInfo, accountNumber: number, sequence: number) => {
+    setAccountNumberInput(String(accountNumber));
+    setSequenceInput(String(sequence));
+
+    setJsonInput((current) => {
+      if (!current.trim()) {
+        return JSON.stringify(
+          makeImportTemplate(targetChain.chainId, accountNumber, sequence),
+          null,
+          2,
+        );
+      }
+
+      try {
+        const parsed = JSON.parse(current) as Record<string, unknown>;
+        if ("msgs" in parsed && "fee" in parsed) {
+          return JSON.stringify(
+            {
+              ...parsed,
+              accountNumber,
+              sequence,
+              chainId: targetChain.chainId,
+            },
+            null,
+            2,
+          );
+        }
+      } catch {
+        // Raw tx envelopes keep original shape; metadata fields are the source of truth.
+      }
+
+      return current;
+    });
+
+    setValidationError(null);
+  };
+
+  const resolveAccountOnChain = async (resolvedChain?: ChainInfo): Promise<{
+    targetChain: ChainInfo;
+    account: Awaited<ReturnType<StargateClient["getAccount"]>>;
+  }> => {
+    const targetChain = resolvedChain ?? resolveChainForSelectedAccount();
+    const client = await StargateClient.connect(await getRpcEndpoint(targetChain));
+    const account = await client.getAccount(selectedAccount.address);
+    return { targetChain, account };
+  };
+
   const fetchCurrentSequence = async (options?: { silent?: boolean }) => {
     const silent = options?.silent ?? false;
     setFetchingSequence(true);
     try {
-      const targetChain = resolveChainForSelectedAccount();
-      const client = await StargateClient.connect(await getRpcEndpoint(targetChain));
-      const account = await client.getAccount(selectedAccount.address);
+      const { targetChain, account } = await resolveAccountOnChain();
       if (!account) {
+        lastAutofilledAccountKey.current = null;
+        setValidationError(accountNotFoundMessage);
         if (!silent) {
           toastError({
-            description:
-              "Account not found on chain yet. You can still import if your JSON already has valid accountNumber and sequence.",
+            description: accountNotFoundMessage,
           });
         }
         return;
       }
 
       lastAutofilledAccountKey.current = `${targetChain.chainId}:${selectedAccount.address}`;
-      setAccountNumberInput(String(account.accountNumber));
-      setSequenceInput(String(account.sequence));
-
-      // If we already have canonical JSON, patch accountNumber and sequence in the editor too
-      if (jsonInput.trim()) {
-        try {
-          const parsed = JSON.parse(jsonInput) as Record<string, unknown>;
-          if ("msgs" in parsed && "fee" in parsed) {
-            setJsonInput(
-              JSON.stringify(
-                {
-                  ...parsed,
-                  accountNumber: account.accountNumber,
-                  sequence: account.sequence,
-                  chainId: targetChain.chainId,
-                },
-                null,
-                2,
-              ),
-            );
-          }
-          setValidationError(null);
-        } catch {
-          // Raw tx envelopes should keep their original shape; the metadata fields are the source of truth.
-        }
-      } else {
-        setJsonInput(
-          JSON.stringify(
-            makeImportTemplate(targetChain.chainId, account.accountNumber, account.sequence),
-            null,
-            2,
-          ),
-        );
-        setValidationError(null);
-      }
+      writeAccountState(targetChain, account.accountNumber, account.sequence);
 
       if (!silent) {
         toastSuccess(
@@ -263,59 +279,40 @@ export default function DevToolsImport({
       }
 
       const autofillKey = `${targetChain.chainId}:${selectedAccount.address}`;
-      if (lastAutofilledAccountKey.current === autofillKey) {
+      if (
+        lastAutofilledAccountKey.current === autofillKey ||
+        autofillInFlightKey.current === autofillKey
+      ) {
         return;
       }
 
       // Clear stale values immediately when switching to a different account/network.
       setAccountNumberInput("");
       setSequenceInput("");
-      lastAutofilledAccountKey.current = autofillKey;
+      autofillInFlightKey.current = autofillKey;
 
       try {
-        const client = await StargateClient.connect(await getRpcEndpoint(targetChain));
-        const account = await client.getAccount(selectedAccount.address);
-        if (cancelled || !account) {
-          if (!account) {
-            lastAutofilledAccountKey.current = null;
-          }
+        const { account } = await resolveAccountOnChain(targetChain);
+        if (cancelled) {
           return;
         }
 
-        setAccountNumberInput(String(account.accountNumber));
-        setSequenceInput(String(account.sequence));
+        if (!account) {
+          lastAutofilledAccountKey.current = null;
+          setValidationError(accountNotFoundMessage);
+          return;
+        }
 
-        setJsonInput((current) => {
-          if (!current.trim()) {
-            return JSON.stringify(
-              makeImportTemplate(targetChain.chainId, account.accountNumber, account.sequence),
-              null,
-              2,
-            );
-          }
-
-          try {
-            const parsed = JSON.parse(current) as Record<string, unknown>;
-            if ("msgs" in parsed && "fee" in parsed) {
-              return JSON.stringify(
-                {
-                  ...parsed,
-                  accountNumber: account.accountNumber,
-                  sequence: account.sequence,
-                  chainId: targetChain.chainId,
-                },
-                null,
-                2,
-              );
-            }
-          } catch {
-            // Leave raw tx envelopes untouched; metadata fields are enough.
-          }
-
-          return current;
-        });
+        writeAccountState(targetChain, account.accountNumber, account.sequence);
+        lastAutofilledAccountKey.current = autofillKey;
       } catch {
-        lastAutofilledAccountKey.current = null;
+        if (!cancelled) {
+          lastAutofilledAccountKey.current = null;
+        }
+      } finally {
+        if (autofillInFlightKey.current === autofillKey) {
+          autofillInFlightKey.current = null;
+        }
       }
     };
 
@@ -328,7 +325,6 @@ export default function DevToolsImport({
     chain.chainId,
     chain.addressPrefix,
     chain.nodeAddress,
-    jsonInput,
     mainnetVariant,
     onChainResolved,
     selectedAccount.address,
