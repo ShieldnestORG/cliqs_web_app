@@ -1,6 +1,6 @@
 import { isTestnetsEnabled } from "@/lib/chainRegistry";
 import { RegistryAsset } from "@/types/chainRegistry";
-import { emptyChain } from "./helpers";
+import { emptyChain, isCoreumChain, isCoreumRouteAlias } from "./helpers";
 import { ChainInfo, ChainItems, ExplorerLinks } from "./types";
 
 const registryShaStorageKey = "context-registry-sha";
@@ -57,6 +57,69 @@ export const deleteLocalChainFromStorage = (chainName: string, chains: ChainItem
 };
 
 const recentChainsStorageKey = "context-recent-chains";
+const txRecentChainPrefix = "tx:";
+
+const getStoredRecentChainKey = (chain: Pick<ChainInfo, "registryName" | "chainDisplayName" | "chainId">) =>
+  isCoreumChain(chain) ? `${txRecentChainPrefix}${chain.chainId}` : chain.registryName;
+
+const isLegacyTxRecentKey = (value: string) => isCoreumRouteAlias(value) && !value.startsWith(txRecentChainPrefix);
+
+const findChainById = (
+  chainId: string,
+  { localnets, testnets, mainnets }: ChainItems,
+  testnetsEnabled: boolean,
+): ChainInfo | null => {
+  for (const chain of localnets.values()) {
+    if (chain.chainId === chainId) {
+      return chain;
+    }
+  }
+
+  if (testnetsEnabled) {
+    for (const chain of testnets.values()) {
+      if (chain.chainId === chainId) {
+        return chain;
+      }
+    }
+  }
+
+  for (const chain of mainnets.values()) {
+    if (chain.chainId === chainId) {
+      return chain;
+    }
+  }
+
+  return null;
+};
+
+const resolveChainReference = (
+  chainReference: string,
+  { localnets, testnets, mainnets }: ChainItems,
+  testnetsEnabled: boolean,
+): ChainInfo | null => {
+  if (chainReference.startsWith(txRecentChainPrefix)) {
+    return findChainById(chainReference.slice(txRecentChainPrefix.length), {
+      localnets,
+      testnets,
+      mainnets,
+    }, testnetsEnabled);
+  }
+
+  if (isLegacyTxRecentKey(chainReference)) {
+    return mainnets.get("tx") ?? (testnetsEnabled ? testnets.get("tx") : undefined) ?? null;
+  }
+
+  if (!testnetsEnabled && testnets.has(chainReference)) {
+    return null;
+  }
+
+  return (
+    localnets.get(chainReference) ??
+    (testnetsEnabled ? testnets.get(chainReference) : undefined) ??
+    mainnets.get(chainReference) ??
+    null
+  );
+};
 
 export const getRecentChainNamesFromStorage = () => {
   const storedNames = localStorage.getItem(recentChainsStorageKey);
@@ -71,28 +134,31 @@ export const setRecentChainNamesInStorage = (chainNames: readonly string[]) => {
   localStorage.setItem(recentChainsStorageKey, stringChainNames);
 };
 
-export const addRecentChainNameInStorage = (chainName: string) => {
+export const addRecentChainNameInStorage = (chain: ChainInfo) => {
   const storedNames = getRecentChainNamesFromStorage();
-  const newChains = storedNames.filter((storedName) => storedName !== chainName);
+  const chainKey = getStoredRecentChainKey(chain);
+  const newChains = storedNames.filter((storedName) => {
+    if (storedName === chainKey) {
+      return false;
+    }
 
-  setRecentChainNamesInStorage([chainName, ...newChains.slice(0, 3)]);
+    if (chainKey.startsWith(txRecentChainPrefix)) {
+      return !(storedName.startsWith(txRecentChainPrefix) || isLegacyTxRecentKey(storedName));
+    }
+
+    return storedName !== chain.registryName;
+  });
+
+  setRecentChainNamesInStorage([chainKey, ...newChains.slice(0, 3)]);
 };
 
 export const getRecentChainsFromStorage = (chains: ChainItems) => {
   const recentChainNames = getRecentChainNamesFromStorage();
   const testnetsEnabled = isTestnetsEnabled();
 
-  const recentChains = recentChainNames.map((chainName) => {
-    // Skip testnet chains when testnets are disabled
-    if (!testnetsEnabled && chains.testnets.has(chainName)) {
-      return null;
-    }
-    const chain =
-      chains.localnets.get(chainName) ??
-      (testnetsEnabled ? chains.testnets.get(chainName) : undefined) ??
-      chains.mainnets.get(chainName);
-    return chain ?? null;
-  });
+  const recentChains = recentChainNames.map((chainReference) =>
+    resolveChainReference(chainReference, chains, testnetsEnabled),
+  );
 
   const nonNullRecentChains: readonly ChainInfo[] = recentChains.filter(
     (chain): chain is ChainInfo => chain !== null,
@@ -206,6 +272,15 @@ export const getChainFromStorage = (
   }
 
   const testnetsEnabled = isTestnetsEnabled();
+
+  if (isCoreumRouteAlias(chainName)) {
+    return (
+      localnets.get(chainName) ??
+      mainnets.get("tx") ??
+      (testnetsEnabled ? testnets.get("tx") : undefined) ??
+      emptyChain
+    );
+  }
 
   return (
     localnets.get(chainName) ??
