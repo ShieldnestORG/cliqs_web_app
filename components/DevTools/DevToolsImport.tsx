@@ -13,7 +13,7 @@ import { ensureProtocol, toastError, toastSuccess } from "@/lib/utils";
 import { OfflineSigner, EncodeObject } from "@cosmjs/proto-signing";
 import { SigningStargateClient, StargateClient } from "@cosmjs/stargate";
 import { FileInput, Loader2, RefreshCw } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
@@ -110,6 +110,7 @@ export default function DevToolsImport({
   const [validationError, setValidationError] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [fetchingSequence, setFetchingSequence] = useState(false);
+  const lastAutofilledAccountKey = useRef<string | null>(null);
 
   const resolveChainForSelectedAccount = (): ChainInfo => {
     const hintedNetwork = detectCoreumNetworkFromInput(jsonInput.trim());
@@ -156,20 +157,24 @@ export default function DevToolsImport({
     return ensureProtocol(nodeAddress);
   };
 
-  const fetchCurrentSequence = async () => {
+  const fetchCurrentSequence = async (options?: { silent?: boolean }) => {
+    const silent = options?.silent ?? false;
     setFetchingSequence(true);
     try {
       const targetChain = resolveChainForSelectedAccount();
       const client = await StargateClient.connect(await getRpcEndpoint(targetChain));
       const account = await client.getAccount(selectedAccount.address);
       if (!account) {
-        toastError({
-          description:
-            "Account not found on chain yet. You can still import if your JSON already has valid accountNumber and sequence.",
-        });
+        if (!silent) {
+          toastError({
+            description:
+              "Account not found on chain yet. You can still import if your JSON already has valid accountNumber and sequence.",
+          });
+        }
         return;
       }
 
+      lastAutofilledAccountKey.current = `${targetChain.chainId}:${selectedAccount.address}`;
       setAccountNumberInput(String(account.accountNumber));
       setSequenceInput(String(account.sequence));
 
@@ -206,19 +211,107 @@ export default function DevToolsImport({
         setValidationError(null);
       }
 
-      toastSuccess(
-        "Fetched on-chain account state",
-        `Current on-chain values: accountNumber=${account.accountNumber}, sequence=${account.sequence}`,
-      );
+      if (!silent) {
+        toastSuccess(
+          "Fetched on-chain account state",
+          `Current on-chain values: accountNumber=${account.accountNumber}, sequence=${account.sequence}`,
+        );
+      }
     } catch (error) {
-      toastError({
-        description: "Failed to fetch account state from chain",
-        fullError: error instanceof Error ? error : undefined,
-      });
+      if (!silent) {
+        toastError({
+          description: "Failed to fetch account state from chain",
+          fullError: error instanceof Error ? error : undefined,
+        });
+      }
     } finally {
       setFetchingSequence(false);
     }
   };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const autoFillAccountState = async () => {
+      let targetChain: ChainInfo;
+      try {
+        targetChain = resolveChainForSelectedAccount();
+      } catch {
+        return;
+      }
+
+      const autofillKey = `${targetChain.chainId}:${selectedAccount.address}`;
+      if (lastAutofilledAccountKey.current === autofillKey) {
+        return;
+      }
+
+      // Clear stale values immediately when switching to a different account/network.
+      setAccountNumberInput("");
+      setSequenceInput("");
+      lastAutofilledAccountKey.current = autofillKey;
+
+      try {
+        const client = await StargateClient.connect(await getRpcEndpoint(targetChain));
+        const account = await client.getAccount(selectedAccount.address);
+        if (cancelled || !account) {
+          if (!account) {
+            lastAutofilledAccountKey.current = null;
+          }
+          return;
+        }
+
+        setAccountNumberInput(String(account.accountNumber));
+        setSequenceInput(String(account.sequence));
+
+        setJsonInput((current) => {
+          if (!current.trim()) {
+            return JSON.stringify(
+              makeImportTemplate(targetChain.chainId, account.accountNumber, account.sequence),
+              null,
+              2,
+            );
+          }
+
+          try {
+            const parsed = JSON.parse(current) as Record<string, unknown>;
+            if ("msgs" in parsed && "fee" in parsed) {
+              return JSON.stringify(
+                {
+                  ...parsed,
+                  accountNumber: account.accountNumber,
+                  sequence: account.sequence,
+                  chainId: targetChain.chainId,
+                },
+                null,
+                2,
+              );
+            }
+          } catch {
+            // Leave raw tx envelopes untouched; metadata fields are enough.
+          }
+
+          return current;
+        });
+      } catch {
+        lastAutofilledAccountKey.current = null;
+      }
+    };
+
+    void autoFillAccountState();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    chain.chainId,
+    chain.addressPrefix,
+    chain.nodeAddress,
+    jsonInput,
+    mainnetVariant,
+    onChainResolved,
+    selectedAccount.address,
+    testnetVariant,
+  ]);
 
   const handleImport = async () => {
     setValidationError(null);
