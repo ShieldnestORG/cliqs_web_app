@@ -112,35 +112,57 @@ export default function DevToolsImport({
   const [fetchingSequence, setFetchingSequence] = useState(false);
   const lastAutofilledAccountKey = useRef<string | null>(null);
 
-  const resolveChainForSelectedAccount = (): ChainInfo => {
-    const hintedNetwork = detectCoreumNetworkFromInput(jsonInput.trim());
-    if (hintedNetwork === "mainnet" && mainnetVariant) {
-      if (mainnetVariant.chainId !== chain.chainId) {
-        onChainResolved?.(mainnetVariant);
-      }
-      return mainnetVariant;
-    }
-    if (hintedNetwork === "testnet" && testnetVariant) {
-      if (testnetVariant.chainId !== chain.chainId) {
-        onChainResolved?.(testnetVariant);
-      }
-      return testnetVariant;
-    }
-
+  const resolveChainBySelectedAddressPrefix = (): ChainInfo | null => {
     if (selectedAccount.address.startsWith(chain.addressPrefix)) {
       return chain;
     }
 
     const matchingVariant = [mainnetVariant, testnetVariant].find(
-      (candidate) =>
-        candidate &&
-        selectedAccount.address.startsWith(candidate.addressPrefix) &&
-        candidate.chainId !== chain.chainId,
+      (candidate) => candidate && selectedAccount.address.startsWith(candidate.addressPrefix),
     );
 
-    if (matchingVariant) {
+    if (!matchingVariant) {
+      return null;
+    }
+
+    if (matchingVariant.chainId !== chain.chainId) {
       onChainResolved?.(matchingVariant);
-      return matchingVariant;
+    }
+    return matchingVariant;
+  };
+
+  const resolveChainForSelectedAccount = (): ChainInfo => {
+    const chainFromSelectedAddress = resolveChainBySelectedAddressPrefix();
+    const hintedNetwork = detectCoreumNetworkFromInput(jsonInput.trim());
+
+    const hintedChain =
+      hintedNetwork === "mainnet"
+        ? mainnetVariant
+        : hintedNetwork === "testnet"
+          ? testnetVariant
+          : undefined;
+
+    // Always trust the selected account prefix first to avoid mainnet/testnet HRP mismatches.
+    if (chainFromSelectedAddress) {
+      if (hintedChain && hintedChain.chainId !== chainFromSelectedAddress.chainId) {
+        console.warn(
+          "[DevToolsImport] JSON network hint conflicts with selected account prefix. Preferring selected account chain.",
+          {
+            selectedAccount: selectedAccount.address,
+            selectedChainId: chainFromSelectedAddress.chainId,
+            hintedChainId: hintedChain.chainId,
+          },
+        );
+      }
+      return chainFromSelectedAddress;
+    }
+
+    // Fall back to JSON hints only when address prefix cannot resolve a chain.
+    if (hintedChain) {
+      if (hintedChain.chainId !== chain.chainId) {
+        onChainResolved?.(hintedChain);
+      }
+      return hintedChain;
     }
 
     throw new Error(
