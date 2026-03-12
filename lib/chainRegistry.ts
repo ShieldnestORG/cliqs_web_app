@@ -147,7 +147,7 @@ const getChainInfoFromJsons = (
   const isCoreum = registryChain.chain_name.toLowerCase().includes("coreum");
   if (isCoreum) {
     const polkachuMainnet = "https://coreum-rpc.polkachu.com";
-    const polkachuTestnet = "https://coreum-testnet-rpc.polkachu.com";
+    const polkachuTestnet = "https://full-node.testnet-1.coreum.dev:26657";
     const preferred = registryChain.chain_id?.toLowerCase().includes("testnet")
       ? polkachuTestnet
       : polkachuMainnet;

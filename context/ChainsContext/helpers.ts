@@ -43,7 +43,7 @@ export const rebrandChain = (chain: ChainInfo): ChainInfo => {
 
   // Reorder nodeAddresses: prefer Polkachu (handles large payloads; Foundation returns 500 on contract uploads)
   const polkachuMainnet = "https://coreum-rpc.polkachu.com";
-  const polkachuTestnet = "https://coreum-testnet-rpc.polkachu.com";
+  const polkachuTestnet = "https://full-node.testnet-1.coreum.dev:26657";
   const preferred = chain.chainId?.toLowerCase().includes("testnet")
     ? polkachuTestnet
     : polkachuMainnet;
