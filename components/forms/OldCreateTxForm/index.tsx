@@ -99,6 +99,7 @@ const OldCreateTxForm = ({ router, senderAddress, accountOnChain }: OldCreateTxF
         MsgTypeUrls.Delegate,
         MsgTypeUrls.Undelegate,
         MsgTypeUrls.BeginRedelegate,
+        MsgTypeUrls.EditValidator,
         MsgTypeUrls.WithdrawDelegatorReward,
         MsgTypeUrls.WithdrawValidatorCommission,
       ] as readonly MsgTypeUrl[]

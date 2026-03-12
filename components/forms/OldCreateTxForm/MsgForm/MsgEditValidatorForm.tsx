@@ -1,10 +1,15 @@
 import { MsgEditValidatorEncodeObject } from "@cosmjs/stargate";
 import { Decimal } from "@cosmjs/math";
 import { fromBech32, toBech32 } from "@cosmjs/encoding";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MsgGetter } from "..";
 import { useChains } from "../../../../context/ChainsContext";
 import { trimStringsObj, checkAddress } from "../../../../lib/displayHelpers";
+import {
+  buildEditValidatorDescription,
+  emptyValidatorEditDescription,
+  getValidatorEditSeedData,
+} from "../../../../lib/validatorEdit";
 import { MsgCodecs, MsgTypeUrls } from "../../../../types/txMsg";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -26,7 +31,12 @@ const MsgEditValidatorForm = ({
   setMsgGetter,
   deleteMsg,
 }: MsgEditValidatorFormProps) => {
-  const { chain } = useChains();
+  const {
+    chain,
+    validatorState: {
+      validators: { bonded, unbonding, unbonded },
+    },
+  } = useChains();
   const isTX =
     chain.registryName.toLowerCase() === "tx" ||
     chain.registryName.toLowerCase().includes("coreum");
@@ -42,15 +52,12 @@ const MsgEditValidatorForm = ({
     minSelfDelegation: false,
   });
 
-  const [description, setDescription] = useState({
-    moniker: "",
-    identity: "",
-    website: "",
-    securityContact: "",
-    details: "",
-  });
+  const [description, setDescription] = useState(emptyValidatorEditDescription());
+  const [currentDescription, setCurrentDescription] = useState(emptyValidatorEditDescription());
   const [commissionRate, setCommissionRate] = useState("");
+  const [currentCommissionRate, setCurrentCommissionRate] = useState("");
   const [minSelfDelegation, setMinSelfDelegation] = useState("");
+  const [currentMinSelfDelegation, setCurrentMinSelfDelegation] = useState("");
   const [validatorAddress, setValidatorAddress] = useState("");
 
   const [validatorAddressError, setValidatorAddressError] = useState("");
@@ -92,6 +99,29 @@ const MsgEditValidatorForm = ({
     return Object.values(enabledFields).some((enabled) => enabled);
   };
 
+  const validators = useMemo(
+    () => [...bonded, ...unbonding, ...unbonded],
+    [bonded, unbonding, unbonded],
+  );
+  const selectedValidator = useMemo(
+    () => validators.find((validator) => validator.operatorAddress === validatorAddress),
+    [validatorAddress, validators],
+  );
+
+  useEffect(() => {
+    if (!selectedValidator) {
+      return;
+    }
+
+    const seed = getValidatorEditSeedData(selectedValidator);
+    setDescription(seed.description);
+    setCurrentDescription(seed.description);
+    setCommissionRate(seed.commissionRate);
+    setCurrentCommissionRate(seed.commissionRate);
+    setMinSelfDelegation(seed.minSelfDelegation);
+    setCurrentMinSelfDelegation(seed.minSelfDelegation);
+  }, [selectedValidator]);
+
   useEffect(() => {
     // eslint-disable-next-line no-shadow
     const { validatorAddress, commissionRate, minSelfDelegation, ...desc } = trimmedInputs;
@@ -127,6 +157,13 @@ const MsgEditValidatorForm = ({
         return false;
       }
 
+      if (!selectedValidator) {
+        setValidatorAddressError(
+          "Current validator metadata could not be loaded. Select a validator from the list so unchanged fields can be preserved.",
+        );
+        return false;
+      }
+
       // Validate commission rate if enabled
       if (
         enabledFields.commissionRate &&
@@ -149,6 +186,17 @@ const MsgEditValidatorForm = ({
       return true;
     };
 
+    if (!selectedValidator) {
+      const msg: MsgEditValidatorEncodeObject = {
+        typeUrl: MsgTypeUrls.EditValidator,
+        value: MsgCodecs[MsgTypeUrls.EditValidator].fromPartial({
+          validatorAddress,
+        }),
+      };
+      setMsgGetter({ isMsgValid, msg });
+      return;
+    }
+
     // Convert commission rate to atomic units if provided
     let commissionRateAtomics = "";
     if (enabledFields.commissionRate && commissionRate) {
@@ -159,16 +207,10 @@ const MsgEditValidatorForm = ({
       }
     }
 
+    const msgDescription = buildEditValidatorDescription(enabledFields, desc, currentDescription);
+
     const msgValue = MsgCodecs[MsgTypeUrls.EditValidator].fromPartial({
-      description: {
-        moniker: enabledFields.moniker ? desc.moniker || undefined : undefined,
-        identity: enabledFields.identity ? desc.identity || undefined : undefined,
-        website: enabledFields.website ? desc.website || undefined : undefined,
-        securityContact: enabledFields.securityContact
-          ? desc.securityContact || undefined
-          : undefined,
-        details: enabledFields.details ? desc.details || undefined : undefined,
-      },
+      description: msgDescription,
       validatorAddress,
       commissionRate: enabledFields.commissionRate ? commissionRateAtomics : undefined,
       minSelfDelegation: enabledFields.minSelfDelegation
@@ -186,8 +228,9 @@ const MsgEditValidatorForm = ({
   }, [
     chain.addressPrefix,
     chain.chainId,
-    senderAddress,
+    currentDescription,
     enabledFields,
+    selectedValidator,
     // Note: setMsgGetter intentionally excluded - it's a stable setter that shouldn't trigger re-runs
     trimmedInputs,
   ]);
@@ -414,7 +457,7 @@ const MsgEditValidatorForm = ({
                   name="commission-rate"
                   value={commissionRate}
                   onChange={({ target }) => setCommissionRate(target.value)}
-                  placeholder={isTX ? "0.05" : "0.10"}
+                  placeholder={currentCommissionRate || (isTX ? "0.05" : "0.10")}
                 />
               </div>
             </div>
@@ -427,7 +470,7 @@ const MsgEditValidatorForm = ({
               name="min-self-delegation"
               value={minSelfDelegation}
               onChange={({ target }) => setMinSelfDelegation(target.value)}
-              placeholder="20000000000"
+              placeholder={currentMinSelfDelegation || "20000000000"}
             />
           )}
         </div>
