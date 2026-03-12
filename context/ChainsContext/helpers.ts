@@ -19,13 +19,25 @@ export const emptyChain: ChainInfo = {
 /**
  * Ensures any Coreum-based chain is rebranded to TX/tx
  */
-export const rebrandChain = (chain: ChainInfo): ChainInfo => {
-  const isCoreum =
-    chain.registryName.toLowerCase().includes("coreum") ||
-    chain.chainDisplayName.toLowerCase().includes("coreum") ||
-    chain.chainId.toLowerCase().includes("coreum");
+export const isCoreumChain = (
+  chain: Pick<Partial<ChainInfo>, "registryName" | "chainDisplayName" | "chainId">,
+) => {
+  const registryName = chain.registryName?.toLowerCase() ?? "";
+  const chainDisplayName = chain.chainDisplayName?.toLowerCase() ?? "";
+  const chainId = chain.chainId?.toLowerCase() ?? "";
 
-  if (!isCoreum) {
+  return (
+    registryName.includes("coreum") || chainDisplayName.includes("coreum") || chainId.includes("coreum")
+  );
+};
+
+export const isCoreumRouteAlias = (chainName: string) => {
+  const normalized = chainName.toLowerCase();
+  return normalized === "tx" || normalized.includes("coreum");
+};
+
+export const rebrandChain = (chain: ChainInfo): ChainInfo => {
+  if (!isCoreumChain(chain)) {
     return chain;
   }
 

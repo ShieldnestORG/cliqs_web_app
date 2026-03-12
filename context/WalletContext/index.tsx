@@ -33,6 +33,18 @@ interface StoredWalletInfo {
   chainId: string;
 }
 
+const isChainReadyForWalletConnect = (chain: ChainInfo) =>
+  Boolean(
+    chain.chainId &&
+      chain.addressPrefix &&
+      chain.denom &&
+      chain.displayDenom &&
+      typeof chain.displayDenomExponent === "number" &&
+      Number.isFinite(chain.displayDenomExponent) &&
+      chain.gasPrice &&
+      (chain.nodeAddress || chain.nodeAddresses.length),
+  );
+
 interface WalletContextType {
   // Wallet state
   walletInfo: WalletInfo | null;
@@ -133,6 +145,13 @@ export const WalletProvider = ({ children }: WalletProviderProps) => {
   // Depend on the full chain object so the suggestion payload is never stale
   // (suggestChainToKeplr uses nodeAddress, restEndpoint, coinType, gasPrice, etc.).
   const connectKeplr = useCallback(async () => {
+    if (!isChainReadyForWalletConnect(chain)) {
+      toastError({
+        description: "Network details are still loading. Please wait a moment and try again.",
+      });
+      return;
+    }
+
     try {
       setLoading((prev) => ({ ...prev, keplr: true }));
 
@@ -165,6 +184,13 @@ export const WalletProvider = ({ children }: WalletProviderProps) => {
   // Connect to Ledger wallet
   // Ledger dependencies are dynamically imported to reduce initial bundle size
   const connectLedger = useCallback(async () => {
+    if (!isChainReadyForWalletConnect(chain)) {
+      toastError({
+        description: "Network details are still loading. Please wait a moment and try again.",
+      });
+      return;
+    }
+
     try {
       setLoading((prev) => ({ ...prev, ledger: true }));
 
@@ -203,7 +229,7 @@ export const WalletProvider = ({ children }: WalletProviderProps) => {
     } finally {
       setLoading((prev) => ({ ...prev, ledger: false }));
     }
-  }, [chain.addressPrefix, chain.chainId]);
+  }, [chain]);
 
   // Disconnect wallet
   const disconnect = useCallback(() => {

@@ -39,7 +39,7 @@ const chainsReducer = (state: State, action: Action): State => {
         addLocalChainInStorage(rebrandedChain, state.chains);
       }
 
-      addRecentChainNameInStorage(rebrandedChain.registryName);
+      addRecentChainNameInStorage(rebrandedChain);
       setChainInUrl(rebrandedChain, state.chains);
 
       return {

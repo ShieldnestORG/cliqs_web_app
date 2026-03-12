@@ -2,7 +2,14 @@ import { getChainsFromRegistry, getShaFromRegistry } from "@/lib/chainRegistry";
 import { toastError, ensureProtocol } from "@/lib/utils";
 import { StargateClient } from "@cosmjs/stargate";
 import { useEffect, useState } from "react";
-import { emptyChain, isChainInfoFilled, rebrandChain, rebrandChains } from "./helpers";
+import {
+  emptyChain,
+  isChainInfoFilled,
+  isCoreumChain,
+  isCoreumRouteAlias,
+  rebrandChain,
+  rebrandChains,
+} from "./helpers";
 import {
   getChainFromEnvfile,
   getChainFromStorage,
@@ -139,14 +146,22 @@ export const getChain = (chains: ChainItems) => {
   const rootRoute = location.pathname.split("/")[1];
   // Avoid app from thinking the /api route is a registryName
   let chainNameFromUrl = rootRoute === "api" ? "" : rootRoute;
+  const requestedCoreumAlias = isCoreumRouteAlias(chainNameFromUrl);
 
   // Handle coreum -> tx mapping for URL lookup
-  if (chainNameFromUrl.toLowerCase().includes("coreum")) {
+  if (requestedCoreumAlias) {
     chainNameFromUrl = "tx";
   }
 
   const recentChain = getRecentChainFromStorage(chains);
   if (!chainNameFromUrl && isChainInfoFilled(recentChain)) {
+    return rebrandChain(recentChain as ChainInfo);
+  }
+
+  // The TX route is intentionally branded, but both Coreum mainnet and testnet
+  // share the same visible alias. Restore the exact last-used variant so refreshes
+  // and intra-app navigation don't silently flip networks.
+  if (requestedCoreumAlias && isChainInfoFilled(recentChain) && isCoreumChain(recentChain)) {
     return rebrandChain(recentChain as ChainInfo);
   }
 
