@@ -4,7 +4,7 @@ import {
   getKeplrDirectSigner,
   getKeplrVerifySignature,
 } from "@/lib/keplr";
-import { getConnectError } from "@/lib/errorHelpers";
+import { getConnectError, getConnectErrorDetails } from "@/lib/errorHelpers";
 import { toastError, toastSuccess } from "@/lib/utils";
 import { WalletInfo, WalletType, LoadingStates } from "@/types/signing";
 import { makeCosmoshubPath, StdSignature } from "@cosmjs/amino";
@@ -150,10 +150,20 @@ export const WalletProvider = ({ children }: WalletProviderProps) => {
 
       toastSuccess("Wallet connected", address);
     } catch (e) {
-      const connectError = getConnectError(e);
-      console.error(connectError, e);
+      const errorDetails = getConnectErrorDetails(e);
+      console.error(errorDetails.message, e);
+
+      // If the wallet doesn't support this chain, clear wallet state completely
+      // so the user can try a different wallet without being stuck
+      if (errorDetails.isChainIncompatible) {
+        setWalletInfo(null);
+        setLedgerSigner(null);
+        setVerificationSignature(null);
+        localStorage.removeItem(WALLET_STORAGE_KEY);
+      }
+
       toastError({
-        description: connectError,
+        description: errorDetails.message,
         fullError: e instanceof Error ? e : undefined,
       });
     } finally {
