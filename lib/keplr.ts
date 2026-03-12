@@ -113,7 +113,12 @@ export const getKeplr = async (chainId: string, chain?: ChainInfo) => {
         msg.includes("There is no chain info") ||
         msg.includes("no chain info"))
     ) {
-      await suggestChainToKeplr(chain);
+      try {
+        await suggestChainToKeplr(chain);
+      } catch {
+        // Suggest can fail when a different injected wallet rejects this chain's coin type.
+        // Keplr may still already know the chain, so retry enable() before giving up.
+      }
       await keplr.enable(chainId);
     } else {
       throw e;
