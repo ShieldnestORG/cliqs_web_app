@@ -242,6 +242,11 @@ export function shouldUseDirectMode(msgs: readonly { typeUrl: string }[]): boole
   // and signatures will fail. In that case, Amino mode should be used.
   //
   // MsgWithdrawValidatorCommission requires Direct mode on Coreum and other chains.
-  const directModeRequiredTypes = ["/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission"];
+  // MsgCreateValidator: Cosmos SDK 0.50+ has Amino JSON regressions causing "signature
+  // verification failed" during CheckTx; Direct mode works reliably (see cosmos/cosmos-sdk#18546).
+  const directModeRequiredTypes = [
+    "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission",
+    "/cosmos.staking.v1beta1.MsgCreateValidator",
+  ];
   return msgs.some((msg) => directModeRequiredTypes.includes(msg.typeUrl));
 }
