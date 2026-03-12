@@ -153,15 +153,6 @@ export const WalletProvider = ({ children }: WalletProviderProps) => {
       const errorDetails = getConnectErrorDetails(e);
       console.error(errorDetails.message, e);
 
-      // If the wallet doesn't support this chain, clear wallet state completely
-      // so the user can try a different wallet without being stuck
-      if (errorDetails.isChainIncompatible) {
-        setWalletInfo(null);
-        setLedgerSigner(null);
-        setVerificationSignature(null);
-        localStorage.removeItem(WALLET_STORAGE_KEY);
-      }
-
       toastError({
         description: errorDetails.message,
         fullError: e instanceof Error ? e : undefined,
