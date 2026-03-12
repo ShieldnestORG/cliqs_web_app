@@ -1,5 +1,6 @@
 import { DbSignatureObj, DbSignatureObjDraft, DbTransactionParsedDataJson } from "@/graphql";
 import { createDbSignature } from "@/lib/api";
+import { getConnectErrorDetails } from "@/lib/errorHelpers";
 import { getKeplr } from "@/lib/keplr";
 import { useWallet } from "@/context/WalletContext";
 import { aminoConverters } from "@/lib/msg";
@@ -238,10 +239,20 @@ const TransactionSigning = (props: TransactionSigningProps) => {
       setSigning("signed");
     } catch (e) {
       console.error("Failed to sign the tx:", e);
-      toastError({
-        description: "Failed to sign the tx",
-        fullError: e instanceof Error ? e : undefined,
-      });
+
+      // Check if this is a wallet/chain incompatibility error
+      const errorDetails = getConnectErrorDetails(e);
+      if (errorDetails.isChainIncompatible) {
+        toastError({
+          description: errorDetails.message,
+          fullError: e instanceof Error ? e : undefined,
+        });
+      } else {
+        toastError({
+          description: "Failed to sign the tx",
+          fullError: e instanceof Error ? e : undefined,
+        });
+      }
     } finally {
       setSigningInProgress(false);
       toast.dismiss(loadingToastId);
