@@ -14,8 +14,9 @@
 
 import escapeStringRegexp from "escape-string-regexp";
 import { ObjectId, WithId, Document, MongoClient, Db } from "mongodb";
+import { DEFAULT_MONGODB_DB_NAME, DEFAULT_MONGODB_URI } from "./defaultMongoConfig";
 
-const uri = process.env.MONGODB_URI || "";
+const uri = DEFAULT_MONGODB_URI;
 
 const MONGO_OPTIONS = {
   serverSelectionTimeoutMS: 15000,
@@ -46,7 +47,7 @@ if (uri) {
 /**
  * Get MongoDB database instance
  */
-const dbName = process.env.MONGODB_DB_NAME || undefined;
+const dbName = DEFAULT_MONGODB_DB_NAME;
 
 export const getDb = async (): Promise<Db | null> => {
   if (!clientPromise) return null;

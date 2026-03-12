@@ -9,7 +9,7 @@
  *      is present in the request context (via AsyncLocalStorage), all
  *      operations are routed to the user's database.
  *
- *   2. Default MongoDB – if MONGODB_URI env is set and reachable.
+ *   2. Default MongoDB – if MONGODB_URI or cliqs_MONGODB_URI is set and reachable.
  *
  *   3. Local JSON file – fallback for development.
  *
@@ -27,6 +27,7 @@ import * as mongoDb from "./mongodb";
 import { isMongoAvailable } from "./mongodb";
 import { getRequestByodbUri } from "./byodb/middleware";
 import { getDynamicDb } from "./byodb/dynamicMongo";
+import { hasDefaultMongoConfig } from "./defaultMongoConfig";
 import { ObjectId, type Db, type WithId, type Document } from "mongodb";
 import fs from "node:fs";
 import path from "node:path";
@@ -80,7 +81,7 @@ const CHECK_INTERVAL_MS = 60_000;
 const RETRY_INTERVAL_MS = 5_000; // Retry connection sooner when it failed
 
 async function usesMongo(): Promise<boolean> {
-  if (!process.env.MONGODB_URI) return false;
+  if (!hasDefaultMongoConfig()) return false;
 
   const now = Date.now();
   const interval = _mongoAvailable === false ? RETRY_INTERVAL_MS : CHECK_INTERVAL_MS;
@@ -95,7 +96,7 @@ async function usesMongo(): Promise<boolean> {
     console.log("[DB] Using MongoDB Atlas");
   } else {
     console.log(
-      "[DB] MongoDB connection failed – will not fall back to local DB when MONGODB_URI is set",
+      "[DB] MongoDB connection failed – will not fall back to local DB when MONGODB_URI or cliqs_MONGODB_URI is set",
     );
   }
 
@@ -103,17 +104,17 @@ async function usesMongo(): Promise<boolean> {
 }
 
 /**
- * When MONGODB_URI is set, MongoDB is required. Do not fall back to localDb.
+ * When default MongoDB env is set, MongoDB is required. Do not fall back to localDb.
  * Throws a clear error if MongoDB is configured but connection failed.
  * Call only when BYODB is not in use (byodb already checked by caller).
  */
 async function requireMongoOrLocalDb(): Promise<"mongo" | "local"> {
-  if (process.env.MONGODB_URI) {
+  if (hasDefaultMongoConfig()) {
     const available = await usesMongo();
     if (!available) {
       throw new Error(
-        "MongoDB is configured (MONGODB_URI) but connection failed. " +
-        "Verify the connection string, network access, and that your MongoDB Atlas IP allowlist includes Vercel (or use 0.0.0.0/0 for serverless).",
+        "MongoDB is configured (MONGODB_URI or cliqs_MONGODB_URI) but connection failed. " +
+          "Verify the connection string, network access, and that your MongoDB Atlas IP allowlist includes Vercel (or use 0.0.0.0/0 for serverless).",
       );
     }
     return "mongo";
