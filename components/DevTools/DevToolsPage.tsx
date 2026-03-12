@@ -540,17 +540,19 @@ export default function DevTools() {
                     </div>
                   </div>
 
-                  {!isVerified ? (
+                  {!isVerified && (
                     <div className="space-y-2">
                       <Button onClick={verify} className="w-full" variant="ghost" size="sm">
                         Verify identity for stronger lookup
                       </Button>
                       <p className="text-xs text-muted-foreground">
-                        Verification is chain-specific and improves lookup accuracy. If you switch
-                        between mainnet and testnet, verify again on the currently selected chain.
+                        Pubkey-based lookup works immediately. Verification is chain-specific and
+                        can improve discovery accuracy when you switch between mainnet and testnet.
                       </p>
                     </div>
-                  ) : loadingMultisigs ? (
+                  )}
+
+                  {loadingMultisigs ? (
                     <div className="flex justify-center py-4">
                       <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                     </div>
