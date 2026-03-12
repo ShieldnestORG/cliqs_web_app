@@ -481,7 +481,9 @@ export default function DevToolsImport({
             <Button
               variant="ghost"
               size="sm"
-              onClick={fetchCurrentSequence}
+              onClick={() => {
+                void fetchCurrentSequence();
+              }}
               disabled={fetchingSequence}
               className="h-7 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
             >
