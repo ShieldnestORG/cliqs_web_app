@@ -19,6 +19,7 @@ import {
   Activity,
   Heart,
   BookOpen,
+  ChevronLeft,
 } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
@@ -268,6 +269,31 @@ export default function Sidebar() {
           </Link>
         )}
       </nav>
+
+      {/* Back to TOKNS */}
+      <div className={cn("mb-2 px-4", collapsed && "px-2")}>
+        {collapsed ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <a
+                href="https://app.tokns.fi"
+                className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </a>
+            </TooltipTrigger>
+            <TooltipContent side="right">Back to TOKNS</TooltipContent>
+          </Tooltip>
+        ) : (
+          <a
+            href="https://app.tokns.fi"
+            className="flex h-10 w-full items-center gap-2 rounded-lg px-4 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Back to TOKNS
+          </a>
+        )}
+      </div>
 
       {/* Donate Button */}
       <div className={cn("mb-2 px-4", collapsed && "px-2")}>
