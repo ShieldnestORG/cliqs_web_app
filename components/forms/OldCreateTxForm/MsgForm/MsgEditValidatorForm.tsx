@@ -9,6 +9,7 @@ import {
   buildEditValidatorDescription,
   emptyValidatorEditDescription,
   getValidatorEditSeedData,
+  ValidatorEditEnabledFields,
 } from "../../../../lib/validatorEdit";
 import { MsgCodecs, MsgTypeUrls } from "../../../../types/txMsg";
 import { Input } from "@/components/ui/input";
@@ -42,7 +43,7 @@ const MsgEditValidatorForm = ({
     chain.registryName.toLowerCase().includes("coreum");
 
   // Enabled fields state
-  const [enabledFields, setEnabledFields] = useState<Record<string, boolean>>({
+  const [enabledFields, setEnabledFields] = useState<ValidatorEditEnabledFields>({
     moniker: false,
     identity: false,
     website: false,
@@ -62,7 +63,7 @@ const MsgEditValidatorForm = ({
 
   const [validatorAddressError, setValidatorAddressError] = useState("");
 
-  const toggleField = (field: string) => {
+  const toggleField = (field: keyof ValidatorEditEnabledFields) => {
     setEnabledFields((prev) => ({
       ...prev,
       [field]: !prev[field],
