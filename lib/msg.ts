@@ -388,13 +388,11 @@ export const aminoConverters = {
   ...makeExtraAminoConverters(),
 };
 
-export const appRegistryTypes: ReadonlyArray<[string, GeneratedType]> = [
-  ...defaultRegistryTypes,
-  ...wasmTypes,
-  [MsgUnjail.typeUrl, MsgUnjail],
-];
-
-export const makeAppRegistry = () => new Registry(appRegistryTypes);
+export const makeAppRegistry = () => {
+  const registry = new Registry([...defaultRegistryTypes, ...wasmTypes]);
+  registry.register(MsgUnjail.typeUrl, MsgUnjail as GeneratedType);
+  return registry;
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const msgRegistry: Record<string, any> = {};

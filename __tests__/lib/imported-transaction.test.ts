@@ -1,5 +1,5 @@
 import { parseImportedTransactionInput } from "@/lib/importedTransaction";
-import { aminoConverters, appRegistryTypes } from "@/lib/msg";
+import { aminoConverters, makeAppRegistry } from "@/lib/msg";
 import { msgsFromJson } from "@/lib/txMsgHelpers";
 import { AminoTypes } from "@cosmjs/stargate";
 
@@ -161,8 +161,7 @@ describe("parseImportedTransactionInput", () => {
         address: "testcorevaloper14rmczf6t6qldyrqrv4jd0zzypkuymrhvxcs0yk",
       },
     });
-    expect(appRegistryTypes.some(([typeUrl]) => typeUrl === "/cosmos.slashing.v1beta1.MsgUnjail")).toBe(
-      true,
-    );
+    const registry = makeAppRegistry();
+    expect(registry.lookupType("/cosmos.slashing.v1beta1.MsgUnjail")).toBeDefined();
   });
 });
