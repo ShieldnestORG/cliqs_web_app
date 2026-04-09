@@ -3,6 +3,7 @@ import * as CosmjsTypesBank from "cosmjs-types/cosmos/bank/v1beta1/tx";
 import * as CosmjsTypesDistribution from "cosmjs-types/cosmos/distribution/v1beta1/tx";
 import * as CosmjsTypesFeegrant from "cosmjs-types/cosmos/feegrant/v1beta1/tx";
 import * as CosmjsTypesGov from "cosmjs-types/cosmos/gov/v1beta1/tx";
+import * as CosmjsTypesSlashing from "cosmjs-types/cosmos/slashing/v1beta1/tx";
 import * as CosmjsTypesStaking from "cosmjs-types/cosmos/staking/v1beta1/tx";
 import * as CosmjsTypesVesting from "cosmjs-types/cosmos/vesting/v1beta1/tx";
 import * as CosmjsTypesCosmWasm from "cosmjs-types/cosmwasm/wasm/v1/tx";
@@ -14,6 +15,7 @@ export const txCosmJsTypes = Object.values({
   ...CosmjsTypesDistribution,
   ...CosmjsTypesFeegrant,
   ...CosmjsTypesGov,
+  ...CosmjsTypesSlashing,
   ...CosmjsTypesStaking,
   ...CosmjsTypesVesting,
   ...CosmjsTypesIbcTransfer,

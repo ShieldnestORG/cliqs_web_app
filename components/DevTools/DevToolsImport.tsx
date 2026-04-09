@@ -7,11 +7,12 @@ import {
   parseImportedTransactionInput,
   TransactionImportMetadata,
 } from "@/lib/importedTransaction";
+import { aminoConverters, makeAppRegistry } from "@/lib/msg";
 import { ensureChainMultisigInDb } from "@/lib/multisigHelpers";
 import { isKnownMsgTypeUrl, msgsFromJson } from "@/lib/txMsgHelpers";
 import { ensureProtocol, toastError, toastSuccess } from "@/lib/utils";
 import { OfflineSigner, EncodeObject } from "@cosmjs/proto-signing";
-import { SigningStargateClient, StargateClient } from "@cosmjs/stargate";
+import { AminoTypes, SigningStargateClient, StargateClient } from "@cosmjs/stargate";
 import { FileInput, Loader2, RefreshCw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Input } from "../ui/input";
@@ -416,6 +417,10 @@ export default function DevToolsImport({
         const client = await SigningStargateClient.connectWithSigner(
           await getRpcEndpoint(targetChain),
           signer,
+          {
+            registry: makeAppRegistry(),
+            aminoTypes: new AminoTypes(aminoConverters),
+          },
         );
         const broadcastResult = await client.signAndBroadcast(
           signerAddress,

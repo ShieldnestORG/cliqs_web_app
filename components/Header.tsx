@@ -13,6 +13,7 @@ import {
   AlertCircle,
   Terminal,
   BookOpen,
+  ChevronLeft,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -75,6 +76,15 @@ export default function Header() {
             </div>
             <span className="cliqs-brand hidden sm:inline">CLIQS</span>
           </Link>
+
+          {/* Back to TOKNS */}
+          <a
+            href="https://app.tokns.fi"
+            className="hidden items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground md:flex"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Back to TOKNS
+          </a>
 
           {/* Chain Connect - Desktop */}
           <div className="hidden md:block">
@@ -287,6 +297,14 @@ export default function Header() {
           {/* Menu Panel */}
           <div className="slide-up fixed left-0 right-0 top-16 z-50 border-b-2 border-border bg-card shadow-lg animate-in md:hidden">
             <nav className="container mx-auto space-y-2 px-[0.75in] py-4">
+              <a
+                href="https://app.tokns.fi"
+                className="flex items-center gap-3 rounded-lg px-4 py-3 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+              >
+                <ChevronLeft className="h-5 w-5" />
+                <span>Back to TOKNS</span>
+              </a>
+              <div className="my-3 h-px bg-border" />
               {chain.registryName &&
                 navItems.map((item) => {
                   const isActive = pathname === item.href;

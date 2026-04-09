@@ -21,6 +21,8 @@ export const gasOfMsg = (msgType: MsgTypeUrl): number => {
       return 500_000;
     case MsgTypeUrls.EditValidator:
       return 500_000;
+    case MsgTypeUrls.Unjail:
+      return 200_000;
     // Distribution
     case MsgTypeUrls.FundCommunityPool:
       return 100_000;
@@ -130,6 +132,12 @@ const importMsgFromJson = (msg: EncodeObject): EncodeObject => {
 
     // Normalize MsgCreateValidator commission field names from snake_case to camelCase
     let normalizedValue = processedValue;
+    if (msg.typeUrl === MsgTypeUrls.Unjail && processedValue.validatorAddress) {
+      normalizedValue = {
+        ...processedValue,
+        validatorAddr: processedValue.validatorAddress,
+      };
+    }
     if (msg.typeUrl === MsgTypeUrls.CreateValidator && processedValue.commission) {
       const commission = processedValue.commission;
       normalizedValue = {

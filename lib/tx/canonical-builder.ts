@@ -14,13 +14,12 @@
  */
 
 import { StdFee, MultisigThresholdPubkey } from "@cosmjs/amino";
-import { wasmTypes } from "@cosmjs/cosmwasm-stargate";
 import { sha256 } from "@cosmjs/crypto";
 import { toBase64 } from "@cosmjs/encoding";
 import { EncodeObject, Registry, TxBodyEncodeObject } from "@cosmjs/proto-signing";
-import { AminoTypes, defaultRegistryTypes } from "@cosmjs/stargate";
+import { AminoTypes } from "@cosmjs/stargate";
 
-import { aminoConverters } from "../msg";
+import { aminoConverters, makeAppRegistry } from "../msg";
 import { makeDirectModeAuthInfo, makeDirectSignDoc } from "../multisigDirect";
 
 // ============================================================================
@@ -88,7 +87,7 @@ export class CanonicalTxBuilder {
   private constructor(msgs: readonly EncodeObject[], options: TxOptions) {
     this.msgs = Object.freeze([...msgs]);
     this.options = Object.freeze({ ...options });
-    this.registry = new Registry([...defaultRegistryTypes, ...wasmTypes]);
+    this.registry = makeAppRegistry();
     this.aminoTypes = new AminoTypes(aminoConverters);
   }
 
