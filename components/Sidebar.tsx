@@ -277,7 +277,7 @@ export default function Sidebar() {
             <TooltipTrigger asChild>
               <a
                 href="https://app.tokns.fi"
-                className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+                className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
               >
                 <ChevronLeft className="h-5 w-5" />
               </a>
@@ -287,7 +287,7 @@ export default function Sidebar() {
         ) : (
           <a
             href="https://app.tokns.fi"
-            className="flex h-10 w-full items-center gap-2 rounded-lg px-4 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+            className="flex h-10 w-full items-center gap-2 rounded-lg border border-border px-4 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
           >
             <ChevronLeft className="h-4 w-4" />
             Back to TOKNS
