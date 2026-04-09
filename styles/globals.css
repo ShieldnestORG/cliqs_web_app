@@ -9,39 +9,42 @@
 
 @layer base {
   :root {
-    --background: 220 13% 18%;
-    --foreground: 210 40% 98%;
-    --card: 220 13% 22%;
-    --card-foreground: 210 40% 98%;
-    --popover: 220 13% 22%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 10% 25%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 10% 25%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 10% 25%;
-    --accent-foreground: 210 40% 98%;
+    /* Coherence Daddy Branding - Neutral Dark */
+    --background: 0 0% 15%;
+    --foreground: 0 0% 89%;
+    --card: 0 0% 18%;
+    --card-foreground: 0 0% 89%;
+    --popover: 0 0% 18%;
+    --popover-foreground: 0 0% 89%;
+    --primary: 0 0% 89%;
+    --primary-foreground: 0 0% 15%;
+    --secondary: 0 0% 22%;
+    --secondary-foreground: 0 0% 89%;
+    --muted: 0 0% 22%;
+    --muted-foreground: 0 0% 63%;
+    --accent: 0 0% 22%;
+    --accent-foreground: 0 0% 89%;
     --destructive: 0 62.8% 50%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 10% 30%;
-    --input: 217.2 10% 30%;
-    --ring: 212.7 26.8% 83.9%;
+    --destructive-foreground: 0 0% 89%;
+    --border: 0 0% 100% / 0.06;
+    --input: 0 0% 25%;
+    --ring: 260 28% 55%;
     --radius: 0.75rem;
-    
-    /* UI4 Institutional Accent Colors */
+
+    /* Coherence Daddy Accent Colors */
     --accent-green: 11 100% 71%;
     --accent-green-bright: 11 100% 76%;
-    --toast-green: 142 71% 45%;
-    --accent-purple: 263 70% 65%;
-    --accent-bronze: 25 50% 40%;
-    --accent-bronze-foreground: 220 13% 18%; /* Using --background color for contrast */
-    
-    /* Personal Theme Specifics (Legacy/Compatibility) */
-    --accent-teal: 189 94% 43%;
-    --accent-orange: 24 100% 75%;
-    --accent-peach: 24 100% 92%;
+    --toast-green: 164 100% 39%;
+    --accent-purple: 260 28% 55%;
+    --accent-blue: 210 52% 43%;
+    --accent-gold: 37 45% 61%;
+    --accent-bronze: 37 45% 61%;
+    --accent-bronze-foreground: 0 0% 15%;
+
+    /* Legacy Compatibility */
+    --accent-teal: 210 52% 43%;
+    --accent-orange: 11 100% 71%;
+    --accent-peach: 11 100% 86%;
   }
 }
 

@@ -89,7 +89,7 @@ export default function Document() {
         <link rel="manifest" href="/site.webmanifest" />
 
         {/* Theme Color */}
-        <meta name="theme-color" content="hsl(220, 13%, 18%)" />
+        <meta name="theme-color" content="#262626" />
       </Head>
       <body className="antialiased">
         <Main />

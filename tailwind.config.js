@@ -83,14 +83,21 @@ module.exports = {
           DEFAULT: "hsl(var(--accent-bronze))",
           foreground: "hsl(var(--accent-bronze-foreground))",
         },
-        // Personal Theme Palette
+        // Coherence Daddy Accent Colors
+        blue: {
+          accent: "hsl(var(--accent-blue))",
+        },
+        gold: {
+          accent: "hsl(var(--accent-gold))",
+        },
+        // Personal Theme Palette (Coherence Daddy)
         personal: {
-          purple: "#7a5195",
-          teal: "#06b6d4",
-          orange: "#ffb380",
-          peach: "#ffe4d4",
-          white: "#fafafa",
-          charcoal: "#1f1d1b",
+          purple: "#7b68ae",
+          teal: "#346aa9",
+          orange: "#ff876d",
+          peach: "#ffb8a8",
+          white: "#e2e2e2",
+          charcoal: "#262626",
           gray: "#6b6b6b",
         },
       },
@@ -103,7 +110,7 @@ module.exports = {
         // UI4 Shadow System
         card: "0 1px 3px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
         "card-hover": "0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08)",
-        "focus-ring": "0 0 0 3px hsl(var(--accent-purple) / 0.3)",
+        "focus-ring": "0 0 0 3px hsl(260 28% 55% / 0.3)",
       },
       keyframes: {
         "accordion-down": {
