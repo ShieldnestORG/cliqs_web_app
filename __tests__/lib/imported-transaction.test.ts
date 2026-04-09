@@ -1,4 +1,7 @@
 import { parseImportedTransactionInput } from "@/lib/importedTransaction";
+import { aminoConverters, appRegistryTypes } from "@/lib/msg";
+import { msgsFromJson } from "@/lib/txMsgHelpers";
+import { AminoTypes } from "@cosmjs/stargate";
 
 describe("parseImportedTransactionInput", () => {
   it("converts a raw Cosmos tx envelope into the canonical app format", () => {
@@ -90,5 +93,76 @@ describe("parseImportedTransactionInput", () => {
       },
     });
     expect(result.importedSignatures).toEqual([]);
+  });
+
+  it("accepts MsgUnjail imports and keeps them signable", () => {
+    const rawTx = {
+      body: {
+        messages: [
+          {
+            "@type": "/cosmos.slashing.v1beta1.MsgUnjail",
+            validator_addr: "testcorevaloper14rmczf6t6qldyrqrv4jd0zzypkuymrhvxcs0yk",
+          },
+        ],
+        memo: "",
+        timeout_height: "0",
+      },
+      auth_info: {
+        signer_infos: [],
+        fee: {
+          amount: [{ denom: "utestcore", amount: "9000" }],
+          gas_limit: "180000",
+        },
+      },
+      signatures: [],
+    };
+
+    const result = parseImportedTransactionInput(
+      rawTx,
+      {
+        chainId: "coreum-testnet-1",
+        accountNumber: "456",
+        sequence: "7",
+      },
+      { expectedChainId: "coreum-testnet-1", requireNonEmptyMsgs: true },
+    );
+
+    expect(result.error).toBeUndefined();
+    if (result.error || !result.tx) {
+      throw new Error(result.error ?? "Expected parsed transaction");
+    }
+
+    expect(result.tx.msgs[0]).toEqual({
+      typeUrl: "/cosmos.slashing.v1beta1.MsgUnjail",
+      value: {
+        validatorAddr: "testcorevaloper14rmczf6t6qldyrqrv4jd0zzypkuymrhvxcs0yk",
+      },
+    });
+
+    expect(msgsFromJson(result.tx.msgs)).toEqual([
+      {
+        typeUrl: "/cosmos.slashing.v1beta1.MsgUnjail",
+        value: {
+          validatorAddr: "testcorevaloper14rmczf6t6qldyrqrv4jd0zzypkuymrhvxcs0yk",
+        },
+      },
+    ]);
+    const aminoTypes = new AminoTypes(aminoConverters);
+    expect(
+      aminoTypes.toAmino({
+        typeUrl: "/cosmos.slashing.v1beta1.MsgUnjail",
+        value: {
+          validatorAddr: "testcorevaloper14rmczf6t6qldyrqrv4jd0zzypkuymrhvxcs0yk",
+        },
+      }),
+    ).toEqual({
+      type: "cosmos-sdk/MsgUnjail",
+      value: {
+        address: "testcorevaloper14rmczf6t6qldyrqrv4jd0zzypkuymrhvxcs0yk",
+      },
+    });
+    expect(appRegistryTypes.some(([typeUrl]) => typeUrl === "/cosmos.slashing.v1beta1.MsgUnjail")).toBe(
+      true,
+    );
   });
 });

@@ -1,8 +1,7 @@
 import { DbSignatureObjDraft, DbTransactionParsedDataJson } from "@/graphql";
+import { makeAppRegistry } from "@/lib/msg";
 import { pubkeyToAddress } from "@cosmjs/amino";
-import { wasmTypes } from "@cosmjs/cosmwasm-stargate";
-import { Registry, TxBodyEncodeObject } from "@cosmjs/proto-signing";
-import { defaultRegistryTypes } from "@cosmjs/stargate";
+import { TxBodyEncodeObject } from "@cosmjs/proto-signing";
 import { toBase64 } from "@cosmjs/encoding";
 import { msgsFromJson } from "./txMsgHelpers";
 import { parseDbTransactionJson } from "./transactionJson";
@@ -119,7 +118,7 @@ const parseExplicitImportedSignatures = (
 };
 
 const buildBodyBytes = (tx: DbTransactionParsedDataJson): Uint8Array => {
-  const registry = new Registry([...defaultRegistryTypes, ...wasmTypes]);
+  const registry = makeAppRegistry();
   const txBodyEncodeObject: TxBodyEncodeObject = {
     typeUrl: "/cosmos.tx.v1beta1.TxBody",
     value: {

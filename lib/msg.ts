@@ -1,6 +1,7 @@
 import { txCosmJsTypes } from "@/types/cosmjs-types";
-import { createWasmAminoConverters } from "@cosmjs/cosmwasm-stargate";
-import { AminoConverters, createDefaultAminoConverters } from "@cosmjs/stargate";
+import { Registry, GeneratedType } from "@cosmjs/proto-signing";
+import { createWasmAminoConverters, wasmTypes } from "@cosmjs/cosmwasm-stargate";
+import { AminoConverters, createDefaultAminoConverters, defaultRegistryTypes } from "@cosmjs/stargate";
 import { GenericAuthorization } from "cosmjs-types/cosmos/authz/v1beta1/authz";
 import { SendAuthorization } from "cosmjs-types/cosmos/bank/v1beta1/authz";
 import { MsgExec, MsgGrant, MsgRevoke } from "cosmjs-types/cosmos/authz/v1beta1/tx";
@@ -9,6 +10,7 @@ import {
   MsgSetWithdrawAddress,
   MsgWithdrawDelegatorReward,
 } from "cosmjs-types/cosmos/distribution/v1beta1/tx";
+import { MsgUnjail } from "cosmjs-types/cosmos/slashing/v1beta1/tx";
 import { MsgDelegate, MsgUndelegate } from "cosmjs-types/cosmos/staking/v1beta1/tx";
 import { Timestamp } from "cosmjs-types/google/protobuf/timestamp";
 import { BinaryReader, BinaryWriter } from "cosmjs-types/binary";
@@ -154,6 +156,24 @@ const EXEC_INNER_CODECS: Record<string, InnerMsgCodec> = {
         delegatorAddress: v.delegator_address as string,
         validatorAddress: v.validator_address as string,
         amount: v.amount as { denom: string; amount: string },
+      }),
+  },
+  "/cosmos.slashing.v1beta1.MsgUnjail": {
+    encode: MsgUnjail.encode,
+    decode: MsgUnjail.decode,
+    aminoType: "cosmos-sdk/MsgUnjail",
+    toAmino: (v) => {
+      const m = v as MsgUnjail;
+      return { address: m.validatorAddr };
+    },
+    fromAmino: (v) =>
+      MsgUnjail.fromPartial({
+        validatorAddr:
+          (typeof v.address === "string"
+            ? v.address
+            : typeof v.validator_addr === "string"
+              ? v.validator_addr
+              : v.validatorAddr) as string,
       }),
   },
   "/cosmos.bank.v1beta1.MsgSend": {
@@ -346,11 +366,35 @@ function makeAuthzAminoConverters(): AminoConverters {
   };
 }
 
+function makeExtraAminoConverters(): AminoConverters {
+  return {
+    "/cosmos.slashing.v1beta1.MsgUnjail": {
+      aminoType: "cosmos-sdk/MsgUnjail",
+      toAmino: ({ validatorAddr }: MsgUnjail) => ({
+        address: validatorAddr,
+      }),
+      fromAmino: ({ address, validator_addr, validatorAddr }: Record<string, unknown>) =>
+        MsgUnjail.fromPartial({
+          validatorAddr: (address ?? validator_addr ?? validatorAddr) as string,
+        }),
+    },
+  };
+}
+
 export const aminoConverters = {
   ...createDefaultAminoConverters(),
   ...createWasmAminoConverters(),
   ...makeAuthzAminoConverters(),
+  ...makeExtraAminoConverters(),
 };
+
+export const appRegistryTypes: ReadonlyArray<[string, GeneratedType]> = [
+  ...defaultRegistryTypes,
+  ...wasmTypes,
+  [MsgUnjail.typeUrl, MsgUnjail],
+];
+
+export const makeAppRegistry = () => new Registry(appRegistryTypes);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const msgRegistry: Record<string, any> = {};

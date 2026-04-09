@@ -13,6 +13,7 @@ import {
   MsgDelegate,
   MsgUndelegate,
 } from "cosmjs-types/cosmos/staking/v1beta1/tx";
+import { MsgUnjail } from "cosmjs-types/cosmos/slashing/v1beta1/tx";
 import { MsgCreateVestingAccount } from "cosmjs-types/cosmos/vesting/v1beta1/tx";
 import {
   MsgExecuteContract,
@@ -32,6 +33,7 @@ export const MsgTypeUrls = {
   BeginRedelegate: "/cosmos.staking.v1beta1.MsgBeginRedelegate",
   CreateValidator: "/cosmos.staking.v1beta1.MsgCreateValidator",
   EditValidator: "/cosmos.staking.v1beta1.MsgEditValidator",
+  Unjail: "/cosmos.slashing.v1beta1.MsgUnjail",
   // Distribution
   FundCommunityPool: "/cosmos.distribution.v1beta1.MsgFundCommunityPool",
   SetWithdrawAddress: "/cosmos.distribution.v1beta1.MsgSetWithdrawAddress",
@@ -62,6 +64,7 @@ export const MsgCodecs = {
   [MsgTypeUrls.BeginRedelegate]: MsgBeginRedelegate,
   [MsgTypeUrls.CreateValidator]: MsgCreateValidator,
   [MsgTypeUrls.EditValidator]: MsgEditValidator,
+  [MsgTypeUrls.Unjail]: MsgUnjail,
   // Distribution
   [MsgTypeUrls.FundCommunityPool]: MsgFundCommunityPool,
   [MsgTypeUrls.SetWithdrawAddress]: MsgSetWithdrawAddress,

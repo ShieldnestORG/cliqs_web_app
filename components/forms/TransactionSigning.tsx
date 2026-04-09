@@ -3,7 +3,7 @@ import { createDbSignature } from "@/lib/api";
 import { getConnectErrorDetails } from "@/lib/errorHelpers";
 import { getKeplr } from "@/lib/keplr";
 import { useWallet } from "@/context/WalletContext";
-import { aminoConverters } from "@/lib/msg";
+import { aminoConverters, makeAppRegistry } from "@/lib/msg";
 import {
   makeDirectModeAuthInfo,
   makeDirectSignDoc,
@@ -15,10 +15,9 @@ import { normalizeDbTransactionJson } from "@/lib/transactionJson";
 import { toastError, toastSuccess } from "@/lib/utils";
 import { SigningStatus } from "@/types/signing";
 import { MultisigThresholdPubkey } from "@cosmjs/amino";
-import { wasmTypes } from "@cosmjs/cosmwasm-stargate";
 import { toBase64, fromBase64 } from "@cosmjs/encoding";
-import { Registry, TxBodyEncodeObject } from "@cosmjs/proto-signing";
-import { AminoTypes, SigningStargateClient, defaultRegistryTypes } from "@cosmjs/stargate";
+import { TxBodyEncodeObject } from "@cosmjs/proto-signing";
+import { AminoTypes, SigningStargateClient } from "@cosmjs/stargate";
 import { assert } from "@cosmjs/utils";
 import Long from "long";
 import { useEffect, useState } from "react";
@@ -112,7 +111,7 @@ const TransactionSigning = (props: TransactionSigningProps) => {
         // DIRECT MODE: Sign the multisig's Direct SignDoc
         // This is different from Amino - we construct the SignDoc for the MULTISIG account,
         // not for the individual signer
-        const registry = new Registry([...defaultRegistryTypes, ...wasmTypes]);
+        const registry = makeAppRegistry();
 
         // 1. Construct bodyBytes (same as Amino)
         const txBodyEncodeObject: TxBodyEncodeObject = {
@@ -172,7 +171,7 @@ const TransactionSigning = (props: TransactionSigningProps) => {
         }
 
         const signingClient = await SigningStargateClient.offline(offlineSigner, {
-          registry: new Registry([...defaultRegistryTypes, ...wasmTypes]),
+          registry: makeAppRegistry(),
           aminoTypes: new AminoTypes(aminoConverters),
         });
 

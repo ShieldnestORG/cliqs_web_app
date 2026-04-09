@@ -35,7 +35,8 @@ export const getMessageCategory = (typeUrl: MsgTypeUrl): MessageCategoryInfo => 
     typeUrl === MsgTypeUrls.Delegate ||
     typeUrl === MsgTypeUrls.Undelegate ||
     typeUrl === MsgTypeUrls.BeginRedelegate ||
-    typeUrl === MsgTypeUrls.CreateValidator
+    typeUrl === MsgTypeUrls.CreateValidator ||
+    typeUrl === MsgTypeUrls.Unjail
   ) {
     return {
       category: "Staking",

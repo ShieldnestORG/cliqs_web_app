@@ -9,11 +9,10 @@
  */
 
 import { MultisigThresholdPubkey, pubkeyToAddress } from "@cosmjs/amino";
-import { wasmTypes } from "@cosmjs/cosmwasm-stargate";
 import { sha256 } from "@cosmjs/crypto";
 import { fromBase64, toBase64 } from "@cosmjs/encoding";
 import { Registry, TxBodyEncodeObject, EncodeObject } from "@cosmjs/proto-signing";
-import { defaultRegistryTypes, StargateClient } from "@cosmjs/stargate";
+import { StargateClient } from "@cosmjs/stargate";
 
 import { MultisigEngine, SignBytesResult, ActionSummary, EngineConfig } from "./engine";
 import {
@@ -36,6 +35,7 @@ import {
   makeDirectSignDoc,
   makeMultisignedTxBytesDirect,
 } from "../multisigDirect";
+import { makeAppRegistry } from "../msg";
 import { normalizePubkey, safeAminoMultisigTxBytes } from "../multisigAmino";
 
 // ============================================================================
@@ -63,7 +63,7 @@ export class PubKeyMultisigEngine implements MultisigEngine {
     // Normalize threshold to string on construction to prevent "str.match is not a
     // function" crash in Uint53.fromString(threshold) inside cosmjs encodePubkey.
     this.multisigPubkey = normalizePubkey(multisigPubkey);
-    this.registry = new Registry([...defaultRegistryTypes, ...wasmTypes]);
+    this.registry = makeAppRegistry();
   }
 
   // ============================================================================
