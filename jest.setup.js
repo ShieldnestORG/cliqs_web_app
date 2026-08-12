@@ -216,8 +216,12 @@ jest.mock("@cosmjs/encoding", () => ({
   })),
 }));
 
-// Mock @cosmjs/proto-signing to avoid TextEncoder issues
+// Mock @cosmjs/proto-signing to avoid TextEncoder issues.
+// Registry comes from the real module so makeAppRegistry() works. It is pulled from
+// build/registry directly rather than the package entry point, because the entry point
+// re-exports the wallet modules, which import the mocked @cosmjs/encoding above.
 jest.mock("@cosmjs/proto-signing", () => ({
+  Registry: jest.requireActual("@cosmjs/proto-signing/build/registry").Registry,
   DirectSecp256k1HdWallet: {
     fromMnemonic: jest.fn(),
   },

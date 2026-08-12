@@ -14,7 +14,7 @@ import { ensureProtocol, toastError, toastSuccess } from "@/lib/utils";
 import { OfflineSigner, EncodeObject } from "@cosmjs/proto-signing";
 import { AminoTypes, SigningStargateClient, StargateClient } from "@cosmjs/stargate";
 import { FileInput, Loader2, RefreshCw } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
@@ -114,7 +114,7 @@ export default function DevToolsImport({
   const lastAutofilledAccountKey = useRef<string | null>(null);
   const autofillInFlightKey = useRef<string | null>(null);
 
-  const resolveChainBySelectedAddressPrefix = (): ChainInfo | null => {
+  const resolveChainBySelectedAddressPrefix = useCallback((): ChainInfo | null => {
     if (selectedAccount.address.startsWith(chain.addressPrefix)) {
       return chain;
     }
@@ -131,9 +131,9 @@ export default function DevToolsImport({
       onChainResolved?.(matchingVariant);
     }
     return matchingVariant;
-  };
+  }, [chain, mainnetVariant, onChainResolved, selectedAccount.address, testnetVariant]);
 
-  const resolveChainForSelectedAccount = (): ChainInfo => {
+  const resolveChainForSelectedAccount = useCallback((): ChainInfo => {
     const chainFromSelectedAddress = resolveChainBySelectedAddressPrefix();
     const hintedNetwork = detectCoreumNetworkFromInput(jsonInput.trim());
 
@@ -170,16 +170,25 @@ export default function DevToolsImport({
     throw new Error(
       `Selected account ${selectedAccount.address} does not match the active ${chain.addressPrefix} network.`,
     );
-  };
+  }, [
+    chain.addressPrefix,
+    chain.chainId,
+    jsonInput,
+    mainnetVariant,
+    onChainResolved,
+    resolveChainBySelectedAddressPrefix,
+    selectedAccount.address,
+    testnetVariant,
+  ]);
 
-  const getRpcEndpoint = async (targetChain: ChainInfo): Promise<string> => {
+  const getRpcEndpoint = useCallback(async (targetChain: ChainInfo): Promise<string> => {
     if (targetChain.nodeAddress) {
       return ensureProtocol(targetChain.nodeAddress);
     }
 
     const nodeAddress = await getNodeFromArray(targetChain.nodeAddresses);
     return ensureProtocol(nodeAddress);
-  };
+  }, []);
 
   const accountNotFoundMessage =
     "Selected account was not found on chain yet. Fund/init this account first, or provide account number and sequence manually.";
@@ -221,15 +230,20 @@ export default function DevToolsImport({
     setValidationError(null);
   };
 
-  const resolveAccountOnChain = async (resolvedChain?: ChainInfo): Promise<{
-    targetChain: ChainInfo;
-    account: Awaited<ReturnType<StargateClient["getAccount"]>>;
-  }> => {
-    const targetChain = resolvedChain ?? resolveChainForSelectedAccount();
-    const client = await StargateClient.connect(await getRpcEndpoint(targetChain));
-    const account = await client.getAccount(selectedAccount.address);
-    return { targetChain, account };
-  };
+  const resolveAccountOnChain = useCallback(
+    async (
+      resolvedChain?: ChainInfo,
+    ): Promise<{
+      targetChain: ChainInfo;
+      account: Awaited<ReturnType<StargateClient["getAccount"]>>;
+    }> => {
+      const targetChain = resolvedChain ?? resolveChainForSelectedAccount();
+      const client = await StargateClient.connect(await getRpcEndpoint(targetChain));
+      const account = await client.getAccount(selectedAccount.address);
+      return { targetChain, account };
+    },
+    [getRpcEndpoint, resolveChainForSelectedAccount, selectedAccount.address],
+  );
 
   const fetchCurrentSequence = async (options?: { silent?: boolean }) => {
     const silent = options?.silent ?? false;
@@ -322,15 +336,7 @@ export default function DevToolsImport({
     return () => {
       cancelled = true;
     };
-  }, [
-    chain.chainId,
-    chain.addressPrefix,
-    chain.nodeAddress,
-    mainnetVariant,
-    onChainResolved,
-    selectedAccount.address,
-    testnetVariant,
-  ]);
+  }, [resolveAccountOnChain, resolveChainForSelectedAccount, selectedAccount.address]);
 
   const handleImport = async () => {
     setValidationError(null);
