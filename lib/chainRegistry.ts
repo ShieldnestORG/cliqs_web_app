@@ -6,9 +6,13 @@ import { requestGhJson } from "./request";
 
 const chainRegistryRepo = "cosmos/chain-registry";
 const repoBranch = "master";
-const shaUrl = `https://api.github.com/repos/${chainRegistryRepo}/commits/${repoBranch}`;
-const mainnetsUrl = `https://api.github.com/repos/${chainRegistryRepo}/contents`;
-const testnetsUrl = `https://api.github.com/repos/${chainRegistryRepo}/contents/testnets`;
+// Routed through our own API so GITHUB_TOKEN applies and the CDN absorbs repeats.
+// Calling api.github.com straight from the browser burns the 60/hour anonymous
+// limit per visitor, and the rate-limited response has no CORS headers, which
+// leaves ChainsContext with zero chains. See pages/api/chain-registry/[...path].ts
+const shaUrl = `/api/chain-registry/commits/${repoBranch}`;
+const mainnetsUrl = "/api/chain-registry/contents";
+const testnetsUrl = "/api/chain-registry/contents/testnets";
 const registryCdnUrl = `https://cdn.jsdelivr.net/gh/${chainRegistryRepo}@${repoBranch}`;
 
 // Check if testnets are enabled via environment variable (default: false)
