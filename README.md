@@ -14,6 +14,8 @@ npm run dev                   # Runs on http://localhost:3003
 
 **New Docs**: [PRD.md](docs/PRD.md), [User Guide](docs/App%20User%20Guide.md), [Appendix](docs/Appendix/). See [SETUP.md](SETUP.md) for dev/prod., including MongoDB Atlas, local JSON database, and BYODB (Bring Your Own Database).
 
+**Operations**: [INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md) — where production lives, how it is deployed, the 2026-08-12 outage post-mortem, and chain/database gotchas.
+
 ## Architecture
 
 - **Database**: MongoDB Atlas (production), or local JSON file (`data/local-db.json`) for development. Users can also bring their own MongoDB via Settings (BYODB).
