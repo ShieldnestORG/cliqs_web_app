@@ -1,8 +1,17 @@
 # Cosmos Multisig UI - Design System Documentation
 
+> **Cluster:** design-system · **Tags:** ui, design-system, tokens, coherence-daddy, geist · **Related:** [STYLE-GUIDE.md](../STYLE-GUIDE.md), [Typography PRD](./TYPOGRAPHY-PRD.md), [Cards PRD](./CARDS-PRD.md), [Buttons PRD](./BUTTONS-PRD.md)
+
 **UI4 Institutional Design System**  
 **Version:** 1.0  
-**Last Updated:** December 2024
+**Last Updated:** 2026-08-13
+
+> **Canonical token reference: [`docs/STYLE-GUIDE.md`](../STYLE-GUIDE.md).**
+> It carries the current Coherence Daddy colour, typography, radius, elevation and
+> motion values, and the two naming traps worth knowing before touching styles
+> (`--accent-green` is coral, not green; the utility is `purple-accent`, not
+> `accent-purple`). The PRDs in this folder describe component intent; where a
+> concrete token value here disagrees with the style guide, the style guide wins.
 
 ---
 
@@ -19,7 +28,7 @@ The Cosmos Multisig UI implements an institutional-grade design system inspired 
 |----------|-------------|
 | [CARDS-PRD.md](./CARDS-PRD.md) | Card system specification with variants and accents |
 | [BUTTONS-PRD.md](./BUTTONS-PRD.md) | Button system with action, tab, and nav variants |
-| [TYPOGRAPHY-PRD.md](./TYPOGRAPHY-PRD.md) | Font system (Space Grotesk, JetBrains Mono, Inter) |
+| [TYPOGRAPHY-PRD.md](./TYPOGRAPHY-PRD.md) | Font system (Geist, Geist Mono) |
 | [FORMS-PRD.md](./FORMS-PRD.md) | Input fields, validation states, slider components |
 | [PATTERNS-PRD.md](./PATTERNS-PRD.md) | CSS patterns, backgrounds, and visual language |
 
@@ -130,9 +139,9 @@ The Cosmos Multisig UI implements an institutional-grade design system inspired 
 
 | Role | Font | Fallback |
 |------|------|----------|
-| **Headings** | Space Grotesk | Inter, sans-serif |
-| **Body** | Inter | system-ui, sans-serif |
-| **Mono/Labels** | JetBrains Mono | SF Mono, monospace |
+| **Headings** | Geist | system-ui, sans-serif |
+| **Body** | Geist | system-ui, sans-serif |
+| **Mono/Labels** | Geist Mono | ui-monospace, SF Mono, monospace |
 
 ---
 
