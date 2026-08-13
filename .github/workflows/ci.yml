@@ -19,6 +19,18 @@ jobs:
       - run: npm ci
       - run: npm run lint
 
+  format:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: "npm"
+      - run: npm ci
+      - run: npm run format:check
+
   test:
     runs-on: ubuntu-24.04
     steps:

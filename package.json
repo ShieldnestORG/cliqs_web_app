@@ -17,6 +17,7 @@
     "resync:pubkeys": "node scripts/resync-multisig-pubkeys-from-chain.mjs",
     "start": "next start -p 3003",
     "format": "prettier --write --log-level warn \"./**/*.{js,jsx,mjs,ts,tsx}\"",
+    "format:check": "prettier --check \"./**/*.{js,jsx,mjs,ts,tsx}\"",
     "lint": "eslint --max-warnings 0 \"./**/*.{js,jsx,mjs,ts,tsx}\"",
     "lint:fix": "eslint --max-warnings 0 \"./**/*.{js,jsx,mjs,ts,tsx}\" --fix"
   },
