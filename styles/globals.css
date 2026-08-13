@@ -41,6 +41,23 @@
     --accent-bronze: 37 45% 61%;
     --accent-bronze-foreground: 0 0% 15%;
 
+    /* Semantic status colours.
+       These exist because status was being expressed with raw Tailwind palette
+       utilities (text-green-500, bg-amber-500, text-red-500 ...) that ignore the
+       brand entirely. They are aliases of existing brand values — no new colours
+       are introduced here.
+
+       Note --accent-green is hue 11, i.e. coral, NOT green. Success therefore
+       maps to --toast-green, which is the actual green. Using green-accent for
+       success would render it orange and make it near-indistinguishable from
+       destructive. */
+    --success: 164 100% 39%;
+    --success-foreground: 0 0% 100%;
+    --warning: 37 45% 61%;
+    --warning-foreground: 0 0% 15%;
+    --info: 210 52% 43%;
+    --info-foreground: 0 0% 100%;
+
     /* Legacy Compatibility */
     --accent-teal: 210 52% 43%;
     --accent-orange: 11 100% 71%;
@@ -54,25 +71,37 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    font-family:
+      "Inter",
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      Oxygen,
+      Ubuntu,
+      Cantarell,
+      "Fira Sans",
+      "Droid Sans",
+      "Helvetica Neue",
+      sans-serif;
   }
-  
+
   /* Typography - Space Grotesk for headings */
   h1 {
     @apply text-3xl font-bold tracking-tight;
-    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    font-family: "Space Grotesk", "Inter", sans-serif;
   }
   h2 {
     @apply text-2xl font-semibold tracking-tight;
-    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    font-family: "Space Grotesk", "Inter", sans-serif;
   }
   h3 {
     @apply text-xl font-semibold;
-    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    font-family: "Space Grotesk", "Inter", sans-serif;
   }
   h4 {
     @apply text-lg font-semibold;
-    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    font-family: "Space Grotesk", "Inter", sans-serif;
   }
 }
 
@@ -87,7 +116,7 @@
   .card-institutional {
     @apply relative border-2 transition-all duration-200;
     border-color: hsl(var(--border));
-    box-shadow: 
+    box-shadow:
       0 1px 3px rgba(0, 0, 0, 0.04),
       inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
@@ -95,7 +124,7 @@
   .card-institutional:hover {
     transform: translateY(-3px);
     border-color: hsl(var(--border) / 0.12);
-    box-shadow: 
+    box-shadow:
       0 8px 24px rgba(0, 0, 0, 0.12),
       0 4px 8px rgba(0, 0, 0, 0.08);
   }
@@ -114,7 +143,7 @@
   }
 
   .card-header-dark::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
@@ -130,7 +159,7 @@
   }
 
   .card-bracket-corner::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 6px;
     left: 6px;
@@ -146,7 +175,7 @@
   }
 
   .card-bracket-corner::after {
-    content: '';
+    content: "";
     position: absolute;
     bottom: 6px;
     right: 6px;
@@ -211,60 +240,60 @@
   /* ----------------------------------------
      UI4 Button System
      ---------------------------------------- */
-  
+
   /* Primary Action Button (Pill) */
   .btn-action-primary {
-    @apply px-6 py-2.5 rounded-full font-semibold text-sm uppercase tracking-wide;
+    @apply rounded-full px-6 py-2.5 text-sm font-semibold uppercase tracking-wide;
     @apply bg-foreground text-background;
-    @apply hover:opacity-90 transition-all duration-200;
+    @apply transition-all duration-200 hover:opacity-90;
     @apply active:scale-95;
-    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply disabled:cursor-not-allowed disabled:opacity-50;
     @apply flex items-center justify-center gap-2;
-    font-family: 'JetBrains Mono', 'SF Mono', monospace;
+    font-family: "JetBrains Mono", "SF Mono", monospace;
     font-size: 11px;
     letter-spacing: 0.05em;
   }
 
   /* Secondary Action Button (Outlined Pill) */
   .btn-action-secondary {
-    @apply px-6 py-2.5 rounded-full font-semibold text-sm uppercase tracking-wide;
-    @apply bg-transparent border-2;
-    @apply hover:bg-muted transition-all duration-200;
+    @apply rounded-full px-6 py-2.5 text-sm font-semibold uppercase tracking-wide;
+    @apply border-2 bg-transparent;
+    @apply transition-all duration-200 hover:bg-muted;
     @apply active:scale-95;
-    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply disabled:cursor-not-allowed disabled:opacity-50;
     @apply flex items-center justify-center gap-2;
     border-color: hsl(var(--foreground));
     color: hsl(var(--foreground));
-    font-family: 'JetBrains Mono', 'SF Mono', monospace;
+    font-family: "JetBrains Mono", "SF Mono", monospace;
     font-size: 11px;
     letter-spacing: 0.05em;
   }
 
   /* Card CTA Button (Square) */
   .btn-card-primary {
-    @apply px-6 py-3 rounded-xl font-semibold text-sm;
+    @apply rounded-xl px-6 py-3 text-sm font-semibold;
     @apply bg-foreground text-background;
-    @apply hover:opacity-90 transition-all duration-200;
+    @apply transition-all duration-200 hover:opacity-90;
     @apply active:scale-95;
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: "Space Grotesk", sans-serif;
   }
 
   .btn-card-secondary {
-    @apply px-6 py-3 rounded-xl font-semibold text-sm;
-    @apply bg-transparent border-2;
-    @apply hover:bg-muted transition-all duration-200;
+    @apply rounded-xl px-6 py-3 text-sm font-semibold;
+    @apply border-2 bg-transparent;
+    @apply transition-all duration-200 hover:bg-muted;
     @apply active:scale-95;
     border-color: hsl(var(--foreground));
     color: hsl(var(--foreground));
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: "Space Grotesk", sans-serif;
   }
 
   /* Tab Buttons */
   .btn-tab {
-    @apply px-5 py-2 rounded-full font-semibold text-xs uppercase tracking-wide;
-    @apply transition-all duration-200 whitespace-nowrap;
+    @apply rounded-full px-5 py-2 text-xs font-semibold uppercase tracking-wide;
+    @apply whitespace-nowrap transition-all duration-200;
     @apply active:scale-95;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: "JetBrains Mono", monospace;
     letter-spacing: 0.03em;
   }
 
@@ -309,7 +338,7 @@
 
   /* Icon Button */
   .btn-icon {
-    @apply p-2 rounded transition-all duration-200;
+    @apply rounded p-2 transition-all duration-200;
     @apply flex items-center justify-center;
     @apply active:scale-95;
   }
@@ -319,7 +348,7 @@
   }
 
   .btn-icon svg {
-    @apply w-4 h-4 transition-colors duration-200;
+    @apply h-4 w-4 transition-colors duration-200;
     color: hsl(var(--muted-foreground));
   }
 
@@ -329,7 +358,7 @@
 
   /* Navigation Button */
   .btn-nav {
-    @apply w-full flex items-center gap-4 px-4 py-3 rounded-lg;
+    @apply flex w-full items-center gap-4 rounded-lg px-4 py-3;
     @apply transition-all duration-200;
   }
 
@@ -352,10 +381,10 @@
   /* ----------------------------------------
      Typography Utilities
      ---------------------------------------- */
-  
+
   /* Section Labels (Comment Style) */
   .text-label {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: "JetBrains Mono", monospace;
     font-size: 10px;
     font-weight: 500;
     text-transform: uppercase;
@@ -364,13 +393,13 @@
   }
 
   .text-label-comment::before {
-    content: '// ';
+    content: "// ";
     opacity: 0.6;
   }
 
   /* KPI Values */
   .text-kpi {
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: "Space Grotesk", sans-serif;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.025em;
@@ -394,9 +423,9 @@
   /* ----------------------------------------
      Status Indicators
      ---------------------------------------- */
-  
+
   .status-dot {
-    @apply w-2 h-2 rounded-full;
+    @apply h-2 w-2 rounded-full;
   }
 
   .status-dot-active {
@@ -409,7 +438,8 @@
   }
 
   @keyframes status-pulse {
-    0%, 100% {
+    0%,
+    100% {
       box-shadow: 0 0 0 0 hsl(var(--accent-green) / 0.4);
     }
     50% {
@@ -429,9 +459,9 @@
   /* ----------------------------------------
      Progress Bar
      ---------------------------------------- */
-  
+
   .progress-track {
-    @apply h-2 rounded-full overflow-hidden;
+    @apply h-2 overflow-hidden rounded-full;
     background: hsl(var(--muted));
   }
 
@@ -443,7 +473,7 @@
       hsl(11 100% 71%) 50%,
       hsl(11 100% 60%) 100%
     );
-    box-shadow: 
+    box-shadow:
       0 0 12px hsl(var(--accent-green) / 0.4),
       inset 0 1px 2px rgba(255, 255, 255, 0.3);
   }
@@ -451,9 +481,9 @@
   /* ----------------------------------------
      Icon Containers
      ---------------------------------------- */
-  
+
   .icon-container {
-    @apply w-12 h-12 border-2 flex items-center justify-center rounded-xl;
+    @apply flex h-12 w-12 items-center justify-center rounded-xl border-2;
     @apply transition-all duration-200;
     border-color: hsl(var(--border));
     background: hsl(var(--card));
@@ -465,7 +495,7 @@
   }
 
   .icon-container svg {
-    @apply w-6 h-6 transition-colors duration-200;
+    @apply h-6 w-6 transition-colors duration-200;
     color: hsl(var(--muted-foreground));
   }
 
@@ -476,16 +506,18 @@
   /* ----------------------------------------
      Loading Spinner
      ---------------------------------------- */
-  
+
   .card-loading-indicator {
-    @apply w-5 h-5 rounded-full;
+    @apply h-5 w-5 rounded-full;
     border: 2px solid hsl(var(--accent-purple) / 0.2);
     border-top-color: hsl(var(--accent-purple));
     animation: spin 0.8s linear infinite;
   }
 
   @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+      transform: rotate(360deg);
+    }
   }
 }
 
@@ -494,16 +526,20 @@
    ============================================ */
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes zoomIn95 {
-  from { 
+  from {
     opacity: 0;
     transform: scale(0.95);
   }
-  to { 
+  to {
     opacity: 1;
     transform: scale(1);
   }
@@ -566,24 +602,42 @@
 }
 
 @keyframes progress {
-  0% { transform: translateX(-100%); }
-  50% { transform: translateX(0); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 @keyframes gradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .reveal {
   animation: reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.reveal-delay-1 { animation-delay: 0.1s; }
-.reveal-delay-2 { animation-delay: 0.2s; }
-.reveal-delay-3 { animation-delay: 0.3s; }
+.reveal-delay-1 {
+  animation-delay: 0.1s;
+}
+.reveal-delay-2 {
+  animation-delay: 0.2s;
+}
+.reveal-delay-3 {
+  animation-delay: 0.3s;
+}
 
 /* ============================================
    Custom Scrollbar
@@ -634,7 +688,7 @@
 }
 
 .section-inner {
-  @apply relative z-10 max-w-[1600px] mx-auto px-[0.75in];
+  @apply relative z-10 mx-auto max-w-[1600px] px-[0.75in];
 }
 
 /* Dot Pattern Background */
@@ -651,7 +705,7 @@
 /* Grid Pattern Background */
 .bg-pattern-grid {
   background-color: hsl(var(--background));
-  background-image: 
+  background-image:
     linear-gradient(to right, hsl(var(--border) / 0.08) 1px, transparent 1px),
     linear-gradient(to bottom, hsl(var(--border) / 0.08) 1px, transparent 1px);
   background-size: 20px 20px;
@@ -684,11 +738,11 @@
 
 /* Institutional Input Style */
 .input-institutional {
-  @apply h-12 px-4 py-3 border-2 transition-colors duration-200 rounded-xl;
+  @apply h-12 rounded-xl border-2 px-4 py-3 transition-colors duration-200;
   @apply focus:outline-none;
   border-color: hsl(var(--border));
   background: hsl(var(--card));
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   font-size: 14px;
 }
 
@@ -735,7 +789,7 @@
 
 .focus-ring:focus-visible {
   outline: none;
-  box-shadow: 
+  box-shadow:
     0 0 0 3px hsl(var(--accent-purple) / 0.3),
     0 4px 12px hsl(var(--accent-purple) / 0.12);
 }
@@ -760,7 +814,7 @@
 
   .bento-card:hover {
     transform: translateY(-2px);
-    box-shadow: 
+    box-shadow:
       0 8px 24px rgba(0, 0, 0, 0.08),
       0 4px 8px rgba(0, 0, 0, 0.04);
   }
@@ -781,26 +835,18 @@
   /* Bento Card Variants */
   .bento-card-highlight {
     border-color: hsl(var(--accent-green) / 0.5);
-    background: linear-gradient(
-      135deg,
-      hsl(var(--card)) 0%,
-      hsl(var(--accent-green) / 0.05) 100%
-    );
+    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--accent-green) / 0.05) 100%);
   }
 
   .bento-card-accent {
     border-color: hsl(var(--accent-purple) / 0.3);
-    background: linear-gradient(
-      135deg,
-      hsl(var(--card)) 0%,
-      hsl(var(--accent-purple) / 0.05) 100%
-    );
+    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--accent-purple) / 0.05) 100%);
   }
 
   /* Dashboard Quick Stats */
   .quick-stat {
-    @apply flex items-center gap-4 p-4 rounded-xl;
-    @apply bg-card border-2 border-border/[0.06];
+    @apply flex items-center gap-4 rounded-xl p-4;
+    @apply border-2 border-border/[0.06] bg-card;
     @apply transition-all duration-200;
   }
 
@@ -810,14 +856,14 @@
   }
 
   .quick-stat-value {
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: "Space Grotesk", sans-serif;
     font-weight: 700;
     font-size: 1.25rem;
     line-height: 1.2;
   }
 
   .quick-stat-label {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: "JetBrains Mono", monospace;
     font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -826,12 +872,12 @@
 
   /* Dashboard Tabs */
   .dashboard-tabs {
-    @apply flex items-center gap-1 p-1 rounded-xl;
+    @apply flex items-center gap-1 rounded-xl p-1;
     background: hsl(var(--muted) / 0.5);
   }
 
   .dashboard-tab {
-    @apply px-4 py-2 rounded-lg text-sm font-medium;
+    @apply rounded-lg px-4 py-2 text-sm font-medium;
     @apply transition-all duration-200;
     color: hsl(var(--muted-foreground));
   }
@@ -846,15 +892,15 @@
     color: hsl(var(--foreground));
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
-
-  }
+}
 
 /* ============================================
    Keyboard Hint Animation
    ============================================ */
 
 @keyframes kbd-bounce {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -883,7 +929,7 @@
     transition: none;
     animation: none;
   }
-  
+
   .card-institutional:hover,
   .card-hover:hover,
   .bento-card:hover,
@@ -902,7 +948,7 @@
   --normal-bg: hsl(var(--card));
   --normal-border: hsl(var(--border));
   --normal-text: hsl(var(--foreground));
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -914,7 +960,7 @@
 
 /* Toast Title */
 [data-sonner-toast] [data-title] {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: "Space Grotesk", sans-serif;
   font-weight: 600;
   font-size: 14px;
   letter-spacing: -0.01em;
@@ -922,7 +968,7 @@
 
 /* Toast Description */
 [data-sonner-toast] [data-description] {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   font-size: 11px;
   opacity: 0.8;
   margin-top: 4px;
@@ -1005,7 +1051,7 @@
 
 /* Action Button in Toast */
 [data-sonner-toast] [data-button] {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
@@ -1023,7 +1069,7 @@
 
 /* Cancel Button in Toast */
 [data-sonner-toast] [data-cancel] {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;

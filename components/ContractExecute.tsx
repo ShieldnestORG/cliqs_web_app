@@ -491,10 +491,10 @@ export function ContractExecute({ client: externalClient, selectedAccount }: Con
         {/* Query Result */}
         {queryResult && (
           <Alert className="border-info/30 bg-info/5">
-            <CheckCircle2 className="text-info h-4 w-4" />
+            <CheckCircle2 className="h-4 w-4 text-info" />
             <AlertDescription>
               <div className="space-y-3">
-                <div className="text-info font-semibold">Query Result</div>
+                <div className="font-semibold text-info">Query Result</div>
 
                 <div className="rounded bg-muted/50 p-3">
                   <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-all font-mono text-xs">

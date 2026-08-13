@@ -600,7 +600,7 @@ const TransactionPage = ({
               <CardContent className="pt-4">
                 <div className="mb-3 flex items-center gap-2">
                   {verificationStatus === "verified" ? (
-                    <CheckCircle2 className="h-5 w-5 text-green-accent" />
+                    <CheckCircle2 className="h-5 w-5 text-success" />
                   ) : verificationStatus === "failed" ? (
                     <AlertTriangle className="h-5 w-5 text-amber-500" />
                   ) : null}
@@ -625,7 +625,7 @@ const TransactionPage = ({
                       {broadcastResult.verifications.map((v, i) => (
                         <div key={i} className="flex items-center gap-2 pl-2 text-xs">
                           {v.verified ? (
-                            <CheckCircle2 className="h-3 w-3 text-green-accent" />
+                            <CheckCircle2 className="h-3 w-3 text-success" />
                           ) : (
                             <AlertTriangle className="h-3 w-3 text-amber-500" />
                           )}
@@ -645,12 +645,12 @@ const TransactionPage = ({
       ) : null}
 
       {!isLoadingTx && sequenceMismatch ? (
-        <Card variant="institutional" className="mb-6 border-red-500/50 bg-red-500/10">
+        <Card variant="institutional" className="mb-6 border-destructive/50 bg-destructive/10">
           <CardContent className="pt-6">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="mt-0.5 h-5 w-5 text-red-400" />
+              <AlertTriangle className="mt-0.5 h-5 w-5 text-destructive" />
               <div className="flex-1">
-                <h3 className="mb-2 text-lg font-semibold text-red-400">
+                <h3 className="mb-2 text-lg font-semibold text-destructive">
                   Sequence Mismatch Detected
                 </h3>
                 <p className="mb-2 text-sm">
@@ -808,8 +808,8 @@ const TransactionPage = ({
                       <span
                         className={`font-mono text-sm font-semibold ${
                           accountOnChain.sequence === txInfo.sequence
-                            ? "text-green-accent"
-                            : "text-red-400"
+                            ? "text-success"
+                            : "text-destructive"
                         }`}
                       >
                         {accountOnChain.sequence}{" "}
@@ -901,8 +901,8 @@ const TransactionPage = ({
                   <div
                     className={`font-mono text-sm font-semibold ${
                       accountOnChain.sequence === txInfo.sequence
-                        ? "text-green-400"
-                        : "text-red-400"
+                        ? "text-success"
+                        : "text-destructive"
                     }`}
                   >
                     {accountOnChain.sequence}{" "}
@@ -1078,14 +1078,14 @@ const TransactionPage = ({
                 </div>
                 <div
                   className={`flex items-center justify-between border-b border-border/50 py-2 ${
-                    sequenceMismatch ? "rounded bg-red-500/10 px-2" : ""
+                    sequenceMismatch ? "rounded bg-destructive/10 px-2" : ""
                   }`}
                 >
                   <span className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
                     Tx Sequence
                   </span>
                   <span
-                    className={`font-mono text-sm ${sequenceMismatch ? "font-semibold text-red-400" : ""}`}
+                    className={`font-mono text-sm ${sequenceMismatch ? "font-semibold text-destructive" : ""}`}
                   >
                     {txInfo.sequence}
                   </span>
@@ -1093,7 +1093,7 @@ const TransactionPage = ({
                 {accountOnChain?.sequence !== undefined && (
                   <div
                     className={`flex items-center justify-between border-b border-border/50 py-2 ${
-                      sequenceMismatch ? "rounded bg-red-500/10 px-2" : ""
+                      sequenceMismatch ? "rounded bg-destructive/10 px-2" : ""
                     }`}
                   >
                     <span className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
@@ -1102,8 +1102,8 @@ const TransactionPage = ({
                     <span
                       className={`font-mono text-sm font-semibold ${
                         accountOnChain.sequence === txInfo.sequence
-                          ? "text-green-accent"
-                          : "text-red-400"
+                          ? "text-success"
+                          : "text-destructive"
                       }`}
                     >
                       {accountOnChain.sequence}{" "}
