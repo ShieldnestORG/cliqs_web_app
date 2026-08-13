@@ -1,5 +1,7 @@
+import type { EncodeObject } from "@cosmjs/proto-signing";
+
 import { RNG } from "../generators/rng";
-import { genMsgBatch } from "../generators/genMsg";
+import { genMsgBatch, type CosmosMsg } from "../generators/genMsg";
 import { genMemo } from "../generators/chainPrimitives";
 import { estimateGas } from "../gas/gasEstimator";
 import { classify } from "../gas/gasOracle";
@@ -11,6 +13,28 @@ import { MockWalletSigner } from "../../../__tests__/mocks/MockWalletSigner";
 import { MockBroadcaster } from "../../../__tests__/mocks/MockBroadcaster";
 
 installChaosPatches();
+
+/**
+ * The msg generator emits Amino-style messages ({ type, value }), while the
+ * wallet flow builds tx bytes from proto EncodeObjects ({ typeUrl, value }).
+ * Map each generated msg type onto its canonical proto typeUrl so the batch we
+ * hand to buildTxBytes is the same shape the real signing path receives.
+ */
+const MSG_TYPE_TO_TYPE_URL: Record<CosmosMsg["type"], string> = {
+  "bank/send": "/cosmos.bank.v1beta1.MsgSend",
+  "staking/delegate": "/cosmos.staking.v1beta1.MsgDelegate",
+  "staking/undelegate": "/cosmos.staking.v1beta1.MsgUndelegate",
+  "distribution/withdraw_rewards": "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward",
+  "distribution/withdraw_validator_commission":
+    "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission",
+  "wasm/execute": "/cosmwasm.wasm.v1.MsgExecuteContract",
+  // Intentionally not a registered typeUrl: this is the disallowed-msg case.
+  "custom/unknown": "/custom.unknown.v1.MsgUnknown",
+};
+
+function toEncodeObjects(msgs: CosmosMsg[]): EncodeObject[] {
+  return msgs.map((m) => ({ typeUrl: MSG_TYPE_TO_TYPE_URL[m.type], value: m.value }));
+}
 
 describe("PHASE 3 GAS FUZZ: resource pressure + out-of-gas safety", () => {
   test("big valid batches fail safely and remain idempotent under out-of-gas injection", async () => {
@@ -48,7 +72,7 @@ describe("PHASE 3 GAS FUZZ: resource pressure + out-of-gas safety", () => {
         },
       });
 
-      const txBytes = await flow.buildTxBytes({ msgs, memo });
+      const txBytes = await flow.buildTxBytes({ msgs: toEncodeObjects(msgs), memo });
       const signed = await flow.signTxBytes(txBytes, signer);
 
       // First attempt: may throw OUT_OF_GAS

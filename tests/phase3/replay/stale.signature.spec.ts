@@ -43,14 +43,14 @@ describe("PHASE 3 REPLAY: Stale Signature Attack", () => {
     test("old signed tx bytes cannot be reused", async () => {
       // Create and sign first transaction
       const tx1 = await walletFlow.buildTxBytes({
-        msgs: [{ type: "test", value: {} }],
+        msgs: [{ typeUrl: "test", value: {} }],
         memo: "tx1",
       });
       const signed1 = await walletFlow.signTxBytes(tx1, signer);
 
       // Create second transaction (different content)
       const tx2 = await walletFlow.buildTxBytes({
-        msgs: [{ type: "test", value: { different: true } }],
+        msgs: [{ typeUrl: "test", value: { different: true } }],
         memo: "tx2",
       });
 
@@ -104,7 +104,7 @@ describe("PHASE 3 REPLAY: Stale Signature Attack", () => {
       // Simulate account with increasing sequence
       for (let sequence = 0; sequence < 10; sequence++) {
         const tx = await walletFlow.buildTxBytes({
-          msgs: [{ type: "test", value: { sequence } }],
+          msgs: [{ typeUrl: "test", value: { sequence } }],
         });
 
         // Sign with current sequence
@@ -119,12 +119,19 @@ describe("PHASE 3 REPLAY: Stale Signature Attack", () => {
         const replayCtx: ReplayContext = {
           txHash,
           txBytes: signedTx,
-          sequence,
+          accountSequence: sequence,
           previousExecutions: executedTxHashes,
           executionSucceeded: false,
         };
 
         expect(() => assertReplayInvariants(replayCtx)).not.toThrow();
+
+        // Positive control: the oracle must actually detect a replay that got
+        // through. Without this, the assertion above is unfalsifiable because
+        // executionSucceeded is hard-coded false.
+        expect(() =>
+          assertReplayInvariants({ ...replayCtx, executionSucceeded: true }),
+        ).toThrow(/Replay attack succeeded/);
 
         // Next sequence would be higher
         // In real blockchain, this would be handled by the node
@@ -138,7 +145,7 @@ describe("PHASE 3 REPLAY: Stale Signature Attack", () => {
       // Create transactions with different sequences
       for (let seq = 0; seq < 5; seq++) {
         const tx = await walletFlow.buildTxBytes({
-          msgs: [{ type: "test", value: { seq } }],
+          msgs: [{ typeUrl: "test", value: { seq } }],
         });
         const signed = await walletFlow.signTxBytes(tx, signer);
         signedTxs.push(signed);
@@ -155,12 +162,19 @@ describe("PHASE 3 REPLAY: Stale Signature Attack", () => {
         const replayCtx: ReplayContext = {
           txHash: oldTxHash,
           txBytes: signedTxs[i],
-          sequence: i,
+          accountSequence: i,
           previousExecutions: executedTxHashes,
           executionSucceeded: false, // Should be false
         };
 
         expect(() => assertReplayInvariants(replayCtx)).not.toThrow();
+
+        // Positive control: replaying an already-executed tx MUST be rejected.
+        // The tx was added to executedTxHashes above, so if it were to succeed
+        // again the oracle has to raise.
+        expect(() =>
+          assertReplayInvariants({ ...replayCtx, executionSucceeded: true }),
+        ).toThrow(/Replay attack succeeded/);
       }
     });
   });
@@ -175,7 +189,7 @@ describe("PHASE 3 REPLAY: Stale Signature Attack", () => {
       faultController.state.credentialValid = true;
 
       const tx = await walletFlow.buildTxBytes({
-        msgs: [{ type: "test", value: {} }],
+        msgs: [{ typeUrl: "test", value: {} }],
       });
       const signedTx = await walletFlow.signTxBytes(tx, signer);
       const txHash = hashTxBytes(signedTx);
@@ -205,7 +219,7 @@ describe("PHASE 3 REPLAY: Stale Signature Attack", () => {
 
       // Signer A creates and executes transaction
       const txA = await walletFlow.buildTxBytes({
-        msgs: [{ type: "test", value: { signer: "A" } }],
+        msgs: [{ typeUrl: "test", value: { signer: "A" } }],
       });
       const signedA = await walletFlow.signTxBytes(txA, signerA);
       const hashA = hashTxBytes(signedA);
@@ -232,7 +246,7 @@ describe("PHASE 3 REPLAY: Stale Signature Attack", () => {
     test("corrupted signatures cannot be replayed", async () => {
       // Create valid signed transaction
       const tx = await walletFlow.buildTxBytes({
-        msgs: [{ type: "test", value: {} }],
+        msgs: [{ typeUrl: "test", value: {} }],
       });
       const signedTx = await walletFlow.signTxBytes(tx, signer);
 
@@ -295,7 +309,7 @@ describe("PHASE 3 REPLAY: Stale Signature Attack", () => {
       broadcaster.enqueueFailure(new Error("NETWORK_ERROR"));
 
       const tx1 = await walletFlow.buildTxBytes({
-        msgs: [{ type: "test", value: {} }],
+        msgs: [{ typeUrl: "test", value: {} }],
       });
       const signed1 = await walletFlow.signTxBytes(tx1, signer);
 
@@ -305,7 +319,7 @@ describe("PHASE 3 REPLAY: Stale Signature Attack", () => {
       broadcaster.enqueueSuccess({ code: 0, txhash: "SUCCESS_HASH" });
 
       const tx2 = await walletFlow.buildTxBytes({
-        msgs: [{ type: "test", value: {} }],
+        msgs: [{ typeUrl: "test", value: {} }],
       });
       const signed2 = await walletFlow.signTxBytes(tx2, signer);
 
@@ -322,7 +336,7 @@ describe("PHASE 3 REPLAY: Stale Signature Attack", () => {
       broadcaster.enqueueSuccess({ code: 0, txhash: "EXECUTED_HASH" });
 
       const tx = await walletFlow.buildTxBytes({
-        msgs: [{ type: "test", value: {} }],
+        msgs: [{ typeUrl: "test", value: {} }],
       });
       const signedTx = await walletFlow.signTxBytes(tx, signer);
 
@@ -354,7 +368,7 @@ describe("PHASE 3 REPLAY: Stale Signature Attack", () => {
       faultController.state.policyVersion = 1;
 
       const tx1 = await walletFlow.buildTxBytes({
-        msgs: [{ type: "test", value: {} }],
+        msgs: [{ typeUrl: "test", value: {} }],
       });
       const signed1 = await walletFlow.signTxBytes(tx1, signer);
 
@@ -379,7 +393,7 @@ describe("PHASE 3 REPLAY: Stale Signature Attack", () => {
     test("emergency pause prevents replay execution", async () => {
       // Execute transaction normally
       const tx = await walletFlow.buildTxBytes({
-        msgs: [{ type: "test", value: {} }],
+        msgs: [{ typeUrl: "test", value: {} }],
       });
       const signedTx = await walletFlow.signTxBytes(tx, signer);
 
@@ -434,7 +448,7 @@ describe("PHASE 3 REPLAY: Stale Signature Attack", () => {
       for (let i = 0; i < 100; i++) {
         // Create, sign, and "execute" transaction
         const tx = await walletFlow.buildTxBytes({
-          msgs: [{ type: "test", value: { id: i } }],
+          msgs: [{ typeUrl: "test", value: { id: i } }],
         });
         const signedTx = await walletFlow.signTxBytes(tx, signer);
         const txHash = hashTxBytes(signedTx);

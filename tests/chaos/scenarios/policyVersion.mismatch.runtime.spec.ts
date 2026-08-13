@@ -20,8 +20,8 @@ describe("CHAOS: policyVersion mismatch at runtime", () => {
           const res = await evaluatePoliciesMinimal(
             {
               timelock: { unlockAtMs: 0 },
-              emergencyPaused: false,
-              safeMode: false,
+              isPaused: false,
+              isSafeMode: false,
             },
             "execution",
           );
@@ -39,8 +39,8 @@ describe("CHAOS: policyVersion mismatch at runtime", () => {
           const res = await evaluatePoliciesMinimal(
             {
               timelock: { unlockAtMs: 0 },
-              emergencyPaused: false,
-              safeMode: false,
+              isPaused: false,
+              isSafeMode: false,
             },
             "execution",
           );

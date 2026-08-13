@@ -27,21 +27,19 @@ describe("API: POST /api/transaction/[id]/signature - Add Signature: P0", () => 
 
   it("should add signature successfully", async () => {
     const txId = "tx-id-123";
-    const mockSignature = {
-      id: "sig-id-123",
-      transaction: { id: txId },
-      signature: "test-signature",
-      pubkey: "test-pubkey",
-    };
+    // createSignature persists the draft and resolves with the signature string
+    // itself (graphql/signature.ts), not with a signature record.
+    const createdSignature = "test-signature";
 
-    mockCreateSignature.mockResolvedValue(mockSignature);
+    mockCreateSignature.mockResolvedValue(createdSignature);
 
     const { req, res } = createMocks({
       method: "POST",
       query: { transactionID: txId },
       body: {
-        signature: "test-signature",
-        pubkey: "test-pubkey",
+        address: "cosmos1member",
+        bodyBytes: "CgoKCC9jb3Ntb3Mx",
+        signature: createdSignature,
       },
     });
 
@@ -49,12 +47,13 @@ describe("API: POST /api/transaction/[id]/signature - Add Signature: P0", () => 
 
     expect(res._getStatusCode()).toBe(200);
     const data = parseResponseData(res._getData());
-    expect(data.signature).toEqual(mockSignature);
-    expect(mockCreateSignature).toHaveBeenCalledWith(
-      expect.objectContaining({
-        transaction: { id: txId },
-      }),
-    );
+    expect(data.signature).toEqual(createdSignature);
+    expect(mockCreateSignature).toHaveBeenCalledWith({
+      address: "cosmos1member",
+      bodyBytes: "CgoKCC9jb3Ntb3Mx",
+      signature: createdSignature,
+      transaction: { id: txId },
+    });
   });
 
   it("should return 405 for non-POST methods", async () => {
@@ -75,8 +74,9 @@ describe("API: POST /api/transaction/[id]/signature - Add Signature: P0", () => 
       method: "POST",
       query: { transactionID: "tx-id-123" },
       body: {
+        address: "cosmos1member",
+        bodyBytes: "CgoKCC9jb3Ntb3Mx",
         signature: "test-signature",
-        pubkey: "test-pubkey",
       },
     });
 

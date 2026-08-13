@@ -140,8 +140,9 @@ function evaluateChaosPolicies(
     };
   }
 
-  // Check policy version mismatch - use context.expectedPolicyVersion if available
-  const expectedVersion = contextOverrides.expectedPolicyVersion ?? context.expectedPolicyVersion;
+  // Check policy version mismatch - PolicyContext has no expected version, so it
+  // only ever comes from the caller's overrides
+  const expectedVersion = contextOverrides.expectedPolicyVersion;
   if (expectedVersion !== undefined && context.policyVersion !== expectedVersion) {
     return {
       allowed: false,

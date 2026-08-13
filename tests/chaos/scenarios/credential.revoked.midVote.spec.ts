@@ -30,8 +30,8 @@ describe("CHAOS: credential revoked mid-vote", () => {
             {
               policyVersion: 1,
               expectedPolicyVersion: 1,
-              emergencyPaused: false,
-              safeMode: false,
+              isPaused: false,
+              isSafeMode: false,
               credential: { holder: "cosmos1voter", valid: true, role: "member" },
               timelock: { unlockAtMs: 0 },
             },
@@ -47,8 +47,8 @@ describe("CHAOS: credential revoked mid-vote", () => {
             {
               policyVersion: 1,
               expectedPolicyVersion: 1,
-              emergencyPaused: false,
-              safeMode: false,
+              isPaused: false,
+              isSafeMode: false,
               // NOTE: we omit credential and let chaos patch inject faultController.state.credentialValid
               timelock: { unlockAtMs: 0 },
             },

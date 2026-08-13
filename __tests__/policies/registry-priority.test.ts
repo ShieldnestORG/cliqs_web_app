@@ -70,6 +70,9 @@ describe("Policy Registry: priority + fail-closed", () => {
     const res = await evaluateExecution(proposal, context, registry);
 
     expect(res.allowed).toBe(false);
+    if (res.allowed) {
+      throw new Error("Expected execution to be denied while emergency pause is active");
+    }
     expect(res.reason).toContain("paused");
   });
 
@@ -132,6 +135,9 @@ describe("Policy Registry: priority + fail-closed", () => {
 
     // Should be blocked by msg type policy (lower priority but still enforced)
     expect(res.allowed).toBe(false);
+    if (res.allowed) {
+      throw new Error("Expected proposal to be denied by the blocked message type policy");
+    }
     expect(res.reason).toContain("blocked");
   });
 });

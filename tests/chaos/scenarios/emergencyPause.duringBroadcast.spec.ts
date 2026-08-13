@@ -38,8 +38,8 @@ describe("CHAOS: emergency pause during broadcast", () => {
           const res = await evaluatePoliciesMinimal(
             {
               timelock: { unlockAtMs: 0 },
-              safeMode: false,
-              // emergencyPaused omitted -> injected by patch
+              isSafeMode: false,
+              // isPaused omitted -> injected from faultController.state.emergencyPaused
             },
             "execution",
           );

@@ -39,6 +39,8 @@ jest.mock("@/graphql/signature", () => ({
 const mockGetMultisig = getMultisig as jest.MockedFunction<typeof getMultisig>;
 const mockCreateTransaction = createTransaction as jest.MockedFunction<typeof createTransaction>;
 const mockCreateSignature = createSignature as jest.MockedFunction<typeof createSignature>;
+const multisigPubkeyJSON =
+  '{"type":"tendermint/PubKeyMultisigThreshold","value":{"threshold":"2","pubkeys":[]}}';
 const validImportedTx = {
   chainId: "cosmoshub-4",
   accountNumber: "1",
@@ -67,6 +69,8 @@ describe("API: POST /api/transaction - Create Transaction: P0", () => {
       id: "multisig-id-123",
       address: "cosmos1multisig",
       chainId: "cosmoshub-4",
+      version: 1,
+      pubkeyJSON: multisigPubkeyJSON,
     };
     const mockTxId = "tx-id-123";
 
@@ -109,6 +113,8 @@ describe("API: POST /api/transaction - Create Transaction: P0", () => {
       id: "multisig-id-123",
       address: "cosmos1multisig",
       chainId: "cosmoshub-4",
+      version: 1,
+      pubkeyJSON: multisigPubkeyJSON,
     });
     mockCreateTransaction.mockResolvedValue("tx-id-123");
     mockCreateSignature.mockResolvedValue("sig-1");
@@ -171,6 +177,8 @@ describe("API: POST /api/transaction - Create Transaction: P0", () => {
       id: "multisig-id-123",
       address: "cosmos1multisig",
       chainId: "cosmoshub-4",
+      version: 1,
+      pubkeyJSON: multisigPubkeyJSON,
     };
 
     mockGetMultisig.mockResolvedValue(mockMultisig);

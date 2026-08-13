@@ -28,12 +28,23 @@ describe("API: GET /api/chain/[chainId]/multisig/[address] - Get Multisig: P0", 
   it("should get multisig successfully", async () => {
     const chainId = "cosmoshub-4";
     const address = "cosmos1multisig123";
+    // DbMultisig has no `members`/`threshold` columns — the member pubkeys and
+    // the threshold live inside the serialized `pubkeyJSON`.
     const mockMultisig = {
       id: "multisig-id-123",
       address,
       chainId,
-      members: [],
-      threshold: 2,
+      version: 1,
+      pubkeyJSON: JSON.stringify({
+        type: "tendermint/PubKeyMultisigThreshold",
+        value: {
+          threshold: "2",
+          pubkeys: [
+            { type: "tendermint/PubKeySecp256k1", value: "member-1-pubkey" },
+            { type: "tendermint/PubKeySecp256k1", value: "member-2-pubkey" },
+          ],
+        },
+      }),
     };
 
     mockGetMultisig.mockResolvedValue(mockMultisig);

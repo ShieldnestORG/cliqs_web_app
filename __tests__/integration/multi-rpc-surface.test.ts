@@ -9,6 +9,7 @@
 
 import { getWalletFlow } from "../adapters/walletFlow.adapter";
 import { MultiRpcVerifier } from "@/lib/rpc/multi-rpc-verifier";
+import type { EndpointConfig } from "@/lib/rpc/endpoint-manager";
 
 describe("Integration: MultiRpcVerifier module surface", () => {
   test("MultiRpcVerifier class is importable", () => {
@@ -20,7 +21,8 @@ describe("Integration: MultiRpcVerifier module surface", () => {
     const instance = new MultiRpcVerifier({
       chainId: "test-chain",
       minConfirmations: 1,
-      endpoints: [{ url: "http://test-rpc", priority: "primary" }],
+      timeoutMs: 30000,
+      endpoints: [{ url: "http://test-rpc", priority: "primary", type: "private" }],
     });
 
     expect(typeof instance.broadcastAndVerify).toBe("function");
@@ -32,12 +34,13 @@ describe("Integration: MultiRpcVerifier module surface", () => {
   });
 
   test("MultiRpcVerifier constructor accepts config", () => {
-    const config = {
+    const config: EndpointConfig = {
       chainId: "cosmoshub-4",
       minConfirmations: 2,
+      timeoutMs: 30000,
       endpoints: [
-        { url: "https://rpc.cosmoshub.strange.love", priority: "primary" },
-        { url: "https://cosmoshub-4.technofractal.com", priority: "secondary" },
+        { url: "https://rpc.cosmoshub.strange.love", priority: "primary", type: "public" },
+        { url: "https://cosmoshub-4.technofractal.com", priority: "secondary", type: "public" },
       ],
     };
 
@@ -48,7 +51,8 @@ describe("Integration: MultiRpcVerifier module surface", () => {
     const instance = new MultiRpcVerifier({
       chainId: "test-chain",
       minConfirmations: 1,
-      endpoints: [{ url: "http://test-rpc", priority: "primary" }],
+      timeoutMs: 30000,
+      endpoints: [{ url: "http://test-rpc", priority: "primary", type: "private" }],
     });
 
     expect(typeof instance.broadcastAndVerify).toBe("function");
