@@ -12,24 +12,20 @@ module.exports = {
     },
     extend: {
       fontFamily: {
-        // UI4 Typography System
+        // Coherence Daddy typography — Geist everywhere, per the portal.
+        // `heading` stays as a separate key because ~104 call sites use
+        // font-heading; it now resolves to Geist rather than Space Grotesk.
         sans: [
-          "Inter",
+          "Geist",
+          "system-ui",
           "-apple-system",
           "BlinkMacSystemFont",
           "Segoe UI",
-          "Roboto",
-          "Oxygen",
-          "Ubuntu",
-          "Cantarell",
-          "Fira Sans",
-          "Droid Sans",
-          "Helvetica Neue",
           "sans-serif",
         ],
-        heading: ["Space Grotesk", "Inter", "sans-serif"],
-        mono: ["JetBrains Mono", "SF Mono", "Fira Code", "monospace"],
-        body: ["Inter", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+        heading: ["Geist", "system-ui", "sans-serif"],
+        mono: ["Geist Mono", "ui-monospace", "SF Mono", "Menlo", "monospace"],
+        body: ["Geist", "system-ui", "-apple-system", "sans-serif"],
       },
       fontSize: {
         // UI4 Typography Scale
