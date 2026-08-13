@@ -119,10 +119,18 @@ export function PendingTransactionsProvider({ children }: { children: ReactNode 
       const pendingPromises = allMultisigs.map(async (multisig) => {
         try {
           const pendingTxs = await getPendingDbTxs(multisig.address, chain.chainId);
-          return { address: multisig.address, pendingCount: pendingTxs.length, transactions: pendingTxs };
+          return {
+            address: multisig.address,
+            pendingCount: pendingTxs.length,
+            transactions: pendingTxs,
+          };
         } catch (error) {
           console.error(`Failed to fetch pending transactions for ${multisig.address}:`, error);
-          return { address: multisig.address, pendingCount: 0, transactions: [] as readonly DbTransaction[] };
+          return {
+            address: multisig.address,
+            pendingCount: 0,
+            transactions: [] as readonly DbTransaction[],
+          };
         }
       });
 

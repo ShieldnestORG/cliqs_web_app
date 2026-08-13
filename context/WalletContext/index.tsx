@@ -134,12 +134,7 @@ export const WalletProvider = ({ children }: WalletProviderProps) => {
     }
     // Use stable primitive dependencies instead of entire chain object
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    walletInfo?.address,
-    walletInfo?.type,
-    chain.chainId,
-    verificationSignature,
-  ]);
+  }, [walletInfo?.address, walletInfo?.type, chain.chainId, verificationSignature]);
 
   // Connect to Keplr wallet.
   // Depend on the full chain object so the suggestion payload is never stale
@@ -155,7 +150,10 @@ export const WalletProvider = ({ children }: WalletProviderProps) => {
     try {
       setLoading((prev) => ({ ...prev, keplr: true }));
 
-      const { bech32Address: address, pubKey: pubKeyArray } = await getKeplrKey(chain.chainId, chain);
+      const { bech32Address: address, pubKey: pubKeyArray } = await getKeplrKey(
+        chain.chainId,
+        chain,
+      );
       const pubKey = toBase64(pubKeyArray);
 
       const newWalletInfo: WalletInfo = { type: "Keplr", address, pubKey };

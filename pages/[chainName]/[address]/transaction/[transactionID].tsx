@@ -23,7 +23,11 @@ import TransactionSigning from "../../../../components/forms/TransactionSigning"
 import Button from "../../../../components/inputs/Button";
 import Page from "../../../../components/layout/Page";
 import { useChains } from "../../../../context/ChainsContext";
-import { ensureChainMultisigInDb, getHostedMultisig, isAccount } from "../../../../lib/multisigHelpers";
+import {
+  ensureChainMultisigInDb,
+  getHostedMultisig,
+  isAccount,
+} from "../../../../lib/multisigHelpers";
 import { dbTxFromJson } from "../../../../lib/txMsgHelpers";
 import { printableCoins } from "../../../../lib/displayHelpers";
 import {
@@ -107,7 +111,10 @@ const TransactionPage = ({
     "idle" | "verifying" | "verified" | "failed"
   >("idle");
   // Memoize txInfo to prevent recalculating on every render
-  const txInfo = useMemo(() => transactionJSON ? dbTxFromJson(transactionJSON) : null, [transactionJSON]);
+  const txInfo = useMemo(
+    () => (transactionJSON ? dbTxFromJson(transactionJSON) : null),
+    [transactionJSON],
+  );
 
   useEffect(() => {
     if (initialTransactionJSON) return;
@@ -123,7 +130,8 @@ const TransactionPage = ({
         setCurrentSignatures(tx.signatures ?? []);
         setTransactionHash(tx.txHash || "");
         setTransactionStatus(
-          tx.status || ((tx.txHash ? "broadcast" : "pending") as "pending" | "broadcast" | "cancelled")
+          tx.status ||
+            ((tx.txHash ? "broadcast" : "pending") as "pending" | "broadcast" | "cancelled"),
         );
       } catch (err) {
         console.error("Fetch tx failed:", err);
@@ -133,7 +141,6 @@ const TransactionPage = ({
       }
     })();
   }, [initialTransactionJSON, transactionID, router]);
-
 
   const multisigAddress = router.query.address?.toString();
 
@@ -218,8 +225,8 @@ const TransactionPage = ({
       if (currentAccountOnChain.accountNumber !== txInfo.accountNumber) {
         throw new Error(
           `Account number mismatch! Transaction was created for account #${txInfo.accountNumber}, ` +
-          `but the current on-chain account number is ${currentAccountOnChain.accountNumber}. ` +
-          `This transaction's signatures are no longer valid. Please cancel this transaction and create a new one.`,
+            `but the current on-chain account number is ${currentAccountOnChain.accountNumber}. ` +
+            `This transaction's signatures are no longer valid. Please cancel this transaction and create a new one.`,
         );
       }
 
@@ -233,9 +240,9 @@ const TransactionPage = ({
 
         throw new Error(
           `Sequence mismatch! Transaction was signed for sequence ${txInfo.sequence}, ` +
-          `but the current on-chain sequence is ${currentAccountOnChain.sequence}. ` +
-          `This typically means another transaction was broadcast from this multisig account. ` +
-          `The collected signatures are no longer valid. Please cancel this transaction and create a new one.`,
+            `but the current on-chain sequence is ${currentAccountOnChain.sequence}. ` +
+            `This typically means another transaction was broadcast from this multisig account. ` +
+            `The collected signatures are no longer valid. Please cancel this transaction and create a new one.`,
         );
       }
 
@@ -253,7 +260,7 @@ const TransactionPage = ({
         if (!s.address || typeof s.address !== "string") {
           throw new Error(
             "A stored signature has a missing or invalid signer address. " +
-            "The transaction data may be corrupt. Please cancel and create a new one.",
+              "The transaction data may be corrupt. Please cancel and create a new one.",
           );
         }
       }
@@ -267,7 +274,7 @@ const TransactionPage = ({
       if (!allSameBodyBytes) {
         throw new Error(
           "Signatures were produced for different transaction bodies — the transaction may " +
-          "have been modified after some members signed. Please cancel and create a new one.",
+            "have been modified after some members signed. Please cancel and create a new one.",
         );
       }
 
@@ -391,11 +398,7 @@ const TransactionPage = ({
 
       // Phase 0: Use MultiRpcVerifier for hardened broadcast
       setVerificationStatus("verifying");
-      verifier = createMultiRpcVerifier(
-        chain.chainId,
-        chain.nodeAddress,
-        chain.nodeAddresses,
-      );
+      verifier = createMultiRpcVerifier(chain.chainId, chain.nodeAddress, chain.nodeAddresses);
 
       const verifiedResult = await verifier.broadcastAndVerify(signedTxBytes);
       setBroadcastResult(verifiedResult);
@@ -404,8 +407,8 @@ const TransactionPage = ({
         setVerificationStatus("failed");
         throw new Error(
           verifiedResult.error ||
-          `Transaction broadcast succeeded but verification failed. ` +
-          `Only ${verifiedResult.verifications.filter((v) => v.verified).length + 1} endpoints confirmed.`,
+            `Transaction broadcast succeeded but verification failed. ` +
+              `Only ${verifiedResult.verifications.filter((v) => v.verified).length + 1} endpoints confirmed.`,
         );
       }
 
@@ -504,8 +507,8 @@ const TransactionPage = ({
   const cancelTx = async () => {
     const confirmed = window.confirm(
       "Are you sure you want to cancel this transaction?\n\n" +
-      "This will mark the transaction as cancelled and it won't be able to be signed or broadcast. " +
-      "This action cannot be undone.",
+        "This will mark the transaction as cancelled and it won't be able to be signed or broadcast. " +
+        "This action cannot be undone.",
     );
 
     if (!confirmed) return;
@@ -538,18 +541,16 @@ const TransactionPage = ({
     [currentSignatures],
   );
 
-  const isThresholdMet = pubkey
-    ? uniqueSignerCount >= Number(pubkey.value.threshold)
-    : false;
+  const isThresholdMet = pubkey ? uniqueSignerCount >= Number(pubkey.value.threshold) : false;
 
   return (
     <Page
       goBack={
         chain.registryName
           ? {
-            pathname: `/${chain.registryName}/${multisigAddress}`,
-            title: "multisig",
-          }
+              pathname: `/${chain.registryName}/${multisigAddress}`,
+              title: "multisig",
+            }
           : undefined
       }
     >
@@ -566,7 +567,9 @@ const TransactionPage = ({
 
       {isLoadingTx ? (
         <div className="mb-6 flex h-32 items-center justify-center rounded-lg border border-border bg-card/50 p-8 shadow-sm">
-          <p className="animate-pulse text-sm text-muted-foreground">Fetching transaction details from database...</p>
+          <p className="animate-pulse text-sm text-muted-foreground">
+            Fetching transaction details from database...
+          </p>
         </div>
       ) : null}
 
@@ -672,7 +675,11 @@ const TransactionPage = ({
       ) : null}
 
       {/* Desktop-first Horizontal Layout for In Progress Transactions */}
-      {!isLoadingTx && !transactionHash && transactionStatus !== "cancelled" && !sequenceMismatch && txInfo ? (
+      {!isLoadingTx &&
+      !transactionHash &&
+      transactionStatus !== "cancelled" &&
+      !sequenceMismatch &&
+      txInfo ? (
         <div className="flex flex-col gap-4 md:gap-6 lg:flex-row">
           {/* LEFT COLUMN: Signing Status Card */}
           <div className="w-full lg:w-[380px] lg:flex-shrink-0">
@@ -687,9 +694,7 @@ const TransactionPage = ({
                   <div className="space-y-3">
                     <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4">
                       <div className="flex items-center gap-3">
-                        <div className="font-heading text-3xl font-bold">
-                          {uniqueSignerCount}
-                        </div>
+                        <div className="font-heading text-3xl font-bold">{uniqueSignerCount}</div>
                         <div className="text-muted-foreground">of</div>
                         <div className="font-heading text-3xl font-bold">
                           {pubkey.value.threshold}
@@ -801,10 +806,11 @@ const TransactionPage = ({
                         Chain Sequence
                       </span>
                       <span
-                        className={`font-mono text-sm font-semibold ${accountOnChain.sequence === txInfo.sequence
-                          ? "text-green-accent"
-                          : "text-red-400"
-                          }`}
+                        className={`font-mono text-sm font-semibold ${
+                          accountOnChain.sequence === txInfo.sequence
+                            ? "text-green-accent"
+                            : "text-red-400"
+                        }`}
                       >
                         {accountOnChain.sequence}{" "}
                         {accountOnChain.sequence === txInfo.sequence ? "✓ OK" : "✗ MISMATCH"}
@@ -893,10 +899,11 @@ const TransactionPage = ({
                     Chain Sequence
                   </div>
                   <div
-                    className={`font-mono text-sm font-semibold ${accountOnChain.sequence === txInfo.sequence
-                      ? "text-green-400"
-                      : "text-red-400"
-                      }`}
+                    className={`font-mono text-sm font-semibold ${
+                      accountOnChain.sequence === txInfo.sequence
+                        ? "text-green-400"
+                        : "text-red-400"
+                    }`}
                   >
                     {accountOnChain.sequence}{" "}
                     {accountOnChain.sequence === txInfo.sequence ? "✓ OK" : "✗ MISMATCH"}
@@ -1043,7 +1050,10 @@ const TransactionPage = ({
       ) : null}
 
       {/* Bento Grid Layout for Completed/Sequence Mismatch Transactions - Horizontal Layout */}
-      {!isLoadingTx && txInfo && (transactionHash || sequenceMismatch) && transactionStatus !== "cancelled" ? (
+      {!isLoadingTx &&
+      txInfo &&
+      (transactionHash || sequenceMismatch) &&
+      transactionStatus !== "cancelled" ? (
         <BentoGrid className="auto-rows-[minmax(200px,auto)] grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
           {/* Transaction Details Card - 1 col */}
           <BentoCard colSpan={1} variant="default" className="p-6">
@@ -1067,8 +1077,9 @@ const TransactionPage = ({
                   <span className="font-mono text-sm">{txInfo.accountNumber}</span>
                 </div>
                 <div
-                  className={`flex items-center justify-between border-b border-border/50 py-2 ${sequenceMismatch ? "rounded bg-red-500/10 px-2" : ""
-                    }`}
+                  className={`flex items-center justify-between border-b border-border/50 py-2 ${
+                    sequenceMismatch ? "rounded bg-red-500/10 px-2" : ""
+                  }`}
                 >
                   <span className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
                     Tx Sequence
@@ -1081,17 +1092,19 @@ const TransactionPage = ({
                 </div>
                 {accountOnChain?.sequence !== undefined && (
                   <div
-                    className={`flex items-center justify-between border-b border-border/50 py-2 ${sequenceMismatch ? "rounded bg-red-500/10 px-2" : ""
-                      }`}
+                    className={`flex items-center justify-between border-b border-border/50 py-2 ${
+                      sequenceMismatch ? "rounded bg-red-500/10 px-2" : ""
+                    }`}
                   >
                     <span className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
                       Chain Sequence
                     </span>
                     <span
-                      className={`font-mono text-sm font-semibold ${accountOnChain.sequence === txInfo.sequence
-                        ? "text-green-accent"
-                        : "text-red-400"
-                        }`}
+                      className={`font-mono text-sm font-semibold ${
+                        accountOnChain.sequence === txInfo.sequence
+                          ? "text-green-accent"
+                          : "text-red-400"
+                      }`}
                     >
                       {accountOnChain.sequence}{" "}
                       {accountOnChain.sequence === txInfo.sequence ? "✓ OK" : "✗ MISMATCH"}

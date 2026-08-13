@@ -8,7 +8,7 @@
  */
 
 import { render, screen, waitFor } from "@testing-library/react";
-import '@testing-library/jest-dom'
+import "@testing-library/jest-dom";
 import TransactionViewPage, {
   getServerSideProps,
 } from "@/pages/[chainName]/[address]/transaction/[transactionID]";
@@ -34,7 +34,9 @@ jest.mock("@/components/dataViews/CompletedTransaction", () => {
 });
 
 jest.mock("@/components/forms/TransactionSigning", () => {
-  return function MockTransactionSigning(props: { tx: { accountNumber: unknown; sequence: unknown } }) {
+  return function MockTransactionSigning(props: {
+    tx: { accountNumber: unknown; sequence: unknown };
+  }) {
     return (
       <div data-testid="transaction-signing">
         {`accountNumber:${String(props.tx.accountNumber)} (${typeof props.tx.accountNumber}) sequence:${String(props.tx.sequence)} (${typeof props.tx.sequence})`}

@@ -258,7 +258,15 @@ export default function ValidatorDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [addressParam, chain, isCliqMode, verificationSignature, verify, walletInfo?.address, walletInfo?.pubKey]);
+  }, [
+    addressParam,
+    chain,
+    isCliqMode,
+    verificationSignature,
+    verify,
+    walletInfo?.address,
+    walletInfo?.pubKey,
+  ]);
 
   // Register chain-only multisig in DB when viewing validator in CLIQ mode.
   // Users can land here directly from "Manage Validator" without visiting the CLIQ page,
@@ -266,12 +274,7 @@ export default function ValidatorDashboard() {
   useEffect(() => {
     (async function ensureCliqInDb() {
       try {
-        if (
-          !isCliqMode ||
-          !cliqAddress ||
-          !isChainInfoFilled(chain) ||
-          !chain.nodeAddress
-        ) {
+        if (!isCliqMode || !cliqAddress || !isChainInfoFilled(chain) || !chain.nodeAddress) {
           return;
         }
 
@@ -340,7 +343,10 @@ export default function ValidatorDashboard() {
           chain,
           sig
             ? { signature: sig }
-            : { address: normalizedEffectiveAddress ?? walletInfo.address, pubkey: walletInfo.pubKey },
+            : {
+                address: normalizedEffectiveAddress ?? walletInfo.address,
+                pubkey: walletInfo.pubKey,
+              },
         );
 
         if (fetchId !== associatedFetchId.current) return;
@@ -583,11 +589,14 @@ export default function ValidatorDashboard() {
                 <div>
                   <p className="text-sm font-medium text-yellow-500">Network Address Mismatch</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Your wallet address uses the <code className="font-mono">{fromBech32(effectiveAddress).prefix}</code> prefix
-                    but you are viewing the <strong>{chain.chainDisplayName || "current"}</strong> chain which uses <code className="font-mono">{chain.addressPrefix}</code>.
-                    The address has been automatically converted to{" "}
-                    <code className="font-mono break-all">{normalizedEffectiveAddress}</code> for this lookup.
-                    To resolve this permanently, reconnect your wallet after switching networks.
+                    Your wallet address uses the{" "}
+                    <code className="font-mono">{fromBech32(effectiveAddress).prefix}</code> prefix
+                    but you are viewing the <strong>{chain.chainDisplayName || "current"}</strong>{" "}
+                    chain which uses <code className="font-mono">{chain.addressPrefix}</code>. The
+                    address has been automatically converted to{" "}
+                    <code className="break-all font-mono">{normalizedEffectiveAddress}</code> for
+                    this lookup. To resolve this permanently, reconnect your wallet after switching
+                    networks.
                   </p>
                 </div>
               </div>
@@ -811,9 +820,11 @@ export default function ValidatorDashboard() {
               <div>
                 <p className="text-sm font-medium text-yellow-500">Network Address Mismatch</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  The address uses the <code className="font-mono">{fromBech32(effectiveAddress).prefix}</code> prefix
-                  but you are on <strong>{chain.chainDisplayName || "this chain"}</strong> which uses <code className="font-mono">{chain.addressPrefix}</code>.
-                  It was automatically converted for this lookup. Reconnect your wallet to resolve this.
+                  The address uses the{" "}
+                  <code className="font-mono">{fromBech32(effectiveAddress).prefix}</code> prefix
+                  but you are on <strong>{chain.chainDisplayName || "this chain"}</strong> which
+                  uses <code className="font-mono">{chain.addressPrefix}</code>. It was
+                  automatically converted for this lookup. Reconnect your wallet to resolve this.
                 </p>
               </div>
             </div>
@@ -841,67 +852,64 @@ export default function ValidatorDashboard() {
       )}
 
       {/* You also manage via CLIQ - when viewing direct validator and user has CLIQ validators */}
-      {!isCliqMode &&
-        !addressParam &&
-        chain.registryName &&
-        cliqOnlyValidators.length > 0 && (
-          <Card variant="institutional" bracket="green" className="border-green-accent/30">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-accent/20">
-                  <Users className="h-5 w-5 text-green-accent" />
-                </div>
-                <div>
-                  <CardLabel className="text-green-accent">Also Manage Via CLIQ</CardLabel>
-                  <CardTitle className="text-base">Your CLIQ Validators</CardTitle>
-                </div>
+      {!isCliqMode && !addressParam && chain.registryName && cliqOnlyValidators.length > 0 && (
+        <Card variant="institutional" bracket="green" className="border-green-accent/30">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-accent/20">
+                <Users className="h-5 w-5 text-green-accent" />
               </div>
-              <CardDescription>
-                You are also a member of{" "}
-                {cliqOnlyValidators.length === 1 ? "a CLIQ that operates" : "CLIQs that operate"} as{" "}
-                {cliqOnlyValidators.length === 1 ? "a validator" : "validators"}. Manage rewards
-                from any of them.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {cliqOnlyValidators.map((item, idx) => (
-                <Link
-                  key={idx}
-                  href={`/${chain.registryName}/validator?address=${item.address}`}
-                  className="block"
-                >
-                  <div className="group flex items-center justify-between gap-4 rounded-xl border border-border/50 bg-muted/30 p-3 transition-all hover:border-green-accent/50 hover:bg-green-accent/5">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-accent/20">
-                        <Shield className="h-4 w-4 text-green-accent" />
-                      </div>
-                      <div className="min-w-0">
-                        <h4 className="truncate font-heading text-sm font-semibold text-foreground">
-                          {item.validator.moniker}
-                        </h4>
-                        <AddressDisplay
-                          address={item.address}
-                          copyLabel="CLIQ address"
-                          className="text-muted-foreground"
-                          head={12}
-                          tail={8}
-                        />
-                      </div>
+              <div>
+                <CardLabel className="text-green-accent">Also Manage Via CLIQ</CardLabel>
+                <CardTitle className="text-base">Your CLIQ Validators</CardTitle>
+              </div>
+            </div>
+            <CardDescription>
+              You are also a member of{" "}
+              {cliqOnlyValidators.length === 1 ? "a CLIQ that operates" : "CLIQs that operate"} as{" "}
+              {cliqOnlyValidators.length === 1 ? "a validator" : "validators"}. Manage rewards from
+              any of them.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {cliqOnlyValidators.map((item, idx) => (
+              <Link
+                key={idx}
+                href={`/${chain.registryName}/validator?address=${item.address}`}
+                className="block"
+              >
+                <div className="group flex items-center justify-between gap-4 rounded-xl border border-border/50 bg-muted/30 p-3 transition-all hover:border-green-accent/50 hover:bg-green-accent/5">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-accent/20">
+                      <Shield className="h-4 w-4 text-green-accent" />
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="shrink-0 gap-2 group-hover:bg-green-accent/10 group-hover:text-green-accent"
-                    >
-                      Manage
-                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </Button>
+                    <div className="min-w-0">
+                      <h4 className="truncate font-heading text-sm font-semibold text-foreground">
+                        {item.validator.moniker}
+                      </h4>
+                      <AddressDisplay
+                        address={item.address}
+                        copyLabel="CLIQ address"
+                        className="text-muted-foreground"
+                        head={12}
+                        tail={8}
+                      />
+                    </div>
                   </div>
-                </Link>
-              ))}
-            </CardContent>
-          </Card>
-        )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="shrink-0 gap-2 group-hover:bg-green-accent/10 group-hover:text-green-accent"
+                  >
+                    Manage
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </Button>
+                </div>
+              </Link>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Network Toggle */}
       <NetworkToggle

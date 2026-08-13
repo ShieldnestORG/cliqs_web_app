@@ -25,7 +25,11 @@ import { useCallback, useEffect, useState } from "react";
 import OldCreateTxForm from "../../../../components/forms/OldCreateTxForm";
 import { useChains } from "../../../../context/ChainsContext";
 import { useWallet } from "@/context/WalletContext";
-import { ensureChainMultisigInDb, getHostedMultisig, isAccount } from "../../../../lib/multisigHelpers";
+import {
+  ensureChainMultisigInDb,
+  getHostedMultisig,
+  isAccount,
+} from "../../../../lib/multisigHelpers";
 import { useMultisigType } from "@/lib/hooks/useMultisigType";
 import { createSigningCW3ClientFromSigner } from "@/lib/contract/cw3-client";
 import { getGasAdjustment } from "@/lib/contract/codeRegistry";

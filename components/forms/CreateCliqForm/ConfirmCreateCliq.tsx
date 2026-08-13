@@ -8,12 +8,7 @@
  */
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useChains } from "@/context/ChainsContext";
 import { ReloadIcon } from "@radix-ui/react-icons";
 import { Shield, Users, Check, ShieldPlus } from "lucide-react";

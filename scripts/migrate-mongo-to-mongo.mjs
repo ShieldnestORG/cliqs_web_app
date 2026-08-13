@@ -35,7 +35,8 @@ try {
 
 const SOURCE_MONGODB_URI = process.env.SOURCE_MONGODB_URI || "";
 const DEST_MONGODB_URI = process.env.DEST_MONGODB_URI || process.env.MONGODB_URI || "";
-const DB_NAME = process.env.MONGODB_DB_NAME || process.env.SOURCE_DB_NAME || process.env.DEST_DB_NAME || "cliqs";
+const DB_NAME =
+  process.env.MONGODB_DB_NAME || process.env.SOURCE_DB_NAME || process.env.DEST_DB_NAME || "cliqs";
 
 const COLLECTIONS = ["multisigs", "transactions", "signatures", "nonces"];
 const BATCH_SIZE = 100;

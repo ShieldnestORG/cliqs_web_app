@@ -59,10 +59,12 @@ export const deleteLocalChainFromStorage = (chainName: string, chains: ChainItem
 const recentChainsStorageKey = "context-recent-chains";
 const txRecentChainPrefix = "tx:";
 
-const getStoredRecentChainKey = (chain: Pick<ChainInfo, "registryName" | "chainDisplayName" | "chainId">) =>
-  isCoreumChain(chain) ? `${txRecentChainPrefix}${chain.chainId}` : chain.registryName;
+const getStoredRecentChainKey = (
+  chain: Pick<ChainInfo, "registryName" | "chainDisplayName" | "chainId">,
+) => (isCoreumChain(chain) ? `${txRecentChainPrefix}${chain.chainId}` : chain.registryName);
 
-const isLegacyTxRecentKey = (value: string) => isCoreumRouteAlias(value) && !value.startsWith(txRecentChainPrefix);
+const isLegacyTxRecentKey = (value: string) =>
+  isCoreumRouteAlias(value) && !value.startsWith(txRecentChainPrefix);
 
 const findChainById = (
   chainId: string,
@@ -98,11 +100,15 @@ const resolveChainReference = (
   testnetsEnabled: boolean,
 ): ChainInfo | null => {
   if (chainReference.startsWith(txRecentChainPrefix)) {
-    return findChainById(chainReference.slice(txRecentChainPrefix.length), {
-      localnets,
-      testnets,
-      mainnets,
-    }, testnetsEnabled);
+    return findChainById(
+      chainReference.slice(txRecentChainPrefix.length),
+      {
+        localnets,
+        testnets,
+        mainnets,
+      },
+      testnetsEnabled,
+    );
   }
 
   if (isLegacyTxRecentKey(chainReference)) {

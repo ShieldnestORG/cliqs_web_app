@@ -1018,9 +1018,8 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
                     <Shield className="h-5 w-5 text-white" />
                   </div>
                   <p className="text-sm leading-relaxed text-muted-foreground">
-                    This creates a{" "}
-                    <span className="font-bold text-foreground">spend-limited</span> authz grant.
-                    CLIQS can only send up to{" "}
+                    This creates a <span className="font-bold text-foreground">spend-limited</span>{" "}
+                    authz grant. CLIQS can only send up to{" "}
                     <span className="font-bold text-foreground">
                       {totalDisplayAmount} {selectedToken?.symbol}
                     </span>{" "}

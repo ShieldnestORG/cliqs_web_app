@@ -344,7 +344,9 @@ export default function DevToolsImport({
     try {
       targetChain = resolveChainForSelectedAccount();
     } catch (error) {
-      setValidationError(error instanceof Error ? error.message : "Could not resolve import chain.");
+      setValidationError(
+        error instanceof Error ? error.message : "Could not resolve import chain.",
+      );
       return;
     }
 
@@ -473,10 +475,10 @@ export default function DevToolsImport({
           Import Transaction
         </CardTitle>
         <CardDescription>
-          Paste either a <code>DbTransactionParsedDataJson</code> object or a raw Cosmos
-          transaction envelope with <code>body</code> and <code>auth_info</code>. Wallet accounts
-          will sign and broadcast immediately; multisig accounts will create a signable transaction
-          entry. Raw imports use the metadata fields below together with the active chain (
+          Paste either a <code>DbTransactionParsedDataJson</code> object or a raw Cosmos transaction
+          envelope with <code>body</code> and <code>auth_info</code>. Wallet accounts will sign and
+          broadcast immediately; multisig accounts will create a signable transaction entry. Raw
+          imports use the metadata fields below together with the active chain (
           <strong>{chain.chainId}</strong>).
         </CardDescription>
       </CardHeader>

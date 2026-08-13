@@ -55,7 +55,9 @@ export default async function chainRegistryProxy(req: NextApiRequest, res: NextA
     // with it. Anonymous access still gets 60/hour, and the CDN cache above means
     // that is plenty to keep the app alive until the token is rotated.
     if (token && (ghRes.status === 401 || ghRes.status === 403)) {
-      console.warn(`[chain-registry] GITHUB_TOKEN rejected (${ghRes.status}); retrying anonymously`);
+      console.warn(
+        `[chain-registry] GITHUB_TOKEN rejected (${ghRes.status}); retrying anonymously`,
+      );
       ghRes = await callGithub(false);
     }
 

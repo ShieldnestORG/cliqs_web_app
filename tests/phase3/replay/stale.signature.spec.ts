@@ -129,9 +129,9 @@ describe("PHASE 3 REPLAY: Stale Signature Attack", () => {
         // Positive control: the oracle must actually detect a replay that got
         // through. Without this, the assertion above is unfalsifiable because
         // executionSucceeded is hard-coded false.
-        expect(() =>
-          assertReplayInvariants({ ...replayCtx, executionSucceeded: true }),
-        ).toThrow(/Replay attack succeeded/);
+        expect(() => assertReplayInvariants({ ...replayCtx, executionSucceeded: true })).toThrow(
+          /Replay attack succeeded/,
+        );
 
         // Next sequence would be higher
         // In real blockchain, this would be handled by the node
@@ -172,9 +172,9 @@ describe("PHASE 3 REPLAY: Stale Signature Attack", () => {
         // Positive control: replaying an already-executed tx MUST be rejected.
         // The tx was added to executedTxHashes above, so if it were to succeed
         // again the oracle has to raise.
-        expect(() =>
-          assertReplayInvariants({ ...replayCtx, executionSucceeded: true }),
-        ).toThrow(/Replay attack succeeded/);
+        expect(() => assertReplayInvariants({ ...replayCtx, executionSucceeded: true })).toThrow(
+          /Replay attack succeeded/,
+        );
       }
     });
   });

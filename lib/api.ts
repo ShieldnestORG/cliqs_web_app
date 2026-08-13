@@ -52,10 +52,9 @@ export const getDbUserMultisigs = async (
     chain,
   };
 
-  const promise = requestJson(
-    `/api/chain/${chain.chainId}/multisig/list`,
-    { body },
-  ) as Promise<FetchedMultisigs>;
+  const promise = requestJson(`/api/chain/${chain.chainId}/multisig/list`, {
+    body,
+  }) as Promise<FetchedMultisigs>;
 
   if (dedupeKey) {
     inFlightMultisigRequests.set(dedupeKey, promise);

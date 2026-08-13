@@ -79,12 +79,9 @@ function getIndexerConfig() {
   return {
     baseUrl,
     apiKey: process.env.MULTISIG_INDEXER_API_KEY?.trim(),
-    timeoutMs:
-      Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : DEFAULT_TIMEOUT_MS,
-    byAddressPath:
-      process.env.MULTISIG_INDEXER_BY_ADDRESS_PATH?.trim() || DEFAULT_BY_ADDRESS_PATH,
-    byPubkeyPath:
-      process.env.MULTISIG_INDEXER_BY_PUBKEY_PATH?.trim() || DEFAULT_BY_PUBKEY_PATH,
+    timeoutMs: Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : DEFAULT_TIMEOUT_MS,
+    byAddressPath: process.env.MULTISIG_INDEXER_BY_ADDRESS_PATH?.trim() || DEFAULT_BY_ADDRESS_PATH,
+    byPubkeyPath: process.env.MULTISIG_INDEXER_BY_PUBKEY_PATH?.trim() || DEFAULT_BY_PUBKEY_PATH,
     importPath: process.env.MULTISIG_INDEXER_IMPORT_PATH?.trim() || DEFAULT_IMPORT_PATH,
     legacyMembershipPath: process.env.MULTISIG_INDEXER_MEMBERSHIP_PATH?.trim(),
   };
@@ -213,25 +210,22 @@ function tryBuildMultisigPubkey(value: unknown): string | null {
   }
 
   const nestedValue = isRecord(candidate.value) ? candidate.value : candidate;
-  const threshold = coerceThreshold(
-    nestedValue.threshold ?? candidate.threshold,
-  );
-  const rawMembers =
-    Array.isArray(nestedValue.pubkeys)
-      ? nestedValue.pubkeys
-      : Array.isArray(candidate.pubkeys)
-        ? candidate.pubkeys
-        : Array.isArray(nestedValue.public_keys)
-          ? nestedValue.public_keys
-          : Array.isArray(candidate.public_keys)
-            ? candidate.public_keys
-            : Array.isArray(candidate.members)
-              ? candidate.members.map((member) =>
-                  isRecord(member)
-                    ? member.pubkey ?? member.rawMemberPubkey ?? member.publicKey
-                    : null,
-                )
-              : null;
+  const threshold = coerceThreshold(nestedValue.threshold ?? candidate.threshold);
+  const rawMembers = Array.isArray(nestedValue.pubkeys)
+    ? nestedValue.pubkeys
+    : Array.isArray(candidate.pubkeys)
+      ? candidate.pubkeys
+      : Array.isArray(nestedValue.public_keys)
+        ? nestedValue.public_keys
+        : Array.isArray(candidate.public_keys)
+          ? candidate.public_keys
+          : Array.isArray(candidate.members)
+            ? candidate.members.map((member) =>
+                isRecord(member)
+                  ? (member.pubkey ?? member.rawMemberPubkey ?? member.publicKey)
+                  : null,
+              )
+            : null;
 
   if (!threshold || !rawMembers || rawMembers.length === 0) return null;
 
@@ -239,9 +233,7 @@ function tryBuildMultisigPubkey(value: unknown): string | null {
   if (members.some((member) => member === null)) return null;
 
   const simpleMembers = members.filter(
-    (
-      member,
-    ): member is { readonly type: "tendermint/PubKeySecp256k1"; readonly value: string } =>
+    (member): member is { readonly type: "tendermint/PubKeySecp256k1"; readonly value: string } =>
       Boolean(member),
   );
 

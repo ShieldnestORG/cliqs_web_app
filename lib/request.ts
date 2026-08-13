@@ -45,7 +45,7 @@ export const requestJson = async (
   { method, headers, body, timeout = DEFAULT_TIMEOUT_MS, ...restConfig }: RequestConfig = {},
 ) => {
   // Auto-inject BYODB headers when active, BUT ONLY for internal API calls.
-  // We do not want to send user's DB credentials to 3rd party APIs (like GitHub) 
+  // We do not want to send user's DB credentials to 3rd party APIs (like GitHub)
   // nor trigger CORS preflight errors with foreign servers.
   const isInternalServer =
     endpoint.startsWith("/") ||
@@ -103,7 +103,9 @@ export const requestJson = async (
     // "Failed to fetch" can be thrown by browser extensions (e.g. Keplr)
     // that patch window.fetch. Log but re-throw so callers can handle it.
     if (error instanceof TypeError && error.message === "Failed to fetch") {
-      console.warn(`[request] Network error for ${endpoint} – this may be caused by a browser extension intercepting fetch.`);
+      console.warn(
+        `[request] Network error for ${endpoint} – this may be caused by a browser extension intercepting fetch.`,
+      );
     }
     throw error;
   }

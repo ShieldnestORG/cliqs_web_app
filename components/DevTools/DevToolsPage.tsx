@@ -217,12 +217,13 @@ export default function DevTools() {
       if (!walletInfo) return;
       try {
         setLoadingMultisigs(true);
-        const fetched = isVerified && verificationSignature
-          ? await getDbUserMultisigs(chain, { signature: verificationSignature })
-          : await getDbUserMultisigs(chain, {
-              address: walletInfo.address,
-              pubkey: walletInfo.pubKey,
-            });
+        const fetched =
+          isVerified && verificationSignature
+            ? await getDbUserMultisigs(chain, { signature: verificationSignature })
+            : await getDbUserMultisigs(chain, {
+                address: walletInfo.address,
+                pubkey: walletInfo.pubKey,
+              });
         const all = [...fetched.created, ...fetched.belonged];
         const unique = all.filter(
           (value, idx, arr) => arr.findIndex((item) => item.address === value.address) === idx,
@@ -746,7 +747,9 @@ export default function DevTools() {
                     }
                   }}
                   onSuccess={(txId) => {
-                    router.push(`/${chain.registryName}/${selectedAccount.address}/transaction/${txId}`);
+                    router.push(
+                      `/${chain.registryName}/${selectedAccount.address}/transaction/${txId}`,
+                    );
                   }}
                 />
               )}
