@@ -112,6 +112,37 @@ const OldCreateTxForm = ({ router, senderAddress, accountOnChain }: OldCreateTxF
     }
   };
 
+  // Deep link support: the validator dashboard links here with ?type=<MsgTypeUrl>
+  // so that picking "Undelegate" there does not make the operator pick it again
+  // from the command grid. Applied once, and only for a recognised type url.
+  const appliedDeepLinkRef = useRef(false);
+
+  useEffect(() => {
+    if (appliedDeepLinkRef.current || !router.isReady) {
+      return;
+    }
+
+    const requestedType = router.query.type;
+
+    if (typeof requestedType !== "string") {
+      return;
+    }
+
+    const isKnownMsgType = (Object.values(MsgTypeUrls) as readonly string[]).includes(
+      requestedType,
+    );
+
+    if (!isKnownMsgType) {
+      return;
+    }
+
+    appliedDeepLinkRef.current = true;
+    handleSelectTransactionType(requestedType as MsgTypeUrl);
+    // handleSelectTransactionType is recreated every render; the ref guard above
+    // is what keeps this to a single application.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router.isReady, router.query.type]);
+
   // Cleanup debounce timeout on unmount
   useEffect(() => {
     return () => {

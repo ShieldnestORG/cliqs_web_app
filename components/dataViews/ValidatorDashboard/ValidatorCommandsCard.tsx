@@ -334,7 +334,7 @@ export default function ValidatorCommandsCard({
             <BentoGrid className="grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
               {/* Delegate */}
               <Link
-                href={`/${chain.registryName}/${targetAddress}/transaction/new`}
+                href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.Delegate)}`}
                 className="block"
               >
                 <BentoCard variant="default" interactive className="min-h-0 p-4">
@@ -352,7 +352,7 @@ export default function ValidatorCommandsCard({
 
               {/* Undelegate */}
               <Link
-                href={`/${chain.registryName}/${targetAddress}/transaction/new`}
+                href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.Undelegate)}`}
                 className="block"
               >
                 <BentoCard variant="default" interactive className="min-h-0 p-4">
@@ -372,7 +372,7 @@ export default function ValidatorCommandsCard({
 
               {/* Redelegate */}
               <Link
-                href={`/${chain.registryName}/${targetAddress}/transaction/new`}
+                href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.BeginRedelegate)}`}
                 className="block"
               >
                 <BentoCard variant="default" interactive className="min-h-0 p-4">
@@ -392,7 +392,7 @@ export default function ValidatorCommandsCard({
 
               {/* Withdraw Rewards */}
               <Link
-                href={`/${chain.registryName}/${targetAddress}/transaction/new`}
+                href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.WithdrawDelegatorReward)}`}
                 className="block"
               >
                 <BentoCard variant="default" interactive className="min-h-0 p-4">
@@ -412,7 +412,7 @@ export default function ValidatorCommandsCard({
 
               {/* Vote */}
               <Link
-                href={`/${chain.registryName}/${targetAddress}/transaction/new`}
+                href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.Vote)}`}
                 className="block"
               >
                 <BentoCard variant="default" interactive className="min-h-0 p-4">
