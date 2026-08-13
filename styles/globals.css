@@ -26,7 +26,7 @@
     --accent-foreground: 0 0% 89%;
     --destructive: 0 62.8% 50%;
     --destructive-foreground: 0 0% 89%;
-    --border: 0 0% 100% / 0.06;
+    --border: 0 0% 100%;
     --input: 0 0% 25%;
     --ring: 260 28% 55%;
     --radius: 0.75rem;
@@ -50,7 +50,7 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border/[0.06];
   }
   body {
     @apply bg-background text-foreground;
@@ -94,7 +94,7 @@
 
   .card-institutional:hover {
     transform: translateY(-3px);
-    border-color: hsl(var(--border) / 0.8);
+    border-color: hsl(var(--border) / 0.12);
     box-shadow: 
       0 8px 24px rgba(0, 0, 0, 0.12),
       0 4px 8px rgba(0, 0, 0, 0.08);
@@ -652,8 +652,8 @@
 .bg-pattern-grid {
   background-color: hsl(var(--background));
   background-image: 
-    linear-gradient(to right, hsl(var(--border) / 0.5) 1px, transparent 1px),
-    linear-gradient(to bottom, hsl(var(--border) / 0.5) 1px, transparent 1px);
+    linear-gradient(to right, hsl(var(--border) / 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--border) / 0.08) 1px, transparent 1px);
   background-size: 20px 20px;
 }
 
@@ -800,12 +800,12 @@
   /* Dashboard Quick Stats */
   .quick-stat {
     @apply flex items-center gap-4 p-4 rounded-xl;
-    @apply bg-card border-2 border-border;
+    @apply bg-card border-2 border-border/[0.06];
     @apply transition-all duration-200;
   }
 
   .quick-stat:hover {
-    border-color: hsl(var(--border) / 0.8);
+    border-color: hsl(var(--border) / 0.12);
     transform: translateY(-1px);
   }
 

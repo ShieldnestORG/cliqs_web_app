@@ -61,7 +61,7 @@ export function BentoCard({
   const variantClasses = {
     default: "bg-card border-border",
     highlight: "bg-card border-green-accent/50 card-bracket-corner",
-    accent: "bg-gradient-to-br from-card to-muted/50 border-accent-purple/30",
+    accent: "bg-gradient-to-br from-card to-muted/50 border-purple-accent/30",
     muted: "bg-muted/30 border-border/50",
   };
 
