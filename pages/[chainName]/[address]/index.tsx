@@ -140,7 +140,7 @@ export default function CliqDashboardPage() {
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              {chain.registryName ? <Link href={`/${chain.registryName}`}>Dashboard</Link> : null}
+              {chain.registryName ? <Link href={`/${chain.registryName}`}>Home</Link> : null}
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
