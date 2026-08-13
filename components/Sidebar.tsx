@@ -29,6 +29,7 @@ import ChainConnect from "./ChainConnect";
 import DonateDialog from "./DonateDialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { showDevTools } from "@/lib/featureFlags";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AddressDisplay } from "@/components/ui/address-display";
 
@@ -55,10 +56,16 @@ export default function Sidebar() {
       { href: `/${chain.registryName}/validator`, label: "Validator", icon: Shield },
       { href: `/${chain.registryName}/dashboard?tab=find`, label: "Find CLIQ", icon: Search },
       { href: `/${chain.registryName}/create`, label: "Create Multisig", icon: ShieldPlus },
-      { href: `/${chain.registryName}/dev`, label: "Dev Tools", icon: Terminal },
       { href: `/${chain.registryName}/account`, label: "Account", icon: Wallet },
       { href: `/${chain.registryName}/settings`, label: "Settings", icon: Settings },
-    ];
+    ].concat(
+      // Dev Tools can sign and broadcast real transactions, so it is not offered
+      // to operators in production builds with the same weight as Settings. The
+      // /dev route itself still exists for anyone who navigates to it directly.
+      showDevTools
+        ? [{ href: `/${chain.registryName}/dev`, label: "Dev Tools", icon: Terminal }]
+        : [],
+    );
 
   const truncatedAddress = walletInfo?.address
     ? `${walletInfo.address.slice(0, 6)}...${walletInfo.address.slice(-6)}`

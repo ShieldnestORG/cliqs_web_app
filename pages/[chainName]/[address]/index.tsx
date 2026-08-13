@@ -532,30 +532,6 @@ export default function CliqDashboardPage() {
                     </div>
                   </CardContent>
                 </Card>
-
-                {/* Keyboard Shortcuts */}
-                <Card className="border-dashed">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-normal uppercase tracking-wide text-muted-foreground">
-                      {/* Label */} Power User Tips
-                    </CardTitle>
-                    <div className="font-heading text-lg font-semibold">Shortcuts</div>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Quick Commands</span>
-                      <kbd className="rounded bg-muted px-2 py-0.5 font-mono text-xs">⌘K</kbd>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">New Transaction</span>
-                      <kbd className="rounded bg-muted px-2 py-0.5 font-mono text-xs">N</kbd>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Copy Address</span>
-                      <kbd className="rounded bg-muted px-2 py-0.5 font-mono text-xs">C</kbd>
-                    </div>
-                  </CardContent>
-                </Card>
               </div>
             </>
           )}

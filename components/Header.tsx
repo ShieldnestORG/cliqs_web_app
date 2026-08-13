@@ -14,6 +14,7 @@ import {
   Terminal,
   BookOpen,
   ChevronLeft,
+  Activity,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -29,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { showDevTools } from "@/lib/featureFlags";
 import { AddressDisplay } from "@/components/ui/address-display";
 
 export default function Header() {
@@ -44,12 +46,20 @@ export default function Header() {
 
   const isOnChain = pathname.includes(chain.registryName);
 
+  // This header is the only navigation below the lg breakpoint (the Sidebar is
+  // lg:flex). Operations is listed here because it is otherwise unreachable on a
+  // phone or tablet except by typing the URL.
   const navItems = [
     { href: `/${chain.registryName}/get-started`, label: "Get Started", icon: BookOpen },
     { href: `/${chain.registryName}/dashboard`, label: "Dashboard", icon: LayoutDashboard },
+    { href: `/${chain.registryName}/operations`, label: "Operations", icon: Activity },
     { href: `/${chain.registryName}/create`, label: "Create", icon: ShieldPlus },
-    { href: `/${chain.registryName}/dev`, label: "Dev Tools", icon: Terminal },
-  ];
+  ].concat(
+    // See lib/featureFlags.ts — Dev Tools can broadcast real transactions.
+    showDevTools
+      ? [{ href: `/${chain.registryName}/dev`, label: "Dev Tools", icon: Terminal }]
+      : [],
+  );
 
   // Truncate address for display (first 6 and last 6 characters)
   const truncatedAddress = walletInfo?.address
@@ -123,7 +133,7 @@ export default function Header() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="relative gap-2 text-amber-600 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-amber-950/20"
+                className="relative gap-2 text-amber-500 hover:bg-amber-950/30 hover:text-amber-400"
                 title={`${totalPendingCount} pending transaction${totalPendingCount !== 1 ? "s" : ""}`}
               >
                 <AlertCircle className="h-4 w-4" />
@@ -332,7 +342,7 @@ export default function Header() {
                   href={`/${chain.registryName}/dashboard?tab=cliqs`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <div className="relative flex items-center gap-3 rounded-lg px-4 py-3 text-amber-600 transition-colors hover:bg-amber-50 dark:hover:bg-amber-950/20">
+                  <div className="relative flex items-center gap-3 rounded-lg px-4 py-3 text-amber-500 transition-colors hover:bg-amber-950/30">
                     <AlertCircle className="h-5 w-5" />
                     <span>Pending Transactions ({totalPendingCount})</span>
                     {/* Blinking dot */}

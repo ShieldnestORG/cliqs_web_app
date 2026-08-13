@@ -327,109 +327,134 @@ export default function ValidatorCommandsCard({
           </div>
         )}
 
-        {/* Staking & Governance Section */}
-        <div className="space-y-4">
-          <div>
-            <h3 className="mb-4 text-sm font-medium uppercase tracking-wide text-muted-foreground">{`// Staking & Governance`}</h3>
-            <BentoGrid className="grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-              {/* Delegate */}
-              <Link
-                href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.Delegate)}`}
-                className="block"
-              >
-                <BentoCard variant="default" interactive className="min-h-0 p-4">
-                  <div className="flex h-full flex-col">
-                    <div className="mb-2 flex items-center gap-2">
-                      <TrendingUp className="h-6 w-6" />
-                      <h4 className="font-heading text-sm font-semibold leading-tight">Delegate</h4>
-                    </div>
-                    <p className="text-xs leading-tight text-muted-foreground">
-                      Stake tokens to validator
-                    </p>
-                  </div>
-                </BentoCard>
-              </Link>
-
-              {/* Undelegate */}
-              <Link
-                href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.Undelegate)}`}
-                className="block"
-              >
-                <BentoCard variant="default" interactive className="min-h-0 p-4">
-                  <div className="flex h-full flex-col">
-                    <div className="mb-2 flex items-center gap-2">
-                      <TrendingUp className="h-6 w-6" />
-                      <h4 className="font-heading text-sm font-semibold leading-tight">
-                        Undelegate
-                      </h4>
-                    </div>
-                    <p className="text-xs leading-tight text-muted-foreground">
-                      Unstake tokens from validator
-                    </p>
-                  </div>
-                </BentoCard>
-              </Link>
-
-              {/* Redelegate */}
-              <Link
-                href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.BeginRedelegate)}`}
-                className="block"
-              >
-                <BentoCard variant="default" interactive className="min-h-0 p-4">
-                  <div className="flex h-full flex-col">
-                    <div className="mb-2 flex items-center gap-2">
-                      <TrendingUp className="h-6 w-6" />
-                      <h4 className="font-heading text-sm font-semibold leading-tight">
-                        Redelegate
-                      </h4>
-                    </div>
-                    <p className="text-xs leading-tight text-muted-foreground">
-                      Move stake between validators
-                    </p>
-                  </div>
-                </BentoCard>
-              </Link>
-
-              {/* Withdraw Rewards */}
-              <Link
-                href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.WithdrawDelegatorReward)}`}
-                className="block"
-              >
-                <BentoCard variant="default" interactive className="min-h-0 p-4">
-                  <div className="flex h-full flex-col">
-                    <div className="mb-2 flex items-center gap-2">
-                      <Coins className="h-6 w-6" />
-                      <h4 className="font-heading text-sm font-semibold leading-tight">
-                        Withdraw Rewards
-                      </h4>
-                    </div>
-                    <p className="text-xs leading-tight text-muted-foreground">
-                      Claim staking rewards
-                    </p>
-                  </div>
-                </BentoCard>
-              </Link>
-
-              {/* Vote */}
-              <Link
-                href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.Vote)}`}
-                className="block"
-              >
-                <BentoCard variant="default" interactive className="min-h-0 p-4">
-                  <div className="flex h-full flex-col">
-                    <div className="mb-2 flex items-center gap-2">
-                      <Vote className="h-6 w-6" />
-                      <h4 className="font-heading text-sm font-semibold leading-tight">Vote</h4>
-                    </div>
-                    <p className="text-xs leading-tight text-muted-foreground">
-                      Vote on governance proposals
-                    </p>
-                  </div>
-                </BentoCard>
-              </Link>
-            </BentoGrid>
+        {/* Staking & Governance Section
+         *
+         * These five actions all route to the CLIQ transaction builder, which
+         * requires a multisig account. In solo (non-CLIQ) mode targetAddress is
+         * the operator's own single-sig account, and that page can only answer
+         * with "Multisig Not Available" — so the cards are a dead end. Explain
+         * that instead of linking into the error; the CliqUpgradeCTA rendered
+         * directly below this card is the way forward. */}
+        {!isCliqMode ? (
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">{`// Staking & Governance`}</h3>
+            <div className="rounded-lg border border-border bg-muted/30 p-4">
+              <p className="text-sm text-muted-foreground">
+                Delegate, Undelegate, Redelegate, Withdraw Rewards and Vote are proposed through a
+                CLIQ so they can be signed by your multisig. Set one up below to enable them.
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Editing your validator&apos;s details is available now — it signs directly with your
+                connected wallet.
+              </p>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="space-y-4">
+            <div>
+              <h3 className="mb-4 text-sm font-medium uppercase tracking-wide text-muted-foreground">{`// Staking & Governance`}</h3>
+              <BentoGrid className="grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+                {/* Delegate */}
+                <Link
+                  href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.Delegate)}`}
+                  className="block"
+                >
+                  <BentoCard variant="default" interactive className="min-h-0 p-4">
+                    <div className="flex h-full flex-col">
+                      <div className="mb-2 flex items-center gap-2">
+                        <TrendingUp className="h-6 w-6" />
+                        <h4 className="font-heading text-sm font-semibold leading-tight">
+                          Delegate
+                        </h4>
+                      </div>
+                      <p className="text-xs leading-tight text-muted-foreground">
+                        Stake tokens to validator
+                      </p>
+                    </div>
+                  </BentoCard>
+                </Link>
+
+                {/* Undelegate */}
+                <Link
+                  href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.Undelegate)}`}
+                  className="block"
+                >
+                  <BentoCard variant="default" interactive className="min-h-0 p-4">
+                    <div className="flex h-full flex-col">
+                      <div className="mb-2 flex items-center gap-2">
+                        <TrendingUp className="h-6 w-6" />
+                        <h4 className="font-heading text-sm font-semibold leading-tight">
+                          Undelegate
+                        </h4>
+                      </div>
+                      <p className="text-xs leading-tight text-muted-foreground">
+                        Unstake tokens from validator
+                      </p>
+                    </div>
+                  </BentoCard>
+                </Link>
+
+                {/* Redelegate */}
+                <Link
+                  href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.BeginRedelegate)}`}
+                  className="block"
+                >
+                  <BentoCard variant="default" interactive className="min-h-0 p-4">
+                    <div className="flex h-full flex-col">
+                      <div className="mb-2 flex items-center gap-2">
+                        <TrendingUp className="h-6 w-6" />
+                        <h4 className="font-heading text-sm font-semibold leading-tight">
+                          Redelegate
+                        </h4>
+                      </div>
+                      <p className="text-xs leading-tight text-muted-foreground">
+                        Move stake between validators
+                      </p>
+                    </div>
+                  </BentoCard>
+                </Link>
+
+                {/* Withdraw Rewards */}
+                <Link
+                  href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.WithdrawDelegatorReward)}`}
+                  className="block"
+                >
+                  <BentoCard variant="default" interactive className="min-h-0 p-4">
+                    <div className="flex h-full flex-col">
+                      <div className="mb-2 flex items-center gap-2">
+                        <Coins className="h-6 w-6" />
+                        <h4 className="font-heading text-sm font-semibold leading-tight">
+                          Withdraw Rewards
+                        </h4>
+                      </div>
+                      <p className="text-xs leading-tight text-muted-foreground">
+                        Claim staking rewards
+                      </p>
+                    </div>
+                  </BentoCard>
+                </Link>
+
+                {/* Vote */}
+                <Link
+                  href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.Vote)}`}
+                  className="block"
+                >
+                  <BentoCard variant="default" interactive className="min-h-0 p-4">
+                    <div className="flex h-full flex-col">
+                      <div className="mb-2 flex items-center gap-2">
+                        <Vote className="h-6 w-6" />
+                        <h4 className="font-heading text-sm font-semibold leading-tight">Vote</h4>
+                      </div>
+                      <p className="text-xs leading-tight text-muted-foreground">
+                        Vote on governance proposals
+                      </p>
+                    </div>
+                  </BentoCard>
+                </Link>
+              </BentoGrid>
+            </div>
+          </div>
+        )}
 
         <Separator />
 
