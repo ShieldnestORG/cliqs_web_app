@@ -240,7 +240,7 @@ The `// label` and title serve **different purposes** and should NOT repeat the 
 
 ## 7. Status Indicators
 
-### Positive (Green)
+### Positive (success)
 
 ```tsx
 <span className="change-positive">+2.4%</span>
@@ -248,11 +248,11 @@ The `// label` and title serve **different purposes** and should NOT repeat the 
 
 ```css
 .change-positive {
-  color: hsl(142 76% 45%);
+  color: hsl(var(--success));
 }
 ```
 
-### Negative (Red)
+### Negative (destructive)
 
 ```tsx
 <span className="change-negative">-1.2%</span>
@@ -260,7 +260,7 @@ The `// label` and title serve **different purposes** and should NOT repeat the 
 
 ```css
 .change-negative {
-  color: hsl(0 84% 60%);
+  color: hsl(var(--destructive));
 }
 ```
 
