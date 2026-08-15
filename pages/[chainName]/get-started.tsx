@@ -37,12 +37,15 @@ import { useState, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 const difficultyConfig = {
-  beginner: { label: "Beginner", color: "text-green-500 bg-green-500/10 border-green-500/20" },
+  beginner: { label: "Beginner", color: "text-success bg-success/10 border-success/20" },
   intermediate: {
     label: "Intermediate",
-    color: "text-amber-500 bg-amber-500/10 border-amber-500/20",
+    color: "text-warning bg-warning/10 border-warning/20",
   },
-  advanced: { label: "Advanced", color: "text-red-400 bg-red-400/10 border-red-400/20" },
+  advanced: {
+    label: "Advanced",
+    color: "text-destructive bg-destructive/10 border-destructive/20",
+  },
 };
 
 function JourneyCard({
@@ -243,10 +246,10 @@ function JourneyWalkthrough({
 
                 {/* Tip */}
                 {s.tip && (
-                  <div className="flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
-                    <Lightbulb className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
+                  <div className="flex items-start gap-3 rounded-xl border border-warning/20 bg-warning/5 p-4">
+                    <Lightbulb className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
                     <div>
-                      <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-amber-500">
+                      <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-warning">
                         Pro Tip
                       </p>
                       <p className="text-sm text-foreground/80">{s.tip}</p>

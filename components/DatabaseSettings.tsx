@@ -485,7 +485,7 @@ export default function DatabaseSettings() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Database className="h-5 w-5 text-blue-500" />
+          <Database className="h-5 w-5 text-info" />
           Database Configuration
         </CardTitle>
         <CardDescription>
@@ -889,7 +889,7 @@ export default function DatabaseSettings() {
                   <RadioGroupItem value="1" id="level-1" className="mt-1" />
                   <div className="flex-1 space-y-1">
                     <Label htmlFor="level-1" className="flex cursor-pointer items-center gap-2">
-                      <KeyRound className="h-4 w-4 text-blue-500" />
+                      <KeyRound className="h-4 w-4 text-info" />
                       Level 1: Passphrase Encryption
                       <Badge variant="secondary" className="text-[10px]">
                         Recommended
@@ -918,7 +918,7 @@ export default function DatabaseSettings() {
                         walletInfo ? "cursor-pointer" : "cursor-not-allowed",
                       )}
                     >
-                      <Wallet className="h-4 w-4 text-green-500" />
+                      <Wallet className="h-4 w-4 text-success" />
                       Level 2: Wallet Signature
                     </Label>
                     <p className="text-xs text-muted-foreground">
@@ -927,7 +927,7 @@ export default function DatabaseSettings() {
                       users.
                     </p>
                     {!walletInfo && (
-                      <p className="mt-1 text-xs font-medium text-amber-600 dark:text-amber-500">
+                      <p className="mt-1 text-xs font-medium text-warning">
                         Connect your wallet to use Level 2 security.
                       </p>
                     )}

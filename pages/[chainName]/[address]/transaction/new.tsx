@@ -522,9 +522,9 @@ export default function CreateTxPage() {
 
         {/* Pending Transactions Warning */}
         {pendingTransactions.length > 0 && (
-          <Alert className="border-yellow-500/50 bg-yellow-500/10">
-            <Clock className="h-4 w-4 text-yellow-500" />
-            <AlertTitle className="text-yellow-500">
+          <Alert className="border-warning/50 bg-warning/10">
+            <Clock className="h-4 w-4 text-warning" />
+            <AlertTitle className="text-warning">
               {pendingTransactions.length} Pending Transaction
               {pendingTransactions.length > 1 ? "s" : ""}
             </AlertTitle>

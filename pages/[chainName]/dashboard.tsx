@@ -209,10 +209,10 @@ const DashboardPage = () => {
           </div>
         ) : null}
         {cliqFetchError && walletInfo && !isLoadingValidators && (
-          <div className="mb-6 flex flex-col items-center justify-between gap-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 sm:flex-row">
+          <div className="mb-6 flex flex-col items-center justify-between gap-4 rounded-xl border border-warning/30 bg-warning/10 p-4 sm:flex-row">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500/20">
-                <Info className="h-5 w-5 text-amber-600 dark:text-amber-500" />
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-warning/20">
+                <Info className="h-5 w-5 text-warning" />
               </div>
               <div>
                 <h3 className="font-heading font-semibold text-foreground">

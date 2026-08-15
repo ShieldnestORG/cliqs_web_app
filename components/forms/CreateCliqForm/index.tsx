@@ -408,8 +408,8 @@ export default function CreateCliqForm() {
                   {filledMembersCount < 2 && (
                     <div className="rounded-lg border border-border bg-muted p-3">
                       <p className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <AlertCircle className="h-3.5 w-3.5 text-yellow-500" />A CLIQ requires at
-                        least 2 members. Add {2 - filledMembersCount} more member
+                        <AlertCircle className="h-3.5 w-3.5 text-warning" />A CLIQ requires at least
+                        2 members. Add {2 - filledMembersCount} more member
                         {2 - filledMembersCount !== 1 ? "s" : ""} to continue.
                       </p>
                     </div>
@@ -509,7 +509,7 @@ export default function CreateCliqForm() {
                               {currentThreshold === memberCount && memberCount > 0 && (
                                 <div className="rounded-lg border border-border bg-muted p-4">
                                   <div className="flex items-start gap-3">
-                                    <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-yellow-500" />
+                                    <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
                                     <div className="space-y-1">
                                       <p className="text-sm font-semibold text-foreground">
                                         Maximum threshold selected

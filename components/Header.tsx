@@ -133,13 +133,13 @@ export default function Header() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="relative gap-2 text-amber-500 hover:bg-amber-950/30 hover:text-amber-400"
+                className="relative gap-2 text-warning hover:bg-warning/30 hover:text-warning"
                 title={`${totalPendingCount} pending transaction${totalPendingCount !== 1 ? "s" : ""}`}
               >
                 <AlertCircle className="h-4 w-4" />
                 <span className="hidden lg:inline">Pending</span>
                 {/* Blinking dot */}
-                <span className="absolute -right-1 -top-1 h-2 w-2 animate-pulse rounded-full bg-amber-500" />
+                <span className="absolute -right-1 -top-1 h-2 w-2 animate-pulse rounded-full bg-warning" />
               </Button>
             </Link>
           )}
@@ -342,11 +342,11 @@ export default function Header() {
                   href={`/${chain.registryName}/dashboard?tab=cliqs`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <div className="relative flex items-center gap-3 rounded-lg px-4 py-3 text-amber-500 transition-colors hover:bg-amber-950/30">
+                  <div className="relative flex items-center gap-3 rounded-lg px-4 py-3 text-warning transition-colors hover:bg-warning/30">
                     <AlertCircle className="h-5 w-5" />
                     <span>Pending Transactions ({totalPendingCount})</span>
                     {/* Blinking dot */}
-                    <span className="absolute right-2 top-2 h-2 w-2 animate-pulse rounded-full bg-amber-500" />
+                    <span className="absolute right-2 top-2 h-2 w-2 animate-pulse rounded-full bg-warning" />
                   </div>
                 </Link>
               )}

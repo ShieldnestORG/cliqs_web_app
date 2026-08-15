@@ -85,13 +85,15 @@ export function MonitoringDashboard({
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case "critical":
-        return "text-red-500";
+        return "text-destructive";
       case "high":
-        return "text-orange-500";
+        // Same hue at lower intensity, matching how the anomaly cards below
+        // separate the two tiers (border-destructive vs border-destructive/60).
+        return "text-destructive/70";
       case "medium":
-        return "text-yellow-500";
+        return "text-warning";
       default:
-        return "text-blue-500";
+        return "text-info";
     }
   };
 
@@ -113,7 +115,7 @@ export function MonitoringDashboard({
               <div className="text-2xl font-bold">{metric.value}</div>
               {metric.change !== undefined && (
                 <p
-                  className={`text-xs ${metric.change >= 0 ? "text-green-accent" : "text-red-500"}`}
+                  className={`text-xs ${metric.change >= 0 ? "text-success" : "text-destructive"}`}
                 >
                   {metric.change >= 0 ? "+" : ""}
                   {metric.change}% {metric.changeLabel || "from last period"}
@@ -220,7 +222,7 @@ export function MonitoringDashboard({
               <ScrollArea className="h-[400px]">
                 {recentAnomalies.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                    <Check className="mb-4 h-12 w-12 text-green-accent" />
+                    <Check className="mb-4 h-12 w-12 text-success" />
                     <p>No anomalies detected</p>
                     <p className="text-sm">All systems operating normally</p>
                   </div>
@@ -231,10 +233,10 @@ export function MonitoringDashboard({
                         key={anomaly.id}
                         className={`rounded-lg border p-4 ${
                           anomaly.severity === "critical"
-                            ? "border-red-500 bg-red-500/10"
+                            ? "border-destructive bg-destructive/10"
                             : anomaly.severity === "high"
-                              ? "border-orange-500 bg-orange-500/10"
-                              : "border-yellow-500 bg-yellow-500/10"
+                              ? "border-destructive/60 bg-destructive/5"
+                              : "border-warning bg-warning/10"
                         }`}
                       >
                         <div className="mb-2 flex items-center justify-between">

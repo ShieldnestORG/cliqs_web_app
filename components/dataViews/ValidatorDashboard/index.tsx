@@ -582,12 +582,12 @@ export default function ValidatorDashboard() {
 
         {/* Address prefix mismatch warning */}
         {addressPrefixMismatch && effectiveAddress && (
-          <Card variant="institutional" className="mx-auto max-w-4xl border-yellow-500/30">
+          <Card variant="institutional" className="mx-auto max-w-4xl border-warning/30">
             <CardContent className="py-4">
               <div className="flex items-start gap-3">
-                <Info className="mt-0.5 h-5 w-5 shrink-0 text-yellow-500" />
+                <Info className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
                 <div>
-                  <p className="text-sm font-medium text-yellow-500">Network Address Mismatch</p>
+                  <p className="text-sm font-medium text-warning">Network Address Mismatch</p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     Your wallet address uses the{" "}
                     <code className="font-mono">{fromBech32(effectiveAddress).prefix}</code> prefix
@@ -680,12 +680,12 @@ export default function ValidatorDashboard() {
 
         {/* CLIQ lookup error - show so user knows why discovery may have failed */}
         {cliqLookupError && !isLoadingAssociated && associatedValidators.length === 0 && (
-          <Card variant="institutional" className="mx-auto max-w-4xl border-yellow-500/30">
+          <Card variant="institutional" className="mx-auto max-w-4xl border-warning/30">
             <CardContent className="py-4">
               <div className="flex items-start gap-3">
-                <Info className="mt-0.5 h-5 w-5 shrink-0 text-yellow-500" />
+                <Info className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
                 <div>
-                  <p className="text-sm font-medium text-yellow-500">CLIQ Lookup Issue</p>
+                  <p className="text-sm font-medium text-warning">CLIQ Lookup Issue</p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     Could not check your CLIQs for associated validators: {cliqLookupError}
                   </p>
@@ -813,12 +813,12 @@ export default function ValidatorDashboard() {
     <div className="space-y-6">
       {/* Address prefix mismatch warning (dashboard loaded state) */}
       {addressPrefixMismatch && effectiveAddress && (
-        <Card variant="institutional" className="border-yellow-500/30">
+        <Card variant="institutional" className="border-warning/30">
           <CardContent className="py-4">
             <div className="flex items-start gap-3">
-              <Info className="mt-0.5 h-5 w-5 shrink-0 text-yellow-500" />
+              <Info className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
               <div>
-                <p className="text-sm font-medium text-yellow-500">Network Address Mismatch</p>
+                <p className="text-sm font-medium text-warning">Network Address Mismatch</p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   The address uses the{" "}
                   <code className="font-mono">{fromBech32(effectiveAddress).prefix}</code> prefix
@@ -834,12 +834,12 @@ export default function ValidatorDashboard() {
 
       {/* CLIQ membership warning */}
       {isCliqMode && isCliqMember === false && !isVerifyingMembership && (
-        <Card variant="institutional" className="border-yellow-500/30">
+        <Card variant="institutional" className="border-warning/30">
           <CardContent className="py-4">
             <div className="flex items-start gap-3">
-              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-yellow-500" />
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
               <div>
-                <p className="text-sm font-medium text-yellow-500">Read-Only Mode</p>
+                <p className="text-sm font-medium text-warning">Read-Only Mode</p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   Your connected wallet could not be verified as a member of this CLIQ. Transaction
                   actions are disabled. If you believe this is an error, reconnect with the correct

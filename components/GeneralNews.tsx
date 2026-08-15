@@ -7,9 +7,9 @@ interface Props {
 
 export default function GeneralNews({ active }: Props) {
   return active ? (
-    <Alert className="mx-auto my-4 max-w-4xl border-amber-500/50 bg-amber-500/10">
-      <AlertTriangle className="h-4 w-4 text-amber-500" />
-      <AlertTitle className="font-bold uppercase tracking-wider text-amber-500">
+    <Alert className="mx-auto my-4 max-w-4xl border-warning/50 bg-warning/10">
+      <AlertTriangle className="h-4 w-4 text-warning" />
+      <AlertTitle className="font-bold uppercase tracking-wider text-warning">
         Important Notice
       </AlertTitle>
       <AlertDescription className="mt-3 text-muted-foreground">

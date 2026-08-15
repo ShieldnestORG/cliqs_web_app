@@ -467,9 +467,9 @@ export default function ContractVotePanel({
           </div>
           <Progress value={getVoteProgress()} className="h-3" />
           {proposal.yesWeight >= proposal.threshold && (
-            <Alert className="border-green-accent/30 bg-green-accent/10">
-              <ShieldCheck className="h-4 w-4 text-green-accent" />
-              <AlertDescription className="text-green-accent">
+            <Alert className="border-success/30 bg-success/10">
+              <ShieldCheck className="h-4 w-4 text-success" />
+              <AlertDescription className="text-success">
                 Threshold reached! This proposal can be executed.
               </AlertDescription>
             </Alert>
@@ -481,28 +481,28 @@ export default function ContractVotePanel({
         {/* Vote Breakdown */}
         <div className="grid grid-cols-4 gap-4 text-center">
           <div>
-            <div className="mb-1 flex items-center justify-center gap-1 text-green-accent">
+            <div className="mb-1 flex items-center justify-center gap-1 text-success">
               <CheckCircle2 className="h-4 w-4" />
               <span className="font-bold">{proposal.yesWeight}</span>
             </div>
             <span className="text-xs text-muted-foreground">Yes</span>
           </div>
           <div>
-            <div className="mb-1 flex items-center justify-center gap-1 text-red-500">
+            <div className="mb-1 flex items-center justify-center gap-1 text-destructive">
               <XCircle className="h-4 w-4" />
               <span className="font-bold">{proposal.noWeight}</span>
             </div>
             <span className="text-xs text-muted-foreground">No</span>
           </div>
           <div>
-            <div className="mb-1 flex items-center justify-center gap-1 text-gray-500">
+            <div className="mb-1 flex items-center justify-center gap-1 text-muted-foreground">
               <MinusCircle className="h-4 w-4" />
               <span className="font-bold">{proposal.abstainWeight}</span>
             </div>
             <span className="text-xs text-muted-foreground">Abstain</span>
           </div>
           <div>
-            <div className="mb-1 flex items-center justify-center gap-1 text-yellow-500">
+            <div className="mb-1 flex items-center justify-center gap-1 text-warning">
               <AlertTriangle className="h-4 w-4" />
               <span className="font-bold">{proposal.vetoWeight}</span>
             </div>

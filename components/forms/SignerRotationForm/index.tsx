@@ -313,8 +313,8 @@ export function SignerRotationForm({
       case "confirm":
         return (
           <div className="space-y-4">
-            <Alert variant="default" className="border-amber-500/30 bg-amber-500/10">
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
+            <Alert variant="default" className="border-warning/30 bg-warning/10">
+              <AlertTriangle className="h-4 w-4 text-warning" />
               <AlertTitle>Review Rotation Details</AlertTitle>
               <AlertDescription>
                 Please review the following changes before proceeding. This action cannot be undone.
@@ -389,8 +389,8 @@ export function SignerRotationForm({
               </Alert>
             ) : (
               <>
-                <Alert className="border-emerald-500/30 bg-emerald-500/10">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                <Alert className="border-success/30 bg-success/10">
+                  <CheckCircle2 className="h-4 w-4 text-success" />
                   <AlertTitle>Rotation Complete</AlertTitle>
                   <AlertDescription>
                     The signer rotation has been completed successfully.
@@ -400,19 +400,19 @@ export function SignerRotationForm({
                 <div className="space-y-2 rounded-lg bg-muted/50 p-4">
                   {state.burnTxHash && (
                     <div className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                      <CheckCircle2 className="h-4 w-4 text-success" />
                       <span>Old credential revoked</span>
                     </div>
                   )}
                   {state.mintTxHash && (
                     <div className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                      <CheckCircle2 className="h-4 w-4 text-success" />
                       <span>New credential issued</span>
                     </div>
                   )}
                   {state.groupUpdateTxHash && (
                     <div className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                      <CheckCircle2 className="h-4 w-4 text-success" />
                       <span>Group membership updated</span>
                     </div>
                   )}

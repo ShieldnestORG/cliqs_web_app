@@ -42,12 +42,12 @@ const TransactionCard = ({
   const isBroadcast = Boolean(tx.txHash);
 
   const statusColor = isCancelled
-    ? "bg-gray-400"
+    ? "bg-muted-foreground"
     : isBroadcast
-      ? "bg-green-accent"
+      ? "bg-success"
       : hasSigned
-        ? "bg-yellow-500"
-        : "bg-blue-500";
+        ? "bg-warning"
+        : "bg-info";
 
   const statusText = isCancelled
     ? "Cancelled"
@@ -339,15 +339,15 @@ export default function ListMultisigTxs({
           {/* Compact status legend */}
           <div className="hidden items-center gap-3 text-xs text-muted-foreground sm:flex">
             <span className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-green-accent"></span>
+              <span className="h-1.5 w-1.5 rounded-full bg-success"></span>
               <span className="font-mono text-[10px]">done</span>
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-yellow-500"></span>
+              <span className="h-1.5 w-1.5 rounded-full bg-warning"></span>
               <span className="font-mono text-[10px]">pending</span>
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-gray-400"></span>
+              <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground"></span>
               <span className="font-mono text-[10px]">cancelled</span>
             </span>
           </div>

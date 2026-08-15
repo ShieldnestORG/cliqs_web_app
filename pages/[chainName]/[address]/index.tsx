@@ -330,7 +330,7 @@ export default function CliqDashboardPage() {
             icon={
               <div
                 className={`h-3 w-3 rounded-full ${
-                  hostedMultisig.hosted === "db+chain" ? "bg-green-accent" : "bg-yellow-500"
+                  hostedMultisig.hosted === "db+chain" ? "bg-success" : "bg-warning"
                 }`}
               />
             }
@@ -652,7 +652,7 @@ export default function CliqDashboardPage() {
                   <div className="flex items-center gap-2">
                     <span
                       className={`h-2 w-2 rounded-full ${
-                        hostedMultisig.hosted === "db+chain" ? "bg-green-accent" : "bg-yellow-500"
+                        hostedMultisig.hosted === "db+chain" ? "bg-success" : "bg-warning"
                       }`}
                     />
                     <span className="text-sm">

@@ -536,7 +536,7 @@ export default function DevToolsImport({
         </div>
 
         {validationError && (
-          <div className="rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-400">
+          <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
             {validationError}
           </div>
         )}

@@ -198,7 +198,7 @@ export default function WithdrawAddressCard({
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 {isSameAsOperator ? (
-                  <span className="text-green-accent">Same as operator account</span>
+                  <span className="text-success">Same as operator account</span>
                 ) : (
                   <span>Custom withdraw address</span>
                 )}

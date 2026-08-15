@@ -342,16 +342,16 @@ export default function OperationsPage() {
           <Card
             variant="institutional"
             className={
-              totalPendingTxs > 0 ? "bg-gradient-to-br from-orange-500/10 to-transparent" : ""
+              totalPendingTxs > 0 ? "bg-gradient-to-br from-warning/10 to-transparent" : ""
             }
           >
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
                 <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-lg ${totalPendingTxs > 0 ? "bg-orange-500/20" : "bg-muted"}`}
+                  className={`flex h-10 w-10 items-center justify-center rounded-lg ${totalPendingTxs > 0 ? "bg-warning/20" : "bg-muted"}`}
                 >
                   <Clock
-                    className={`h-5 w-5 ${totalPendingTxs > 0 ? "text-orange-500" : "text-muted-foreground"}`}
+                    className={`h-5 w-5 ${totalPendingTxs > 0 ? "text-warning" : "text-muted-foreground"}`}
                   />
                 </div>
                 <div>
@@ -401,7 +401,7 @@ export default function OperationsPage() {
               {totalPendingTxs > 0 && (
                 <Badge
                   variant="secondary"
-                  className="ml-1 h-5 bg-orange-500/20 px-1.5 text-xs text-orange-500"
+                  className="ml-1 h-5 bg-warning/20 px-1.5 text-xs text-warning"
                 >
                   {totalPendingTxs}
                 </Badge>
@@ -432,12 +432,12 @@ export default function OperationsPage() {
           <TabsContent value="overview" className="space-y-6">
             {/* Pending Transactions Alert */}
             {totalPendingTxs > 0 && (
-              <Card variant="institutional" className="border-orange-500/30 bg-orange-500/5">
+              <Card variant="institutional" className="border-warning/30 bg-warning/5">
                 <CardContent className="py-4">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/20">
-                        <AlertCircle className="h-5 w-5 text-orange-500" />
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning/20">
+                        <AlertCircle className="h-5 w-5 text-warning" />
                       </div>
                       <div>
                         <h3 className="font-heading font-bold">Action Required</h3>
@@ -505,10 +505,7 @@ export default function OperationsPage() {
                               </div>
                               <div className="flex items-center gap-2">
                                 {cliq.pendingTxCount > 0 && (
-                                  <Badge
-                                    variant="secondary"
-                                    className="bg-orange-500/20 text-orange-500"
-                                  >
+                                  <Badge variant="secondary" className="bg-warning/20 text-warning">
                                     {cliq.pendingTxCount} pending
                                   </Badge>
                                 )}
@@ -573,7 +570,7 @@ export default function OperationsPage() {
                             <div className="flex items-center gap-2">
                               <Badge
                                 variant="secondary"
-                                className="bg-orange-500/20 text-xs text-orange-500"
+                                className="bg-warning/20 text-xs text-warning"
                               >
                                 {tx.signatures?.length || 0} sig
                                 {(tx.signatures?.length || 0) !== 1 ? "s" : ""}
@@ -673,10 +670,7 @@ export default function OperationsPage() {
                               </div>
                             </div>
                             <div className="flex shrink-0 items-center gap-3">
-                              <Badge
-                                variant="secondary"
-                                className="bg-orange-500/20 text-orange-500"
-                              >
+                              <Badge variant="secondary" className="bg-warning/20 text-warning">
                                 Pending
                               </Badge>
                               <Button variant="ghost" size="sm" className="gap-2">
@@ -729,7 +723,7 @@ export default function OperationsPage() {
                             </div>
                           </div>
                           {cliq.pendingTxCount > 0 && (
-                            <Badge variant="secondary" className="bg-orange-500/20 text-orange-500">
+                            <Badge variant="secondary" className="bg-warning/20 text-warning">
                               {cliq.pendingTxCount} pending
                             </Badge>
                           )}
@@ -749,7 +743,7 @@ export default function OperationsPage() {
                               {cliq.validator?.jailed ? (
                                 <span className="text-destructive">Jailed</span>
                               ) : (
-                                <span className="text-green-accent">Active</span>
+                                <span className="text-success">Active</span>
                               )}
                             </p>
                           </div>
@@ -842,10 +836,7 @@ export default function OperationsPage() {
                           </div>
                           <div className="flex shrink-0 items-center gap-3">
                             {cliq.pendingTxCount > 0 && (
-                              <Badge
-                                variant="secondary"
-                                className="bg-orange-500/20 text-orange-500"
-                              >
+                              <Badge variant="secondary" className="bg-warning/20 text-warning">
                                 {cliq.pendingTxCount} pending
                               </Badge>
                             )}

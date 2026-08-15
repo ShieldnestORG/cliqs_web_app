@@ -166,8 +166,8 @@ export function QuickStat({ label, value, icon, trend }: QuickStatProps) {
           <p
             className={cn(
               "mt-1 text-xs",
-              trend.direction === "up" && "text-green-accent",
-              trend.direction === "down" && "text-red-500",
+              trend.direction === "up" && "text-success",
+              trend.direction === "down" && "text-destructive",
               trend.direction === "neutral" && "text-muted-foreground",
             )}
           >

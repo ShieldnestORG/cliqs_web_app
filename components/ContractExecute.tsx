@@ -264,7 +264,7 @@ export function ContractExecute({ client: externalClient, selectedAccount }: Con
     >
       <CardHeader>
         <CardTitle
-          className={`flex items-center gap-2 ${isDisabled ? "text-gray-500" : "text-secondary"}`}
+          className={`flex items-center gap-2 ${isDisabled ? "text-muted-foreground" : "text-secondary"}`}
         >
           <FileCode2 className={`h-6 w-6 ${isDisabled ? "" : "text-secondary"}`} />
           Execute Custom Message
@@ -437,11 +437,11 @@ export function ContractExecute({ client: externalClient, selectedAccount }: Con
 
         {/* Execute Result */}
         {executeResult && (
-          <Alert className="border-green-500/30 bg-green-500/5">
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
+          <Alert className="border-success/30 bg-success/5">
+            <CheckCircle2 className="h-4 w-4 text-success" />
             <AlertDescription>
               <div className="space-y-3">
-                <div className="font-semibold text-green-600">Message Executed Successfully</div>
+                <div className="font-semibold text-success">Message Executed Successfully</div>
 
                 <div className="space-y-2 rounded bg-muted/50 p-3">
                   <div className="flex items-center justify-between text-sm">

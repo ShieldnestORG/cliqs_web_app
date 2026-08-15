@@ -7,8 +7,8 @@ const Spinner = ({ size }: SpinnerProps) => (
     <div className="spinner"></div>
     <style jsx>{`
       .spinner {
-        border: ${size || 2}px solid #f3f3f3;
-        border-top: ${size || 2}px solid #561253;
+        border: ${size || 2}px solid hsl(var(--accent-purple) / 0.2);
+        border-top: ${size || 2}px solid hsl(var(--accent-purple));
         border-radius: 50%;
         width: ${size || 16}px;
         height: ${size || 16}px;

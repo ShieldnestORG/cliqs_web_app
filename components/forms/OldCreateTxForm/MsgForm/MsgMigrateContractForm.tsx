@@ -149,15 +149,15 @@ const MsgMigrateContractForm = ({
       </Button>
       <h2 className="mb-4 font-heading text-xl font-semibold">MsgMigrateContract</h2>
 
-      <div className="mb-4 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-200">
-        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+      <div className="mb-4 flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
         <div>
           <p className="font-semibold">Migration requirements</p>
-          <ul className="mt-1 list-disc pl-4 text-xs text-amber-200/80">
+          <ul className="mt-1 list-disc pl-4 text-xs text-warning/80">
             <li>The contract must have an admin set (only the admin can migrate).</li>
             <li>
               The <strong>new</strong> code (target Code ID) must export a{" "}
-              <code className="rounded bg-amber-900/40 px-1">migrate</code> entry point. If it does
+              <code className="rounded bg-warning/20 px-1">migrate</code> entry point. If it does
               not, the chain will reject with &ldquo;Missing export migrate&rdquo;.
             </li>
             <li>The migrate JSON message must match what the new code expects.</li>
@@ -189,11 +189,11 @@ const MsgMigrateContractForm = ({
             </p>
           )}
           {contractAdmin && !checkingContract && (
-            <p className="mt-1 flex items-center gap-1 text-xs text-green-accent">
+            <p className="mt-1 flex items-center gap-1 text-xs text-success">
               <Info className="h-3 w-3" />
               Admin: <span className="font-mono">{contractAdmin}</span>
               {contractAdmin !== senderAddress && (
-                <span className="ml-1 text-amber-400">(not the sender address)</span>
+                <span className="ml-1 text-warning">(not the sender address)</span>
               )}
             </p>
           )}

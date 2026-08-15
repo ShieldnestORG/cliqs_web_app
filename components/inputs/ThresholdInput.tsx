@@ -32,12 +32,12 @@ const ThresholdInput = (props: Props) => (
         font-size: 24px;
       }
       input {
-        background: #722d6f;
-        border: 2px solid #ffffff;
+        background: hsl(var(--accent-purple));
+        border: 2px solid hsl(var(--border));
         box-sizing: border-box;
         border-radius: 9px;
 
-        color: white;
+        color: hsl(var(--foreground));
         padding: 10px 5px 10px 20px;
       }
       .threshold-group .between {
@@ -49,7 +49,7 @@ const ThresholdInput = (props: Props) => (
         box-sizing: border-box;
         border-radius: 9px;
 
-        color: white;
+        color: hsl(var(--foreground));
         padding: 10px 5px;
       }
       p {

@@ -138,8 +138,8 @@ export default function DevToolsUploader({
         )}
 
         {uploadResult && (
-          <div className="rounded-lg border border-green-accent/30 bg-green-accent/10 p-3 text-sm">
-            <p className="font-semibold text-green-accent">Upload Complete</p>
+          <div className="rounded-lg border border-success/30 bg-success/10 p-3 text-sm">
+            <p className="font-semibold text-success">Upload Complete</p>
             <p className="text-xs text-muted-foreground">Code ID: {uploadResult.codeId}</p>
             <p className="break-all font-mono text-xs text-muted-foreground">
               {uploadResult.txHash}

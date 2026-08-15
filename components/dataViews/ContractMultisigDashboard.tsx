@@ -304,7 +304,7 @@ export default function ContractMultisigDashboard({
                     {config?.members.map((member) => (
                       <TableRow
                         key={member.addr}
-                        className={member.addr === userAddress ? "bg-blue-500/5" : ""}
+                        className={member.addr === userAddress ? "bg-info/5" : ""}
                       >
                         <TableCell className="font-mono text-sm">
                           <div className="flex items-center gap-2">

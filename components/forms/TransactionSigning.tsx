@@ -263,14 +263,14 @@ const TransactionSigning = (props: TransactionSigningProps) => {
     return (
       <div className="space-y-3">
         {signing === "signed" ? (
-          <div className="flex items-center gap-2 rounded-lg border border-green-accent/30 bg-green-accent/10 p-3">
-            <CheckCircle2 className="h-4 w-4 text-green-accent" />
-            <p className="m-0 text-sm text-green-accent">You've signed this transaction</p>
+          <div className="flex items-center gap-2 rounded-lg border border-success/30 bg-success/10 p-3">
+            <CheckCircle2 className="h-4 w-4 text-success" />
+            <p className="m-0 text-sm text-success">You've signed this transaction</p>
           </div>
         ) : null}
         {signing === "not_a_member" ? (
-          <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3">
-            <p className="m-0 text-sm text-red-400">You don't belong to this multisig</p>
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3">
+            <p className="m-0 text-sm text-destructive">You don't belong to this multisig</p>
           </div>
         ) : null}
         {signing === "not_signed" ? (
@@ -282,10 +282,10 @@ const TransactionSigning = (props: TransactionSigningProps) => {
                 </p>
                 {/* Info banner when Direct mode is auto-selected */}
                 {requiresDirectMode && (
-                  <div className="mb-2 rounded border border-blue-500/30 bg-blue-500/10 p-2">
+                  <div className="mb-2 rounded border border-info/30 bg-info/10 p-2">
                     <div className="flex items-center gap-1">
-                      <CheckCircle2 className="h-3 w-3 text-blue-400" />
-                      <span className="text-xs text-blue-400">Using Direct signing mode</span>
+                      <CheckCircle2 className="h-3 w-3 text-info" />
+                      <span className="text-xs text-info">Using Direct signing mode</span>
                     </div>
                     <p className="m-0 mt-1 text-xs text-muted-foreground">
                       Required for validator commission withdrawal
@@ -371,8 +371,8 @@ const TransactionSigning = (props: TransactionSigningProps) => {
                     style={{
                       padding: "12px",
                       borderRadius: "8px",
-                      background: "rgba(59, 130, 246, 0.1)",
-                      border: "1px solid rgba(59, 130, 246, 0.3)",
+                      background: "hsl(var(--info) / 0.1)",
+                      border: "1px solid hsl(var(--info) / 0.3)",
                       marginBottom: "12px",
                     }}
                   >
@@ -384,12 +384,16 @@ const TransactionSigning = (props: TransactionSigningProps) => {
                         marginBottom: "4px",
                       }}
                     >
-                      <CheckCircle2 size={14} color="#3b82f6" />
-                      <span style={{ fontSize: "13px", color: "#3b82f6", fontWeight: 500 }}>
+                      <CheckCircle2 size={14} color="hsl(var(--info))" />
+                      <span
+                        style={{ fontSize: "13px", color: "hsl(var(--info))", fontWeight: 500 }}
+                      >
                         Using Direct signing mode
                       </span>
                     </div>
-                    <p style={{ fontSize: "12px", margin: 0, color: "#9ca3af" }}>
+                    <p
+                      style={{ fontSize: "12px", margin: 0, color: "hsl(var(--muted-foreground))" }}
+                    >
                       Required for validator commission withdrawal on TX
                     </p>
                   </div>
@@ -430,13 +434,13 @@ const TransactionSigning = (props: TransactionSigningProps) => {
                       gap: "8px",
                       padding: "8px 12px",
                       borderRadius: "8px",
-                      background: "hsl(var(--accent-green) / 0.1)",
-                      border: "1px solid hsl(var(--accent-green) / 0.3)",
+                      background: "hsl(var(--success) / 0.1)",
+                      border: "1px solid hsl(var(--success) / 0.3)",
                       marginBottom: "12px",
                     }}
                   >
-                    <Shield size={16} color="hsl(var(--accent-green))" />
-                    <span style={{ fontSize: "13px", color: "hsl(var(--accent-green))" }}>
+                    <Shield size={16} color="hsl(var(--success))" />
+                    <span style={{ fontSize: "13px", color: "hsl(var(--success))" }}>
                       Transaction intent verified
                     </span>
                   </div>
@@ -489,7 +493,7 @@ const TransactionSigning = (props: TransactionSigningProps) => {
           margin-right: 0.5em;
         }
         .multisig-error p {
-          color: red;
+          color: hsl(var(--destructive));
           font-size: 16px;
         }
       `}</style>

@@ -168,8 +168,8 @@ const CardKPI = React.forwardRef<HTMLDivElement, CardKPIProps>(
     }
 
     const trendClasses = {
-      up: "text-green-accent",
-      down: "text-red-500",
+      up: "text-success",
+      down: "text-destructive",
       neutral: "text-foreground",
     }
 

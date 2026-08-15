@@ -39,29 +39,29 @@ const Input = (props: InputProps) => (
       }
 
       label {
-        color: white;
+        color: hsl(var(--foreground));
         font-style: italic;
         font-size: 12px;
         margin-bottom: ${props.type === "checkbox" ? 0 : "1em"};
       }
 
       input {
-        background: #722d6f;
-        border: 2px solid rgba(255, 255, 255, 0.5);
+        background: hsl(var(--accent-purple));
+        border: 2px solid hsl(var(--border) / 0.5);
         box-sizing: border-box;
         border-radius: 9px;
 
-        color: white;
+        color: hsl(var(--foreground));
         padding: 10px 5px;
       }
 
       input:hover,
       input:focus {
-        border-color: rgba(255, 255, 255, 1);
+        border-color: hsl(var(--border));
       }
 
       input::placeholder {
-        color: rgba(255, 255, 255, 0.3);
+        color: hsl(var(--foreground) / 0.3);
       }
       input[type="datetime-local"]::-webkit-calendar-picker-indicator {
         cursor: pointer;
@@ -73,7 +73,7 @@ const Input = (props: InputProps) => (
       }
       .error {
         font-size: 12px;
-        color: coral;
+        color: hsl(var(--destructive));
         margin-top: 5px;
       }
     `}</style>

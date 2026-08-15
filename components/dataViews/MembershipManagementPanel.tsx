@@ -323,7 +323,7 @@ export default function MembershipManagementPanel({
             <CardDescription>
               {members.length} members · Total weight: {totalWeight}
               {hasChanges && (
-                <span className="ml-2 text-yellow-600">→ Projected: {projectedTotalWeight}</span>
+                <span className="ml-2 text-warning">→ Projected: {projectedTotalWeight}</span>
               )}
             </CardDescription>
           </div>
@@ -435,28 +435,28 @@ export default function MembershipManagementPanel({
                   key={member.address}
                   className={
                     isPendingAdd
-                      ? "bg-green-50 dark:bg-green-950"
+                      ? "bg-success/10"
                       : isPendingRemove
-                        ? "bg-red-50 opacity-50 dark:bg-red-950"
+                        ? "bg-destructive/10 opacity-50"
                         : isPendingUpdate
-                          ? "bg-yellow-50 dark:bg-yellow-950"
+                          ? "bg-warning/10"
                           : ""
                   }
                 >
                   <TableCell className="font-mono text-sm">
                     {member.address.slice(0, 12)}...{member.address.slice(-8)}
                     {isPendingAdd && (
-                      <Badge variant="outline" className="ml-2 text-green-600">
+                      <Badge variant="outline" className="ml-2 text-success">
                         New
                       </Badge>
                     )}
                     {isPendingRemove && (
-                      <Badge variant="outline" className="ml-2 text-red-600">
+                      <Badge variant="outline" className="ml-2 text-destructive">
                         Removing
                       </Badge>
                     )}
                     {isPendingUpdate && (
-                      <Badge variant="outline" className="ml-2 text-yellow-600">
+                      <Badge variant="outline" className="ml-2 text-warning">
                         Updated
                       </Badge>
                     )}
@@ -563,7 +563,7 @@ export default function MembershipManagementPanel({
                         <div key={i} className="flex items-center gap-2 text-sm">
                           {change.type === "add" && (
                             <>
-                              <Badge className="bg-green-100 text-green-800">ADD</Badge>
+                              <Badge className="bg-success/20 text-success">ADD</Badge>
                               <span className="font-mono">
                                 {change.address.slice(0, 12)}...{change.address.slice(-8)}
                               </span>
@@ -574,7 +574,7 @@ export default function MembershipManagementPanel({
                           )}
                           {change.type === "remove" && (
                             <>
-                              <Badge className="bg-red-100 text-red-800">REMOVE</Badge>
+                              <Badge className="bg-destructive/20 text-destructive">REMOVE</Badge>
                               <span className="font-mono">
                                 {change.address.slice(0, 12)}...{change.address.slice(-8)}
                               </span>
@@ -582,7 +582,7 @@ export default function MembershipManagementPanel({
                           )}
                           {change.type === "update" && (
                             <>
-                              <Badge className="bg-yellow-100 text-yellow-800">UPDATE</Badge>
+                              <Badge className="bg-warning/20 text-warning">UPDATE</Badge>
                               <span className="font-mono">
                                 {change.address.slice(0, 12)}...{change.address.slice(-8)}
                               </span>

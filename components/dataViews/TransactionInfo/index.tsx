@@ -222,7 +222,7 @@ const TransactionInfo = ({ tx, currentOnChainSequence, compact }: TransactionInf
                 <label>Chain Sequence:</label>
                 <div
                   style={{
-                    color: hasSequenceMismatch ? "#ff9999" : "#99ff99",
+                    color: hasSequenceMismatch ? "hsl(var(--destructive))" : "hsl(var(--success))",
                     fontWeight: "bold",
                   }}
                 >
@@ -296,14 +296,14 @@ const TransactionInfo = ({ tx, currentOnChainSequence, compact }: TransactionInf
           display: block;
         }
         .meta-data li.sequence-mismatch {
-          background: rgba(255, 100, 100, 0.15);
-          border: 1px solid rgba(255, 100, 100, 0.3);
+          background: hsl(var(--destructive) / 0.15);
+          border: 1px solid hsl(var(--destructive) / 0.3);
         }
         .mismatch-indicator {
           margin-left: auto;
           font-size: 12px;
-          color: #ff9999;
-          background: rgba(255, 100, 100, 0.2);
+          color: hsl(var(--destructive));
+          background: hsl(var(--destructive) / 0.2);
           padding: 3px 8px;
           border-radius: 5px;
         }

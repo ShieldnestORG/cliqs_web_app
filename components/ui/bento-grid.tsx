@@ -157,8 +157,8 @@ export function BentoStatCard({
   className,
 }: BentoStatCardProps) {
   const changeColors = {
-    positive: "text-green-accent",
-    negative: "text-red-500",
+    positive: "text-success",
+    negative: "text-destructive",
     neutral: "text-muted-foreground",
   };
 

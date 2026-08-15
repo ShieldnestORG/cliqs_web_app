@@ -602,7 +602,7 @@ const TransactionPage = ({
                   {verificationStatus === "verified" ? (
                     <CheckCircle2 className="h-5 w-5 text-success" />
                   ) : verificationStatus === "failed" ? (
-                    <AlertTriangle className="h-5 w-5 text-amber-500" />
+                    <AlertTriangle className="h-5 w-5 text-warning" />
                   ) : null}
                   <CardLabel comment className="mb-0">
                     Multi-Endpoint Verification
@@ -627,7 +627,7 @@ const TransactionPage = ({
                           {v.verified ? (
                             <CheckCircle2 className="h-3 w-3 text-success" />
                           ) : (
-                            <AlertTriangle className="h-3 w-3 text-amber-500" />
+                            <AlertTriangle className="h-3 w-3 text-warning" />
                           )}
                           <span className="max-w-[150px] truncate font-mono">
                             {new URL(v.endpoint).hostname}

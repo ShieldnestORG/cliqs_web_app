@@ -114,7 +114,7 @@ export default function CreateCliqPage() {
                         <span>Cold storage ready</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <Info className="mt-0.5 h-4 w-4 shrink-0 text-yellow-500" />
+                        <Info className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
                         <span>Address changes on rotation</span>
                       </li>
                     </ul>
@@ -158,7 +158,7 @@ export default function CreateCliqPage() {
                         <span>Weighted voting</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <Info className="mt-0.5 h-4 w-4 shrink-0 text-yellow-500" />
+                        <Info className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
                         <span>Fixed member set</span>
                       </li>
                     </ul>

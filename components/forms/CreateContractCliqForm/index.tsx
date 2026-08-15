@@ -568,8 +568,8 @@ export default function CreateContractCliqForm() {
             The app uploads and deploys the contract for you. No technical knowledge required.
           </span>
           {chainConstraints?.permissionedUpload && (
-            <div className="flex items-start gap-2 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-yellow-500" />
+            <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
               <div>
                 <p className="font-medium text-foreground">Permissioned chain</p>
                 <p className="mt-0.5 text-muted-foreground">
@@ -737,7 +737,7 @@ export default function CreateContractCliqForm() {
                                 <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
                               )}
                               {codeIdStatus === "valid" && (
-                                <Check className="h-3 w-3 text-green-500" />
+                                <Check className="h-3 w-3 text-success" />
                               )}
                               {codeIdStatus === "invalid" && (
                                 <AlertCircle className="h-3 w-3 text-destructive" />
@@ -755,7 +755,7 @@ export default function CreateContractCliqForm() {
                               <p className="text-xs text-destructive">{codeIdError}</p>
                             )}
                             {codeIdStatus === "valid" && (
-                              <p className="text-xs text-green-600">
+                              <p className="text-xs text-success">
                                 Code ID verified on-chain — upload step will be skipped
                               </p>
                             )}
@@ -923,8 +923,8 @@ export default function CreateContractCliqForm() {
                 {filledMembersCount < 2 && (
                   <div className="rounded-lg border border-border bg-muted p-3">
                     <p className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <AlertCircle className="h-3.5 w-3.5 text-yellow-500" />A CLIQ requires at
-                      least 2 members.
+                      <AlertCircle className="h-3.5 w-3.5 text-warning" />A CLIQ requires at least 2
+                      members.
                     </p>
                   </div>
                 )}
@@ -1270,8 +1270,8 @@ export default function CreateContractCliqForm() {
                       {/* Chain compatibility warning for bulk-memory */}
                       {chainConstraints?.supportsBulkMemory === false &&
                         wasmSource === "bundled" && (
-                          <div className="mt-3 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm">
-                            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+                          <div className="mt-3 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm">
+                            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
                             <div>
                               <p className="font-medium text-foreground">
                                 Bundled WASM may not be compatible
@@ -1366,7 +1366,7 @@ export default function CreateContractCliqForm() {
                           : deployPhase === "uploaded" ||
                               deployPhase === "instantiating" ||
                               deployPhase === "done"
-                            ? "border-green-500 bg-green-500/5"
+                            ? "border-success bg-success/5"
                             : "border-border bg-muted/30"
                       }`}
                     >
@@ -1374,7 +1374,7 @@ export default function CreateContractCliqForm() {
                         {deployPhase === "uploading" ? (
                           <Loader2 className="h-5 w-5 animate-spin text-primary" />
                         ) : uploadedCodeId ? (
-                          <CheckCircle2 className="h-5 w-5 text-green-500" />
+                          <CheckCircle2 className="h-5 w-5 text-success" />
                         ) : (
                           <UploadCloud className="h-5 w-5 text-muted-foreground" />
                         )}
@@ -1398,9 +1398,9 @@ export default function CreateContractCliqForm() {
 
                   {/* Wallet switch panel */}
                   {showWalletSwitch && deployPhase === "uploaded" && (
-                    <div className="space-y-3 rounded-xl border border-yellow-500/30 bg-yellow-500/5 p-4">
+                    <div className="space-y-3 rounded-xl border border-warning/30 bg-warning/5 p-4">
                       <div className="flex items-center gap-3">
-                        <Wallet className="h-5 w-5 text-yellow-500" />
+                        <Wallet className="h-5 w-5 text-warning" />
                         <div>
                           <p className="text-sm font-medium text-foreground">
                             Switch Wallet (optional)
@@ -1445,7 +1445,7 @@ export default function CreateContractCliqForm() {
                       deployPhase === "instantiating"
                         ? "border-primary bg-primary/5"
                         : deployPhase === "done"
-                          ? "border-green-500 bg-green-500/5"
+                          ? "border-success bg-success/5"
                           : "border-border bg-muted/30"
                     }`}
                   >
@@ -1453,7 +1453,7 @@ export default function CreateContractCliqForm() {
                       {deployPhase === "instantiating" ? (
                         <Loader2 className="h-5 w-5 animate-spin text-primary" />
                       ) : deployPhase === "done" ? (
-                        <CheckCircle2 className="h-5 w-5 text-green-500" />
+                        <CheckCircle2 className="h-5 w-5 text-success" />
                       ) : (
                         <FileCode2 className="h-5 w-5 text-muted-foreground" />
                       )}
@@ -1584,8 +1584,8 @@ export default function CreateContractCliqForm() {
             {currentStep === "complete" && deployResult && (
               <div className="space-y-6">
                 <div className="py-4 text-center">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-green-500/30 bg-green-500/10">
-                    <CheckCircle2 className="h-8 w-8 text-green-500" />
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-success/30 bg-success/10">
+                    <CheckCircle2 className="h-8 w-8 text-success" />
                   </div>
                   <h3 className="text-xl font-semibold text-foreground">
                     CLIQ Created Successfully
@@ -1610,7 +1610,7 @@ export default function CreateContractCliqForm() {
                         className="rounded p-1 hover:bg-muted"
                       >
                         {copied ? (
-                          <Check className="h-3.5 w-3.5 text-green-500" />
+                          <Check className="h-3.5 w-3.5 text-success" />
                         ) : (
                           <Copy className="h-3.5 w-3.5 text-muted-foreground" />
                         )}
@@ -1632,9 +1632,9 @@ export default function CreateContractCliqForm() {
                 </div>
 
                 {/* Data retention notice */}
-                <div className="space-y-2 rounded-xl border border-blue-500/20 bg-blue-500/5 p-4">
+                <div className="space-y-2 rounded-xl border border-info/20 bg-info/5 p-4">
                   <div className="flex items-start gap-2">
-                    <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
+                    <Info className="mt-0.5 h-4 w-4 shrink-0 text-info" />
                     <div className="text-sm">
                       <p className="font-medium text-foreground">Download a backup copy</p>
                       <p className="mt-0.5 text-muted-foreground">

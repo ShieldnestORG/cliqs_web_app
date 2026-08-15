@@ -197,7 +197,7 @@ export function EmergencyPanel({
             {state.isPaused ? (
               <Pause className="h-5 w-5 text-destructive" />
             ) : (
-              <Play className="h-5 w-5 text-green-accent" />
+              <Play className="h-5 w-5 text-success" />
             )}
             Pause Control
           </CardTitle>
@@ -314,9 +314,9 @@ export function EmergencyPanel({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             {state.isSafeMode ? (
-              <ShieldAlert className="h-5 w-5 text-amber-500" />
+              <ShieldAlert className="h-5 w-5 text-warning" />
             ) : (
-              <Shield className="h-5 w-5 text-green-accent" />
+              <Shield className="h-5 w-5 text-success" />
             )}
             Safe Mode
           </CardTitle>

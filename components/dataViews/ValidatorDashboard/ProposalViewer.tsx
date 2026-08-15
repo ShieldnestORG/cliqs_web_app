@@ -83,12 +83,12 @@ export default function ProposalViewer({
 
     // Mapping vote options to labels
     const options: Record<number, { label: string; className: string }> = {
-      1: { label: "YES", className: "bg-green-500/20 text-green-500 border-green-500/30" },
+      1: { label: "YES", className: "bg-success/20 text-success border-success/30" },
       2: { label: "ABSTAIN", className: "bg-muted text-muted-foreground" },
       3: { label: "NO", className: "bg-destructive/20 text-destructive border-destructive/30" },
       4: {
         label: "NO WITH VETO",
-        className: "bg-orange-500/20 text-orange-500 border-orange-500/30",
+        className: "bg-warning/20 text-warning border-warning/30",
       },
     };
 
@@ -231,10 +231,10 @@ export default function ProposalViewer({
   };
 
   const voteOptions = [
-    { label: "Yes", value: 1, color: "bg-green-500 hover:bg-green-600" },
+    { label: "Yes", value: 1, color: "bg-success hover:bg-success/80" },
     { label: "Abstain", value: 2, color: "bg-muted hover:bg-muted/80 text-foreground" },
     { label: "No", value: 3, color: "bg-destructive hover:bg-destructive/80" },
-    { label: "No with Veto", value: 4, color: "bg-orange-500 hover:bg-orange-600" },
+    { label: "No with Veto", value: 4, color: "bg-warning hover:bg-warning/80" },
   ];
 
   return (
@@ -279,7 +279,7 @@ export default function ProposalViewer({
                     ) : (
                       <Badge
                         variant="outline"
-                        className="gap-1 border-orange-500/30 bg-orange-500/10 text-orange-500"
+                        className="gap-1 border-warning/30 bg-warning/10 text-warning"
                       >
                         <AlertCircle className="h-3 w-3" />
                         NEEDS VOTE
