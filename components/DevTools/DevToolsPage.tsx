@@ -217,12 +217,13 @@ export default function DevTools() {
       if (!walletInfo) return;
       try {
         setLoadingMultisigs(true);
-        const fetched = isVerified && verificationSignature
-          ? await getDbUserMultisigs(chain, { signature: verificationSignature })
-          : await getDbUserMultisigs(chain, {
-              address: walletInfo.address,
-              pubkey: walletInfo.pubKey,
-            });
+        const fetched =
+          isVerified && verificationSignature
+            ? await getDbUserMultisigs(chain, { signature: verificationSignature })
+            : await getDbUserMultisigs(chain, {
+                address: walletInfo.address,
+                pubkey: walletInfo.pubKey,
+              });
         const all = [...fetched.created, ...fetched.belonged];
         const unique = all.filter(
           (value, idx, arr) => arr.findIndex((item) => item.address === value.address) === idx,
@@ -513,7 +514,7 @@ export default function DevTools() {
                     className={`w-full rounded-lg border-2 p-3 text-left transition-all ${
                       selectedAccount?.type === "wallet"
                         ? "border-green-accent bg-green-accent/5"
-                        : "border-border hover:border-border/80 hover:bg-muted/50"
+                        : "border-border/[0.06] hover:border-border/80 hover:bg-muted/50"
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -533,7 +534,7 @@ export default function DevTools() {
 
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t border-border" />
+                      <span className="w-full border-t border-border/[0.06]" />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
                       <span className="bg-card px-2 text-muted-foreground">Or Multisig</span>
@@ -571,7 +572,7 @@ export default function DevTools() {
                           className={`w-full rounded-lg border-2 p-3 text-left transition-all ${
                             selectedAccount?.address === multisig.address
                               ? "border-green-accent bg-green-accent/5"
-                              : "border-border hover:border-border/80 hover:bg-muted/50"
+                              : "border-border/[0.06] hover:border-border/80 hover:bg-muted/50"
                           }`}
                         >
                           <p className="truncate text-sm font-semibold">
@@ -628,7 +629,7 @@ export default function DevTools() {
           </Card>
 
           {selectedAccount && (
-            <div className="rounded-xl border border-border bg-muted/20 p-4">
+            <div className="rounded-xl border border-border/[0.06] bg-muted/20 p-4">
               <p className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">
                 Selected Identity
               </p>
@@ -746,7 +747,9 @@ export default function DevTools() {
                     }
                   }}
                   onSuccess={(txId) => {
-                    router.push(`/${chain.registryName}/${selectedAccount.address}/transaction/${txId}`);
+                    router.push(
+                      `/${chain.registryName}/${selectedAccount.address}/transaction/${txId}`,
+                    );
                   }}
                 />
               )}
@@ -764,7 +767,7 @@ export default function DevTools() {
                     deleteMsg={() => setSelectedCommand(null)}
                   />
 
-                  <div className="mt-8 space-y-6 border-t border-border pt-8">
+                  <div className="mt-8 space-y-6 border-t border-border/[0.06] pt-8">
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                       <div className="space-y-2">
                         <Label htmlFor="gas-limit">Gas Limit</Label>

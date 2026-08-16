@@ -29,6 +29,7 @@ import ChainConnect from "./ChainConnect";
 import DonateDialog from "./DonateDialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { showDevTools } from "@/lib/featureFlags";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AddressDisplay } from "@/components/ui/address-display";
 
@@ -55,10 +56,16 @@ export default function Sidebar() {
       { href: `/${chain.registryName}/validator`, label: "Validator", icon: Shield },
       { href: `/${chain.registryName}/dashboard?tab=find`, label: "Find CLIQ", icon: Search },
       { href: `/${chain.registryName}/create`, label: "Create Multisig", icon: ShieldPlus },
-      { href: `/${chain.registryName}/dev`, label: "Dev Tools", icon: Terminal },
       { href: `/${chain.registryName}/account`, label: "Account", icon: Wallet },
       { href: `/${chain.registryName}/settings`, label: "Settings", icon: Settings },
-    ];
+    ].concat(
+      // Dev Tools can sign and broadcast real transactions, so it is not offered
+      // to operators in production builds with the same weight as Settings. The
+      // /dev route itself still exists for anyone who navigates to it directly.
+      showDevTools
+        ? [{ href: `/${chain.registryName}/dev`, label: "Dev Tools", icon: Terminal }]
+        : [],
+    );
 
   const truncatedAddress = walletInfo?.address
     ? `${walletInfo.address.slice(0, 6)}...${walletInfo.address.slice(-6)}`
@@ -67,7 +74,7 @@ export default function Sidebar() {
   return (
     <aside
       className={cn(
-        "sticky top-0 z-50 hidden h-screen flex-col border-r-2 border-border bg-card/50 backdrop-blur-md transition-all duration-300 ease-in-out lg:flex",
+        "sticky top-0 z-50 hidden h-screen flex-col border-r-2 border-border/[0.06] bg-card/50 backdrop-blur-md transition-all duration-300 ease-in-out lg:flex",
         collapsed ? "w-20" : "w-64",
       )}
     >
@@ -206,16 +213,16 @@ export default function Sidebar() {
                 {!collapsed && <span className="flex-1 truncate text-left">{item.label}</span>}
                 {!collapsed && showPendingIndicator && (
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-medium text-amber-500">{totalPendingCount}</span>
+                    <span className="text-xs font-medium text-warning">{totalPendingCount}</span>
                     <div className="relative flex h-2 w-2">
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
-                      <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500"></span>
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-warning opacity-75"></span>
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-warning"></span>
                     </div>
                   </div>
                 )}
                 {collapsed && showPendingIndicator && (
                   <div className="absolute right-2 top-2 flex h-2 w-2">
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500"></span>
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-warning"></span>
                   </div>
                 )}
                 {!collapsed && isActive && !showPendingIndicator && (
@@ -245,13 +252,13 @@ export default function Sidebar() {
         {hasPendingTransactions && (
           <Link href={`/${chain.registryName}/operations?tab=pending`} className="block">
             {!collapsed ? (
-              <div className="group/pending mt-4 cursor-pointer rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 transition-all animate-in fade-in slide-in-from-left-4 hover:bg-amber-500/20">
-                <div className="mb-1 flex items-center gap-2 text-amber-500">
+              <div className="group/pending mt-4 cursor-pointer rounded-xl border border-warning/20 bg-warning/10 px-4 py-3 transition-all animate-in fade-in slide-in-from-left-4 hover:bg-warning/20">
+                <div className="mb-1 flex items-center gap-2 text-warning">
                   <AlertCircle className="h-4 w-4" />
                   <span className="text-xs font-bold uppercase tracking-wider">Pending Tasks</span>
                   <ChevronRight className="ml-auto h-3 w-3 opacity-0 transition-opacity group-hover/pending:opacity-100" />
                 </div>
-                <p className="text-[11px] leading-tight text-amber-500/80">
+                <p className="text-[11px] leading-tight text-warning/80">
                   You have {totalPendingCount} transaction{totalPendingCount !== 1 ? "s" : ""}{" "}
                   awaiting signatures.
                 </p>
@@ -259,7 +266,7 @@ export default function Sidebar() {
             ) : (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="mx-auto mt-4 flex h-10 w-10 items-center justify-center rounded-xl border border-amber-500/20 bg-amber-500/10 text-amber-500 transition-all hover:bg-amber-500/20">
+                  <div className="mx-auto mt-4 flex h-10 w-10 items-center justify-center rounded-xl border border-warning/20 bg-warning/10 text-warning transition-all hover:bg-warning/20">
                     <AlertCircle className="h-5 w-5" />
                   </div>
                 </TooltipTrigger>
@@ -277,7 +284,7 @@ export default function Sidebar() {
             <TooltipTrigger asChild>
               <a
                 href="https://app.tokns.fi"
-                className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+                className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg border border-border/[0.06] text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
               >
                 <ChevronLeft className="h-5 w-5" />
               </a>
@@ -287,7 +294,7 @@ export default function Sidebar() {
         ) : (
           <a
             href="https://app.tokns.fi"
-            className="flex h-10 w-full items-center gap-2 rounded-lg border border-border px-4 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+            className="flex h-10 w-full items-center gap-2 rounded-lg border border-border/[0.06] px-4 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
           >
             <ChevronLeft className="h-4 w-4" />
             Back to TOKNS
@@ -304,7 +311,10 @@ export default function Sidebar() {
                 onClick={() => setShowDonate(true)}
                 size="icon"
                 className="mx-auto h-10 w-10 transition-all hover:brightness-110"
-                style={{ backgroundColor: "#ff876d", color: "#fff" }}
+                style={{
+                  backgroundColor: "hsl(var(--primary))",
+                  color: "hsl(var(--primary-foreground))",
+                }}
               >
                 <Heart className="h-5 w-5" />
               </Button>
@@ -315,7 +325,10 @@ export default function Sidebar() {
           <Button
             onClick={() => setShowDonate(true)}
             className="h-10 w-full gap-2 text-sm font-semibold transition-all hover:brightness-110"
-            style={{ backgroundColor: "#ff876d", color: "#fff" }}
+            style={{
+              backgroundColor: "hsl(var(--primary))",
+              color: "hsl(var(--primary-foreground))",
+            }}
           >
             <Heart className="h-4 w-4" />
             Donate

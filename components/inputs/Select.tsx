@@ -8,20 +8,20 @@ const StyledSelect = (props: any) => {
       ...provided,
       borderRadius: "10px",
       background: "none",
-      borderColor: state.isFocused ? "rgba(255, 255, 255, 1)" : "rgba(255, 255, 255, 0.5)",
+      borderColor: state.isFocused ? "hsl(var(--border))" : "hsl(var(--border) / 0.5)",
       borderWidth: "2px",
       boxShadow: "none",
       cursor: "pointer",
-      color: "white",
+      color: "hsl(var(--foreground))",
       "&:hover": {
-        borderColor: "rgba(255, 255, 255, 1)",
+        borderColor: "hsl(var(--border))",
       },
     }),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     option: (provided: CSSProperties, state: any) => ({
       ...provided,
       background: state.isSelected ? "rgba(255, 255, 255, 0.2)" : "none",
-      color: "white",
+      color: "hsl(var(--foreground))",
       cursor: "pointer",
       "&:hover": {
         background: "rgba(255, 255, 255, 0.2)",
@@ -31,15 +31,15 @@ const StyledSelect = (props: any) => {
       ...provided,
       zIndex: 10,
       borderRadius: "10px",
-      background: "#561253",
+      background: "hsl(var(--accent-purple))",
     }),
     singleValue: (provided: CSSProperties) => ({
       ...provided,
-      color: "white",
+      color: "hsl(var(--foreground))",
     }),
     input: (provided: CSSProperties) => ({
       ...provided,
-      color: "white",
+      color: "hsl(var(--foreground))",
     }),
     placeholder: (provided: CSSProperties) => ({
       ...provided,

@@ -202,8 +202,8 @@ export function ProposalIntentView({
                 className={cn(
                   "flex items-start gap-3 rounded-lg border p-3",
                   msg.risk === "high" && "border-destructive/30 bg-destructive/5",
-                  msg.risk === "medium" && "border-amber-500/30 bg-amber-500/5",
-                  msg.risk === "low" && "border-border bg-muted/30",
+                  msg.risk === "medium" && "border-warning/30 bg-warning/5",
+                  msg.risk === "low" && "border-border/[0.06] bg-muted/30",
                 )}
               >
                 <div className="mt-0.5">{msg.icon}</div>
@@ -509,7 +509,7 @@ function formatVoteOption(option: number | string): string {
 
 function SendIcon() {
   return (
-    <svg className="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg className="h-4 w-4 text-blue-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -540,7 +540,12 @@ function StakeIcon() {
 
 function VoteIcon() {
   return (
-    <svg className="h-4 w-4 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg
+      className="h-4 w-4 text-purple-accent"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -553,7 +558,7 @@ function VoteIcon() {
 
 function RewardIcon() {
   return (
-    <svg className="h-4 w-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg className="h-4 w-4 text-gold-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -566,7 +571,7 @@ function RewardIcon() {
 
 function ContractIcon() {
   return (
-    <svg className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg className="h-4 w-4 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -579,7 +584,7 @@ function ContractIcon() {
 
 function IBCIcon() {
   return (
-    <svg className="h-4 w-4 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg className="h-4 w-4 text-blue-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"

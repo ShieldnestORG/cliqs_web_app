@@ -263,7 +263,7 @@ export function getByodbHeaders(): Record<string, string> {
 
   if (!_decryptedUri) return {};
 
-  // Trim the URI carefully, as pasting Mongo strings often carries invisible newlines 
+  // Trim the URI carefully, as pasting Mongo strings often carries invisible newlines
   // which will cause a fatal 'TypeError: Failed to execute fetch on Window: Invalid value'
   return { [HEADER_NAME]: _decryptedUri.replace(/[\n\r]/g, "").trim() };
 }

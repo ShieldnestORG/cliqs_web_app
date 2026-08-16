@@ -1,7 +1,11 @@
 import { txCosmJsTypes } from "@/types/cosmjs-types";
 import { Registry, GeneratedType } from "@cosmjs/proto-signing";
 import { createWasmAminoConverters, wasmTypes } from "@cosmjs/cosmwasm-stargate";
-import { AminoConverters, createDefaultAminoConverters, defaultRegistryTypes } from "@cosmjs/stargate";
+import {
+  AminoConverters,
+  createDefaultAminoConverters,
+  defaultRegistryTypes,
+} from "@cosmjs/stargate";
 import { GenericAuthorization } from "cosmjs-types/cosmos/authz/v1beta1/authz";
 import { SendAuthorization } from "cosmjs-types/cosmos/bank/v1beta1/authz";
 import { MsgExec, MsgGrant, MsgRevoke } from "cosmjs-types/cosmos/authz/v1beta1/tx";
@@ -168,12 +172,11 @@ const EXEC_INNER_CODECS: Record<string, InnerMsgCodec> = {
     },
     fromAmino: (v) =>
       MsgUnjail.fromPartial({
-        validatorAddr:
-          (typeof v.address === "string"
-            ? v.address
-            : typeof v.validator_addr === "string"
-              ? v.validator_addr
-              : v.validatorAddr) as string,
+        validatorAddr: (typeof v.address === "string"
+          ? v.address
+          : typeof v.validator_addr === "string"
+            ? v.validator_addr
+            : v.validatorAddr) as string,
       }),
   },
   "/cosmos.bank.v1beta1.MsgSend": {

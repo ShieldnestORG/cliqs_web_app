@@ -19,14 +19,13 @@ jest.mock("@cosmjs/amino", () => ({
   })),
   isMultisigThresholdPubkey: jest
     .fn()
-    .mockImplementation(
-      (value) =>
-        Boolean(
-          value &&
-            typeof value === "object" &&
-            value.type === "tendermint/PubKeyMultisigThreshold" &&
-            value.value,
-        ),
+    .mockImplementation((value) =>
+      Boolean(
+        value &&
+          typeof value === "object" &&
+          value.type === "tendermint/PubKeyMultisigThreshold" &&
+          value.value,
+      ),
     ),
   isSecp256k1Pubkey: jest
     .fn()

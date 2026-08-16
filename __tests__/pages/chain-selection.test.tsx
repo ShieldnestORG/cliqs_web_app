@@ -8,7 +8,7 @@
  */
 
 import { render, screen, waitFor } from "@testing-library/react";
-import ChainHomePage from "@/pages/[chainName]/home";
+import ChainHomePage from "@/pages/[chainName]/index";
 
 // Mock the ChainsContext
 const mockSetChain = jest.fn();

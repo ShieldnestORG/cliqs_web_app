@@ -1,8 +1,10 @@
 # Patterns PRD
 
+> **Cluster:** design-system · **Tags:** ui, patterns, backgrounds, tokens, coherence-daddy · **Related:** [STYLE-GUIDE.md](../STYLE-GUIDE.md), [UI Index](./INDEX.md), [Cards PRD](./CARDS-PRD.md)
+
 **Cosmos Multisig UI - Visual Patterns Specification**  
-**Version:** 1.0  
-**Last Updated:** December 2024
+**Version:** 1.1  
+**Last Updated:** 2026-08-13
 
 ---
 
@@ -22,20 +24,23 @@ Visual patterns for consistent styling across the application:
 
 ### Core Colors
 
+> **Canonical values live in [`docs/STYLE-GUIDE.md`](../STYLE-GUIDE.md).** The block
+> below mirrors it for convenience; if the two disagree, the style guide wins.
+
 ```css
 :root {
-  /* Background */
-  --background: 220 13% 18%;          /* #2a2d36 - Main bg */
-  --card: 220 13% 22%;                /* #33363f - Card bg */
-  --muted: 217.2 10% 25%;             /* #3b3e47 - Muted bg */
-  
+  /* Background — Coherence Daddy dark canvas */
+  --background: 240 6.7% 5.9%;         /* #0E0E10 - Main bg */
+  --card: 240 5.9% 10%;                /* #18181B - Card + popover bg */
+  --muted: 240 4.6% 12.7%;             /* #1F1F22 - Muted / secondary bg */
+
   /* Foreground */
-  --foreground: 210 40% 98%;          /* #f8fafc - Primary text */
-  --muted-foreground: 215 20.2% 65.1%; /* #9ca3af - Secondary text */
-  
-  /* Border */
-  --border: 217.2 10% 30%;            /* #454852 */
-  --input: 217.2 10% 30%;             /* Same as border */
+  --foreground: 48 16.1% 93.9%;        /* #F2F1ED - Primary text (warm) */
+  --muted-foreground: 240 2.7% 64.1%;  /* #A1A1A6 - Secondary text */
+
+  /* Border — NOTE: no alpha inside the token, so border-border/NN works */
+  --border: 0 0% 100%;                 /* white; applied globally at /[0.06] */
+  --input: 240 4.6% 12.7%;             /* #1F1F22 */
 }
 ```
 
@@ -43,17 +48,26 @@ Visual patterns for consistent styling across the application:
 
 ```css
 :root {
-  /* Green (Primary Accent) */
-  --accent-green: 142 71% 45%;        /* #22c55e - Actions, success */
-  --accent-green-bright: 142 76% 55%; /* Hover states */
-  
-  /* Purple (Secondary Accent) */
-  --accent-purple: 263 70% 65%;       /* #a78bfa - Focus, links */
-  
-  /* Destructive */
-  --destructive: 0 62.8% 50%;         /* #dc2626 - Errors */
+  /* Brand coral — this is --primary and, confusingly, --accent-green too */
+  --primary: 10.9 100% 64.5%;          /* #FF6B4A */
+  --accent-green: 10.9 100% 64.5%;     /* #FF6B4A - hue 11: CORAL, not green */
+  --accent-green-bright: 10.9 100% 70%;/* Hover states */
+
+  /* Secondary accent */
+  --accent-purple: 260 28% 55%;        /* #7B68AE - utility is `purple-accent` */
+
+  /* Semantic status */
+  --success: 156.1 35.9% 45.3%;        /* #4A9D7C - the real green */
+  --warning: 37.4 72.3% 56.1%;         /* #E0A33E */
+  --info: 219.7 82.2% 64.7%;           /* #5B8DEF */
+  --destructive: 0 66.4% 55.7%;        /* #D94343 - Errors */
 }
 ```
+
+> **`--accent-green` is hue 11 — coral, not green.** The name is inherited from an
+> earlier migration and kept because ~60 call sites use `green-accent`. Never map a
+> success meaning onto it; it renders orange and collides with `destructive`. Use
+> `--success` for success.
 
 ---
 
@@ -83,8 +97,8 @@ Engineering-paper style grid.
 .bg-pattern-grid {
   background-color: hsl(var(--background));
   background-image: 
-    linear-gradient(to right, hsl(var(--border) / 0.5) 1px, transparent 1px),
-    linear-gradient(to bottom, hsl(var(--border) / 0.5) 1px, transparent 1px);
+    linear-gradient(to right, hsl(var(--border) / 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--border) / 0.08) 1px, transparent 1px);
   background-size: 20px 20px;
 }
 ```
@@ -157,8 +171,8 @@ box-shadow:
 
 ```css
 box-shadow: 
-  0 0 0 3px hsl(var(--accent-purple) / 0.3),
-  0 4px 12px hsl(var(--accent-purple) / 0.12);
+  0 0 0 3px hsl(var(--ring) / 0.3),
+  0 4px 12px hsl(var(--ring) / 0.12);
 ```
 
 ---
@@ -200,11 +214,11 @@ box-shadow:
 
 ```css
 .change-positive {
-  color: hsl(142 76% 45%);
+  color: hsl(var(--success));
 }
 
 .change-negative {
-  color: hsl(0 84% 60%);
+  color: hsl(var(--destructive));
 }
 ```
 
@@ -224,12 +238,12 @@ box-shadow:
   @apply h-full rounded-full;
   background: linear-gradient(
     90deg,
-    hsl(142 71% 65%) 0%,
-    hsl(142 76% 45%) 50%,
-    hsl(142 76% 36%) 100%
+    hsl(var(--success) / 0.7) 0%,
+    hsl(var(--success)) 50%,
+    hsl(var(--success) / 0.85) 100%
   );
   box-shadow: 
-    0 0 12px hsl(var(--accent-green) / 0.4),
+    0 0 12px hsl(var(--success) / 0.4),
     inset 0 1px 2px rgba(255, 255, 255, 0.3);
 }
 ```
@@ -330,7 +344,7 @@ Icons are used directly without containers for a cleaner, lighter appearance. Us
 
 ## 12. Highlight Bars
 
-### Green Highlight
+### Brand Highlight (coral — `--accent-green` is hue 11)
 
 ```css
 .highlight-bar {

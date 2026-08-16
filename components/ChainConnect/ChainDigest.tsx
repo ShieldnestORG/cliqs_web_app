@@ -23,7 +23,7 @@ export default function ChainDigest({ chain, simplify }: ChainItemProps) {
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="relative">
-          <Avatar className="h-12 w-12 border-2 border-border">
+          <Avatar className="h-12 w-12 border-2 border-border/[0.06]">
             <AvatarImage
               src={chain.logo}
               alt={`${chain.chainDisplayName} logo`}
@@ -46,7 +46,7 @@ export default function ChainDigest({ chain, simplify }: ChainItemProps) {
           <div className="flex items-center gap-2">
             <Badge
               variant="outline"
-              className="border-border bg-muted/50 font-mono text-[10px] text-muted-foreground"
+              className="border-border/[0.06] bg-muted/50 font-mono text-[10px] text-muted-foreground"
             >
               {chain.chainId}
             </Badge>
@@ -88,7 +88,7 @@ export default function ChainDigest({ chain, simplify }: ChainItemProps) {
               </CollapsibleTrigger>
             )}
           </div>
-          <div className="mt-2 rounded-lg border border-border bg-muted/30 px-3 py-2">
+          <div className="mt-2 rounded-lg border border-border/[0.06] bg-muted/30 px-3 py-2">
             <code className="block truncate font-mono text-xs text-foreground">
               {chain.nodeAddress || chain.nodeAddresses[0]}
             </code>
@@ -103,7 +103,7 @@ export default function ChainDigest({ chain, simplify }: ChainItemProps) {
               .map((address) => (
                 <div
                   key={address}
-                  className="rounded-lg border border-border bg-muted/30 px-3 py-2"
+                  className="rounded-lg border border-border/[0.06] bg-muted/30 px-3 py-2"
                 >
                   <code className="block truncate font-mono text-xs text-foreground">
                     {address}
@@ -116,7 +116,7 @@ export default function ChainDigest({ chain, simplify }: ChainItemProps) {
 
       {/* Actions */}
       {!simplify && (
-        <div className="border-t border-border pt-3">
+        <div className="border-t border-border/[0.06] pt-3">
           {chains.localnets.has(chain.registryName) ? (
             <ButtonWithConfirm
               onClick={() => {

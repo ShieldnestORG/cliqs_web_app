@@ -14,6 +14,7 @@ import {
   Terminal,
   BookOpen,
   ChevronLeft,
+  Activity,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -29,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { showDevTools } from "@/lib/featureFlags";
 import { AddressDisplay } from "@/components/ui/address-display";
 
 export default function Header() {
@@ -44,12 +46,20 @@ export default function Header() {
 
   const isOnChain = pathname.includes(chain.registryName);
 
+  // This header is the only navigation below the lg breakpoint (the Sidebar is
+  // lg:flex). Operations is listed here because it is otherwise unreachable on a
+  // phone or tablet except by typing the URL.
   const navItems = [
     { href: `/${chain.registryName}/get-started`, label: "Get Started", icon: BookOpen },
     { href: `/${chain.registryName}/dashboard`, label: "Dashboard", icon: LayoutDashboard },
+    { href: `/${chain.registryName}/operations`, label: "Operations", icon: Activity },
     { href: `/${chain.registryName}/create`, label: "Create", icon: ShieldPlus },
-    { href: `/${chain.registryName}/dev`, label: "Dev Tools", icon: Terminal },
-  ];
+  ].concat(
+    // See lib/featureFlags.ts — Dev Tools can broadcast real transactions.
+    showDevTools
+      ? [{ href: `/${chain.registryName}/dev`, label: "Dev Tools", icon: Terminal }]
+      : [],
+  );
 
   // Truncate address for display (first 6 and last 6 characters)
   const truncatedAddress = walletInfo?.address
@@ -57,7 +67,7 @@ export default function Header() {
     : null;
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b-2 border-border bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80 lg:hidden">
+    <header className="sticky top-0 z-50 w-full border-b-2 border-border/[0.06] bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80 lg:hidden">
       <div className="container mx-auto flex h-16 items-center justify-between px-[0.75in]">
         {/* Logo / Brand */}
         <div className="flex items-center gap-4">
@@ -123,19 +133,19 @@ export default function Header() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="relative gap-2 text-amber-600 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-amber-950/20"
+                className="relative gap-2 text-warning hover:bg-warning/30 hover:text-warning"
                 title={`${totalPendingCount} pending transaction${totalPendingCount !== 1 ? "s" : ""}`}
               >
                 <AlertCircle className="h-4 w-4" />
                 <span className="hidden lg:inline">Pending</span>
                 {/* Blinking dot */}
-                <span className="absolute -right-1 -top-1 h-2 w-2 animate-pulse rounded-full bg-amber-500" />
+                <span className="absolute -right-1 -top-1 h-2 w-2 animate-pulse rounded-full bg-warning" />
               </Button>
             </Link>
           )}
 
           {/* Separator */}
-          {chain.registryName && <div className="mx-2 h-6 w-px bg-border" />}
+          {chain.registryName && <div className="mx-2 h-6 w-px bg-border/[0.06]" />}
 
           {/* Wallet Connection Button/Dropdown */}
           {walletInfo ? (
@@ -295,7 +305,7 @@ export default function Header() {
           />
 
           {/* Menu Panel */}
-          <div className="slide-up fixed left-0 right-0 top-16 z-50 border-b-2 border-border bg-card shadow-lg animate-in md:hidden">
+          <div className="slide-up fixed left-0 right-0 top-16 z-50 border-b-2 border-border/[0.06] bg-card shadow-lg animate-in md:hidden">
             <nav className="container mx-auto space-y-2 px-[0.75in] py-4">
               <a
                 href="https://app.tokns.fi"
@@ -304,7 +314,7 @@ export default function Header() {
                 <ChevronLeft className="h-5 w-5" />
                 <span>Back to TOKNS</span>
               </a>
-              <div className="my-3 h-px bg-border" />
+              <div className="my-3 h-px bg-border/[0.06]" />
               {chain.registryName &&
                 navItems.map((item) => {
                   const isActive = pathname === item.href;
@@ -332,17 +342,17 @@ export default function Header() {
                   href={`/${chain.registryName}/dashboard?tab=cliqs`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <div className="relative flex items-center gap-3 rounded-lg px-4 py-3 text-amber-600 transition-colors hover:bg-amber-50 dark:hover:bg-amber-950/20">
+                  <div className="relative flex items-center gap-3 rounded-lg px-4 py-3 text-warning transition-colors hover:bg-warning/30">
                     <AlertCircle className="h-5 w-5" />
                     <span>Pending Transactions ({totalPendingCount})</span>
                     {/* Blinking dot */}
-                    <span className="absolute right-2 top-2 h-2 w-2 animate-pulse rounded-full bg-amber-500" />
+                    <span className="absolute right-2 top-2 h-2 w-2 animate-pulse rounded-full bg-warning" />
                   </div>
                 </Link>
               )}
 
               {/* Separator */}
-              <div className="my-3 h-px bg-border" />
+              <div className="my-3 h-px bg-border/[0.06]" />
 
               {/* Wallet Section - Mobile */}
               {walletInfo ? (
@@ -427,7 +437,7 @@ export default function Header() {
                       setMobileMenuOpen(false);
                     }}
                     disabled={isConnecting}
-                    className="flex w-full items-center gap-3 rounded-lg border border-border px-4 py-3 font-medium text-foreground transition-all hover:bg-muted/50 disabled:opacity-50"
+                    className="flex w-full items-center gap-3 rounded-lg border border-border/[0.06] px-4 py-3 font-medium text-foreground transition-all hover:bg-muted/50 disabled:opacity-50"
                   >
                     {loading.ledger ? (
                       <Loader2 className="h-5 w-5 animate-spin" />

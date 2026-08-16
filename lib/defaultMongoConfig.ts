@@ -1,5 +1,4 @@
-const DEFAULT_MONGODB_URI =
-  process.env.MONGODB_URI || process.env.cliqs_MONGODB_URI || "";
+const DEFAULT_MONGODB_URI = process.env.MONGODB_URI || process.env.cliqs_MONGODB_URI || "";
 
 const DEFAULT_MONGODB_DB_NAME =
   process.env.MONGODB_DB_NAME || process.env.cliqs_MONGODB_DB_NAME || undefined;

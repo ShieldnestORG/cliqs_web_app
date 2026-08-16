@@ -52,7 +52,11 @@ describe("PHASE 3 FUZZ: Transaction Processing", () => {
         const tx = genTx(i);
         const bytes = txToBytes(tx);
 
-        expect(bytes instanceof Uint8Array || bytes.constructor.name === "Uint8Array").toBe(true);
+        // Read the ctor name before the `instanceof` check: inside the `||` the
+        // narrowed type is `never`, which has no properties. The fallback still
+        // runs at runtime and still covers a cross-realm Uint8Array.
+        const ctorName = bytes.constructor.name;
+        expect(bytes instanceof Uint8Array || ctorName === "Uint8Array").toBe(true);
         expect(bytes.length).toBeGreaterThan(0);
 
         // Hash should be deterministic

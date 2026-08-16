@@ -57,7 +57,7 @@ describe("API: POST /api/transaction/[id] - Transaction Actions: P0", () => {
 
   it("should cancel transaction successfully", async () => {
     const txId = "tx-id-123";
-    mockCancelTransaction.mockResolvedValue('true');
+    mockCancelTransaction.mockResolvedValue("true");
 
     const { req, res } = createMocks({
       method: "POST",

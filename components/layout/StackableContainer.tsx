@@ -32,10 +32,10 @@ const StackableContainer = ({
 
   const variantClasses = {
     default: base
-      ? "bg-card border border-border shadow-lg"
+      ? "bg-card border border-border/[0.06] shadow-lg"
       : "bg-muted/30 border border-border/50",
-    institutional: "bg-card border-2 border-border shadow-card",
-    elevated: "bg-card border border-border shadow-lg hover:shadow-xl",
+    institutional: "bg-card border-2 border-border/[0.06] shadow-card",
+    elevated: "bg-card border border-border/[0.06] shadow-lg hover:shadow-xl",
   };
 
   const accentClasses = {

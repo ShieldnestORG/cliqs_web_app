@@ -81,7 +81,9 @@ const normalizeRawValue = (value: unknown): unknown => {
 
 const parseExplicitImportedSignatures = (
   value: unknown,
-): { signatures: readonly ImportedSignatureSeed[]; error?: never } | { signatures?: never; error: string } => {
+):
+  | { signatures: readonly ImportedSignatureSeed[]; error?: never }
+  | { signatures?: never; error: string } => {
   if (value === undefined) {
     return { signatures: [] };
   }
@@ -130,10 +132,7 @@ const buildBodyBytes = (tx: DbTransactionParsedDataJson): Uint8Array => {
   return registry.encode(txBodyEncodeObject);
 };
 
-const signerInfoToAddress = (
-  signerInfo: unknown,
-  addressPrefix: string,
-): string | null => {
+const signerInfoToAddress = (signerInfo: unknown, addressPrefix: string): string | null => {
   if (!isRecord(signerInfo)) return null;
 
   const publicKeyCandidate = isRecord(signerInfo.public_key)
@@ -176,7 +175,9 @@ const extractRawImportedSignatures = (
   parsed: Record<string, unknown>,
   tx: DbTransactionParsedDataJson,
   addressPrefix?: string,
-): { signatures: readonly ImportedSignatureSeed[]; error?: never } | { signatures?: never; error: string } => {
+):
+  | { signatures: readonly ImportedSignatureSeed[]; error?: never }
+  | { signatures?: never; error: string } => {
   const rawSignatures = parsed.signatures;
   if (rawSignatures === undefined) {
     return { signatures: [] };
@@ -218,7 +219,7 @@ const extractRawImportedSignatures = (
     if (!address) {
       return {
         error:
-          "Imported raw signatures could not be mapped to signer addresses. Provide explicit \"importedSignatures\" instead.",
+          'Imported raw signatures could not be mapped to signer addresses. Provide explicit "importedSignatures" instead.',
       };
     }
 
@@ -263,8 +264,7 @@ const parseRawEnvelope = (
     timeoutHeight !== 0
   ) {
     return {
-      error:
-        'Only raw transactions with timeout_height "0" are currently supported for import.',
+      error: 'Only raw transactions with timeout_height "0" are currently supported for import.',
     };
   }
 
@@ -280,7 +280,9 @@ const parseRawEnvelope = (
   const signerInfos = Array.isArray(authInfo.signer_infos) ? authInfo.signer_infos : [];
   const signerSequence =
     metadata.sequence ??
-    (isRecord(signerInfos[0]) ? signerInfos[0].sequence ?? signerInfos[0].signer_sequence : undefined);
+    (isRecord(signerInfos[0])
+      ? (signerInfos[0].sequence ?? signerInfos[0].signer_sequence)
+      : undefined);
   const sequence = parseMetadataNumber(signerSequence, "sequence");
   if (typeof sequence === "string") {
     return { error: sequence };

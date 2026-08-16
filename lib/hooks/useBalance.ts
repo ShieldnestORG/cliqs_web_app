@@ -55,7 +55,7 @@ export function useBalance({
             setError(
               new Error(
                 `Address prefix '${prefix}' does not match chain prefix '${chain.addressPrefix}'. ` +
-                `This address belongs to a different network.`,
+                  `This address belongs to a different network.`,
               ),
             );
             setLoading(false);
@@ -107,28 +107,28 @@ export function useBalance({
     () =>
       denom
         ? (() => {
-          // First try exact match
-          let found = balances.find((coin) => coin.denom === denom);
-          if (found) return found;
-
-          // If not found, try to find the asset and match against its base denom
-          const asset = chain.assets.find(
-            (a) => a.base === denom || a.symbol === denom || a.display === denom,
-          );
-          if (asset) {
-            // Try matching against base denom
-            found = balances.find((coin) => coin.denom === asset.base);
+            // First try exact match
+            let found = balances.find((coin) => coin.denom === denom);
             if (found) return found;
 
-            // Try matching against all denom units
-            for (const unit of asset.denom_units) {
-              found = balances.find((coin) => coin.denom === unit.denom);
+            // If not found, try to find the asset and match against its base denom
+            const asset = chain.assets.find(
+              (a) => a.base === denom || a.symbol === denom || a.display === denom,
+            );
+            if (asset) {
+              // Try matching against base denom
+              found = balances.find((coin) => coin.denom === asset.base);
               if (found) return found;
-            }
-          }
 
-          return null;
-        })()
+              // Try matching against all denom units
+              for (const unit of asset.denom_units) {
+                found = balances.find((coin) => coin.denom === unit.denom);
+                if (found) return found;
+              }
+            }
+
+            return null;
+          })()
         : null,
     [balances, denom, chain.assets],
   );

@@ -27,7 +27,7 @@ export default function ChainConnect() {
       <DialogButton />
       <DialogContent
         aria-describedby={undefined}
-        className="flex h-[85vh] max-w-4xl flex-col overflow-hidden border-2 border-border bg-card p-0"
+        className="flex h-[85vh] max-w-4xl flex-col overflow-hidden border-2 border-border/[0.06] bg-card p-0"
         style={
           newConnection.action === "confirm" ? { maxWidth: "fit-content", height: "auto" } : {}
         }
@@ -42,7 +42,7 @@ export default function ChainConnect() {
             defaultValue={newConnection.chain ? tabs.custom : tabs.choose}
             className="flex min-h-0 flex-1 flex-col"
           >
-            <DialogHeader className="flex-shrink-0 border-b border-border bg-muted/30 px-6 py-4">
+            <DialogHeader className="flex-shrink-0 border-b border-border/[0.06] bg-muted/30 px-6 py-4">
               <div className="flex items-center gap-4">
                 <div className="icon-container h-10 w-10 rounded-lg">
                   <Network className="h-5 w-5" />

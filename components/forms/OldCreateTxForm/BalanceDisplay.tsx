@@ -203,7 +203,7 @@ export default function BalanceDisplay({
           </div>
 
           {/* Connected Wallet Balance - For reference */}
-          <div className="space-y-2 border-l border-border pl-4">
+          <div className="space-y-2 border-l border-border/[0.06] pl-4">
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <Wallet className="h-4 w-4" />
               <span>Your Wallet Balance</span>

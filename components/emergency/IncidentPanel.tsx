@@ -115,11 +115,11 @@ export function IncidentPanel({
   const getStatusColor = (status: string) => {
     switch (status) {
       case "open":
-        return "text-red-500";
+        return "text-destructive";
       case "acknowledged":
-        return "text-yellow-500";
+        return "text-warning";
       case "resolved":
-        return "text-green-accent";
+        return "text-success";
       default:
         return "text-muted-foreground";
     }
@@ -163,7 +163,7 @@ export function IncidentPanel({
             <CardTitle className="text-sm font-medium">Open</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-500">{openCount}</div>
+            <div className="text-2xl font-bold text-destructive">{openCount}</div>
           </CardContent>
         </Card>
         <Card>
@@ -171,7 +171,7 @@ export function IncidentPanel({
             <CardTitle className="text-sm font-medium">Acknowledged</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-500">{acknowledgedCount}</div>
+            <div className="text-2xl font-bold text-warning">{acknowledgedCount}</div>
           </CardContent>
         </Card>
         <Card>
@@ -179,7 +179,7 @@ export function IncidentPanel({
             <CardTitle className="text-sm font-medium">Resolved (7d)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-accent">
+            <div className="text-2xl font-bold text-success">
               {incidents.filter((i) => i.status === "resolved").length}
             </div>
           </CardContent>
@@ -196,7 +196,7 @@ export function IncidentPanel({
           <ScrollArea className="h-[500px]">
             {sortedIncidents.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                <CheckCircle className="mb-4 h-12 w-12 text-green-accent" />
+                <CheckCircle className="mb-4 h-12 w-12 text-success" />
                 <p>No incidents</p>
                 <p className="text-sm">All systems operating normally</p>
               </div>
@@ -211,9 +211,9 @@ export function IncidentPanel({
                       key={incident.id}
                       className={`rounded-lg border p-4 ${
                         incident.status === "open"
-                          ? "border-red-500/50 bg-red-500/5"
+                          ? "border-destructive/50 bg-destructive/5"
                           : incident.status === "acknowledged"
-                            ? "border-yellow-500/50 bg-yellow-500/5"
+                            ? "border-warning/50 bg-warning/5"
                             : "bg-muted/50"
                       }`}
                     >

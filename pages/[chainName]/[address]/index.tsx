@@ -15,11 +15,7 @@ import DashboardLayout, { QuickStatsRow, QuickStat } from "@/components/layout/D
 import { isChainInfoFilled } from "@/context/ChainsContext/helpers";
 import { checkAddress } from "@/lib/displayHelpers";
 import { getKeplrKey } from "@/lib/keplr";
-import {
-  HostedMultisig,
-  ensureChainMultisigInDb,
-  getHostedMultisig,
-} from "@/lib/multisigHelpers";
+import { HostedMultisig, ensureChainMultisigInDb, getHostedMultisig } from "@/lib/multisigHelpers";
 import { toastError } from "@/lib/utils";
 import { isSecp256k1Pubkey, pubkeyToAddress } from "@cosmjs/amino";
 import copy from "copy-to-clipboard";
@@ -144,7 +140,7 @@ export default function CliqDashboardPage() {
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              {chain.registryName ? <Link href={`/${chain.registryName}`}>Dashboard</Link> : null}
+              {chain.registryName ? <Link href={`/${chain.registryName}`}>Home</Link> : null}
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
@@ -276,7 +272,7 @@ export default function CliqDashboardPage() {
             <div className="mb-3 flex items-center gap-3">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-green-accent/30 bg-gradient-to-br from-green-accent/20 to-green-accent/10">
                 <Users className="h-7 w-7 text-green-accent" />
-              </div>trad
+              </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="font-heading text-2xl font-bold tracking-tight lg:text-3xl">
@@ -333,8 +329,9 @@ export default function CliqDashboardPage() {
             value={hostedMultisig.hosted === "db+chain" ? "Active" : "Pending"}
             icon={
               <div
-                className={`h-3 w-3 rounded-full ${hostedMultisig.hosted === "db+chain" ? "bg-green-accent" : "bg-yellow-500"
-                  }`}
+                className={`h-3 w-3 rounded-full ${
+                  hostedMultisig.hosted === "db+chain" ? "bg-success" : "bg-warning"
+                }`}
               />
             }
           />
@@ -535,30 +532,6 @@ export default function CliqDashboardPage() {
                     </div>
                   </CardContent>
                 </Card>
-
-                {/* Keyboard Shortcuts */}
-                <Card className="border-dashed">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-normal uppercase tracking-wide text-muted-foreground">
-                      {/* Label */} Power User Tips
-                    </CardTitle>
-                    <div className="font-heading text-lg font-semibold">Shortcuts</div>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Quick Commands</span>
-                      <kbd className="rounded bg-muted px-2 py-0.5 font-mono text-xs">⌘K</kbd>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">New Transaction</span>
-                      <kbd className="rounded bg-muted px-2 py-0.5 font-mono text-xs">N</kbd>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Copy Address</span>
-                      <kbd className="rounded bg-muted px-2 py-0.5 font-mono text-xs">C</kbd>
-                    </div>
-                  </CardContent>
-                </Card>
               </div>
             </>
           )}
@@ -612,7 +585,7 @@ export default function CliqDashboardPage() {
                 return (
                   <div
                     key={memberAddress}
-                    className="group flex items-center gap-4 rounded-lg border border-border bg-card p-4 transition-colors hover:bg-muted/50"
+                    className="group flex items-center gap-4 rounded-lg border border-border/[0.06] bg-card p-4 transition-colors hover:bg-muted/50"
                   >
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-green-accent/30 bg-gradient-to-br from-green-accent/20 to-green-accent/10">
                       <span className="text-sm font-bold text-green-accent">{index + 1}</span>
@@ -678,8 +651,9 @@ export default function CliqDashboardPage() {
                   </p>
                   <div className="flex items-center gap-2">
                     <span
-                      className={`h-2 w-2 rounded-full ${hostedMultisig.hosted === "db+chain" ? "bg-green-accent" : "bg-yellow-500"
-                        }`}
+                      className={`h-2 w-2 rounded-full ${
+                        hostedMultisig.hosted === "db+chain" ? "bg-success" : "bg-warning"
+                      }`}
                     />
                     <span className="text-sm">
                       {hostedMultisig.hosted === "db+chain" ? "Active on chain" : "Pending funding"}

@@ -45,13 +45,13 @@ export default function CliqUpgradeCTA() {
     <Card
       variant="institutional"
       bracket="purple"
-      className="to-accent-purple/5 bg-gradient-to-br from-card"
+      className="bg-gradient-to-br from-card to-purple-accent/5"
     >
       <CardContent className="p-6 md:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center">
           {/* Content */}
           <div className="flex-1 space-y-4">
-            <div className="bg-accent-purple/20 border-accent-purple/30 text-accent-purple inline-flex items-center gap-2 rounded-full border px-3 py-1 font-mono text-xs uppercase tracking-wider">
+            <div className="inline-flex items-center gap-2 rounded-full border border-purple-accent/30 bg-purple-accent/20 px-3 py-1 font-mono text-xs uppercase tracking-wider text-purple-accent">
               <ShieldPlus className="h-3 w-3" />
               Security Upgrade
             </div>
@@ -74,8 +74,8 @@ export default function CliqUpgradeCTA() {
                     key={index}
                     className="flex items-center gap-2 text-sm text-muted-foreground"
                   >
-                    <div className="bg-accent-purple/20 flex h-6 w-6 items-center justify-center rounded">
-                      <Icon className="text-accent-purple h-3 w-3" />
+                    <div className="flex h-6 w-6 items-center justify-center rounded bg-purple-accent/20">
+                      <Icon className="h-3 w-3 text-purple-accent" />
                     </div>
                     <span>{benefit.title}</span>
                   </div>
@@ -118,8 +118,8 @@ export default function CliqUpgradeCTA() {
                     const Icon = benefit.icon;
                     return (
                       <div key={index} className="flex gap-4">
-                        <div className="bg-accent-purple/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
-                          <Icon className="text-accent-purple h-5 w-5" />
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-accent/20">
+                          <Icon className="h-5 w-5 text-purple-accent" />
                         </div>
                         <div>
                           <h4 className="font-semibold text-foreground">{benefit.title}</h4>
@@ -131,23 +131,23 @@ export default function CliqUpgradeCTA() {
                     );
                   })}
 
-                  <div className="rounded-lg border border-border bg-muted/50 p-4">
+                  <div className="rounded-lg border border-border/[0.06] bg-muted/50 p-4">
                     <h4 className="mb-2 font-semibold text-foreground">How It Works</h4>
                     <ol className="space-y-2 text-sm text-muted-foreground">
                       <li className="flex gap-2">
-                        <span className="text-accent-purple font-mono">1.</span>
+                        <span className="font-mono text-purple-accent">1.</span>
                         <span>Create a CLIQ with your team members' addresses</span>
                       </li>
                       <li className="flex gap-2">
-                        <span className="text-accent-purple font-mono">2.</span>
+                        <span className="font-mono text-purple-accent">2.</span>
                         <span>Set the signing threshold (e.g., 2-of-3)</span>
                       </li>
                       <li className="flex gap-2">
-                        <span className="text-accent-purple font-mono">3.</span>
+                        <span className="font-mono text-purple-accent">3.</span>
                         <span>Propose transactions that require multiple signatures</span>
                       </li>
                       <li className="flex gap-2">
-                        <span className="text-accent-purple font-mono">4.</span>
+                        <span className="font-mono text-purple-accent">4.</span>
                         <span>Team members sign and broadcast securely</span>
                       </li>
                     </ol>

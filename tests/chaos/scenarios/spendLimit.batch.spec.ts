@@ -16,8 +16,8 @@ describe("CHAOS: spend limit crossed via batching", () => {
             {
               policyVersion: 1,
               expectedPolicyVersion: 1,
-              emergencyPaused: false,
-              safeMode: false,
+              isPaused: false,
+              isSafeMode: false,
               timelock: { unlockAtMs: 0 },
 
               // represent "batch" as aggregate list (your engine can interpret this however it does today)

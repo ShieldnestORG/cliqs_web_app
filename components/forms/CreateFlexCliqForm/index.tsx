@@ -704,7 +704,7 @@ export default function CreateFlexCliqForm() {
     <Card variant="institutional" bracket="purple" className="overflow-visible">
       <CardHeader>
         <div className="mb-2 flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-muted">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border/[0.06] bg-muted">
             <Users className="h-7 w-7 text-foreground" />
           </div>
           <div>
@@ -727,8 +727,8 @@ export default function CreateFlexCliqForm() {
             address. The app uploads and deploys both contracts for you.
           </span>
           {chainConstraints?.permissionedUpload && (
-            <div className="flex items-start gap-2 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-yellow-500" />
+            <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
               <div>
                 <p className="font-medium text-foreground">Permissioned chain</p>
                 <p className="mt-0.5 text-muted-foreground">
@@ -849,7 +849,7 @@ export default function CreateFlexCliqForm() {
                 />
 
                 {/* Advanced settings */}
-                <div className="border-t border-border pt-4">
+                <div className="border-t border-border/[0.06] pt-4">
                   <button
                     type="button"
                     onClick={() => setShowAdvanced(!showAdvanced)}
@@ -862,7 +862,7 @@ export default function CreateFlexCliqForm() {
                   </button>
 
                   {showAdvanced && (
-                    <div className="mt-4 space-y-4 border-l-2 border-border pl-6">
+                    <div className="mt-4 space-y-4 border-l-2 border-border/[0.06] pl-6">
                       <div className="grid grid-cols-2 gap-4">
                         <FormField
                           control={form.control}
@@ -875,7 +875,7 @@ export default function CreateFlexCliqForm() {
                                   <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
                                 )}
                                 {cw4Status === "valid" && (
-                                  <Check className="h-3 w-3 text-green-500" />
+                                  <Check className="h-3 w-3 text-success" />
                                 )}
                                 {cw4Status === "invalid" && (
                                   <AlertCircle className="h-3 w-3 text-destructive" />
@@ -902,7 +902,7 @@ export default function CreateFlexCliqForm() {
                                       className={`inline-flex cursor-pointer items-center gap-1 rounded-full border px-2 py-0.5 text-xs transition-colors ${
                                         Number(field.value) === s.codeId
                                           ? "border-primary bg-primary/10 text-primary"
-                                          : "border-border bg-muted text-muted-foreground hover:bg-muted/80"
+                                          : "border-border/[0.06] bg-muted text-muted-foreground hover:bg-muted/80"
                                       }`}
                                     >
                                       <span className="font-mono font-medium">{s.codeId}</span>
@@ -929,7 +929,7 @@ export default function CreateFlexCliqForm() {
                                   <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
                                 )}
                                 {cw3Status === "valid" && (
-                                  <Check className="h-3 w-3 text-green-500" />
+                                  <Check className="h-3 w-3 text-success" />
                                 )}
                                 {cw3Status === "invalid" && (
                                   <AlertCircle className="h-3 w-3 text-destructive" />
@@ -956,7 +956,7 @@ export default function CreateFlexCliqForm() {
                                       className={`inline-flex cursor-pointer items-center gap-1 rounded-full border px-2 py-0.5 text-xs transition-colors ${
                                         Number(field.value) === s.codeId
                                           ? "border-primary bg-primary/10 text-primary"
-                                          : "border-border bg-muted text-muted-foreground hover:bg-muted/80"
+                                          : "border-border/[0.06] bg-muted text-muted-foreground hover:bg-muted/80"
                                       }`}
                                     >
                                       <span className="font-mono font-medium">{s.codeId}</span>
@@ -1039,7 +1039,7 @@ export default function CreateFlexCliqForm() {
                   )}
                 </div>
 
-                <div className="flex justify-end border-t border-border pt-4">
+                <div className="flex justify-end border-t border-border/[0.06] pt-4">
                   <Button
                     type="button"
                     variant="action"
@@ -1068,12 +1068,12 @@ export default function CreateFlexCliqForm() {
                       Add wallet addresses with voting weights
                     </p>
                   </div>
-                  <div className="rounded-full border border-border bg-muted px-3 py-1.5 text-sm font-medium text-foreground">
+                  <div className="rounded-full border border-border/[0.06] bg-muted px-3 py-1.5 text-sm font-medium text-foreground">
                     Total Weight: {totalWeight}
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-border bg-muted/30 p-3">
+                <div className="rounded-lg border border-border/[0.06] bg-muted/30 p-3">
                   <p className="text-xs text-muted-foreground">
                     <strong>Flex Membership:</strong> Unlike fixed multisigs, members can be added
                     or removed later via proposals (depending on group admin settings).
@@ -1143,15 +1143,15 @@ export default function CreateFlexCliqForm() {
                 </Button>
 
                 {filledMembersCount < 2 && (
-                  <div className="rounded-lg border border-border bg-muted p-3">
+                  <div className="rounded-lg border border-border/[0.06] bg-muted p-3">
                     <p className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <AlertCircle className="h-3.5 w-3.5 text-yellow-500" /> A CLIQ requires at
-                      least 2 members.
+                      <AlertCircle className="h-3.5 w-3.5 text-warning" /> A CLIQ requires at least
+                      2 members.
                     </p>
                   </div>
                 )}
 
-                <div className="flex justify-between border-t border-border pt-4">
+                <div className="flex justify-between border-t border-border/[0.06] pt-4">
                   <Button
                     type="button"
                     variant="ghost"
@@ -1218,7 +1218,7 @@ export default function CreateFlexCliqForm() {
                                   disabled={totalWeight < 1}
                                 />
                               </div>
-                              <div className="flex min-w-[120px] items-center justify-center gap-2 rounded-xl border border-border bg-muted px-4 py-3 shadow-sm">
+                              <div className="flex min-w-[120px] items-center justify-center gap-2 rounded-xl border border-border/[0.06] bg-muted px-4 py-3 shadow-sm">
                                 <Shield className="h-5 w-5 text-foreground" />
                                 <span className="font-heading text-2xl font-bold text-foreground">
                                   {currentThreshold}
@@ -1273,7 +1273,7 @@ export default function CreateFlexCliqForm() {
                 />
 
                 {/* Group Admin */}
-                <div className="border-t border-border pt-4">
+                <div className="border-t border-border/[0.06] pt-4">
                   <FormField
                     control={form.control}
                     name="groupAdminType"
@@ -1345,7 +1345,7 @@ export default function CreateFlexCliqForm() {
                   )}
                 </div>
 
-                <div className="flex justify-between border-t border-border pt-4">
+                <div className="flex justify-between border-t border-border/[0.06] pt-4">
                   <Button
                     type="button"
                     variant="ghost"
@@ -1385,7 +1385,7 @@ export default function CreateFlexCliqForm() {
 
                 <div className="space-y-4">
                   {/* Identity */}
-                  <div className="rounded-xl border border-border bg-muted/30 p-4">
+                  <div className="rounded-xl border border-border/[0.06] bg-muted/30 p-4">
                     <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
                       <FileText className="h-4 w-4" /> Identity
                     </h4>
@@ -1418,7 +1418,7 @@ export default function CreateFlexCliqForm() {
                   </div>
 
                   {/* Members */}
-                  <div className="rounded-xl border border-border bg-muted/30 p-4">
+                  <div className="rounded-xl border border-border/[0.06] bg-muted/30 p-4">
                     <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
                       <UsersRound className="h-4 w-4" /> Members ({filledMembersCount})
                     </h4>
@@ -1440,7 +1440,7 @@ export default function CreateFlexCliqForm() {
                   </div>
 
                   {/* Governance */}
-                  <div className="rounded-xl border border-border bg-muted/30 p-4">
+                  <div className="rounded-xl border border-border/[0.06] bg-muted/30 p-4">
                     <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
                       <Shield className="h-4 w-4" /> Governance
                     </h4>
@@ -1458,7 +1458,7 @@ export default function CreateFlexCliqForm() {
                         </span>
                       </div>
                     </div>
-                    <div className="mt-3 border-t border-border pt-3 text-sm">
+                    <div className="mt-3 border-t border-border/[0.06] pt-3 text-sm">
                       <span className="text-muted-foreground">Group Admin: </span>
                       <span className="font-medium capitalize text-foreground">
                         {watchedGroupAdminType}
@@ -1467,7 +1467,7 @@ export default function CreateFlexCliqForm() {
                   </div>
 
                   {/* Deployment Info */}
-                  <div className="rounded-xl border border-border bg-muted/30 p-4">
+                  <div className="rounded-xl border border-border/[0.06] bg-muted/30 p-4">
                     <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
                       <Rocket className="h-4 w-4" /> Deployment
                     </h4>
@@ -1512,7 +1512,7 @@ export default function CreateFlexCliqForm() {
 
                   {/* WASM source selector */}
                   {needsUpload && (
-                    <div className="space-y-3 rounded-xl border border-border bg-muted/30 p-4">
+                    <div className="space-y-3 rounded-xl border border-border/[0.06] bg-muted/30 p-4">
                       <h4 className="flex items-center gap-2 text-sm font-semibold text-foreground">
                         <UploadCloud className="h-4 w-4" /> Contract Source
                       </h4>
@@ -1520,7 +1520,7 @@ export default function CreateFlexCliqForm() {
                         <button
                           type="button"
                           onClick={() => setWasmSource("bundled")}
-                          className={`flex-1 rounded-lg border p-3 text-left text-sm transition-colors ${wasmSource === "bundled" ? "border-primary bg-primary/5 text-foreground" : "border-border bg-background text-muted-foreground hover:bg-muted/50"}`}
+                          className={`flex-1 rounded-lg border p-3 text-left text-sm transition-colors ${wasmSource === "bundled" ? "border-primary bg-primary/5 text-foreground" : "border-border/[0.06] bg-background text-muted-foreground hover:bg-muted/50"}`}
                         >
                           <p className="font-medium">Bundled (recommended)</p>
                           <p className="mt-0.5 text-xs opacity-70">
@@ -1530,7 +1530,7 @@ export default function CreateFlexCliqForm() {
                         <button
                           type="button"
                           onClick={() => setWasmSource("custom")}
-                          className={`flex-1 rounded-lg border p-3 text-left text-sm transition-colors ${wasmSource === "custom" ? "border-primary bg-primary/5 text-foreground" : "border-border bg-background text-muted-foreground hover:bg-muted/50"}`}
+                          className={`flex-1 rounded-lg border p-3 text-left text-sm transition-colors ${wasmSource === "custom" ? "border-primary bg-primary/5 text-foreground" : "border-border/[0.06] bg-background text-muted-foreground hover:bg-muted/50"}`}
                         >
                           <p className="font-medium">Custom WASM</p>
                           <p className="mt-0.5 text-xs opacity-70">
@@ -1550,7 +1550,7 @@ export default function CreateFlexCliqForm() {
                                 type="file"
                                 accept=".wasm,application/wasm"
                                 onChange={(e) => onCustomCw4FileChange(e.target.files?.[0] ?? null)}
-                                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-1.5 file:text-xs file:font-semibold"
+                                className="w-full rounded-lg border border-border/[0.06] bg-background px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-1.5 file:text-xs file:font-semibold"
                               />
                               {customCw4File && (
                                 <p className="text-xs text-muted-foreground">
@@ -1566,7 +1566,7 @@ export default function CreateFlexCliqForm() {
                                 type="file"
                                 accept=".wasm,application/wasm"
                                 onChange={(e) => onCustomCw3FileChange(e.target.files?.[0] ?? null)}
-                                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-1.5 file:text-xs file:font-semibold"
+                                className="w-full rounded-lg border border-border/[0.06] bg-background px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-1.5 file:text-xs file:font-semibold"
                               />
                               {customCw3File && (
                                 <p className="text-xs text-muted-foreground">
@@ -1583,15 +1583,15 @@ export default function CreateFlexCliqForm() {
                           type="checkbox"
                           checked={showWalletSwitch}
                           onChange={(e) => setShowWalletSwitch(e.target.checked)}
-                          className="rounded border-border"
+                          className="rounded border-border/[0.06]"
                         />
                         Switch to hardware wallet after upload (before instantiation)
                       </label>
 
                       {chainConstraints?.supportsBulkMemory === false &&
                         wasmSource === "bundled" && (
-                          <div className="mt-3 flex items-start gap-2 rounded-lg border border-yellow-500/20 bg-yellow-500/5 p-3 text-sm">
-                            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-yellow-500" />
+                          <div className="mt-3 flex items-start gap-2 rounded-lg border border-warning/20 bg-warning/5 p-3 text-sm">
+                            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
                             <div>
                               <p className="font-medium text-foreground">
                                 Check chain compatibility
@@ -1607,7 +1607,7 @@ export default function CreateFlexCliqForm() {
                   )}
                 </div>
 
-                <div className="flex justify-between border-t border-border pt-4">
+                <div className="flex justify-between border-t border-border/[0.06] pt-4">
                   <Button
                     type="button"
                     variant="ghost"
@@ -1686,9 +1686,9 @@ export default function CreateFlexCliqForm() {
 
                   {/* Wallet switch */}
                   {showWalletSwitch && deployPhase === "uploaded" && (
-                    <div className="space-y-3 rounded-xl border border-yellow-500/30 bg-yellow-500/5 p-4">
+                    <div className="space-y-3 rounded-xl border border-warning/30 bg-warning/5 p-4">
                       <div className="flex items-center gap-3">
-                        <Wallet className="h-5 w-5 text-yellow-500" />
+                        <Wallet className="h-5 w-5 text-warning" />
                         <div>
                           <p className="text-sm font-medium text-foreground">
                             Switch Wallet (optional)
@@ -1785,7 +1785,7 @@ export default function CreateFlexCliqForm() {
                   )}
                 </div>
 
-                <div className="flex justify-between border-t border-border pt-4">
+                <div className="flex justify-between border-t border-border/[0.06] pt-4">
                   <Button
                     type="button"
                     variant="ghost"
@@ -1847,8 +1847,8 @@ export default function CreateFlexCliqForm() {
             {currentStep === "complete" && deployResult && (
               <div className="space-y-6">
                 <div className="py-4 text-center">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-green-500/30 bg-green-500/10">
-                    <CheckCircle2 className="h-8 w-8 text-green-500" />
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-success/30 bg-success/10">
+                    <CheckCircle2 className="h-8 w-8 text-success" />
                   </div>
                   <h3 className="text-xl font-semibold text-foreground">Flex CLIQ Created</h3>
                   <p className="mt-1 text-sm text-muted-foreground">
@@ -1856,7 +1856,7 @@ export default function CreateFlexCliqForm() {
                   </p>
                 </div>
 
-                <div className="space-y-3 rounded-xl border border-border bg-muted/30 p-4">
+                <div className="space-y-3 rounded-xl border border-border/[0.06] bg-muted/30 p-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Multisig Address</span>
                     <div className="flex items-center gap-2">
@@ -1870,7 +1870,7 @@ export default function CreateFlexCliqForm() {
                         className="rounded p-1 hover:bg-muted"
                       >
                         {copied ? (
-                          <Check className="h-3.5 w-3.5 text-green-500" />
+                          <Check className="h-3.5 w-3.5 text-success" />
                         ) : (
                           <Copy className="h-3.5 w-3.5 text-muted-foreground" />
                         )}
@@ -1888,7 +1888,7 @@ export default function CreateFlexCliqForm() {
                     <span className="flex items-center gap-1 text-sm text-muted-foreground">
                       <Link2 className="h-3 w-3" /> Linked
                     </span>
-                    <span className="text-xs font-medium text-green-600">
+                    <span className="text-xs font-medium text-success">
                       CW3-Flex references CW4-Group
                     </span>
                   </div>
@@ -1900,9 +1900,9 @@ export default function CreateFlexCliqForm() {
                   </div>
                 </div>
 
-                <div className="space-y-2 rounded-xl border border-blue-500/20 bg-blue-500/5 p-4">
+                <div className="space-y-2 rounded-xl border border-info/20 bg-info/5 p-4">
                   <div className="flex items-start gap-2">
-                    <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
+                    <Info className="mt-0.5 h-4 w-4 shrink-0 text-info" />
                     <div className="text-sm">
                       <p className="font-medium text-foreground">Download a backup copy</p>
                       <p className="mt-0.5 text-muted-foreground">
@@ -1969,15 +1969,15 @@ function DeployStepItem({
         active
           ? "border-primary bg-primary/5"
           : done
-            ? "border-green-500 bg-green-500/5"
-            : "border-border bg-muted/30"
+            ? "border-success bg-success/5"
+            : "border-border/[0.06] bg-muted/30"
       }`}
     >
       <div className="flex items-center gap-3">
         {active ? (
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
         ) : done ? (
-          <CheckCircle2 className="h-5 w-5 text-green-500" />
+          <CheckCircle2 className="h-5 w-5 text-success" />
         ) : (
           <UploadCloud className="h-5 w-5 text-muted-foreground" />
         )}

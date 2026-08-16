@@ -25,7 +25,11 @@ import { useCallback, useEffect, useState } from "react";
 import OldCreateTxForm from "../../../../components/forms/OldCreateTxForm";
 import { useChains } from "../../../../context/ChainsContext";
 import { useWallet } from "@/context/WalletContext";
-import { ensureChainMultisigInDb, getHostedMultisig, isAccount } from "../../../../lib/multisigHelpers";
+import {
+  ensureChainMultisigInDb,
+  getHostedMultisig,
+  isAccount,
+} from "../../../../lib/multisigHelpers";
 import { useMultisigType } from "@/lib/hooks/useMultisigType";
 import { createSigningCW3ClientFromSigner } from "@/lib/contract/cw3-client";
 import { getGasAdjustment } from "@/lib/contract/codeRegistry";
@@ -518,9 +522,9 @@ export default function CreateTxPage() {
 
         {/* Pending Transactions Warning */}
         {pendingTransactions.length > 0 && (
-          <Alert className="border-yellow-500/50 bg-yellow-500/10">
-            <Clock className="h-4 w-4 text-yellow-500" />
-            <AlertTitle className="text-yellow-500">
+          <Alert className="border-warning/50 bg-warning/10">
+            <Clock className="h-4 w-4 text-warning" />
+            <AlertTitle className="text-warning">
               {pendingTransactions.length} Pending Transaction
               {pendingTransactions.length > 1 ? "s" : ""}
             </AlertTitle>

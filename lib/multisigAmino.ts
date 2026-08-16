@@ -160,13 +160,7 @@ export function safeAminoMultisigTxBytes(
     validateNormalizedPubkey(normalizedPubkey);
     validateNormalizedFee(normalizedFee);
 
-    return makeMultisignedTxBytes(
-      normalizedPubkey,
-      sequence,
-      normalizedFee,
-      bodyBytes,
-      signatures,
-    );
+    return makeMultisignedTxBytes(normalizedPubkey, sequence, normalizedFee, bodyBytes, signatures);
   } catch (e) {
     // Emit sanitized diagnostic metadata without exposing sensitive values
     console.error("[safeAminoMultisigTxBytes] Assembly failed:", {

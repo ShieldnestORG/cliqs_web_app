@@ -311,7 +311,7 @@ export function CredentialManagerPanel({
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-emerald-500" />
+              <Shield className="h-5 w-5 text-success" />
               Credential Management
             </CardTitle>
             <CardDescription>Manage identity NFT credentials for team members</CardDescription>

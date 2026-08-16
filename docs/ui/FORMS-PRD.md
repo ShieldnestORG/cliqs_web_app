@@ -77,7 +77,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   @apply focus:outline-none;
   border-color: hsl(var(--border));
   background: hsl(var(--card));
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Geist Mono', ui-monospace, monospace;
   font-size: 14px;
 }
 

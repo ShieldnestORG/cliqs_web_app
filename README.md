@@ -16,6 +16,8 @@ npm run dev                   # Runs on http://localhost:3003
 
 **Operations**: [INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md) — where production lives, how it is deployed, the 2026-08-12 outage post-mortem, and chain/database gotchas.
 
+**Design**: [STYLE-GUIDE.md](docs/STYLE-GUIDE.md) is the canonical token reference (Coherence Daddy colours, Geist typography, radius/elevation/motion scales). Read it before touching styles — it documents two naming traps that silently produce no CSS. Component specs live in [docs/ui/](docs/ui/INDEX.md).
+
 ## Architecture
 
 - **Database**: MongoDB Atlas (production), or local JSON file (`data/local-db.json`) for development. Users can also bring their own MongoDB via Settings (BYODB).

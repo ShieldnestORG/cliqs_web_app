@@ -126,9 +126,9 @@ export async function getMultisigsFromChainWhereMember(
   _address: string,
   _pubkey: string,
 ): Promise<DbMultisig[]> {
-  // This function iterates over EVERY active validator on the network and fetches 
-  // their account details to see if they are a multisig. This is incredibly slow 
-  // and frequently causes API routes to hit the 30s timeout limit. 
+  // This function iterates over EVERY active validator on the network and fetches
+  // their account details to see if they are a multisig. This is incredibly slow
+  // and frequently causes API routes to hit the 30s timeout limit.
   // For now, we disable this expensive fallback discovery mechanism.
   return [];
 }

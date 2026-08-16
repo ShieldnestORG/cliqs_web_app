@@ -21,8 +21,8 @@ describe("CHAOS: safe-mode during timelock", () => {
             {
               nowMs: now,
               timelock: { unlockAtMs: now + 60_000 },
-              safeMode: false,
-              emergencyPaused: false,
+              isSafeMode: false,
+              isPaused: false,
               policyVersion: 1,
               expectedPolicyVersion: 1,
             },
@@ -42,7 +42,7 @@ describe("CHAOS: safe-mode during timelock", () => {
             {
               nowMs: now + 60_001,
               timelock: { unlockAtMs: now + 60_000 },
-              emergencyPaused: false,
+              isPaused: false,
               policyVersion: 1,
               expectedPolicyVersion: 1,
             },

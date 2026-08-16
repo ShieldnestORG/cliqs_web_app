@@ -50,13 +50,13 @@ export default function ConfirmConnection({ closeDialog }: ConfirmConnectionProp
       {/* Chain Comparison */}
       <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:justify-center">
         {/* Current Chain */}
-        <div className="w-full max-w-sm rounded-lg border-2 border-border bg-muted/30 p-4 sm:w-auto">
+        <div className="w-full max-w-sm rounded-lg border-2 border-border/[0.06] bg-muted/30 p-4 sm:w-auto">
           <span className="mb-3 block text-[10px] text-label text-destructive">{`// FROM`}</span>
           <ChainDigest chain={chain} simplify />
         </div>
 
         {/* Arrow */}
-        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2 border-border bg-card sm:mt-12">
+        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2 border-border/[0.06] bg-card sm:mt-12">
           <ArrowRight className="h-5 w-5 text-[hsl(var(--accent-green))]" />
         </div>
 
@@ -70,7 +70,7 @@ export default function ConfirmConnection({ closeDialog }: ConfirmConnectionProp
       </div>
 
       {/* Actions */}
-      <div className="flex flex-col-reverse gap-3 border-t border-border pt-4 sm:flex-row sm:justify-end">
+      <div className="flex flex-col-reverse gap-3 border-t border-border/[0.06] pt-4 sm:flex-row sm:justify-end">
         <Button
           variant="action-outline"
           size="action"

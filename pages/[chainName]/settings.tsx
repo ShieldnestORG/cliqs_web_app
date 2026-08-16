@@ -95,7 +95,7 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between space-x-2 rounded-lg border border-border p-4">
+              <div className="flex items-center justify-between space-x-2 rounded-lg border border-border/[0.06] p-4">
                 <div className="flex-1 space-y-0.5">
                   <Label htmlFor="require-wallet-signin" className="text-base font-medium">
                     Require Wallet Sign-In for Cliqs

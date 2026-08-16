@@ -8,6 +8,7 @@
  */
 
 import { MultiRpcVerifier } from "@/lib/rpc/multi-rpc-verifier";
+import type { EndpointConfig } from "@/lib/rpc/endpoint-manager";
 import { EncodeObject } from "@cosmjs/proto-signing";
 import type { WalletSigner } from "../mocks/MockWalletSigner";
 import type { Broadcaster, BroadcastResult } from "../mocks/MockBroadcaster";
@@ -17,6 +18,18 @@ export interface WalletFlow {
   signTxBytes(txBytes: Uint8Array, signer: WalletSigner): Promise<Uint8Array>;
   broadcastSignedTx(txBytes: Uint8Array, broadcaster: Broadcaster): Promise<BroadcastResult>;
   broadcastViaMultiRpcVerifier?(txBytes: Uint8Array): Promise<any>;
+}
+
+/**
+ * Monotonic clock for mock tx building. Guarantees every build gets a distinct
+ * timestamp even when several complete within the same millisecond.
+ */
+let lastBuildTimestamp = 0;
+
+function nextBuildTimestamp(): number {
+  const now = Date.now();
+  lastBuildTimestamp = now > lastBuildTimestamp ? now : lastBuildTimestamp + 1;
+  return lastBuildTimestamp;
 }
 
 /**
@@ -31,8 +44,12 @@ export function getWalletFlow(): WalletFlow {
       msgs: readonly EncodeObject[];
       memo?: string;
     }): Promise<Uint8Array> {
-      // Mock tx building - create deterministic bytes based on input
-      const input = JSON.stringify({ msgs, memo, timestamp: Date.now() });
+      // Mock tx building - create deterministic bytes based on input.
+      // The timestamp is forced strictly monotonic: Date.now() has millisecond
+      // resolution, so two builds inside the same millisecond would otherwise
+      // produce byte-identical txs, and any test asserting that two separate
+      // builds differ would fail depending on machine speed.
+      const input = JSON.stringify({ msgs, memo, timestamp: nextBuildTimestamp() });
       const bytes = new TextEncoder().encode(input);
       return bytes;
     },
@@ -40,8 +57,11 @@ export function getWalletFlow(): WalletFlow {
     async signTxBytes(txBytes: Uint8Array, signer: WalletSigner): Promise<Uint8Array> {
       // Get signature and append to tx bytes
       const sig = await signer.sign(txBytes, { purpose: "test" });
-      const sigBytes = Buffer.from(JSON.stringify(sig), "utf8");
-      return new Uint8Array(Buffer.concat([txBytes, sigBytes]));
+      const sigBytes = new TextEncoder().encode(JSON.stringify(sig));
+      const signed = new Uint8Array(txBytes.length + sigBytes.length);
+      signed.set(txBytes, 0);
+      signed.set(sigBytes, txBytes.length);
+      return signed;
     },
 
     async broadcastSignedTx(
@@ -53,13 +73,15 @@ export function getWalletFlow(): WalletFlow {
 
     async broadcastViaMultiRpcVerifier(txBytes: Uint8Array): Promise<any> {
       // Create minimal endpoint config for testing
-      const config = {
+      const config: EndpointConfig = {
         chainId: "test-chain",
         minConfirmations: 1,
+        timeoutMs: 30000,
         endpoints: [
           {
             url: "http://test-rpc",
-            priority: "primary" as const,
+            priority: "primary",
+            type: "private",
           },
         ],
       };

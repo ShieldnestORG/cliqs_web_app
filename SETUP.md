@@ -94,8 +94,24 @@ npm start
 ## Other Commands
 
 - **Lint**: `npm run lint`
-- **Format**: `npm run format`
-- **Test**: `npm test`
+- **Format**: `npm run format` — rewrites files
+- **Check formatting**: `npm run format:check` — read-only; **this one gates CI**
+- **Test**: `npm test` (watch) / `npm run test:ci` (single run)
+
+### CI
+
+`.github/workflows/ci.yml` runs four jobs on every push and PR: `lint`, `format`,
+`test`, `build`. All four must pass.
+
+`format` runs `npm run format:check`, so an unformatted file fails the build even
+though ESLint is clean — `eslint-config-prettier` disables formatting rules rather
+than enforcing them, so lint cannot catch it. Run `npm run format` before pushing.
+
+## Design system
+
+UI work should follow [`docs/STYLE-GUIDE.md`](docs/STYLE-GUIDE.md), which carries the
+current Coherence Daddy tokens and the naming traps worth knowing before touching
+styles.
 
 ## Features
 

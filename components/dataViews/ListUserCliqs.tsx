@@ -232,7 +232,7 @@ export default function ListUserCliqs() {
 
         {/* Ledger connected - can't easily verify */}
         {walletInfo && walletInfo.type === "Ledger" && !cliqs ? (
-          <div className="rounded-lg border border-border p-4 text-sm text-muted-foreground">
+          <div className="rounded-lg border border-border/[0.06] p-4 text-sm text-muted-foreground">
             <p>
               Ledger wallet connected. To view your Cliqs, please use Keplr to verify your identity.
             </p>
@@ -327,12 +327,12 @@ export default function ListUserCliqs() {
                   <Link
                     key={cliq.address}
                     href={`/${chainRegistryName}/${cliq.address}`}
-                    className="group flex items-center gap-3 rounded-lg border border-border p-3 transition-all hover:border-green-accent/50 hover:bg-muted/50"
+                    className="group flex items-center gap-3 rounded-lg border border-border/[0.06] p-3 transition-all hover:border-green-accent/50 hover:bg-muted/50"
                   >
-                    <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-green-accent/30 bg-gradient-to-br from-green-accent/20 to-emerald-600/10">
+                    <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-green-accent/30 bg-gradient-to-br from-green-accent/20 to-green-accent/10">
                       <Users className="h-5 w-5 text-green-accent" />
                       {pendingCount > 0 && (
-                        <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-card bg-amber-500 text-[10px] font-bold text-white">
+                        <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-card bg-warning text-[10px] font-bold text-white">
                           {pendingCount}
                         </span>
                       )}
@@ -352,7 +352,7 @@ export default function ListUserCliqs() {
                         {pendingCount > 0 && (
                           <Badge
                             variant="outline"
-                            className="ml-auto h-5 gap-1 border-amber-500/20 bg-amber-500/10 px-1.5 text-amber-500 sm:ml-0"
+                            className="ml-auto h-5 gap-1 border-warning/20 bg-warning/10 px-1.5 text-warning sm:ml-0"
                           >
                             <Clock className="h-3 w-3" />
                             {pendingCount} pending

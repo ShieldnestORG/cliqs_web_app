@@ -16,8 +16,9 @@ import { createCliqTransaction, buildSetWithdrawAddressMsg } from "@/lib/validat
 import { ArrowRight, Loader2, Check, X, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
-import { GasPrice, SigningStargateClient } from "@cosmjs/stargate";
+import { calculateFee, GasPrice, SigningStargateClient } from "@cosmjs/stargate";
 import { MsgTypeUrls } from "@/types/txMsg";
+import { gasOfTx } from "@/lib/txMsgHelpers";
 import { checkAddress } from "@/lib/displayHelpers";
 import { useRouter } from "next/router";
 import { AddressDisplay } from "@/components/ui/address-display";
@@ -90,6 +91,9 @@ export default function WithdrawAddressCard({
         toast.dismiss(loadingToast);
 
         if (result.success && result.txId) {
+          if (result.warning) {
+            toast.warning(result.warning, { duration: 8000 });
+          }
           toast.success("Transaction created!", {
             description: "Redirecting to sign...",
           });
@@ -135,14 +139,9 @@ export default function WithdrawAddressCard({
         },
       ];
 
-      // Calculate fee based on gas price
-      const gasPriceNum = parseFloat(chain.gasPrice) || 0.0625;
-      const feeAmount = Math.ceil(gasPriceNum * 100_000).toString();
-
-      const fee = {
-        amount: [{ denom: chain.denom, amount: feeAmount }],
-        gas: "100000",
-      };
+      // Calculate fee from the shared gas table
+      const gasLimit = gasOfTx([MsgTypeUrls.SetWithdrawAddress]);
+      const fee = calculateFee(gasLimit, chain.gasPrice);
 
       const result = await client.signAndBroadcast(validator.delegatorAddress, messages, fee, "");
 
@@ -198,7 +197,7 @@ export default function WithdrawAddressCard({
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 {isSameAsOperator ? (
-                  <span className="text-green-accent">Same as operator account</span>
+                  <span className="text-success">Same as operator account</span>
                 ) : (
                   <span>Custom withdraw address</span>
                 )}

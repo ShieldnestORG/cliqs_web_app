@@ -130,13 +130,13 @@ export default function ProposalAuditTrail({
   const getVoteIcon = (vote: string) => {
     switch (vote) {
       case "yes":
-        return <CheckCircle className="h-4 w-4 text-green-accent" />;
+        return <CheckCircle className="h-4 w-4 text-success" />;
       case "no":
-        return <XCircle className="h-4 w-4 text-red-500" />;
+        return <XCircle className="h-4 w-4 text-destructive" />;
       case "abstain":
-        return <Clock className="h-4 w-4 text-gray-500" />;
+        return <Clock className="h-4 w-4 text-muted-foreground" />;
       case "veto":
-        return <XCircle className="h-4 w-4 text-orange-500" />;
+        return <XCircle className="h-4 w-4 text-warning" />;
       default:
         return null;
     }
@@ -146,13 +146,13 @@ export default function ProposalAuditTrail({
   const getVoteBadgeClass = (vote: string) => {
     switch (vote) {
       case "yes":
-        return "bg-green-accent/20 text-green-accent";
+        return "bg-success/20 text-success";
       case "no":
-        return "bg-red-100 text-red-800";
+        return "bg-destructive/20 text-destructive";
       case "abstain":
-        return "bg-gray-100 text-gray-800";
+        return "bg-muted text-muted-foreground";
       case "veto":
-        return "bg-orange-100 text-orange-800";
+        return "bg-warning/20 text-warning";
       default:
         return "";
     }
@@ -181,7 +181,7 @@ export default function ProposalAuditTrail({
             <p className="text-sm text-muted-foreground">Threshold</p>
             <p className="font-medium">
               {voteTotals.yes} / {threshold}
-              {thresholdMet && <CheckCircle className="ml-1 inline h-4 w-4 text-green-accent" />}
+              {thresholdMet && <CheckCircle className="ml-1 inline h-4 w-4 text-success" />}
             </p>
           </div>
           <div className="space-y-1">
@@ -202,19 +202,19 @@ export default function ProposalAuditTrail({
         {/* Vote breakdown */}
         <div className="flex flex-wrap gap-4">
           <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-green-accent" />
+            <div className="h-3 w-3 rounded-full bg-success" />
             <span className="text-sm">Yes: {voteTotals.yes}</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-red-500" />
+            <div className="h-3 w-3 rounded-full bg-destructive" />
             <span className="text-sm">No: {voteTotals.no}</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-gray-500" />
+            <div className="h-3 w-3 rounded-full bg-muted-foreground" />
             <span className="text-sm">Abstain: {voteTotals.abstain}</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-orange-500" />
+            <div className="h-3 w-3 rounded-full bg-warning" />
             <span className="text-sm">Veto: {voteTotals.veto}</span>
           </div>
         </div>
@@ -303,12 +303,12 @@ export default function ProposalAuditTrail({
                       </TableCell>
                       <TableCell>
                         {vote.credentialValid ? (
-                          <Badge variant="outline" className="text-green-600">
+                          <Badge variant="outline" className="text-success">
                             <Shield className="mr-1 h-3 w-3" />
                             Valid
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="text-red-600">
+                          <Badge variant="outline" className="text-destructive">
                             <Shield className="mr-1 h-3 w-3" />
                             Invalid
                           </Badge>
@@ -382,7 +382,7 @@ export default function ProposalAuditTrail({
             <AccordionItem value="execution">
               <AccordionTrigger>
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-accent" />
+                  <CheckCircle className="h-4 w-4 text-success" />
                   <span>Executed</span>
                   <span className="ml-2 text-sm text-muted-foreground">
                     {formatTime(executedAt)}

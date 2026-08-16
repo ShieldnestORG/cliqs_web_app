@@ -34,7 +34,7 @@ export default function ButtonWithConfirm({
     <Button
       size="sm"
       variant={toConfirm ? "destructive" : "default"}
-      className={cn(toConfirm ? "" : "bg-amber-400 text-black hover:bg-amber-400")}
+      className={cn(toConfirm ? "" : "bg-warning text-black hover:bg-warning")}
       onClick={
         toConfirm
           ? onClick

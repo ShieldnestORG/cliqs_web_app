@@ -61,6 +61,17 @@ const mockRegisterDiscoveredMultisigs = registerDiscoveredMultisigs as jest.Mock
   typeof registerDiscoveredMultisigs
 >;
 
+const multisigPubkeyJSON =
+  '{"type":"tendermint/PubKeyMultisigThreshold","value":{"threshold":"2","pubkeys":[]}}';
+
+const dbMultisig = (id: string, address: string, chainId: string) => ({
+  id,
+  address,
+  chainId,
+  version: 1,
+  pubkeyJSON: multisigPubkeyJSON,
+});
+
 describe("API: POST /api/chain/[chainId]/multisig/list - List Multisigs: P0", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -69,8 +80,8 @@ describe("API: POST /api/chain/[chainId]/multisig/list - List Multisigs: P0", ()
 
   it("should list multisigs with signature successfully", async () => {
     const chainId = "cosmoshub-4";
-    const mockCreated = [{ id: "1", address: "cosmos1created" }];
-    const mockBelonged = [{ id: "2", address: "cosmos1belonged" }];
+    const mockCreated = [dbMultisig("1", "cosmos1created", chainId)];
+    const mockBelonged = [dbMultisig("2", "cosmos1belonged", chainId)];
 
     mockGetNonce.mockResolvedValue(1);
     mockIncrementNonce.mockResolvedValue(2);
@@ -106,8 +117,8 @@ describe("API: POST /api/chain/[chainId]/multisig/list - List Multisigs: P0", ()
 
   it("should list multisigs with address and pubkey successfully", async () => {
     const chainId = "cosmoshub-4";
-    const mockCreated = [{ id: "1", address: "cosmos1created" }];
-    const mockBelonged = [{ id: "2", address: "cosmos1belonged" }];
+    const mockCreated = [dbMultisig("1", "cosmos1created", chainId)];
+    const mockBelonged = [dbMultisig("2", "cosmos1belonged", chainId)];
 
     mockGetCreatedMultisigs.mockResolvedValue(mockCreated);
     mockGetBelongedMultisigs.mockResolvedValue(mockBelonged);
@@ -153,7 +164,7 @@ describe("API: POST /api/chain/[chainId]/multisig/list - List Multisigs: P0", ()
 
     mockGetCreatedMultisigs.mockResolvedValue([]);
     mockGetBelongedMultisigs.mockResolvedValue([]);
-    mockDiscoverMultisigsWhereMember.mockResolvedValue(discovered as any);
+    mockDiscoverMultisigsWhereMember.mockResolvedValue(discovered);
 
     const { req, res } = createMocks({
       method: "POST",

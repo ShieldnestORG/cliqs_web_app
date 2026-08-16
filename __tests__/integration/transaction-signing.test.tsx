@@ -28,12 +28,10 @@ describe("Transaction Signing Flow: P0", () => {
 
   it("should complete full signing flow", async () => {
     const txId = "tx-id-123";
-    const mockSignature = {
-      id: "sig-id-123",
-      transaction: { id: txId },
-      signature: "test-signature",
-      pubkey: "test-pubkey",
-    };
+    // createSignature persists the draft and resolves with the signature string
+    // itself (graphql/signature.ts:26), not with a signature record. The handler
+    // then responds with { signature: <that string> }.
+    const mockSignature = "test-signature";
 
     mockCreateSignature.mockResolvedValue(mockSignature);
 

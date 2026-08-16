@@ -73,11 +73,11 @@ export default function Document() {
         {/* Error overlay suppressor – must run before all other scripts */}
         <script dangerouslySetInnerHTML={{ __html: OVERLAY_SUPPRESSOR_SCRIPT }} />
 
-        {/* UI4 Typography - Google Fonts */}
+        {/* Coherence Daddy typography — Geist / Geist Mono */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap"
           rel="stylesheet"
         />
 
@@ -89,7 +89,8 @@ export default function Document() {
         <link rel="manifest" href="/site.webmanifest" />
 
         {/* Theme Color */}
-        <meta name="theme-color" content="#262626" />
+        {/* Matches --background (#0E0E10) so mobile browser chrome blends with the app */}
+        <meta name="theme-color" content="#0E0E10" />
       </Head>
       <body className="antialiased">
         <Main />

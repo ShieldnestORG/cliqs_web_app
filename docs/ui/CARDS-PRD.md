@@ -169,7 +169,7 @@ Section labels with optional comment-style prefix.
 **Styling:**
 ```css
 .text-label {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Geist Mono', ui-monospace, monospace;
   font-size: 10px;
   font-weight: 500;
   text-transform: uppercase;

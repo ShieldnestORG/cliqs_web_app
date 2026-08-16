@@ -96,7 +96,8 @@ export function withByodbMiddleware(handler: NextApiHandler): NextApiHandler {
     if (req.headers["x-byodb-locked"] === "true") {
       res.status(403).json({
         error: "Database Locked",
-        message: "Your custom database is currently locked. Please go to Settings to unlock it before interacting with your CLIQs.",
+        message:
+          "Your custom database is currently locked. Please go to Settings to unlock it before interacting with your CLIQs.",
       });
       return;
     }

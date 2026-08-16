@@ -16,7 +16,10 @@ export type EnsureMultisigRegistrationResult = {
 };
 
 async function persistMultisig(
-  multisig: Pick<DbMultisig, "chainId" | "address" | "creator" | "pubkeyJSON" | "name" | "description">,
+  multisig: Pick<
+    DbMultisig,
+    "chainId" | "address" | "creator" | "pubkeyJSON" | "name" | "description"
+  >,
   source: "account_pubkey" | "manual_admin",
 ): Promise<DbMultisig | null> {
   try {

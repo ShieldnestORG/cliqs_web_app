@@ -128,7 +128,7 @@ export default function MemberSnapshotView({
             <span>
               Total weight: {totalWeight}
               {currentTotalWeight !== undefined && currentTotalWeight !== totalWeight && (
-                <span className="ml-1 text-yellow-600">(now: {currentTotalWeight})</span>
+                <span className="ml-1 text-warning">(now: {currentTotalWeight})</span>
               )}
             </span>
           </div>
@@ -144,17 +144,17 @@ export default function MemberSnapshotView({
         {memberChanges?.hasChanges && (
           <div className="flex flex-wrap gap-2">
             {memberChanges.added.length > 0 && (
-              <Badge className="bg-green-accent/20 text-green-accent">
+              <Badge className="bg-success/20 text-success">
                 +{memberChanges.added.length} added since
               </Badge>
             )}
             {memberChanges.removed.length > 0 && (
-              <Badge className="bg-red-100 text-red-800">
+              <Badge className="bg-destructive/20 text-destructive">
                 -{memberChanges.removed.length} removed since
               </Badge>
             )}
             {memberChanges.changed.length > 0 && (
-              <Badge className="bg-yellow-100 text-yellow-800">
+              <Badge className="bg-warning/20 text-warning">
                 {memberChanges.changed.length} weight changed
               </Badge>
             )}
@@ -187,7 +187,7 @@ export default function MemberSnapshotView({
                   <TableCell className="text-right">
                     {member.weight}
                     {weightChanged && (
-                      <span className="ml-1 text-yellow-600">→ {currentMember?.weight}</span>
+                      <span className="ml-1 text-warning">→ {currentMember?.weight}</span>
                     )}
                   </TableCell>
                   <TableCell className="text-right text-muted-foreground">
@@ -196,12 +196,12 @@ export default function MemberSnapshotView({
                   {currentMembers && (
                     <TableCell>
                       {wasRemoved && (
-                        <Badge variant="outline" className="text-red-600">
+                        <Badge variant="outline" className="text-destructive">
                           Removed
                         </Badge>
                       )}
                       {weightChanged && (
-                        <Badge variant="outline" className="text-yellow-600">
+                        <Badge variant="outline" className="text-warning">
                           Changed
                         </Badge>
                       )}

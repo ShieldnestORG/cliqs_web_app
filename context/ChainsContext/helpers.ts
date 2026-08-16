@@ -27,7 +27,9 @@ export const isCoreumChain = (
   const chainId = chain.chainId?.toLowerCase() ?? "";
 
   return (
-    registryName.includes("coreum") || chainDisplayName.includes("coreum") || chainId.includes("coreum")
+    registryName.includes("coreum") ||
+    chainDisplayName.includes("coreum") ||
+    chainId.includes("coreum")
   );
 };
 

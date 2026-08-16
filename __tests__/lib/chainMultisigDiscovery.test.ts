@@ -9,10 +9,7 @@ jest.mock("@/lib/multisigIndexer", () => ({
 }));
 
 import { discoverMultisigsWhereMember } from "@/lib/chainMultisigDiscovery";
-import {
-  discoverMultisigsFromIndexer,
-  isMultisigIndexerConfigured,
-} from "@/lib/multisigIndexer";
+import { discoverMultisigsFromIndexer, isMultisigIndexerConfigured } from "@/lib/multisigIndexer";
 
 const mockDiscoverMultisigsFromIndexer = discoverMultisigsFromIndexer as jest.MockedFunction<
   typeof discoverMultisigsFromIndexer

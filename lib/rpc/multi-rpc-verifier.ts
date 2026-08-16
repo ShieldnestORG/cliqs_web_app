@@ -31,6 +31,10 @@ export interface BroadcastResult {
   readonly txHash: string;
   /** Whether broadcast was successful */
   readonly success: boolean;
+  /** Chain result code (0 = executed OK), when a chain response was received */
+  readonly code?: number;
+  /** True when the primary endpoint proved inclusion but witness confirmations fell short */
+  readonly partialVerification?: boolean;
   /** Block height if confirmed */
   readonly height?: number;
   /** Gas used */
@@ -208,6 +212,7 @@ export class MultiRpcVerifier {
       return {
         txHash: broadcastResponse.transactionHash,
         success: false,
+        code: broadcastResponse.code,
         error: broadcastResponse.rawLog || `Transaction failed with code ${broadcastResponse.code}`,
         height: broadcastResponse.height,
         gasUsed: Number(broadcastResponse.gasUsed),
@@ -229,9 +234,15 @@ export class MultiRpcVerifier {
 
     console.log(`🔍 Verification: ${confirmedCount}/${this.config.minConfirmations} confirmations`);
 
+    // The primary endpoint already proved inclusion (code 0 at a block height).
+    // Witness endpoints falling short of minConfirmations must never turn a
+    // landed tx into a reported failure — flag partial verification instead so
+    // callers can warn without telling the operator to cancel-and-recreate.
     return {
       txHash: broadcastResponse.transactionHash,
-      success: isFullyVerified,
+      success: true,
+      code: broadcastResponse.code,
+      partialVerification: !isFullyVerified,
       height: broadcastResponse.height,
       gasUsed: Number(broadcastResponse.gasUsed),
       gasWanted: Number(broadcastResponse.gasWanted),

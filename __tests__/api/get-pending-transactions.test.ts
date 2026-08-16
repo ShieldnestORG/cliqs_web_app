@@ -40,6 +40,9 @@ describe("API: POST /api/transaction/pending - Get Pending Transactions: P0", ()
       id: "multisig-id-123",
       address: multisigAddress,
       chainId,
+      version: 1,
+      pubkeyJSON:
+        '{"type":"tendermint/PubKeyMultisigThreshold","value":{"threshold":"2","pubkeys":[]}}',
     };
     const mockPendingTxs = [
       {
@@ -50,7 +53,14 @@ describe("API: POST /api/transaction/pending - Get Pending Transactions: P0", ()
       {
         id: "tx-id-2",
         dataJSON: JSON.stringify({ chainId }),
-        signatures: [{ id: "sig-1" }],
+        // A DbSignatureObj is keyed by signer address, not by an id.
+        signatures: [
+          {
+            address: "cosmos1member",
+            bodyBytes: "CgoKCC9jb3Ntb3Mx",
+            signature: "c2lnbmF0dXJlLWJ5dGVz",
+          },
+        ],
       },
     ];
 

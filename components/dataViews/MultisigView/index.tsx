@@ -162,10 +162,7 @@ export default function MultisigView() {
                   </p>
                 )}
                 {chain.registryName && (
-                  <Button
-                    asChild
-                    className="mt-2 border border-black/50 bg-white text-amber-600 hover:bg-white"
-                  >
+                  <Button asChild className="mt-2">
                     <Link href={`/${chain.registryName}/create`}>Create new multisig</Link>
                   </Button>
                 )}

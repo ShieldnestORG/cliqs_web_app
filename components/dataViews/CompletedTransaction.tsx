@@ -25,7 +25,7 @@ const CompletedTransaction = ({ transactionHash }: CompletedTransactionProps) =>
       <StackableContainer lessPadding lessMargin lessRadius>
         <div className="confirmation">
           <svg viewBox="0 0 77 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M5 30L26 51L72 5" stroke="white" strokeWidth="12" />
+            <path d="M5 30L26 51L72 5" stroke="hsl(var(--foreground))" strokeWidth="12" />
           </svg>
           <p>This transaction has been broadcast</p>
         </div>
@@ -75,7 +75,7 @@ const CompletedTransaction = ({ transactionHash }: CompletedTransactionProps) =>
         }
         .hash-card {
           background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          border: 1px solid hsl(var(--border) / 0.1);
           border-radius: 12px;
           padding: 16px;
           margin-top: 16px;
@@ -86,34 +86,34 @@ const CompletedTransaction = ({ transactionHash }: CompletedTransactionProps) =>
         }
         .hash-card:hover {
           background: rgba(255, 255, 255, 0.06);
-          border-color: rgba(255, 255, 255, 0.2);
+          border-color: hsl(var(--border) / 0.2);
         }
         .hash-card:focus {
           outline: none;
-          border-color: rgba(255, 255, 255, 0.3);
+          border-color: hsl(var(--border) / 0.3);
         }
         .hash-card.copied {
-          border-color: #22c55e;
+          border-color: hsl(var(--success));
           box-shadow:
-            0 0 20px rgba(34, 197, 94, 0.4),
-            0 0 40px rgba(34, 197, 94, 0.2),
-            inset 0 0 20px rgba(34, 197, 94, 0.1);
+            0 0 20px hsl(var(--success) / 0.4),
+            0 0 40px hsl(var(--success) / 0.2),
+            inset 0 0 20px hsl(var(--success) / 0.1);
           animation: glowPulse 1s ease-out;
         }
         @keyframes glowPulse {
           0% {
             box-shadow:
-              0 0 20px rgba(34, 197, 94, 0.6),
-              0 0 40px rgba(34, 197, 94, 0.4),
-              inset 0 0 30px rgba(34, 197, 94, 0.2);
-            border-color: #4ade80;
+              0 0 20px hsl(var(--success) / 0.6),
+              0 0 40px hsl(var(--success) / 0.4),
+              inset 0 0 30px hsl(var(--success) / 0.2);
+            border-color: hsl(var(--success));
           }
           100% {
             box-shadow:
-              0 0 20px rgba(34, 197, 94, 0.4),
-              0 0 40px rgba(34, 197, 94, 0.2),
-              inset 0 0 20px rgba(34, 197, 94, 0.1);
-            border-color: #22c55e;
+              0 0 20px hsl(var(--success) / 0.4),
+              0 0 40px hsl(var(--success) / 0.2),
+              inset 0 0 20px hsl(var(--success) / 0.1);
+            border-color: hsl(var(--success));
           }
         }
         .hash-header {
@@ -125,7 +125,7 @@ const CompletedTransaction = ({ transactionHash }: CompletedTransactionProps) =>
         label {
           font-size: 12px;
           font-style: italic;
-          color: rgba(255, 255, 255, 0.6);
+          color: hsl(var(--foreground) / 0.6);
           margin: 0;
         }
         .copied-badge {
@@ -134,7 +134,7 @@ const CompletedTransaction = ({ transactionHash }: CompletedTransactionProps) =>
           gap: 4px;
           font-size: 12px;
           font-weight: 600;
-          color: #22c55e;
+          color: hsl(var(--success));
           opacity: 0;
           transform: translateY(-5px);
           transition: all 0.3s ease;
@@ -157,7 +157,7 @@ const CompletedTransaction = ({ transactionHash }: CompletedTransactionProps) =>
           font-size: 14px;
           word-break: break-all;
           flex: 1;
-          color: white;
+          color: hsl(var(--foreground));
         }
         .copy-icon {
           flex-shrink: 0;
@@ -168,20 +168,20 @@ const CompletedTransaction = ({ transactionHash }: CompletedTransactionProps) =>
           width: 18px;
         }
         .copy-icon path {
-          stroke: rgb(146, 120, 150);
+          stroke: hsl(var(--muted-foreground));
           stroke-width: 10;
           transition: stroke 0.2s ease;
         }
         .hash-card:hover .copy-icon path {
-          stroke: white;
+          stroke: hsl(var(--foreground));
         }
         .hash-card.copied .copy-icon path {
-          stroke: #22c55e;
+          stroke: hsl(var(--success));
         }
         .click-hint {
           display: block;
           font-size: 10px;
-          color: rgba(255, 255, 255, 0.4);
+          color: hsl(var(--foreground) / 0.4);
           margin-top: 8px;
           transition: opacity 0.2s ease;
         }

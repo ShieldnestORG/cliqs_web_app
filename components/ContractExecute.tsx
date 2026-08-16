@@ -264,7 +264,7 @@ export function ContractExecute({ client: externalClient, selectedAccount }: Con
     >
       <CardHeader>
         <CardTitle
-          className={`flex items-center gap-2 ${isDisabled ? "text-gray-500" : "text-secondary"}`}
+          className={`flex items-center gap-2 ${isDisabled ? "text-muted-foreground" : "text-secondary"}`}
         >
           <FileCode2 className={`h-6 w-6 ${isDisabled ? "" : "text-secondary"}`} />
           Execute Custom Message
@@ -278,7 +278,7 @@ export function ContractExecute({ client: externalClient, selectedAccount }: Con
         </div>
 
         {senderAddress && (
-          <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/20 px-3 py-2">
+          <div className="flex items-center gap-2 rounded-lg border border-border/[0.06] bg-muted/20 px-3 py-2">
             <span className="text-xs font-medium text-muted-foreground">Sender</span>
             <Badge
               variant={selectedAccount?.type === "multisig" ? "outline" : "default"}
@@ -437,11 +437,11 @@ export function ContractExecute({ client: externalClient, selectedAccount }: Con
 
         {/* Execute Result */}
         {executeResult && (
-          <Alert className="border-green-500/30 bg-green-500/5">
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
+          <Alert className="border-success/30 bg-success/5">
+            <CheckCircle2 className="h-4 w-4 text-success" />
             <AlertDescription>
               <div className="space-y-3">
-                <div className="font-semibold text-green-600">Message Executed Successfully</div>
+                <div className="font-semibold text-success">Message Executed Successfully</div>
 
                 <div className="space-y-2 rounded bg-muted/50 p-3">
                   <div className="flex items-center justify-between text-sm">
@@ -491,10 +491,10 @@ export function ContractExecute({ client: externalClient, selectedAccount }: Con
         {/* Query Result */}
         {queryResult && (
           <Alert className="border-info/30 bg-info/5">
-            <CheckCircle2 className="text-info h-4 w-4" />
+            <CheckCircle2 className="h-4 w-4 text-info" />
             <AlertDescription>
               <div className="space-y-3">
-                <div className="text-info font-semibold">Query Result</div>
+                <div className="font-semibold text-info">Query Result</div>
 
                 <div className="rounded bg-muted/50 p-3">
                   <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-all font-mono text-xs">

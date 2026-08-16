@@ -38,21 +38,21 @@ export default function ValidatorIdentityCard({ validator }: ValidatorIdentityCa
           label: "Active",
           variant: "default" as const,
           icon: Shield,
-          className: "bg-green-accent/20 text-green-accent border-green-accent/30",
+          className: "bg-success/20 text-success border-success/30",
         };
       case "UNBONDING":
         return {
           label: "Unbonding",
           variant: "secondary" as const,
           icon: CircleDashed,
-          className: "bg-yellow-500/20 text-yellow-500 border-yellow-500/30",
+          className: "bg-warning/20 text-warning border-warning/30",
         };
       default:
         return {
           label: "Inactive",
           variant: "outline" as const,
           icon: CircleDashed,
-          className: "bg-muted text-muted-foreground border-border",
+          className: "bg-muted text-muted-foreground border-border/[0.06]",
         };
     }
   };

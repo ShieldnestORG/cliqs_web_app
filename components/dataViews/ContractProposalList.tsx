@@ -273,7 +273,7 @@ export default function ContractProposalList({
                       <div>
                         <p className="max-w-[200px] truncate font-medium">{proposal.title}</p>
                         {!proposal.isConfirmed && (
-                          <span className="text-xs text-yellow-500">Unconfirmed</span>
+                          <span className="text-xs text-warning">Unconfirmed</span>
                         )}
                       </div>
                     </TableCell>
@@ -283,7 +283,7 @@ export default function ContractProposalList({
                     <TableCell className="text-right">
                       <span
                         className={
-                          proposal.yesWeight >= threshold ? "font-medium text-green-accent" : ""
+                          proposal.yesWeight >= threshold ? "font-medium text-success" : ""
                         }
                       >
                         {proposal.yesWeight}

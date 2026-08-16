@@ -30,8 +30,9 @@ import {
 } from "@/components/ui/dialog";
 import { useState, useRef } from "react";
 import { toast } from "sonner";
-import { GasPrice, SigningStargateClient } from "@cosmjs/stargate";
+import { calculateFee, GasPrice, SigningStargateClient } from "@cosmjs/stargate";
 import { MsgTypeUrls } from "@/types/txMsg";
+import { gasOfTx } from "@/lib/txMsgHelpers";
 import { useWallet } from "@/context/WalletContext";
 import { useRouter } from "next/router";
 import { Proposal } from "cosmjs-types/cosmos/gov/v1beta1/gov";
@@ -83,12 +84,12 @@ export default function ProposalViewer({
 
     // Mapping vote options to labels
     const options: Record<number, { label: string; className: string }> = {
-      1: { label: "YES", className: "bg-green-500/20 text-green-500 border-green-500/30" },
+      1: { label: "YES", className: "bg-success/20 text-success border-success/30" },
       2: { label: "ABSTAIN", className: "bg-muted text-muted-foreground" },
       3: { label: "NO", className: "bg-destructive/20 text-destructive border-destructive/30" },
       4: {
         label: "NO WITH VETO",
-        className: "bg-orange-500/20 text-orange-500 border-orange-500/30",
+        className: "bg-warning/20 text-warning border-warning/30",
       },
     };
 
@@ -140,6 +141,9 @@ export default function ProposalViewer({
         toast.dismiss(loadingToast);
 
         if (result.success && result.txId) {
+          if (result.warning) {
+            toast.warning(result.warning, { duration: 8000 });
+          }
           const txUrl = `/${chain.registryName}/${cliqAddress}/transaction/${result.txId}`;
           toast.success("Transaction created!", {
             description: "Ready for multisig signing",
@@ -191,14 +195,9 @@ export default function ProposalViewer({
         },
       ];
 
-      // Calculate fee
-      const gasPriceNum = parseFloat(chain.gasPrice) || 0.0625;
-      const feeAmount = Math.ceil(gasPriceNum * 250_000).toString();
-
-      const fee = {
-        amount: [{ denom: chain.denom, amount: feeAmount }],
-        gas: "250000",
-      };
+      // Calculate fee from the shared gas table
+      const gasLimit = gasOfTx([MsgTypeUrls.Vote]);
+      const fee = calculateFee(gasLimit, chain.gasPrice);
 
       const result = await client.signAndBroadcast(walletInfo.address, messages, fee, "");
 
@@ -231,10 +230,10 @@ export default function ProposalViewer({
   };
 
   const voteOptions = [
-    { label: "Yes", value: 1, color: "bg-green-500 hover:bg-green-600" },
+    { label: "Yes", value: 1, color: "bg-success hover:bg-success/80" },
     { label: "Abstain", value: 2, color: "bg-muted hover:bg-muted/80 text-foreground" },
     { label: "No", value: 3, color: "bg-destructive hover:bg-destructive/80" },
-    { label: "No with Veto", value: 4, color: "bg-orange-500 hover:bg-orange-600" },
+    { label: "No with Veto", value: 4, color: "bg-warning hover:bg-warning/80" },
   ];
 
   return (
@@ -279,7 +278,7 @@ export default function ProposalViewer({
                     ) : (
                       <Badge
                         variant="outline"
-                        className="gap-1 border-orange-500/30 bg-orange-500/10 text-orange-500"
+                        className="gap-1 border-warning/30 bg-warning/10 text-warning"
                       >
                         <AlertCircle className="h-3 w-3" />
                         NEEDS VOTE

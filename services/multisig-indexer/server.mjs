@@ -266,7 +266,11 @@ function normalizeSimplePubkey(value) {
 
   if (!isObject(value)) return null;
 
-  if (typeof value.type === "string" && value.type.includes("Secp256k1") && typeof value.value === "string") {
+  if (
+    typeof value.type === "string" &&
+    value.type.includes("Secp256k1") &&
+    typeof value.value === "string"
+  ) {
     return { type: "tendermint/PubKeySecp256k1", value: value.value };
   }
 
@@ -297,14 +301,19 @@ function buildRawMultisigPubkey(input) {
 
   const members = Array.isArray(input.members) ? input.members : [];
   const simpleMembers = members
-    .map((member) => (isObject(member) ? normalizeSimplePubkey(member.pubkey ?? member.rawMemberPubkey) : null))
+    .map((member) =>
+      isObject(member) ? normalizeSimplePubkey(member.pubkey ?? member.rawMemberPubkey) : null,
+    )
     .filter(Boolean);
 
   if (simpleMembers.length !== members.length || simpleMembers.length === 0) {
     return null;
   }
 
-  return createMultisigThresholdPubkey(simpleMembers, asPositiveInteger(input.threshold, "threshold"));
+  return createMultisigThresholdPubkey(
+    simpleMembers,
+    asPositiveInteger(input.threshold, "threshold"),
+  );
 }
 
 function flattenMembers(pubkey, addressPrefix, members, positionCounter) {
@@ -381,7 +390,9 @@ function validateImportBody(body) {
         pubkeyFingerprint,
         weight: normalizeWeight(member.weight),
         position:
-          typeof member.position === "number" && Number.isInteger(member.position) && member.position >= 0
+          typeof member.position === "number" &&
+          Number.isInteger(member.position) &&
+          member.position >= 0
             ? member.position
             : index,
         rawMemberPubkey: normalizedPubkey ?? member.rawMemberPubkey ?? member.pubkey ?? null,
@@ -394,7 +405,8 @@ function validateImportBody(body) {
     rawMultisigPubkey: buildRawMultisigPubkey(body),
     firstSeenHeight: normalizeHeight(body.firstSeenHeight),
     lastSeenHeight: normalizeHeight(body.lastSeenHeight),
-    lastSeenTxHash: typeof body.lastSeenTxHash === "string" && body.lastSeenTxHash ? body.lastSeenTxHash : null,
+    lastSeenTxHash:
+      typeof body.lastSeenTxHash === "string" && body.lastSeenTxHash ? body.lastSeenTxHash : null,
   };
 }
 
@@ -570,7 +582,10 @@ async function fetchMultisigRowsByWhere(whereSql, values) {
   }
 
   const memberKeys = multisigsResult.rows.map((row, index) => `($1, $${index + 2})`).join(", ");
-  const memberValues = [multisigsResult.rows[0].chain_id, ...multisigsResult.rows.map((row) => row.multisig_address)];
+  const memberValues = [
+    multisigsResult.rows[0].chain_id,
+    ...multisigsResult.rows.map((row) => row.multisig_address),
+  ];
 
   const membersResult = await pool.query(
     `
@@ -658,7 +673,9 @@ async function getChainDirectoryEntries() {
 
   const entries = [
     ...mainnetEntries
-      .filter((entry) => entry.type === "dir" && !entry.path.startsWith(".") && entry.path !== "testnets")
+      .filter(
+        (entry) => entry.type === "dir" && !entry.path.startsWith(".") && entry.path !== "testnets",
+      )
       .map((entry) => ({ path: entry.path })),
     ...testnetEntries
       .filter((entry) => entry.type === "dir" && !entry.path.startsWith("testnets/."))
@@ -694,7 +711,9 @@ async function resolveChainConfig(chainId) {
   for (let offset = 0; offset < entries.length; offset += 25) {
     const batch = entries.slice(offset, offset + 25);
     const settled = await Promise.allSettled(
-      batch.map((entry) => fetch(`${branchBase}/${entry.path}/chain.json`).then((response) => response.json())),
+      batch.map((entry) =>
+        fetch(`${branchBase}/${entry.path}/chain.json`).then((response) => response.json()),
+      ),
     );
 
     for (const result of settled) {
@@ -703,7 +722,9 @@ async function resolveChainConfig(chainId) {
       if (chain?.chain_id !== chainId) continue;
 
       let rpcEndpoints = Array.isArray(chain.apis?.rpc)
-        ? chain.apis.rpc.map((rpc) => rpc.address).filter((address) => address.startsWith("https://"))
+        ? chain.apis.rpc
+            .map((rpc) => rpc.address)
+            .filter((address) => address.startsWith("https://"))
         : [];
 
       if ((chain.chain_name || "").toLowerCase().includes("coreum")) {
@@ -780,7 +801,9 @@ async function refreshMultisigFromChain(chainId, multisigAddress) {
       chainId,
       multisigAddress,
       changedMemberAddresses: members.map((member) => member.address).filter(Boolean),
-      changedMemberPubkeyFingerprints: members.map((member) => member.pubkeyFingerprint).filter(Boolean),
+      changedMemberPubkeyFingerprints: members
+        .map((member) => member.pubkeyFingerprint)
+        .filter(Boolean),
       source: "account_pubkey",
       height: payload.lastSeenHeight,
       txHash: null,
@@ -914,7 +937,9 @@ async function handleImport(req, res) {
     chainId: body.chainId,
     multisigAddress: body.multisigAddress,
     changedMemberAddresses: body.members.map((member) => member.address).filter(Boolean),
-    changedMemberPubkeyFingerprints: body.members.map((member) => member.pubkeyFingerprint).filter(Boolean),
+    changedMemberPubkeyFingerprints: body.members
+      .map((member) => member.pubkeyFingerprint)
+      .filter(Boolean),
     source: body.source,
     height: body.lastSeenHeight,
     txHash: body.lastSeenTxHash,
@@ -936,7 +961,11 @@ async function handleRefresh(req, res) {
   }
 
   const body = await readJsonBody(req);
-  if (!isObject(body) || typeof body.chainId !== "string" || typeof body.multisigAddress !== "string") {
+  if (
+    !isObject(body) ||
+    typeof body.chainId !== "string" ||
+    typeof body.multisigAddress !== "string"
+  ) {
     json(res, 400, { error: "chainId and multisigAddress are required" });
     return;
   }
@@ -980,7 +1009,10 @@ async function handleBackfill(req, res) {
   const result = await refreshKnownMultisigs({
     chainId,
     limit:
-      isObject(body) && typeof body.limit === "number" && Number.isInteger(body.limit) && body.limit > 0
+      isObject(body) &&
+      typeof body.limit === "number" &&
+      Number.isInteger(body.limit) &&
+      body.limit > 0
         ? body.limit
         : REFRESH_BATCH_SIZE,
   });

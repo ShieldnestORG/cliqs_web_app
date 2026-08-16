@@ -12,7 +12,7 @@ The button system implements an institutional design language with:
 
 - **Pill-shaped buttons** (rounded-full) for primary actions
 - **Square buttons** (rounded-none) for card CTAs
-- **Monospace typography** (JetBrains Mono) for technical aesthetic
+- **Monospace typography** (Geist Mono) for technical aesthetic
 - **High contrast** with green accents in dark mode
 - **Micro-interactions** with scale transforms on press
 
@@ -57,7 +57,7 @@ The button system implements an institutional design language with:
 
 ```css
 /* Action Button Text */
-font-family: 'JetBrains Mono', monospace;
+font-family: 'Geist Mono', ui-monospace, monospace;
 font-size: 11px;
 font-weight: 600;
 text-transform: uppercase;
@@ -85,7 +85,7 @@ letter-spacing: 0.05em;
   @apply bg-foreground text-background;
   @apply hover:opacity-90 transition-all duration-200;
   @apply active:scale-95;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Geist Mono', ui-monospace, monospace;
   font-size: 11px;
   letter-spacing: 0.05em;
 }
@@ -140,7 +140,7 @@ letter-spacing: 0.05em;
   @apply bg-foreground text-background;
   @apply hover:opacity-90 transition-all duration-200;
   @apply active:scale-95;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Geist', system-ui, sans-serif;
 }
 ```
 

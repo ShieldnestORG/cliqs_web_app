@@ -59,9 +59,9 @@ export function BentoCard({
   };
 
   const variantClasses = {
-    default: "bg-card border-border",
+    default: "bg-card border-border/[0.06]",
     highlight: "bg-card border-green-accent/50 card-bracket-corner",
-    accent: "bg-gradient-to-br from-card to-muted/50 border-accent-purple/30",
+    accent: "bg-gradient-to-br from-card to-muted/50 border-purple-accent/30",
     muted: "bg-muted/30 border-border/50",
   };
 
@@ -157,8 +157,8 @@ export function BentoStatCard({
   className,
 }: BentoStatCardProps) {
   const changeColors = {
-    positive: "text-green-accent",
-    negative: "text-red-500",
+    positive: "text-success",
+    negative: "text-destructive",
     neutral: "text-muted-foreground",
   };
 

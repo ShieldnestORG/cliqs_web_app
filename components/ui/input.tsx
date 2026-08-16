@@ -30,7 +30,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     
     const variantClasses = {
       default: "rounded-lg border border-input bg-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-      institutional: "rounded-xl border-2 border-border bg-card font-mono focus:border-green-accent focus:ring-0 focus:ring-offset-0",
+      institutional: "rounded-xl border-2 border-border/[0.06] bg-card font-mono focus:border-green-accent focus:ring-0 focus:ring-offset-0",
       filled: "rounded-lg border-none bg-muted focus:bg-muted/80 focus-visible:ring-2 focus-visible:ring-ring",
     }
 

@@ -12,9 +12,9 @@ A **three-font system** optimized for crypto data display:
 
 | Font | Role | Personality |
 |------|------|-------------|
-| **Space Grotesk** | Headlines, KPIs, bold values | Modern, geometric, institutional |
-| **Inter** | Body text, paragraphs | Clean, readable, accessible |
-| **JetBrains Mono** | Code, labels, buttons, data | Technical, monospaced, precise |
+| **Geist** | Headlines, KPIs, bold values | The Coherence Daddy typeface; hierarchy via weight + tight tracking |
+| **Geist** | Body text, paragraphs | Same family as headings — one typeface throughout |
+| **Geist Mono** | Code, labels, buttons, data | Technical, monospaced, precise |
 
 ---
 
@@ -25,10 +25,10 @@ A **three-font system** optimized for crypto data display:
 ```javascript
 // tailwind.config.js
 fontFamily: {
-  sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
-  heading: ['Space Grotesk', 'Inter', 'sans-serif'],
-  mono: ['JetBrains Mono', 'SF Mono', 'Fira Code', 'monospace'],
-  body: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+  sans: ['Geist', 'system-ui', '-apple-system', 'sans-serif'],
+  heading: ['Geist', 'system-ui', 'sans-serif'],
+  mono: ['Geist Mono', 'ui-monospace', 'SF Mono', 'monospace'],
+  body: ['Geist', 'system-ui', '-apple-system', 'sans-serif'],
 }
 ```
 
@@ -36,7 +36,7 @@ fontFamily: {
 
 ```html
 <link 
-  href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" 
+  href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" 
   rel="stylesheet" 
 />
 ```
@@ -47,15 +47,15 @@ fontFamily: {
 
 | Context | Font | Size | Weight | Case |
 |---------|------|------|--------|------|
-| **Page Title (h1)** | Space Grotesk | 30-36px | Bold | Title |
-| **Section Heading (h2)** | Space Grotesk | 24px | Semibold | Title |
-| **Card Title (h3)** | Space Grotesk | 18-20px | Semibold | Title |
+| **Page Title (h1)** | Geist | 30-36px | Bold | Title |
+| **Section Heading (h2)** | Geist | 24px | Semibold | Title |
+| **Card Title (h3)** | Geist | 18-20px | Semibold | Title |
 | **Body Text** | Inter | 14-16px | Normal | Sentence |
-| **KPI Value** | Space Grotesk | 24-48px | Bold | — |
-| **Data Label** | JetBrains Mono | 10-12px | Normal | UPPERCASE |
-| **Button Text** | JetBrains Mono | 11-14px | Semibold | UPPERCASE |
-| **Code/Address** | JetBrains Mono | 12-14px | Normal | As-is |
-| **Table Header** | JetBrains Mono | 10-12px | Medium | UPPERCASE |
+| **KPI Value** | Geist | 24-48px | Bold | — |
+| **Data Label** | Geist Mono | 10-12px | Normal | UPPERCASE |
+| **Button Text** | Geist Mono | 11-14px | Semibold | UPPERCASE |
+| **Code/Address** | Geist Mono | 12-14px | Normal | As-is |
+| **Table Header** | Geist Mono | 10-12px | Medium | UPPERCASE |
 | **Navigation** | Inter | 14px | Medium | Title |
 
 ---
@@ -210,7 +210,7 @@ The `// label` and title serve **different purposes** and should NOT repeat the 
 ```css
 /* Section Labels */
 .text-label {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Geist Mono', ui-monospace, monospace;
   font-size: 10px;
   font-weight: 500;
   text-transform: uppercase;
@@ -225,7 +225,7 @@ The `// label` and title serve **different purposes** and should NOT repeat the 
 
 /* KPI Values */
 .text-kpi {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Geist', system-ui, sans-serif;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.025em;
@@ -240,7 +240,7 @@ The `// label` and title serve **different purposes** and should NOT repeat the 
 
 ## 7. Status Indicators
 
-### Positive (Green)
+### Positive (success)
 
 ```tsx
 <span className="change-positive">+2.4%</span>
@@ -248,11 +248,11 @@ The `// label` and title serve **different purposes** and should NOT repeat the 
 
 ```css
 .change-positive {
-  color: hsl(142 76% 45%);
+  color: hsl(var(--success));
 }
 ```
 
-### Negative (Red)
+### Negative (destructive)
 
 ```tsx
 <span className="change-negative">-1.2%</span>
@@ -260,7 +260,7 @@ The `// label` and title serve **different purposes** and should NOT repeat the 
 
 ```css
 .change-negative {
-  color: hsl(0 84% 60%);
+  color: hsl(var(--destructive));
 }
 ```
 
