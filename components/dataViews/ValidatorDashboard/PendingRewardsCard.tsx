@@ -21,8 +21,9 @@ import { Coins, Wallet, Loader2, CheckCircle2, Users } from "lucide-react";
 import { DecCoin } from "cosmjs-types/cosmos/base/v1beta1/coin";
 import { useState } from "react";
 import { toast } from "sonner";
-import { GasPrice, SigningStargateClient } from "@cosmjs/stargate";
+import { calculateFee, GasPrice, SigningStargateClient } from "@cosmjs/stargate";
 import { MsgTypeUrls } from "@/types/txMsg";
+import { gasOfTx } from "@/lib/txMsgHelpers";
 import { useRouter } from "next/router";
 
 interface PendingRewardsCardProps {
@@ -108,6 +109,9 @@ export default function PendingRewardsCard({
         toast.dismiss(loadingToast);
 
         if (result.success && result.txId) {
+          if (result.warning) {
+            toast.warning(result.warning, { duration: 8000 });
+          }
           toast.success("Transaction created!", {
             description: "Redirecting to sign...",
           });
@@ -164,15 +168,9 @@ export default function PendingRewardsCard({
         },
       });
 
-      // Calculate fee based on number of messages
-      const gasPriceNum = parseFloat(chain.gasPrice) || 0.0625;
-      const gasLimit = messages.length > 1 ? 1_100_000 : 600_000;
-      const feeAmount = Math.ceil(gasPriceNum * gasLimit).toString();
-
-      const fee = {
-        amount: [{ denom: chain.denom, amount: feeAmount }],
-        gas: gasLimit.toString(),
-      };
+      // Calculate fee from the shared gas table based on the messages being sent
+      const gasLimit = gasOfTx(messages.map((m) => m.typeUrl));
+      const fee = calculateFee(gasLimit, chain.gasPrice);
 
       const result = await client.signAndBroadcast(validator.delegatorAddress, messages, fee, "");
 
@@ -242,6 +240,9 @@ export default function PendingRewardsCard({
         toast.dismiss(loadingToast);
 
         if (result.success && result.txId) {
+          if (result.warning) {
+            toast.warning(result.warning, { duration: 8000 });
+          }
           toast.success("Transaction created!", {
             description: "Redirecting to sign...",
           });
@@ -285,14 +286,9 @@ export default function PendingRewardsCard({
         },
       ];
 
-      // Calculate fee based on gas price
-      const gasPriceNum = parseFloat(chain.gasPrice) || 0.0625;
-      const feeAmount = Math.ceil(gasPriceNum * 500_000).toString();
-
-      const fee = {
-        amount: [{ denom: chain.denom, amount: feeAmount }],
-        gas: "500000",
-      };
+      // Calculate fee from the shared gas table
+      const gasLimit = gasOfTx([MsgTypeUrls.WithdrawDelegatorReward]);
+      const fee = calculateFee(gasLimit, chain.gasPrice);
 
       const result = await client.signAndBroadcast(validator.delegatorAddress, messages, fee, "");
 

@@ -33,9 +33,10 @@ export const gasOfMsg = (msgType: MsgTypeUrl): number => {
       // See e.g. https://www.mintscan.io/cosmos/tx/EA7EC3F6F08DA4E6D419359F264B34AB27D2AAE7FF40267E7E760927475157B3
       return 500_000;
     case MsgTypeUrls.WithdrawValidatorCommission:
-      // This now bundles both MsgWithdrawDelegatorReward + MsgWithdrawValidatorCommission
-      // like the CLI does with --commission flag. Gas accounts for both messages.
-      return 1_000_000;
+      // Covers the single commission-withdrawal message only. Builders that also want
+      // self-delegation rewards append a separate MsgWithdrawDelegatorReward, which is
+      // billed on its own via gasOfTx.
+      return 600_000;
     // Vesting
     case MsgTypeUrls.CreateVestingAccount:
       return 100_000;

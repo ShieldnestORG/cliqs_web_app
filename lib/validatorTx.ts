@@ -28,6 +28,7 @@ export interface CreateCliqTxResult {
   success: boolean;
   txId?: string;
   error?: string;
+  warning?: string;
 }
 
 /**
@@ -42,52 +43,73 @@ export async function createCliqTransaction(
   try {
     // Get account info for the CLIQ address
     const client = await StargateClient.connect(chain.nodeAddress);
-    const account = await client.getAccount(cliqAddress);
+    try {
+      const account = await client.getAccount(cliqAddress);
 
-    if (!account) {
-      return {
-        success: false,
-        error: `CLIQ account not found on chain: ${cliqAddress}`,
+      if (!account) {
+        return {
+          success: false,
+          error: `CLIQ account not found on chain: ${cliqAddress}`,
+        };
+      }
+
+      // Calculate gas based on message types
+      const msgTypeUrls = messages.map((m) => m.typeUrl) as MsgTypeUrl[];
+      const gasLimit = gasOfTx(msgTypeUrls);
+
+      // Calculate fee
+      const fee = calculateFee(gasLimit, chain.gasPrice);
+
+      // The CLIQ account itself pays the fee at broadcast time, so warn (without
+      // blocking creation) when its balance cannot cover it.
+      let warning: string | undefined;
+      const feeCoin = fee.amount[0];
+      if (feeCoin) {
+        try {
+          const balance = await client.getBalance(cliqAddress, feeCoin.denom);
+          if (BigInt(balance.amount) < BigInt(feeCoin.amount)) {
+            warning = `Heads up: this transaction's fee is ${feeCoin.amount} ${feeCoin.denom} but the CLIQ account ${cliqAddress} only holds ${balance.amount} ${feeCoin.denom}. The CLIQ account itself pays the fee - fund it before broadcasting or the broadcast will fail.`;
+          }
+        } catch (balanceError) {
+          // The warning is best-effort; a failed balance query must not block creation
+          console.warn("Could not check CLIQ balance for fee warning:", balanceError);
+        }
+      }
+
+      // Export messages to JSON format
+      const exportedMsgs = messages.map((msg) => exportMsgToJson(msg));
+
+      // Build transaction data
+      const txData: DbTransactionParsedDataJson = {
+        accountNumber: account.accountNumber,
+        sequence: account.sequence,
+        chainId: chain.chainId,
+        msgs: exportedMsgs,
+        fee,
+        memo,
       };
-    }
 
-    // Calculate gas based on message types
-    const msgTypeUrls = messages.map((m) => m.typeUrl) as MsgTypeUrl[];
-    const gasLimit = gasOfTx(msgTypeUrls);
+      // Ensure chain-only multisig is registered in DB before creating tx (handles race with
+      // validator view useEffect and direct navigations that skip the CLIQ page)
+      const resolved = await ensureChainMultisigInDb(cliqAddress, chain);
+      if (!resolved.multisig) {
+        return {
+          success: false,
+          error: resolved.reason ?? `CLIQ address could not be resolved: ${cliqAddress}`,
+        };
+      }
 
-    // Calculate fee
-    const fee = calculateFee(gasLimit, chain.gasPrice);
+      // Create the transaction in the database
+      const txId = await createDbTx(cliqAddress, chain.chainId, txData);
 
-    // Export messages to JSON format
-    const exportedMsgs = messages.map((msg) => exportMsgToJson(msg));
-
-    // Build transaction data
-    const txData: DbTransactionParsedDataJson = {
-      accountNumber: account.accountNumber,
-      sequence: account.sequence,
-      chainId: chain.chainId,
-      msgs: exportedMsgs,
-      fee,
-      memo,
-    };
-
-    // Ensure chain-only multisig is registered in DB before creating tx (handles race with
-    // validator view useEffect and direct navigations that skip the CLIQ page)
-    const resolved = await ensureChainMultisigInDb(cliqAddress, chain);
-    if (!resolved.multisig) {
       return {
-        success: false,
-        error: resolved.reason ?? `CLIQ address could not be resolved: ${cliqAddress}`,
+        success: true,
+        txId,
+        warning,
       };
+    } finally {
+      client.disconnect();
     }
-
-    // Create the transaction in the database
-    const txId = await createDbTx(cliqAddress, chain.chainId, txData);
-
-    return {
-      success: true,
-      txId,
-    };
   } catch (e) {
     console.error("Failed to create CLIQ transaction:", e);
     return {

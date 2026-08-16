@@ -35,8 +35,9 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { GasPrice, SigningStargateClient } from "@cosmjs/stargate";
+import { calculateFee, GasPrice, SigningStargateClient } from "@cosmjs/stargate";
 import { MsgTypeUrls } from "@/types/txMsg";
+import { gasOfTx } from "@/lib/txMsgHelpers";
 import { Decimal } from "@cosmjs/math";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -166,6 +167,9 @@ export default function ValidatorCommandsCard({
         toast.dismiss(loadingToast);
 
         if (result.success && result.txId) {
+          if (result.warning) {
+            toast.warning(result.warning, { duration: 8000 });
+          }
           toast.success("Transaction created!", {
             description: "Redirecting to sign...",
           });
@@ -236,14 +240,9 @@ export default function ValidatorCommandsCard({
         },
       ];
 
-      // Calculate fee
-      const gasPriceNum = parseFloat(chain.gasPrice) || 0.0625;
-      const feeAmount = Math.ceil(gasPriceNum * 400_000).toString();
-
-      const fee = {
-        amount: [{ denom: chain.denom, amount: feeAmount }],
-        gas: "400000",
-      };
+      // Calculate fee from the shared gas table
+      const gasLimit = gasOfTx([MsgTypeUrls.EditValidator]);
+      const fee = calculateFee(gasLimit, chain.gasPrice);
 
       const result = await client.signAndBroadcast(validator.delegatorAddress, messages, fee, "");
 
@@ -338,7 +337,7 @@ export default function ValidatorCommandsCard({
         {!isCliqMode ? (
           <div className="space-y-4">
             <h3 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">{`// Staking & Governance`}</h3>
-            <div className="rounded-lg border border-border bg-muted/30 p-4">
+            <div className="rounded-lg border border-border/[0.06] bg-muted/30 p-4">
               <p className="text-sm text-muted-foreground">
                 Delegate, Undelegate, Redelegate, Withdraw Rewards and Vote are proposed through a
                 CLIQ so they can be signed by your multisig. Set one up below to enable them.

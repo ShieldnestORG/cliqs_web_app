@@ -30,8 +30,9 @@ import {
 } from "@/components/ui/dialog";
 import { useState, useRef } from "react";
 import { toast } from "sonner";
-import { GasPrice, SigningStargateClient } from "@cosmjs/stargate";
+import { calculateFee, GasPrice, SigningStargateClient } from "@cosmjs/stargate";
 import { MsgTypeUrls } from "@/types/txMsg";
+import { gasOfTx } from "@/lib/txMsgHelpers";
 import { useWallet } from "@/context/WalletContext";
 import { useRouter } from "next/router";
 import { Proposal } from "cosmjs-types/cosmos/gov/v1beta1/gov";
@@ -140,6 +141,9 @@ export default function ProposalViewer({
         toast.dismiss(loadingToast);
 
         if (result.success && result.txId) {
+          if (result.warning) {
+            toast.warning(result.warning, { duration: 8000 });
+          }
           const txUrl = `/${chain.registryName}/${cliqAddress}/transaction/${result.txId}`;
           toast.success("Transaction created!", {
             description: "Ready for multisig signing",
@@ -191,14 +195,9 @@ export default function ProposalViewer({
         },
       ];
 
-      // Calculate fee
-      const gasPriceNum = parseFloat(chain.gasPrice) || 0.0625;
-      const feeAmount = Math.ceil(gasPriceNum * 250_000).toString();
-
-      const fee = {
-        amount: [{ denom: chain.denom, amount: feeAmount }],
-        gas: "250000",
-      };
+      // Calculate fee from the shared gas table
+      const gasLimit = gasOfTx([MsgTypeUrls.Vote]);
+      const fee = calculateFee(gasLimit, chain.gasPrice);
 
       const result = await client.signAndBroadcast(walletInfo.address, messages, fee, "");
 
