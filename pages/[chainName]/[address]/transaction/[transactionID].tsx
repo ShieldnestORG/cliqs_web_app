@@ -13,7 +13,7 @@ import { Account, StargateClient } from "@cosmjs/stargate";
 import { assert } from "@cosmjs/utils";
 import type { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
-import { useEffect, useState, useMemo } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
 import { AlertTriangle, FileText, MessageSquare, Users, Zap, CheckCircle2 } from "lucide-react";
 import CompletedTransaction from "../../../../components/dataViews/CompletedTransaction";
@@ -96,9 +96,14 @@ const TransactionPage = ({
   const [transactionHash, setTransactionHash] = useState(initialTxHash);
   const [transactionStatus, setTransactionStatus] = useState(initialStatus);
   const [isLoadingTx, setIsLoadingTx] = useState(!initialTransactionJSON);
+  // Transient tx-fetch failure — offer an inline retry instead of bouncing to /404
+  const [txLoadError, setTxLoadError] = useState<string | null>(null);
 
   const [accountOnChain, setAccountOnChain] = useState<Account | null>(null);
   const [pubkey, setPubkey] = useState<MultisigThresholdPubkey>();
+  // Set when the multisig account fetch fails — without a pubkey the whole footer
+  // (signing widget + Broadcast + Cancel) is hidden, so surface a retry card instead
+  const [multisigError, setMultisigError] = useState<string | null>(null);
   const [sequenceMismatch, setSequenceMismatch] = useState<{
     expected: number;
     actual: number;
@@ -108,7 +113,7 @@ const TransactionPage = ({
   // Phase 0: Multi-RPC verification state
   const [broadcastResult, setBroadcastResult] = useState<BroadcastResult | null>(null);
   const [verificationStatus, setVerificationStatus] = useState<
-    "idle" | "verifying" | "verified" | "failed"
+    "idle" | "verifying" | "verified" | "partial" | "failed"
   >("idle");
   // Memoize txInfo to prevent recalculating on every render
   const txInfo = useMemo(
@@ -116,31 +121,41 @@ const TransactionPage = ({
     [transactionJSON],
   );
 
+  const loadTx = useCallback(async () => {
+    try {
+      setIsLoadingTx(true);
+      setTxLoadError(null);
+      const { requestJson } = await import("../../../../lib/request");
+      const tx = await requestJson(`/api/transaction/${transactionID}`);
+      // The API 404s with "Transaction not found" when the tx doesn't exist,
+      // so a null 200 body would be the same definitive answer
+      if (!tx) throw new Error("Transaction not found");
+
+      setTransactionJSON(tx.dataJSON);
+      setCurrentSignatures(tx.signatures ?? []);
+      setTransactionHash(tx.txHash || "");
+      setTransactionStatus(
+        tx.status ||
+          ((tx.txHash ? "broadcast" : "pending") as "pending" | "broadcast" | "cancelled"),
+      );
+    } catch (err) {
+      console.error("Fetch tx failed:", err);
+      // Only redirect when the API definitively reported the tx doesn't exist.
+      // Timeouts and network blips get an inline retry card instead.
+      if (err instanceof Error && err.message === "Transaction not found") {
+        router.push("/404");
+      } else {
+        setTxLoadError(err instanceof Error ? err.message : "Could not load this transaction");
+      }
+    } finally {
+      setIsLoadingTx(false);
+    }
+  }, [transactionID, router]);
+
   useEffect(() => {
     if (initialTransactionJSON) return;
-
-    (async () => {
-      try {
-        setIsLoadingTx(true);
-        const { requestJson } = await import("../../../../lib/request");
-        const tx = await requestJson(`/api/transaction/${transactionID}`);
-        if (!tx) throw new Error("Not found");
-
-        setTransactionJSON(tx.dataJSON);
-        setCurrentSignatures(tx.signatures ?? []);
-        setTransactionHash(tx.txHash || "");
-        setTransactionStatus(
-          tx.status ||
-            ((tx.txHash ? "broadcast" : "pending") as "pending" | "broadcast" | "cancelled"),
-        );
-      } catch (err) {
-        console.error("Fetch tx failed:", err);
-        router.push("/404");
-      } finally {
-        setIsLoadingTx(false);
-      }
-    })();
-  }, [initialTransactionJSON, transactionID, router]);
+    loadTx();
+  }, [initialTransactionJSON, loadTx]);
 
   const multisigAddress = router.query.address?.toString();
 
@@ -148,52 +163,58 @@ const TransactionPage = ({
     setCurrentSignatures((prevState) => [...prevState, signature]);
   };
 
-  useEffect(() => {
-    (async function fetchMultisig() {
-      try {
-        if (!multisigAddress || !isChainInfoFilled(chain) || !chain.nodeAddress) {
-          return;
-        }
-
-        const resolved = await ensureChainMultisigInDb(multisigAddress, chain);
-        if (!resolved.multisig) {
-          throw new Error(resolved.reason ?? "Multisig address could not be resolved");
-        }
-        const hostedMultisig = await getHostedMultisig(multisigAddress, chain);
-
-        assert(
-          hostedMultisig.hosted === "db+chain" && isAccount(hostedMultisig.accountOnChain),
-          "Multisig address could not be found",
-        );
-
-        // Normalize threshold to string — cosmjs 0.35.0-rc.0 calls
-        // Uint53.fromString(threshold) which crashes with "str.match is not a
-        // function" when threshold is a JS number from JSON.parse or protobuf decode.
-        setPubkey(normalizePubkey(hostedMultisig.pubkeyOnDb));
-        setAccountOnChain(hostedMultisig.accountOnChain);
-
-        // Check for sequence mismatch - this happens when another tx was broadcast
-        // from this account after this transaction was created
-        if (txInfo && hostedMultisig.accountOnChain.sequence !== txInfo.sequence) {
-          setSequenceMismatch({
-            expected: txInfo.sequence,
-            actual: hostedMultisig.accountOnChain.sequence,
-          });
-          setSequenceVerified(false);
-        } else {
-          setSequenceMismatch(null);
-          setSequenceVerified(true);
-        }
-      } catch (e) {
-        console.error("Failed to find multisig address:", e);
-        toastError({
-          title: "Failed to find multisig address",
-          description: e instanceof Error ? e.message : "Could not resolve this multisig.",
-          fullError: e instanceof Error ? e : undefined,
-        });
+  // Extracted so the error card below can re-invoke it — a thrown fetch would
+  // otherwise leave pubkey undefined forever, hiding the whole signing footer.
+  const fetchMultisig = useCallback(async () => {
+    try {
+      if (!multisigAddress || !isChainInfoFilled(chain) || !chain.nodeAddress) {
+        return;
       }
-    })();
+      setMultisigError(null);
+
+      const resolved = await ensureChainMultisigInDb(multisigAddress, chain);
+      if (!resolved.multisig) {
+        throw new Error(resolved.reason ?? "Multisig address could not be resolved");
+      }
+      const hostedMultisig = await getHostedMultisig(multisigAddress, chain);
+
+      assert(
+        hostedMultisig.hosted === "db+chain" && isAccount(hostedMultisig.accountOnChain),
+        "Multisig address could not be found",
+      );
+
+      // Normalize threshold to string — cosmjs 0.35.0-rc.0 calls
+      // Uint53.fromString(threshold) which crashes with "str.match is not a
+      // function" when threshold is a JS number from JSON.parse or protobuf decode.
+      setPubkey(normalizePubkey(hostedMultisig.pubkeyOnDb));
+      setAccountOnChain(hostedMultisig.accountOnChain);
+
+      // Check for sequence mismatch - this happens when another tx was broadcast
+      // from this account after this transaction was created
+      if (txInfo && hostedMultisig.accountOnChain.sequence !== txInfo.sequence) {
+        setSequenceMismatch({
+          expected: txInfo.sequence,
+          actual: hostedMultisig.accountOnChain.sequence,
+        });
+        setSequenceVerified(false);
+      } else {
+        setSequenceMismatch(null);
+        setSequenceVerified(true);
+      }
+    } catch (e) {
+      console.error("Failed to find multisig address:", e);
+      setMultisigError(e instanceof Error ? e.message : "Could not resolve this multisig.");
+      toastError({
+        title: "Failed to find multisig address",
+        description: e instanceof Error ? e.message : "Could not resolve this multisig.",
+        fullError: e instanceof Error ? e : undefined,
+      });
+    }
   }, [chain, multisigAddress, txInfo]);
+
+  useEffect(() => {
+    fetchMultisig();
+  }, [fetchMultisig]);
 
   const broadcastTx = async () => {
     const loadingToastId = toast.loading("Broadcasting transaction");
@@ -244,6 +265,35 @@ const TransactionPage = ({
             `This typically means another transaction was broadcast from this multisig account. ` +
             `The collected signatures are no longer valid. Please cancel this transaction and create a new one.`,
         );
+      }
+
+      // The multisig account ITSELF pays the transaction fee — cosmjs sets no
+      // explicit fee payer, so the chain deducts it from the only signer: the
+      // multisig account. Signer wallets never pay. Check the balance up front
+      // so a fee shortfall doesn't waste the broadcast attempt.
+      for (const coin of txInfo.fee.amount) {
+        let feeBalance;
+        try {
+          feeBalance = await client.getBalance(multisigAddress, coin.denom);
+        } catch (balanceError) {
+          // The pre-check is best-effort; if the balance query itself fails,
+          // proceed and let the chain give the definitive answer at broadcast.
+          console.warn("Could not pre-check multisig fee balance:", balanceError);
+          continue;
+        }
+        const required = BigInt(String(coin.amount));
+        const available = BigInt(feeBalance.amount);
+        if (available < required) {
+          const shortfall = required - available;
+          throw new Error(
+            `The transaction fee of ${coin.amount}${coin.denom} cannot be paid: insufficient funds. ` +
+              `The multisig account itself pays the fee (not any signer wallet), and ` +
+              `${multisigAddress} currently holds only ${feeBalance.amount}${coin.denom} ` +
+              `(${shortfall.toString()}${coin.denom} short). Send at least ` +
+              `${shortfall.toString()}${coin.denom} to the multisig address, then broadcast again — ` +
+              `the collected signatures remain valid and nothing needs to be re-signed.`,
+          );
+        }
       }
 
       // Deduplicate signatures by address — last-in wins on accidental duplicates.
@@ -403,6 +453,41 @@ const TransactionPage = ({
       const verifiedResult = await verifier.broadcastAndVerify(signedTxBytes);
       setBroadcastResult(verifiedResult);
 
+      // The tx landed in a block but failed execution (DeliverTx code !== 0).
+      // The fee was consumed and the sequence advanced, so record the hash and
+      // steer the operator to cancel — retrying this exact tx can never succeed.
+      if (verifiedResult.code !== undefined && verifiedResult.code !== 0) {
+        setVerificationStatus("failed");
+        await updateDbTxHash(transactionID, verifiedResult.txHash);
+        setTransactionHash(verifiedResult.txHash);
+        setTransactionStatus("broadcast");
+        dispatchTransactionStatusChanged();
+
+        const rawLog = verifiedResult.rawLog || verifiedResult.error || "";
+        let guidance = "";
+        if (rawLog.includes("commission cannot be changed more than once")) {
+          guidance =
+            " Validator commission can only be changed once per 24 hours — wait 24 hours " +
+            "after the previous change before submitting a new one.";
+        } else if (rawLog.includes("commission rate cannot change more than max change rate")) {
+          guidance =
+            " The new commission rate differs from the current one by more than the " +
+            "validator's max change rate — create a new transaction with a smaller change.";
+        }
+
+        toastError({
+          title: "Transaction failed on-chain",
+          description:
+            `The transaction was included at height ${verifiedResult.height} but failed to ` +
+            `execute${rawLog ? `: ${rawLog}` : ""}. The fee was consumed and the account ` +
+            `sequence advanced, so broadcasting again cannot succeed. Cancel this ` +
+            `transaction and create a new one.` +
+            guidance,
+          fullError: new Error(rawLog || `Transaction failed with code ${verifiedResult.code}`),
+        });
+        return;
+      }
+
       if (!verifiedResult.success) {
         setVerificationStatus("failed");
         throw new Error(
@@ -412,9 +497,23 @@ const TransactionPage = ({
         );
       }
 
-      setVerificationStatus("verified");
+      // Record the hash FIRST — the tx is on chain, and the DB must reflect that
+      // before any verification complaint. A landed tx left marked pending invites
+      // a cancel-and-recreate, which is a double-execution risk for a MsgSend.
       await updateDbTxHash(transactionID, verifiedResult.txHash);
-      toastSuccess("Transaction broadcasted and verified", verifiedResult.txHash);
+
+      if (verifiedResult.partialVerification) {
+        // Primary endpoint proved inclusion but fewer witness endpoints than
+        // required confirmed it — success with a warning, not a failure.
+        setVerificationStatus("partial");
+        toastSuccess(
+          "Transaction broadcasted and included in a block",
+          "Fewer independent endpoints than required have confirmed it yet — see the verification card.",
+        );
+      } else {
+        setVerificationStatus("verified");
+        toastSuccess("Transaction broadcasted and verified", verifiedResult.txHash);
+      }
       setTransactionHash(verifiedResult.txHash);
       setTransactionStatus("broadcast");
 
@@ -444,14 +543,17 @@ const TransactionPage = ({
         errorMessage.includes("sequence") ||
         errorMessage.includes("account sequence mismatch")
       ) {
-        // Re-fetch the current sequence to update UI
+        // Re-fetch the current sequence to see whether it actually changed
+        // (null = could not determine, keep the conservative message)
+        let sequenceChanged: boolean | null = null;
         try {
           const refreshClient = await StargateClient.connect(chain.nodeAddress);
           try {
             const currentAccount = await refreshClient.getAccount(multisigAddress!);
             if (currentAccount && txInfo) {
               setAccountOnChain(currentAccount);
-              if (currentAccount.sequence !== txInfo.sequence) {
+              sequenceChanged = currentAccount.sequence !== txInfo.sequence;
+              if (sequenceChanged) {
                 setSequenceMismatch({
                   expected: txInfo.sequence,
                   actual: currentAccount.sequence,
@@ -466,13 +568,26 @@ const TransactionPage = ({
           console.error("[broadcastTx] Failed to re-fetch account state:", fetchErr);
         }
 
-        toastError({
-          description:
-            "Transaction rejected: the account's sequence number has changed. " +
-            "This usually means another transaction was broadcast from this multisig. " +
-            "Please cancel this transaction and create a new one.",
-          fullError: e instanceof Error ? e : undefined,
-        });
+        if (sequenceChanged === false) {
+          // The sequence still matches, so "the sequence changed" would be wrong —
+          // the chain rejected the signatures themselves (unauthorized).
+          toastError({
+            description:
+              "Transaction rejected: the chain refused the signatures, but the account's " +
+              "sequence number still matches. Check that the chain-id and account number " +
+              "are correct and that every signer used the wallet matching their registered " +
+              "pubkey.",
+            fullError: e instanceof Error ? e : undefined,
+          });
+        } else {
+          toastError({
+            description:
+              "Transaction rejected: the account's sequence number has changed. " +
+              "This usually means another transaction was broadcast from this multisig. " +
+              "Please cancel this transaction and create a new one.",
+            fullError: e instanceof Error ? e : undefined,
+          });
+        }
       } else if (
         errorMessage.includes("str.match") ||
         errorMessage.includes("is not a function") ||
@@ -484,6 +599,38 @@ const TransactionPage = ({
             "Transaction assembly failed due to a data type error. " +
             "This has been logged for diagnostics. Please try refreshing the page. " +
             "If the error persists, cancel this transaction and create a new one.",
+          fullError: e instanceof Error ? e : undefined,
+        });
+      } else if (errorMessage.includes("insufficient funds")) {
+        // The multisig account ITSELF is the fee payer — no signer wallet pays.
+        // "Broadcasting transaction failed" is the cosmjs BroadcastTxError prefix,
+        // which only wraps CheckTx rejections: the tx never entered a block, so the
+        // sequence did not change and the signatures remain valid. Our own
+        // pre-broadcast balance check ("signatures remain valid") is equally safe.
+        // Without either marker, do not claim the signatures are still usable.
+        const sequenceUnchanged =
+          errorMessage.includes("Broadcasting transaction failed") ||
+          errorMessage.includes("signatures remain valid");
+        toastError({
+          title: "Multisig account cannot cover the fee",
+          description:
+            `The multisig account itself pays the transaction fee — not any signer's ` +
+            `wallet — and ${multisigAddress} does not hold enough funds for it. ` +
+            `Send funds to the multisig address and broadcast again.` +
+            (sequenceUnchanged
+              ? " The collected signatures remain valid, so nothing needs to be re-signed."
+              : ""),
+          fullError: e instanceof Error ? e : undefined,
+        });
+      } else if (errorMessage.includes("insufficient fee")) {
+        // Distinct from "insufficient funds": the account CAN pay, but the fee set
+        // on the proposal no longer meets the chain's minimum gas price.
+        toastError({
+          title: "Transaction fee too low",
+          description:
+            "The chain's gas price has risen since this proposal was created, and the " +
+            "fee is fixed at signing time so it cannot be raised now. Cancel this " +
+            "transaction and create a new one with a higher fee.",
           fullError: e instanceof Error ? e : undefined,
         });
       } else {
@@ -566,16 +713,34 @@ const TransactionPage = ({
       </h1>
 
       {isLoadingTx ? (
-        <div className="mb-6 flex h-32 items-center justify-center rounded-lg border border-border bg-card/50 p-8 shadow-sm">
+        <div className="mb-6 flex h-32 items-center justify-center rounded-lg border border-border/[0.06] bg-card/50 p-8 shadow-sm">
           <p className="animate-pulse text-sm text-muted-foreground">
             Fetching transaction details from database...
           </p>
         </div>
       ) : null}
 
+      {/* Transient fetch failure — retry instead of the /404 dead end */}
+      {!isLoadingTx && txLoadError && !txInfo ? (
+        <Card variant="institutional" className="mb-6 border-destructive/50 bg-destructive/10">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="mt-0.5 h-5 w-5 text-destructive" />
+              <div className="flex-1">
+                <h3 className="mb-2 text-lg font-semibold text-destructive">
+                  Could not load this transaction
+                </h3>
+                <p className="mb-3 text-sm">{txLoadError}</p>
+                <Button label="Retry" onClick={loadTx} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
       {/* Status Banners */}
       {!isLoadingTx && transactionStatus === "cancelled" ? (
-        <div className="mb-6 rounded-lg border-2 border-border bg-muted/20 p-4">
+        <div className="mb-6 rounded-lg border-2 border-border/[0.06] bg-muted/20 p-4">
           <div className="flex items-start gap-3">
             <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-muted-foreground" />
             <div>
@@ -601,13 +766,20 @@ const TransactionPage = ({
                 <div className="mb-3 flex items-center gap-2">
                   {verificationStatus === "verified" ? (
                     <CheckCircle2 className="h-5 w-5 text-success" />
-                  ) : verificationStatus === "failed" ? (
+                  ) : verificationStatus === "failed" || verificationStatus === "partial" ? (
                     <AlertTriangle className="h-5 w-5 text-warning" />
                   ) : null}
                   <CardLabel comment className="mb-0">
                     Multi-Endpoint Verification
                   </CardLabel>
                 </div>
+
+                {verificationStatus === "partial" && (
+                  <p className="mb-3 text-sm text-warning">
+                    The transaction is confirmed on the primary endpoint, but fewer independent
+                    endpoints than required have confirmed it yet.
+                  </p>
+                )}
 
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
@@ -662,12 +834,38 @@ const TransactionPage = ({
                   This usually means another transaction was broadcast from this multisig account
                   after this transaction was created. The signatures collected are no longer valid.
                 </p>
-                <div className="rounded-lg border border-border bg-card/50 p-3">
+                <div className="rounded-lg border border-border/[0.06] bg-card/50 p-3">
                   <p className="text-sm">
                     <strong>Solution:</strong> Cancel this transaction and create a new one with the
                     current sequence number.
                   </p>
                 </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {/* Multisig fetch failure — without a pubkey the signing footer is hidden,
+          so surface the error visibly with a retry instead of just a toast */}
+      {!isLoadingTx &&
+      multisigError &&
+      !pubkey &&
+      !transactionHash &&
+      transactionStatus !== "cancelled" ? (
+        <Card variant="institutional" className="mb-6 border-destructive/50 bg-destructive/10">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="mt-0.5 h-5 w-5 text-destructive" />
+              <div className="flex-1">
+                <h3 className="mb-2 text-lg font-semibold text-destructive">
+                  Could not load the multisig account
+                </h3>
+                <p className="mb-2 text-sm">{multisigError}</p>
+                <p className="mb-3 text-sm">
+                  Signing and broadcasting are unavailable until the multisig account is loaded.
+                </p>
+                <Button label="Retry" onClick={fetchMultisig} />
               </div>
             </div>
           </CardContent>
@@ -692,7 +890,7 @@ const TransactionPage = ({
               <BentoCardContent className="flex-1 space-y-4">
                 {pubkey ? (
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4">
+                    <div className="flex items-center justify-between rounded-lg border border-border/[0.06] bg-muted/30 p-4">
                       <div className="flex items-center gap-3">
                         <div className="font-heading text-3xl font-bold">{uniqueSignerCount}</div>
                         <div className="text-muted-foreground">of</div>
@@ -930,7 +1128,7 @@ const TransactionPage = ({
               ) : null}
             </div>
             {txInfo.memo && (
-              <div className="mt-4 border-t border-border pt-4">
+              <div className="mt-4 border-t border-border/[0.06] pt-4">
                 <div className="mb-1 font-mono text-xs uppercase tracking-wide text-muted-foreground">
                   Memo
                 </div>
