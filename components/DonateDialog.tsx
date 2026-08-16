@@ -476,7 +476,7 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={handleClose} />
 
-      <div className="relative w-full max-w-3xl rounded-3xl border border-border bg-card shadow-[0_0_50px_rgba(0,0,0,0.5)] duration-300 animate-in fade-in zoom-in-95">
+      <div className="relative w-full max-w-3xl rounded-3xl border border-border/[0.06] bg-card shadow-[0_0_50px_rgba(0,0,0,0.5)] duration-300 animate-in fade-in zoom-in-95">
         {/* Header */}
         <div
           className="flex items-center justify-between overflow-hidden rounded-t-3xl p-8 md:p-12"
@@ -543,7 +543,7 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
                 key={i}
                 className={cn(
                   "h-2 rounded-full transition-all duration-500",
-                  currentStepIndex >= i ? "w-16 bg-primary" : "w-6 bg-border",
+                  currentStepIndex >= i ? "w-16 bg-primary" : "w-6 bg-border/[0.06]",
                 )}
               />
             ))}
@@ -638,7 +638,7 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
             <div className="grid grid-cols-1 gap-6 pt-4 md:grid-cols-2">
               <button
                 onClick={() => handleSelectType("one-time")}
-                className="group relative rounded-3xl border-2 border-border bg-muted/10 p-8 text-left transition-all duration-300 hover:border-primary hover:bg-primary/5 active:scale-[0.98]"
+                className="group relative rounded-3xl border-2 border-border/[0.06] bg-muted/10 p-8 text-left transition-all duration-300 hover:border-primary hover:bg-primary/5 active:scale-[0.98]"
               >
                 <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 transition-colors group-hover:bg-primary/20">
                   <Zap className="h-8 w-8 text-primary" />
@@ -651,7 +651,7 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
 
               <button
                 onClick={() => handleSelectType("recurring")}
-                className="group relative rounded-3xl border-2 border-border bg-muted/10 p-8 text-left transition-all duration-300 hover:border-primary hover:bg-primary/5 active:scale-[0.98]"
+                className="group relative rounded-3xl border-2 border-border/[0.06] bg-muted/10 p-8 text-left transition-all duration-300 hover:border-primary hover:bg-primary/5 active:scale-[0.98]"
               >
                 <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 transition-colors group-hover:bg-primary/20">
                   <Repeat className="h-8 w-8 text-primary" />
@@ -676,7 +676,7 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
                       ref={tokenButtonRef}
                       onClick={handleToggleTokenList}
                       className={cn(
-                        "flex h-[72px] w-full items-center justify-between rounded-2xl border-2 border-border bg-muted/20 p-5 text-left transition-all hover:bg-muted/40",
+                        "flex h-[72px] w-full items-center justify-between rounded-2xl border-2 border-border/[0.06] bg-muted/20 p-5 text-left transition-all hover:bg-muted/40",
                         showTokenList && "border-primary ring-4 ring-primary/10",
                       )}
                     >
@@ -751,7 +751,7 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
                           onClick={() => setShowTokenList(false)}
                         >
                           <div
-                            className="absolute max-h-[70vh] overflow-y-auto rounded-3xl border-2 border-border bg-card shadow-2xl duration-200 animate-in slide-in-from-top-2"
+                            className="absolute max-h-[70vh] overflow-y-auto rounded-3xl border-2 border-border/[0.06] bg-card shadow-2xl duration-200 animate-in slide-in-from-top-2"
                             style={{
                               left: `${dropdownPosition.left}px`,
                               top: `${dropdownPosition.top}px`,
@@ -760,7 +760,7 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
                             onClick={(e) => e.stopPropagation()}
                           >
                             {/* Header */}
-                            <div className="sticky top-0 rounded-t-3xl border-b border-border bg-card p-4">
+                            <div className="sticky top-0 rounded-t-3xl border-b border-border/[0.06] bg-card p-4">
                               <h3 className="text-lg font-black text-foreground">Select Token</h3>
                               <p className="mt-0.5 text-xs text-muted-foreground">
                                 {tokens.length} token{tokens.length !== 1 ? "s" : ""} available
@@ -876,7 +876,7 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
                         const val = e.target.value;
                         if (/^\d*\.?\d*$/.test(val)) setAmount(val);
                       }}
-                      className="h-[72px] w-full rounded-2xl border-2 border-border bg-muted/20 p-5 pr-24 text-2xl font-bold text-foreground transition-all focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10"
+                      className="h-[72px] w-full rounded-2xl border-2 border-border/[0.06] bg-muted/20 p-5 pr-24 text-2xl font-bold text-foreground transition-all focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10"
                     />
                     <button
                       onClick={handleMaxAmount}
@@ -904,7 +904,7 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
                             "flex-1 rounded-2xl border-2 py-4 text-base font-bold transition-all",
                             frequency === f.id
                               ? "border-primary bg-primary/10 text-primary"
-                              : "border-border bg-muted/10 text-muted-foreground hover:border-border/80",
+                              : "border-border/[0.06] bg-muted/10 text-muted-foreground hover:border-border/80",
                           )}
                         >
                           {f.label}
@@ -925,7 +925,7 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
                             "min-w-[80px] flex-1 rounded-2xl border-2 py-4 text-base font-bold transition-all",
                             duration === d.id
                               ? "border-primary bg-primary/10 text-primary"
-                              : "border-border bg-muted/10 text-muted-foreground hover:border-border/80",
+                              : "border-border/[0.06] bg-muted/10 text-muted-foreground hover:border-border/80",
                           )}
                         >
                           {d.label}

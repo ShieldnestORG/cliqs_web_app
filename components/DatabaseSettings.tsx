@@ -526,7 +526,7 @@ export default function DatabaseSettings() {
 
         {/* Unlock Panel (shown when credentials are saved but locked) */}
         {status.enabled && status.needsUnlock && (
-          <div className="space-y-3 rounded-lg border border-border bg-muted/50 p-4">
+          <div className="space-y-3 rounded-lg border border-border/[0.06] bg-muted/50 p-4">
             <h4 className="flex items-center gap-2 font-medium">
               <Lock className="h-4 w-4" />
               Unlock Credentials
@@ -870,7 +870,7 @@ export default function DatabaseSettings() {
                 className="space-y-3"
               >
                 {/* Level 0 */}
-                <div className="flex items-start space-x-3 rounded-lg border border-border p-4 transition-colors hover:bg-muted/50">
+                <div className="flex items-start space-x-3 rounded-lg border border-border/[0.06] p-4 transition-colors hover:bg-muted/50">
                   <RadioGroupItem value="0" id="level-0" className="mt-1" />
                   <div className="flex-1 space-y-1">
                     <Label htmlFor="level-0" className="flex cursor-pointer items-center gap-2">
@@ -885,7 +885,7 @@ export default function DatabaseSettings() {
                 </div>
 
                 {/* Level 1 */}
-                <div className="flex items-start space-x-3 rounded-lg border border-border p-4 transition-colors hover:bg-muted/50">
+                <div className="flex items-start space-x-3 rounded-lg border border-border/[0.06] p-4 transition-colors hover:bg-muted/50">
                   <RadioGroupItem value="1" id="level-1" className="mt-1" />
                   <div className="flex-1 space-y-1">
                     <Label htmlFor="level-1" className="flex cursor-pointer items-center gap-2">
@@ -905,7 +905,7 @@ export default function DatabaseSettings() {
                 {/* Level 2 */}
                 <div
                   className={cn(
-                    "flex items-start space-x-3 rounded-lg border border-border p-4 transition-colors",
+                    "flex items-start space-x-3 rounded-lg border border-border/[0.06] p-4 transition-colors",
                     walletInfo ? "hover:bg-muted/50" : "bg-muted/30 opacity-70",
                   )}
                 >
@@ -938,7 +938,7 @@ export default function DatabaseSettings() {
 
             {/* Passphrase fields for Level 1 */}
             {securityLevel === 1 && (
-              <div className="space-y-3 rounded-lg border border-border bg-muted/50 p-4">
+              <div className="space-y-3 rounded-lg border border-border/[0.06] bg-muted/50 p-4">
                 <div className="space-y-2">
                   <Label htmlFor="passphrase">Encryption Passphrase</Label>
                   <Input

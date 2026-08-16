@@ -60,7 +60,7 @@ function JourneyCard({
 
   return (
     <Card
-      className="group cursor-pointer border-border bg-card transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg"
+      className="group cursor-pointer border-border/[0.06] bg-card transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg"
       onClick={() => onSelect(journey)}
       role="button"
       tabIndex={0}
@@ -163,7 +163,7 @@ function JourneyWalkthrough({
 
       {/* Prerequisites */}
       {journey.prerequisites.length > 0 && (
-        <Card className="border-border bg-muted/30">
+        <Card className="border-border/[0.06] bg-muted/30">
           <CardContent className="p-4">
             <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
               <CheckCircle2 className="h-4 w-4 text-primary" />
@@ -221,7 +221,7 @@ function JourneyWalkthrough({
         {/* Step Content */}
         {journey.steps.map((s, i) => (
           <TabsContent key={i} value={String(i)} className="mt-4">
-            <Card className="border-border">
+            <Card className="border-border/[0.06]">
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">

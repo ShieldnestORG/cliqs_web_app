@@ -133,7 +133,7 @@ export default function ListUserMultisigs() {
 
         {/* Ledger connected - can't easily verify */}
         {walletInfo && walletInfo.type === "Ledger" && !multisigs ? (
-          <div className="rounded-lg border border-border p-4 text-sm text-muted-foreground">
+          <div className="rounded-lg border border-border/[0.06] p-4 text-sm text-muted-foreground">
             <p>
               Ledger wallet connected. To view your multisigs, please use Keplr to verify your
               identity.

@@ -13,7 +13,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
         duration: 4000,
         classNames: {
           toast:
-            "group toast group-[.toaster]:bg-card group-[.toaster]:text-foreground group-[.toaster]:border-2 group-[.toaster]:border-border group-[.toaster]:shadow-lg group-[.toaster]:rounded-xl",
+            "group toast group-[.toaster]:bg-card group-[.toaster]:text-foreground group-[.toaster]:border-2 group-[.toaster]:border-border/[0.06] group-[.toaster]:shadow-lg group-[.toaster]:rounded-xl",
           title: "group-[.toast]:font-semibold group-[.toast]:tracking-tight",
           description: "group-[.toast]:text-muted-foreground group-[.toast]:text-xs",
           actionButton:
@@ -21,7 +21,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
           cancelButton:
             "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground group-[.toast]:rounded-lg group-[.toast]:font-semibold group-[.toast]:uppercase group-[.toast]:text-xs",
           closeButton:
-            "group-[.toast]:bg-card group-[.toast]:border-2 group-[.toast]:border-border group-[.toast]:text-muted-foreground group-[.toast]:hover:text-foreground group-[.toast]:rounded-lg group-[.toast]:transition-colors",
+            "group-[.toast]:bg-card group-[.toast]:border-2 group-[.toast]:border-border/[0.06] group-[.toast]:text-muted-foreground group-[.toast]:hover:text-foreground group-[.toast]:rounded-lg group-[.toast]:transition-colors",
           error:
             "group-[.toaster]:!bg-card group-[.toaster]:!border-destructive group-[.toaster]:!border-l-4",
           success:

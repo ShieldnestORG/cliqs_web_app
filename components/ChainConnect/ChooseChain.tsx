@@ -22,13 +22,13 @@ export default function ChooseChain() {
   return (
     <Command className="flex min-h-0 flex-1 flex-col bg-transparent">
       {/* Search Input */}
-      <div className="flex-shrink-0 border-b border-border bg-muted/20 px-4 py-3">
+      <div className="flex-shrink-0 border-b border-border/[0.06] bg-muted/20 px-4 py-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <CommandInput
             hideIcon
             placeholder="Search by chain name or ID..."
-            className="h-11 w-full rounded-lg border-2 border-border bg-card pl-10 pr-4 font-mono text-sm text-foreground placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
+            className="h-11 w-full rounded-lg border-2 border-border/[0.06] bg-card pl-10 pr-4 font-mono text-sm text-foreground placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
           />
         </div>
       </div>

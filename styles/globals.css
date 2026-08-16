@@ -189,7 +189,7 @@
      ---------------------------------------- */
   .card-institutional {
     @apply relative border-2 transition-all duration-200;
-    border-color: hsl(var(--border));
+    border-color: hsl(var(--border) / 0.06);
     box-shadow:
       0 1px 3px rgba(0, 0, 0, 0.04),
       inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -323,7 +323,7 @@
     @apply active:scale-95;
     @apply disabled:cursor-not-allowed disabled:opacity-50;
     @apply flex items-center justify-center gap-2;
-    font-family: "JetBrains Mono", "SF Mono", monospace;
+    font-family: "Geist Mono", ui-monospace, "SF Mono", monospace;
     font-size: 11px;
     letter-spacing: 0.05em;
   }
@@ -338,7 +338,7 @@
     @apply flex items-center justify-center gap-2;
     border-color: hsl(var(--foreground));
     color: hsl(var(--foreground));
-    font-family: "JetBrains Mono", "SF Mono", monospace;
+    font-family: "Geist Mono", ui-monospace, "SF Mono", monospace;
     font-size: 11px;
     letter-spacing: 0.05em;
   }
@@ -349,7 +349,7 @@
     @apply bg-foreground text-background;
     @apply transition-all duration-200 hover:opacity-90;
     @apply active:scale-95;
-    font-family: "Space Grotesk", sans-serif;
+    font-family: "Geist", system-ui, sans-serif;
   }
 
   .btn-card-secondary {
@@ -359,7 +359,7 @@
     @apply active:scale-95;
     border-color: hsl(var(--foreground));
     color: hsl(var(--foreground));
-    font-family: "Space Grotesk", sans-serif;
+    font-family: "Geist", system-ui, sans-serif;
   }
 
   /* Tab Buttons */
@@ -367,7 +367,7 @@
     @apply rounded-full px-5 py-2 text-xs font-semibold uppercase tracking-wide;
     @apply whitespace-nowrap transition-all duration-200;
     @apply active:scale-95;
-    font-family: "JetBrains Mono", monospace;
+    font-family: "Geist Mono", ui-monospace, "SF Mono", monospace;
     letter-spacing: 0.03em;
   }
 
@@ -458,7 +458,7 @@
 
   /* Section Labels (Comment Style) */
   .text-label {
-    font-family: "JetBrains Mono", monospace;
+    font-family: "Geist Mono", ui-monospace, "SF Mono", monospace;
     font-size: 10px;
     font-weight: 500;
     text-transform: uppercase;
@@ -473,7 +473,7 @@
 
   /* KPI Values */
   .text-kpi {
-    font-family: "Space Grotesk", sans-serif;
+    font-family: "Geist", system-ui, sans-serif;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.025em;
@@ -559,7 +559,7 @@
   .icon-container {
     @apply flex h-12 w-12 items-center justify-center rounded-xl border-2;
     @apply transition-all duration-200;
-    border-color: hsl(var(--border));
+    border-color: hsl(var(--border) / 0.06);
     background: hsl(var(--card));
   }
 
@@ -814,9 +814,9 @@
 .input-institutional {
   @apply h-12 rounded-xl border-2 px-4 py-3 transition-colors duration-200;
   @apply focus:outline-none;
-  border-color: hsl(var(--border));
+  border-color: hsl(var(--border) / 0.06);
   background: hsl(var(--card));
-  font-family: "JetBrains Mono", monospace;
+  font-family: "Geist Mono", ui-monospace, "SF Mono", monospace;
   font-size: 14px;
 }
 
@@ -827,7 +827,7 @@
 
 .input-institutional:disabled {
   background: hsl(var(--muted));
-  border-color: hsl(var(--border));
+  border-color: hsl(var(--border) / 0.06);
   color: hsl(var(--muted-foreground));
   cursor: not-allowed;
 }
@@ -883,7 +883,7 @@
   .bento-card {
     @apply relative rounded-xl border-2 bg-card p-5;
     @apply transition-all duration-300;
-    border-color: hsl(var(--border));
+    border-color: hsl(var(--border) / 0.06);
   }
 
   .bento-card:hover {
@@ -930,14 +930,14 @@
   }
 
   .quick-stat-value {
-    font-family: "Space Grotesk", sans-serif;
+    font-family: "Geist", system-ui, sans-serif;
     font-weight: 700;
     font-size: 1.25rem;
     line-height: 1.2;
   }
 
   .quick-stat-label {
-    font-family: "JetBrains Mono", monospace;
+    font-family: "Geist Mono", ui-monospace, "SF Mono", monospace;
     font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -1020,9 +1020,9 @@
 /* Toast Container */
 [data-sonner-toaster] {
   --normal-bg: hsl(var(--card));
-  --normal-border: hsl(var(--border));
+  --normal-border: hsl(var(--border) / 0.06);
   --normal-text: hsl(var(--foreground));
-  font-family: "Inter", sans-serif;
+  font-family: "Geist", system-ui, sans-serif;
   transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -1034,7 +1034,7 @@
 
 /* Toast Title */
 [data-sonner-toast] [data-title] {
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Geist", system-ui, sans-serif;
   font-weight: 600;
   font-size: 14px;
   letter-spacing: -0.01em;
@@ -1042,7 +1042,7 @@
 
 /* Toast Description */
 [data-sonner-toast] [data-description] {
-  font-family: "JetBrains Mono", monospace;
+  font-family: "Geist Mono", ui-monospace, "SF Mono", monospace;
   font-size: 11px;
   opacity: 0.8;
   margin-top: 4px;
@@ -1061,7 +1061,7 @@
   width: 20px;
   height: 20px;
   border-radius: 6px;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid hsl(var(--border) / 0.06);
   background: hsl(var(--card));
   color: hsl(var(--muted-foreground));
   transition: all 150ms ease;
@@ -1125,7 +1125,7 @@
 
 /* Action Button in Toast */
 [data-sonner-toast] [data-button] {
-  font-family: "JetBrains Mono", monospace;
+  font-family: "Geist Mono", ui-monospace, "SF Mono", monospace;
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
@@ -1143,7 +1143,7 @@
 
 /* Cancel Button in Toast */
 [data-sonner-toast] [data-cancel] {
-  font-family: "JetBrains Mono", monospace;
+  font-family: "Geist Mono", ui-monospace, "SF Mono", monospace;
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
@@ -1151,7 +1151,7 @@
   padding: 8px 16px;
   border-radius: 6px;
   background: transparent;
-  border: 2px solid hsl(var(--border));
+  border: 2px solid hsl(var(--border) / 0.06);
   color: hsl(var(--muted-foreground));
   transition: all 150ms ease;
 }

@@ -67,7 +67,7 @@ export default function ConfirmCreateCliq({ createCliqForm }: ConfirmCreateCliqP
         </DialogTitle>
 
         {/* CLIQ Name */}
-        <div className="mt-4 rounded-xl border border-border bg-muted p-4 shadow-sm">
+        <div className="mt-4 rounded-xl border border-border/[0.06] bg-muted p-4 shadow-sm">
           <p className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">CLIQ Name</p>
           <h3 className="font-heading text-xl font-bold text-foreground">
             {name || "Unnamed CLIQ"}
@@ -86,9 +86,9 @@ export default function ConfirmCreateCliq({ createCliqForm }: ConfirmCreateCliqP
             {filteredMembers.map(({ member }, index) => (
               <div
                 key={member}
-                className="flex items-center gap-3 rounded-lg border-2 border-border bg-muted/30 p-3 transition-colors hover:bg-muted/50"
+                className="flex items-center gap-3 rounded-lg border-2 border-border/[0.06] bg-muted/30 p-3 transition-colors hover:bg-muted/50"
               >
-                <div className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-muted font-mono text-xs font-bold text-foreground">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full border border-border/[0.06] bg-muted font-mono text-xs font-bold text-foreground">
                   {index + 1}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -103,7 +103,7 @@ export default function ConfirmCreateCliq({ createCliqForm }: ConfirmCreateCliqP
         </div>
 
         {/* Threshold Info */}
-        <div className="mt-4 flex items-center gap-3 rounded-lg border border-border bg-muted p-4">
+        <div className="mt-4 flex items-center gap-3 rounded-lg border border-border/[0.06] bg-muted p-4">
           <Shield className="h-5 w-5 flex-shrink-0 text-foreground" />
           <div>
             <p className="text-sm font-medium text-foreground">

@@ -35,7 +35,7 @@ export default function ChainItem({ chain, hoverCardElementBoundary }: ChainItem
             "aria-selected:bg-muted/50",
             isConnected
               ? "cursor-default border-[hsl(var(--accent-green))] bg-[hsl(var(--accent-green)/0.1)]"
-              : "border-border bg-card hover:border-[hsl(var(--accent-green)/0.5)] hover:bg-muted/30",
+              : "border-border/[0.06] bg-card hover:border-[hsl(var(--accent-green)/0.5)] hover:bg-muted/30",
           )}
         >
           {/* Connected Badge */}
@@ -46,7 +46,7 @@ export default function ChainItem({ chain, hoverCardElementBoundary }: ChainItem
           )}
 
           {/* Chain Logo */}
-          <Avatar className="h-10 w-10 shrink-0 border-2 border-border bg-muted">
+          <Avatar className="h-10 w-10 shrink-0 border-2 border-border/[0.06] bg-muted">
             <AvatarImage
               src={chain.logo}
               alt={`${chain.chainDisplayName} logo`}
@@ -69,7 +69,7 @@ export default function ChainItem({ chain, hoverCardElementBoundary }: ChainItem
         </CommandItem>
       </HoverCardTrigger>
       <HoverCardContent
-        className="w-auto border-2 border-border bg-card p-4 shadow-lg"
+        className="w-auto border-2 border-border/[0.06] bg-card p-4 shadow-lg"
         collisionBoundary={hoverCardElementBoundary}
         side="right"
         align="start"

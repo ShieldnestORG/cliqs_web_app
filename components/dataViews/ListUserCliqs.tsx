@@ -232,7 +232,7 @@ export default function ListUserCliqs() {
 
         {/* Ledger connected - can't easily verify */}
         {walletInfo && walletInfo.type === "Ledger" && !cliqs ? (
-          <div className="rounded-lg border border-border p-4 text-sm text-muted-foreground">
+          <div className="rounded-lg border border-border/[0.06] p-4 text-sm text-muted-foreground">
             <p>
               Ledger wallet connected. To view your Cliqs, please use Keplr to verify your identity.
             </p>
@@ -327,7 +327,7 @@ export default function ListUserCliqs() {
                   <Link
                     key={cliq.address}
                     href={`/${chainRegistryName}/${cliq.address}`}
-                    className="group flex items-center gap-3 rounded-lg border border-border p-3 transition-all hover:border-green-accent/50 hover:bg-muted/50"
+                    className="group flex items-center gap-3 rounded-lg border border-border/[0.06] p-3 transition-all hover:border-green-accent/50 hover:bg-muted/50"
                   >
                     <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-green-accent/30 bg-gradient-to-br from-green-accent/20 to-green-accent/10">
                       <Users className="h-5 w-5 text-green-accent" />

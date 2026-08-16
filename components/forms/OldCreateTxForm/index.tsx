@@ -330,7 +330,7 @@ const OldCreateTxForm = ({ router, senderAddress, accountOnChain }: OldCreateTxF
           ))}
 
           {/* Transaction Settings */}
-          <div className="space-y-4 border-t border-border pt-4">
+          <div className="space-y-4 border-t border-border/[0.06] pt-4">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <div>
                 <Input

@@ -88,7 +88,7 @@ const Page = ({ title, goBack, children, variant = "default", showPattern = true
           href="https://github.com/cosmos/cosmos-multisig-ui"
           target="_blank"
           rel="noopener noreferrer"
-          className="group flex items-center gap-2 rounded-lg border border-border/50 bg-card/80 px-3 py-2 text-xs text-muted-foreground backdrop-blur-sm transition-all hover:border-border hover:text-foreground"
+          className="group flex items-center gap-2 rounded-lg border border-border/50 bg-card/80 px-3 py-2 text-xs text-muted-foreground backdrop-blur-sm transition-all hover:border-border/80 hover:text-foreground"
         >
           <Github className="h-4 w-4" />
           <span className="hidden font-mono uppercase tracking-wide sm:inline">GitHub</span>

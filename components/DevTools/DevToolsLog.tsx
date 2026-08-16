@@ -93,14 +93,14 @@ export default function DevToolsLog({ entries, onClear }: DevToolsLogProps) {
         </div>
 
         {filtered.length === 0 ? (
-          <p className="rounded-lg border border-border bg-muted/20 px-3 py-5 text-center text-sm text-muted-foreground">
+          <p className="rounded-lg border border-border/[0.06] bg-muted/20 px-3 py-5 text-center text-sm text-muted-foreground">
             No matching developer activity.
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[860px] text-sm">
               <thead>
-                <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
+                <tr className="border-b border-border/[0.06] text-left text-xs uppercase tracking-wide text-muted-foreground">
                   <th className="px-2 py-2">When</th>
                   <th className="px-2 py-2">Stage</th>
                   <th className="px-2 py-2">Network</th>

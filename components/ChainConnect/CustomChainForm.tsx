@@ -120,7 +120,7 @@ export default function CustomChainForm() {
                   <FormControl>
                     <Input
                       placeholder="mynetwork"
-                      className="h-10 border-2 border-border bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
+                      className="h-10 border-2 border-border/[0.06] bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
                       {...field}
                     />
                   </FormControl>
@@ -139,7 +139,7 @@ export default function CustomChainForm() {
                   <FormControl>
                     <Input
                       placeholder="My Network"
-                      className="h-10 border-2 border-border bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
+                      className="h-10 border-2 border-border/[0.06] bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
                       {...field}
                     />
                   </FormControl>
@@ -155,7 +155,7 @@ export default function CustomChainForm() {
                   <FormControl>
                     <Input
                       placeholder="my-net-4"
-                      className="h-10 border-2 border-border bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
+                      className="h-10 border-2 border-border/[0.06] bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
                       {...field}
                     />
                   </FormControl>
@@ -181,7 +181,7 @@ export default function CustomChainForm() {
                   <FormControl>
                     <Input
                       placeholder="umycoin"
-                      className="h-10 border-2 border-border bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
+                      className="h-10 border-2 border-border/[0.06] bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
                       {...field}
                     />
                   </FormControl>
@@ -199,7 +199,7 @@ export default function CustomChainForm() {
                   <FormControl>
                     <Input
                       placeholder="MYCOIN"
-                      className="h-10 border-2 border-border bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
+                      className="h-10 border-2 border-border/[0.06] bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
                       {...field}
                     />
                   </FormControl>
@@ -215,7 +215,7 @@ export default function CustomChainForm() {
                   <FormControl>
                     <Input
                       placeholder="6"
-                      className="h-10 border-2 border-border bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
+                      className="h-10 border-2 border-border/[0.06] bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
                       {...field}
                     />
                   </FormControl>
@@ -231,7 +231,7 @@ export default function CustomChainForm() {
                   <FormControl>
                     <Input
                       placeholder="0.04umycoin"
-                      className="h-10 border-2 border-border bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
+                      className="h-10 border-2 border-border/[0.06] bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
                       {...field}
                     />
                   </FormControl>
@@ -259,7 +259,7 @@ export default function CustomChainForm() {
                   <FormControl>
                     <Input
                       placeholder="mynet"
-                      className="h-10 border-2 border-border bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
+                      className="h-10 border-2 border-border/[0.06] bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
                       {...field}
                     />
                   </FormControl>
@@ -278,7 +278,7 @@ export default function CustomChainForm() {
                   <FormControl>
                     <Input
                       placeholder="https://..."
-                      className="h-10 border-2 border-border bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
+                      className="h-10 border-2 border-border/[0.06] bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
                       {...field}
                     />
                   </FormControl>
@@ -303,7 +303,7 @@ export default function CustomChainForm() {
                 <FormControl>
                   <Input
                     placeholder="https://rpc1.example.com, https://rpc2.example.com"
-                    className="h-10 border-2 border-border bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
+                    className="h-10 border-2 border-border/[0.06] bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
                     {...field}
                   />
                 </FormControl>
@@ -326,7 +326,7 @@ export default function CustomChainForm() {
                   <FormControl>
                     <Input
                       placeholder="https://explorer.example.com/tx/${txHash}"
-                      className="h-10 border-2 border-border bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
+                      className="h-10 border-2 border-border/[0.06] bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
                       {...field}
                     />
                   </FormControl>
@@ -348,7 +348,7 @@ export default function CustomChainForm() {
                   <FormControl>
                     <Input
                       placeholder="https://explorer.example.com/account/${accountAddress}"
-                      className="h-10 border-2 border-border bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
+                      className="h-10 border-2 border-border/[0.06] bg-muted/30 font-mono text-sm placeholder:text-muted-foreground focus:border-[hsl(var(--accent-green))] focus:ring-2 focus:ring-[hsl(var(--accent-green)/0.2)]"
                       {...field}
                     />
                   </FormControl>
@@ -377,7 +377,7 @@ export default function CustomChainForm() {
                 <FormItem>
                   <FormLabel className="text-xs font-medium text-foreground">Assets JSON</FormLabel>
                   <FormControl>
-                    <div className="overflow-hidden rounded-lg border-2 border-border">
+                    <div className="overflow-hidden rounded-lg border-2 border-border/[0.06]">
                       <JsonEditor
                         content={{ text: field.value }}
                         onChange={(newMsgContent) => {
@@ -396,7 +396,7 @@ export default function CustomChainForm() {
         )}
 
         {/* Submit Button */}
-        <div className="flex justify-end border-t border-border pt-4">
+        <div className="flex justify-end border-t border-border/[0.06] pt-4">
           <Button variant="action" size="action" type="submit">
             Add Custom Chain
           </Button>

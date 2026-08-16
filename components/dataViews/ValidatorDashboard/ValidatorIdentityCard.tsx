@@ -52,7 +52,7 @@ export default function ValidatorIdentityCard({ validator }: ValidatorIdentityCa
           label: "Inactive",
           variant: "outline" as const,
           icon: CircleDashed,
-          className: "bg-muted text-muted-foreground border-border",
+          className: "bg-muted text-muted-foreground border-border/[0.06]",
         };
     }
   };

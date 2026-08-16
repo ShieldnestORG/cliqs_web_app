@@ -278,7 +278,7 @@ export function ContractExecute({ client: externalClient, selectedAccount }: Con
         </div>
 
         {senderAddress && (
-          <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/20 px-3 py-2">
+          <div className="flex items-center gap-2 rounded-lg border border-border/[0.06] bg-muted/20 px-3 py-2">
             <span className="text-xs font-medium text-muted-foreground">Sender</span>
             <Badge
               variant={selectedAccount?.type === "multisig" ? "outline" : "default"}

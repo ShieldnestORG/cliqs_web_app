@@ -203,7 +203,7 @@ export function ProposalIntentView({
                   "flex items-start gap-3 rounded-lg border p-3",
                   msg.risk === "high" && "border-destructive/30 bg-destructive/5",
                   msg.risk === "medium" && "border-warning/30 bg-warning/5",
-                  msg.risk === "low" && "border-border bg-muted/30",
+                  msg.risk === "low" && "border-border/[0.06] bg-muted/30",
                 )}
               >
                 <div className="mt-0.5">{msg.icon}</div>

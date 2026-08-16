@@ -93,7 +93,7 @@ const ChainHomePage = () => {
       <section className="section-wrapper bg-pattern-dots">
         <div className="section-inner max-w-6xl space-y-6 py-8 text-center">
           {/* Label */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/50 px-4 py-2 font-mono text-xs uppercase tracking-wider text-muted-foreground">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border/[0.06] bg-muted/50 px-4 py-2 font-mono text-xs uppercase tracking-wider text-muted-foreground">
             <span className="h-2 w-2 animate-status-pulse rounded-full bg-green-accent" />
             {chain.chainDisplayName || "Cosmos"} Network
           </div>

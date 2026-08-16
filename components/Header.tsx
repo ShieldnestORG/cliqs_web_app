@@ -67,7 +67,7 @@ export default function Header() {
     : null;
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b-2 border-border bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80 lg:hidden">
+    <header className="sticky top-0 z-50 w-full border-b-2 border-border/[0.06] bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80 lg:hidden">
       <div className="container mx-auto flex h-16 items-center justify-between px-[0.75in]">
         {/* Logo / Brand */}
         <div className="flex items-center gap-4">
@@ -145,7 +145,7 @@ export default function Header() {
           )}
 
           {/* Separator */}
-          {chain.registryName && <div className="mx-2 h-6 w-px bg-border" />}
+          {chain.registryName && <div className="mx-2 h-6 w-px bg-border/[0.06]" />}
 
           {/* Wallet Connection Button/Dropdown */}
           {walletInfo ? (
@@ -305,7 +305,7 @@ export default function Header() {
           />
 
           {/* Menu Panel */}
-          <div className="slide-up fixed left-0 right-0 top-16 z-50 border-b-2 border-border bg-card shadow-lg animate-in md:hidden">
+          <div className="slide-up fixed left-0 right-0 top-16 z-50 border-b-2 border-border/[0.06] bg-card shadow-lg animate-in md:hidden">
             <nav className="container mx-auto space-y-2 px-[0.75in] py-4">
               <a
                 href="https://app.tokns.fi"
@@ -314,7 +314,7 @@ export default function Header() {
                 <ChevronLeft className="h-5 w-5" />
                 <span>Back to TOKNS</span>
               </a>
-              <div className="my-3 h-px bg-border" />
+              <div className="my-3 h-px bg-border/[0.06]" />
               {chain.registryName &&
                 navItems.map((item) => {
                   const isActive = pathname === item.href;
@@ -352,7 +352,7 @@ export default function Header() {
               )}
 
               {/* Separator */}
-              <div className="my-3 h-px bg-border" />
+              <div className="my-3 h-px bg-border/[0.06]" />
 
               {/* Wallet Section - Mobile */}
               {walletInfo ? (
@@ -437,7 +437,7 @@ export default function Header() {
                       setMobileMenuOpen(false);
                     }}
                     disabled={isConnecting}
-                    className="flex w-full items-center gap-3 rounded-lg border border-border px-4 py-3 font-medium text-foreground transition-all hover:bg-muted/50 disabled:opacity-50"
+                    className="flex w-full items-center gap-3 rounded-lg border border-border/[0.06] px-4 py-3 font-medium text-foreground transition-all hover:bg-muted/50 disabled:opacity-50"
                   >
                     {loading.ledger ? (
                       <Loader2 className="h-5 w-5 animate-spin" />

@@ -11,7 +11,7 @@ export function ChainHeader() {
   return isChainInfoFilled(chain) ? (
     <div className="flex items-center gap-2">
       <div className="relative">
-        <Avatar className="h-7 w-7 border border-border">
+        <Avatar className="h-7 w-7 border border-border/[0.06]">
           <AvatarImage src={chain.logo} alt={`${chain.chainDisplayName} logo`} />
           <AvatarFallback className="bg-muted font-mono text-[10px]">
             {chain.registryName.slice(0, 2).toUpperCase()}
@@ -39,7 +39,7 @@ export default function DialogButton() {
 
   return showChainSelect ? (
     <DialogTrigger asChild>
-      <button className="group relative flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1.5 transition-all duration-200 hover:border-[hsl(var(--accent-green)/0.5)] hover:bg-muted/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent-purple)/0.5)] focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+      <button className="group relative flex items-center gap-1.5 rounded-md border border-border/[0.06] bg-card px-2 py-1.5 transition-all duration-200 hover:border-[hsl(var(--accent-green)/0.5)] hover:bg-muted/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent-purple)/0.5)] focus-visible:ring-offset-2 focus-visible:ring-offset-background">
         <ChainHeader />
         <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-hover:text-foreground group-data-[state=open]:rotate-180" />
       </button>

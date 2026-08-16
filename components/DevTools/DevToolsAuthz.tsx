@@ -463,7 +463,7 @@ export default function DevToolsAuthz({
       </CardHeader>
       <CardContent className="space-y-4">
         {!isWalletSelected && (
-          <div className="rounded-lg border border-border bg-muted/20 p-3 text-xs text-muted-foreground">
+          <div className="rounded-lg border border-border/[0.06] bg-muted/20 p-3 text-xs text-muted-foreground">
             Select your connected wallet account to manage authz permissions.
           </div>
         )}
@@ -513,7 +513,7 @@ export default function DevToolsAuthz({
 
         {mode === "grant" && (
           <div className="space-y-4">
-            <div className="rounded-lg border border-border bg-muted/10 p-3 text-xs text-muted-foreground">
+            <div className="rounded-lg border border-border/[0.06] bg-muted/10 p-3 text-xs text-muted-foreground">
               <p className="mb-1 font-semibold text-foreground">Step 1 of 2 — Grant Permission</p>
               Allow another address (the grantee) to perform a specific action on your behalf. After
               granting, switch to the{" "}
@@ -593,7 +593,7 @@ export default function DevToolsAuthz({
 
         {mode === "execute" && (
           <div className="space-y-4">
-            <div className="rounded-lg border border-border bg-muted/10 p-3 text-xs text-muted-foreground">
+            <div className="rounded-lg border border-border/[0.06] bg-muted/10 p-3 text-xs text-muted-foreground">
               <p className="mb-1 font-semibold text-foreground">Step 2 of 2 — Execute on Behalf</p>
               Use an existing grant to perform an action as the granter. Your connected wallet is
               the <strong>grantee</strong> (executor). The <strong>granter</strong> is the account
@@ -834,7 +834,7 @@ export default function DevToolsAuthz({
                       className={`w-full rounded-lg border p-3 text-left transition ${
                         selected
                           ? "border-destructive/60 bg-destructive/10"
-                          : "border-border bg-card/40 hover:border-border/80"
+                          : "border-border/[0.06] bg-card/40 hover:border-border/80"
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">

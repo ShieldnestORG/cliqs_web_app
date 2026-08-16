@@ -131,7 +131,7 @@ export default function CliqUpgradeCTA() {
                     );
                   })}
 
-                  <div className="rounded-lg border border-border bg-muted/50 p-4">
+                  <div className="rounded-lg border border-border/[0.06] bg-muted/50 p-4">
                     <h4 className="mb-2 font-semibold text-foreground">How It Works</h4>
                     <ol className="space-y-2 text-sm text-muted-foreground">
                       <li className="flex gap-2">

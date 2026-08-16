@@ -157,7 +157,7 @@ interface QuickStatProps {
 
 export function QuickStat({ label, value, icon, trend }: QuickStatProps) {
   return (
-    <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-4">
+    <div className="flex items-center gap-4 rounded-xl border border-border/[0.06] bg-card p-4">
       {icon && icon}
       <div className="min-w-0">
         <p className="truncate text-xs uppercase tracking-wide text-muted-foreground">{label}</p>

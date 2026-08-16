@@ -74,7 +74,7 @@ export default function Sidebar() {
   return (
     <aside
       className={cn(
-        "sticky top-0 z-50 hidden h-screen flex-col border-r-2 border-border bg-card/50 backdrop-blur-md transition-all duration-300 ease-in-out lg:flex",
+        "sticky top-0 z-50 hidden h-screen flex-col border-r-2 border-border/[0.06] bg-card/50 backdrop-blur-md transition-all duration-300 ease-in-out lg:flex",
         collapsed ? "w-20" : "w-64",
       )}
     >
@@ -284,7 +284,7 @@ export default function Sidebar() {
             <TooltipTrigger asChild>
               <a
                 href="https://app.tokns.fi"
-                className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+                className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg border border-border/[0.06] text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
               >
                 <ChevronLeft className="h-5 w-5" />
               </a>
@@ -294,7 +294,7 @@ export default function Sidebar() {
         ) : (
           <a
             href="https://app.tokns.fi"
-            className="flex h-10 w-full items-center gap-2 rounded-lg border border-border px-4 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+            className="flex h-10 w-full items-center gap-2 rounded-lg border border-border/[0.06] px-4 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
           >
             <ChevronLeft className="h-4 w-4" />
             Back to TOKNS

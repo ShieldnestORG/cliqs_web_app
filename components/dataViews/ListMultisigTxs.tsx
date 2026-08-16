@@ -59,7 +59,7 @@ const TransactionCard = ({
     <Link href={`/${chainName}/${multisigAddress}/transaction/${tx.id}`}>
       <div
         className={cn(
-          "group relative rounded-xl border-2 border-border bg-card p-4 transition-all duration-300",
+          "group relative rounded-xl border-2 border-border/[0.06] bg-card p-4 transition-all duration-300",
           "hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-lg hover:shadow-black/10",
           "active:translate-y-0 active:shadow-md",
           "cursor-pointer",

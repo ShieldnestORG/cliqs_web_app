@@ -585,7 +585,7 @@ export default function CliqDashboardPage() {
                 return (
                   <div
                     key={memberAddress}
-                    className="group flex items-center gap-4 rounded-lg border border-border bg-card p-4 transition-colors hover:bg-muted/50"
+                    className="group flex items-center gap-4 rounded-lg border border-border/[0.06] bg-card p-4 transition-colors hover:bg-muted/50"
                   >
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-green-accent/30 bg-gradient-to-br from-green-accent/20 to-green-accent/10">
                       <span className="text-sm font-bold text-green-accent">{index + 1}</span>

@@ -73,7 +73,7 @@ export default function CreateCliqPage() {
             </div>
 
             {/* Type Comparison Card */}
-            <Card className="border-border bg-muted/30">
+            <Card className="border-border/[0.06] bg-muted/30">
               <CardContent className="p-4">
                 <div className="grid gap-4 text-sm sm:grid-cols-3">
                   {/* PubKey Features */}
@@ -85,7 +85,7 @@ export default function CreateCliqPage() {
                     className={`cursor-pointer rounded-lg border p-4 text-left transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 ${
                       multisigType === "pubkey"
                         ? "border-primary bg-card shadow-sm"
-                        : "border-border bg-background/50 hover:bg-background/80"
+                        : "border-border/[0.06] bg-background/50 hover:bg-background/80"
                     }`}
                   >
                     <div className="mb-3 flex items-center gap-2">
@@ -129,7 +129,7 @@ export default function CreateCliqPage() {
                     className={`cursor-pointer rounded-lg border p-4 text-left transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 ${
                       multisigType === "contract"
                         ? "border-primary bg-card shadow-sm"
-                        : "border-border bg-background/50 hover:bg-background/80"
+                        : "border-border/[0.06] bg-background/50 hover:bg-background/80"
                     }`}
                   >
                     <div className="mb-3 flex items-center gap-2">
@@ -173,7 +173,7 @@ export default function CreateCliqPage() {
                     className={`cursor-pointer rounded-lg border p-4 text-left transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 ${
                       multisigType === "flex"
                         ? "border-primary bg-card shadow-sm"
-                        : "border-border bg-background/50 hover:bg-background/80"
+                        : "border-border/[0.06] bg-background/50 hover:bg-background/80"
                     }`}
                   >
                     <div className="mb-3 flex items-center gap-2">

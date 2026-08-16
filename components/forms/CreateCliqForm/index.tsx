@@ -194,7 +194,7 @@ export default function CreateCliqForm() {
       <Card variant="institutional" bracket="green" className="overflow-visible">
         <CardHeader>
           <div className="mb-2 flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-muted">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border/[0.06] bg-muted">
               <Users className="h-7 w-7 text-foreground" />
             </div>
             <div>
@@ -230,14 +230,14 @@ export default function CreateCliqForm() {
                 <TabsList className="mb-6 grid h-auto w-full grid-cols-3 rounded-xl bg-muted/50 p-1">
                   <TabsTrigger
                     value="name"
-                    className="flex items-center gap-2 rounded-lg px-4 py-3 shadow-sm transition-all data-[state=active]:border data-[state=active]:border-border data-[state=active]:bg-background data-[state=active]:text-foreground"
+                    className="flex items-center gap-2 rounded-lg px-4 py-3 shadow-sm transition-all data-[state=active]:border data-[state=active]:border-border/[0.06] data-[state=active]:bg-background data-[state=active]:text-foreground"
                   >
                     <div
                       className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-colors ${
                         isNameStepComplete
                           ? "bg-primary text-primary-foreground"
                           : activeTab === "name"
-                            ? "border border-border bg-muted text-foreground"
+                            ? "border border-border/[0.06] bg-muted text-foreground"
                             : "bg-muted text-muted-foreground"
                       }`}
                     >
@@ -249,14 +249,14 @@ export default function CreateCliqForm() {
 
                   <TabsTrigger
                     value="members"
-                    className="flex items-center gap-2 rounded-lg px-4 py-3 shadow-sm transition-all data-[state=active]:border data-[state=active]:border-border data-[state=active]:bg-background data-[state=active]:text-foreground"
+                    className="flex items-center gap-2 rounded-lg px-4 py-3 shadow-sm transition-all data-[state=active]:border data-[state=active]:border-border/[0.06] data-[state=active]:bg-background data-[state=active]:text-foreground"
                   >
                     <div
                       className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-colors ${
                         isMembersStepComplete
                           ? "bg-primary text-primary-foreground"
                           : activeTab === "members"
-                            ? "border border-border bg-muted text-foreground"
+                            ? "border border-border/[0.06] bg-muted text-foreground"
                             : "bg-muted text-muted-foreground"
                       }`}
                     >
@@ -265,7 +265,7 @@ export default function CreateCliqForm() {
                     <span className="hidden font-medium sm:inline">Members</span>
                     <UsersRound className="h-4 w-4 sm:hidden" />
                     {filledMembersCount > 0 && (
-                      <span className="rounded-full border border-border bg-muted px-1.5 py-0.5 text-xs text-foreground">
+                      <span className="rounded-full border border-border/[0.06] bg-muted px-1.5 py-0.5 text-xs text-foreground">
                         {filledMembersCount}
                       </span>
                     )}
@@ -273,12 +273,12 @@ export default function CreateCliqForm() {
 
                   <TabsTrigger
                     value="approval"
-                    className="flex items-center gap-2 rounded-lg px-4 py-3 shadow-sm transition-all data-[state=active]:border data-[state=active]:border-border data-[state=active]:bg-background data-[state=active]:text-foreground"
+                    className="flex items-center gap-2 rounded-lg px-4 py-3 shadow-sm transition-all data-[state=active]:border data-[state=active]:border-border/[0.06] data-[state=active]:bg-background data-[state=active]:text-foreground"
                   >
                     <div
                       className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-colors ${
                         activeTab === "approval"
-                          ? "border border-border bg-muted text-foreground"
+                          ? "border border-border/[0.06] bg-muted text-foreground"
                           : "bg-muted text-muted-foreground"
                       }`}
                     >
@@ -339,7 +339,7 @@ export default function CreateCliqForm() {
                   />
 
                   {/* Navigation */}
-                  <div className="flex justify-end border-t border-border pt-4">
+                  <div className="flex justify-end border-t border-border/[0.06] pt-4">
                     <Button
                       type="button"
                       variant="action"
@@ -366,12 +366,12 @@ export default function CreateCliqForm() {
                         Add the wallet addresses or public keys of CLIQ members
                       </p>
                     </div>
-                    <div className="rounded-full border border-border bg-muted px-3 py-1.5 text-sm font-medium text-foreground">
+                    <div className="rounded-full border border-border/[0.06] bg-muted px-3 py-1.5 text-sm font-medium text-foreground">
                       {filledMembersCount} member{filledMembersCount !== 1 ? "s" : ""} added
                     </div>
                   </div>
 
-                  <div className="rounded-lg border border-border bg-muted/30 p-3">
+                  <div className="rounded-lg border border-border/[0.06] bg-muted/30 p-3">
                     <p className="text-xs text-muted-foreground">
                       💡 <strong>Tip:</strong> You can paste multiple addresses at once in the first
                       field, separated by commas or spaces.
@@ -406,7 +406,7 @@ export default function CreateCliqForm() {
 
                   {/* Minimum members warning */}
                   {filledMembersCount < 2 && (
-                    <div className="rounded-lg border border-border bg-muted p-3">
+                    <div className="rounded-lg border border-border/[0.06] bg-muted p-3">
                       <p className="flex items-center gap-2 text-xs text-muted-foreground">
                         <AlertCircle className="h-3.5 w-3.5 text-warning" />A CLIQ requires at least
                         2 members. Add {2 - filledMembersCount} more member
@@ -416,7 +416,7 @@ export default function CreateCliqForm() {
                   )}
 
                   {/* Navigation */}
-                  <div className="flex justify-between border-t border-border pt-4">
+                  <div className="flex justify-between border-t border-border/[0.06] pt-4">
                     <Button
                       type="button"
                       variant="ghost"
@@ -484,7 +484,7 @@ export default function CreateCliqForm() {
                                     disabled={memberCount < 1}
                                   />
                                 </div>
-                                <div className="flex min-w-[120px] items-center justify-center gap-2 rounded-xl border border-border bg-muted px-4 py-3 shadow-sm">
+                                <div className="flex min-w-[120px] items-center justify-center gap-2 rounded-xl border border-border/[0.06] bg-muted px-4 py-3 shadow-sm">
                                   <Shield className="h-5 w-5 text-foreground" />
                                   <span className="font-heading text-2xl font-bold text-foreground">
                                     {currentThreshold}
@@ -507,7 +507,7 @@ export default function CreateCliqForm() {
 
                               {/* Warning for max threshold */}
                               {currentThreshold === memberCount && memberCount > 0 && (
-                                <div className="rounded-lg border border-border bg-muted p-4">
+                                <div className="rounded-lg border border-border/[0.06] bg-muted p-4">
                                   <div className="flex items-start gap-3">
                                     <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
                                     <div className="space-y-1">
@@ -531,7 +531,7 @@ export default function CreateCliqForm() {
                   />
 
                   {/* Phase 3: Credential Gating Section */}
-                  <div className="space-y-4 border-t border-border pt-6">
+                  <div className="space-y-4 border-t border-border/[0.06] pt-6">
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
                         <h4 className="flex items-center gap-2 text-base font-semibold text-foreground">
@@ -625,7 +625,7 @@ export default function CreateCliqForm() {
                   </div>
 
                   {/* Summary Card */}
-                  <div className="space-y-3 rounded-xl border border-border bg-muted/30 p-4">
+                  <div className="space-y-3 rounded-xl border border-border/[0.06] bg-muted/30 p-4">
                     <h4 className="text-sm font-semibold text-foreground">CLIQ Summary</h4>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
@@ -660,7 +660,7 @@ export default function CreateCliqForm() {
                   </div>
 
                   {/* Navigation & Submit */}
-                  <div className="flex justify-between border-t border-border pt-4">
+                  <div className="flex justify-between border-t border-border/[0.06] pt-4">
                     <Button
                       type="button"
                       variant="ghost"
