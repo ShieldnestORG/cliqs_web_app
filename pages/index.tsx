@@ -7,13 +7,12 @@ export default function Home() {
   const { chain } = useChains();
 
   useEffect(() => {
-    // If we have a chain in context, redirect to its dashboard
-    if (chain?.registryName) {
-      router.replace(`/${chain.registryName}/dashboard`);
-    } else {
-      // Fallback to cosmoshub dashboard as the default entry point
-      router.replace("/cosmoshub/dashboard");
-    }
+    // On a cold load the chain context is still emptyChain (registryName ""), so this
+    // effect runs before the chain resolves. Fall back to the deployment's configured
+    // chain instead of a hardcoded one, or a first visit lands on the wrong network.
+    const registryName =
+      chain?.registryName || process.env.NEXT_PUBLIC_REGISTRY_NAME || "cosmoshub";
+    router.replace(`/${registryName}/dashboard`);
   }, [chain, router]);
 
   return (
