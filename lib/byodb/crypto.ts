@@ -261,16 +261,14 @@ export async function decryptCredential(
   throw new Error(`Unknown credential encoding level: ${level}`);
 }
 
-/**
- * Generate a fingerprint (SHA-256 hash) of a connection string.
- * Used to verify correctness without storing the plaintext.
+/*
+ * A fingerprintConnectionString() helper used to live here: an unsalted,
+ * truncated SHA-256 over the whole connection string. It was persisted next to
+ * the masked URI and read by nothing, which handed anyone with a localStorage
+ * read an offline verifier for password guesses — one hash per guess, against a
+ * credential the KDF otherwise protects at 600k PBKDF2 iterations. Do not
+ * reintroduce a verifier derived from the credential.
  */
-export async function fingerprintConnectionString(connectionString: string): Promise<string> {
-  const subtle = getSubtleCrypto();
-  const encoder = new TextEncoder();
-  const hash = await subtle.digest("SHA-256", encoder.encode(connectionString));
-  return toHex(hash).slice(0, 16); // 8-byte fingerprint is plenty
-}
 
 /**
  * Sanitize a MongoDB connection string for display (mask password).
