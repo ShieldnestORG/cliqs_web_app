@@ -193,23 +193,33 @@ export const getDbNonce = async (address: string, chainId: string) => {
 // Transaction Privacy / Wipe Operations
 // ============================================================================
 
-export type WipeMode = "completed" | "all";
+export type WipeMode = "completed" | "all" | "multisig";
 
 export type WipeResult = {
   readonly success: boolean;
   readonly mode: WipeMode;
   readonly deletedTransactions: number;
   readonly deletedSignatures: number;
+  /** Only set for mode "multisig" */
+  readonly deletedMultisigs?: number;
   /** Shown when using local JSON DB; wipe not supported, user must delete data file manually */
   readonly localDbNotice?: string;
 };
 
+export type WipeTxsBody = {
+  readonly multisigAddress: string;
+  readonly chainId: string;
+  readonly mode: WipeMode;
+  readonly signature: StdSignature;
+  readonly chain: ChainInfo;
+};
 export const wipeTransactions = async (
   multisigAddress: string,
-  chainId: string,
+  chain: ChainInfo,
   mode: WipeMode,
+  signature: StdSignature,
 ): Promise<WipeResult> => {
-  const body = { multisigAddress, chainId, mode };
+  const body: WipeTxsBody = { multisigAddress, chainId: chain.chainId, mode, signature, chain };
   const result: WipeResult = await requestJson("/api/transaction/wipe", { body });
   return result;
 };
@@ -222,11 +232,18 @@ export type ExportResult = {
   readonly transactions: readonly object[];
 };
 
+export type ExportTxsBody = {
+  readonly multisigAddress: string;
+  readonly chainId: string;
+  readonly signature: StdSignature;
+  readonly chain: ChainInfo;
+};
 export const exportTransactions = async (
   multisigAddress: string,
-  chainId: string,
+  chain: ChainInfo,
+  signature: StdSignature,
 ): Promise<ExportResult> => {
-  const body = { multisigAddress, chainId };
+  const body: ExportTxsBody = { multisigAddress, chainId: chain.chainId, signature, chain };
   const result: ExportResult = await requestJson("/api/transaction/export", { body });
   return result;
 };
