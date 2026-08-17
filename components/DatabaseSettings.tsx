@@ -463,9 +463,13 @@ export default function DatabaseSettings() {
   };
 
   const securityLevelBadge = (level: SecurityLevel) => {
-    const labels = ["Base (HTTPS only)", "Passphrase + AES-256", "Wallet Signature + AES-256"];
+    // Level 0 must read as a warning here. This badge is the only indicator a
+    // user who already chose a level ever sees — the picker is hidden once a
+    // credential is configured — and "HTTPS only" described transport, which
+    // says nothing about the credential being reversible at rest.
+    const labels = ["Not encrypted at rest", "Passphrase + AES-256", "Wallet Signature + AES-256"];
     const variants: Array<"secondary" | "default" | "destructive"> = [
-      "secondary",
+      "destructive",
       "default",
       "default",
     ];
@@ -507,6 +511,14 @@ export default function DatabaseSettings() {
             </AlertTitle>
             <AlertDescription className="space-y-2">
               <p className="font-mono text-sm">{status.meta.maskedUri}</p>
+              {status.meta.securityLevel === 0 && (
+                <p className="text-sm text-destructive">
+                  This connection string is stored base64-encoded, which anyone with access to this
+                  browser profile can reverse. To encrypt it, choose &ldquo;Disconnect Custom
+                  Database&rdquo; below and add it again with Level 1 or 2 — your database and its
+                  contents are not affected, only the credential stored here.
+                </p>
+              )}
               <div className="mt-2 flex flex-wrap gap-2">
                 {securityLevelBadge(status.meta.securityLevel)}
                 {status.meta.provisioned && (
