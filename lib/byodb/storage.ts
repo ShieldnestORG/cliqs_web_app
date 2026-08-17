@@ -9,8 +9,14 @@
  *   - Attach to API requests via custom header
  *   - Track connection status
  *
- * The credential is never stored in plaintext on disk. It is only decrypted
- * in memory when needed for an API call and transmitted over HTTPS.
+ * At levels 1 and 2 the credential is encrypted at rest (AES-256-GCM, key
+ * derived by PBKDF2) and only decrypted into memory when needed for an API
+ * call. Level 0 is base64 only — reversible by anyone who can read
+ * localStorage — so it is an explicit opt-out, not protection.
+ *
+ * Nothing derived from the credential may be stored alongside it. A verifier
+ * such as a hash lets an attacker who can read localStorage confirm password
+ * guesses offline, which bypasses the KDF entirely; see stripLegacyFields.
  */
 
 import {
@@ -21,7 +27,6 @@ import {
   encryptLevel2,
   decryptCredential,
   detectLevel,
-  fingerprintConnectionString,
   maskConnectionString,
 } from "./crypto";
 
@@ -42,8 +47,6 @@ export interface ByodbMeta {
   enabled: boolean;
   /** Security level used to protect the credential */
   securityLevel: SecurityLevel;
-  /** SHA-256 fingerprint of the connection string (first 16 hex chars) */
-  fingerprint: string;
   /** Masked connection string for display (password hidden) */
   maskedUri: string;
   /** ISO timestamp when credential was last saved */
@@ -70,11 +73,38 @@ let _decryptedUri: string | null = null;
 // Meta helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * Earlier versions stored a `fingerprint`: an unsalted, truncated SHA-256 of the
+ * full connection string, written at every security level and read by nothing.
+ * Beside `maskedUri` — which reveals every field except the password — it let
+ * anyone who could read localStorage verify password guesses at one hash per
+ * guess, instead of attacking AES-GCM through PBKDF2 at 600k iterations. Browsers
+ * that saved a credential before this change still hold it, so strip it on read
+ * and persist the cleaned copy.
+ */
+function stripLegacyFields(raw: Record<string, unknown>): {
+  meta: ByodbMeta;
+  changed: boolean;
+} {
+  const { fingerprint, ...rest } = raw as Record<string, unknown> & { fingerprint?: unknown };
+  return { meta: rest as unknown as ByodbMeta, changed: fingerprint !== undefined };
+}
+
 function readMeta(): ByodbMeta | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem(META_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    const { meta, changed } = stripLegacyFields(JSON.parse(raw));
+    if (changed) {
+      // Rewrite immediately: leaving it in place keeps the oracle on disk.
+      try {
+        localStorage.setItem(META_KEY, JSON.stringify(meta));
+      } catch {
+        // A failed rewrite must not break reading the credential.
+      }
+    }
+    return meta;
   } catch {
     return null;
   }
@@ -129,12 +159,11 @@ export async function saveCredential(
   // Keep plaintext in memory for immediate use
   _decryptedUri = normalizedUri;
 
-  // Store metadata (non-sensitive)
-  const fingerprint = await fingerprintConnectionString(normalizedUri);
+  // Store metadata. Nothing derived from the credential goes in here — see the
+  // file header and stripLegacyFields.
   const meta: ByodbMeta = {
     enabled: true,
     securityLevel: level,
-    fingerprint,
     maskedUri: maskConnectionString(normalizedUri),
     savedAt: new Date().toISOString(),
     lastTestedAt: null,
@@ -288,5 +317,5 @@ export function withByodb<T extends { headers?: Record<string, string> }>(config
 // Re-exports for convenience
 // ---------------------------------------------------------------------------
 
-export { maskConnectionString, fingerprintConnectionString } from "./crypto";
+export { maskConnectionString } from "./crypto";
 export type { SecurityLevel } from "./crypto";

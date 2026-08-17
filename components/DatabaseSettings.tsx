@@ -878,8 +878,9 @@ export default function DatabaseSettings() {
                       Level 0: Base Protection
                     </Label>
                     <p className="text-xs text-muted-foreground">
-                      Credentials encoded in localStorage, transmitted over HTTPS. No unlock step
-                      needed. Good for development or trusted devices.
+                      <strong>Not encrypted.</strong> Base64-encoded in localStorage, which anyone
+                      with access to this browser profile can reverse. No unlock step needed. Use
+                      only for development or a device you fully trust.
                     </p>
                   </div>
                 </div>
@@ -985,9 +986,22 @@ export default function DatabaseSettings() {
               <AlertTitle>Privacy & Security</AlertTitle>
               <AlertDescription className="space-y-1 text-sm">
                 <p>
-                  Your connection string is encrypted locally and only sent to our server (over
-                  HTTPS) during API calls. We never log, store, or cache your credentials
-                  server-side.
+                  {securityLevel === 0 ? (
+                    <>
+                      At Level 0 your connection string is <strong>encoded, not encrypted</strong> —
+                      anyone who can read this browser&apos;s storage can recover it. Choose Level 1
+                      or 2 to encrypt it at rest.
+                    </>
+                  ) : (
+                    <>
+                      Your connection string is encrypted at rest in this browser (AES-256-GCM) and
+                      decrypted only in memory when needed.
+                    </>
+                  )}{" "}
+                  It is sent to our server over HTTPS on each API call, because the server makes the
+                  database connection on your behalf — so the server necessarily sees it in use. We
+                  never log it or store it server-side; connections are pooled in memory only, for
+                  up to 30 seconds.
                 </p>
                 <p>
                   When BYODB is active, all data is read/written exclusively to your database. Our

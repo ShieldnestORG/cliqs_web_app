@@ -38,7 +38,8 @@ const MAX_CONNECTIONS = 20;
 const CLEANUP_INTERVAL_MS = 15_000;
 
 // ---------------------------------------------------------------------------
-// Cache (keyed by SHA-256 fingerprint of connection string)
+// Cache (keyed by a non-cryptographic djb2 hash of the connection string —
+// see quickHash below; this is map keying only, never a security boundary)
 // ---------------------------------------------------------------------------
 
 const cache = new Map<string, CachedConnection>();

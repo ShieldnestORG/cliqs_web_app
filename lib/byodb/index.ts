@@ -20,7 +20,6 @@ export {
   withByodb,
   BYODB_HEADER_NAME,
   maskConnectionString,
-  fingerprintConnectionString,
   type ByodbMeta,
   type ByodbStatus,
   type SecurityLevel,

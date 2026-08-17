@@ -7,6 +7,7 @@ Index for `docs/security/`.
 | Doc | What it covers |
 | --- | --- |
 | [SOC2-GAP-ASSESSMENT.md](SOC2-GAP-ASSESSMENT.md) | Canonical security document. Security-TSC technical-controls gap assessment: nine control domains, the full 38-route API inventory with an auth column, what PR #31 remediated, and the prioritized follow-up list (L1–L6 plus CSP). |
+| [AUTHORIZATION-REVIEW-DIARY.md](AUTHORIZATION-REVIEW-DIARY.md) | Working diary for the L1 uniform-authorization attempt. Why branch `fix/flow-security-soc2` is **held from release** despite green gates, the four measured breaks and their shared root cause in the nonce design, attributed owner decisions, and a running correction log. Not an assessment — a record. |
 
 Security facts documented elsewhere:
 
