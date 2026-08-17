@@ -1,6 +1,7 @@
 import { cancelTransaction, getTransaction, updateTxHash } from "@/graphql/transaction";
 import { UpdateDbTxHashBody } from "@/lib/api";
 import { withByodbMiddleware } from "@/lib/byodb/middleware";
+import { checkRateLimit, getClientIdentifier, rateLimitKey } from "@/lib/rateLimit";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 const endpointErrMsg = "Failed to update transaction";
@@ -10,6 +11,29 @@ async function apiTransactionActions(req: NextApiRequest, res: NextApiResponse) 
 
   if ((req.method !== "POST" && req.method !== "GET") || typeof txId !== "string" || !txId) {
     res.status(405).end();
+    return;
+  }
+
+  // Rate limit BOTH methods, and do it before the GET branch below.
+  //
+  // The GET is unauthenticated and returns the full transaction — dataJSON
+  // (messages, amounts, recipients, memo) plus every collected signature. With
+  // no limit, an attacker holding or guessing transaction ids can sweep them
+  // for free, one request per id. A limit does not make the read private; it
+  // makes bulk harvesting cost something, which is the cheap half of the fix.
+  //
+  // This is deliberately NOT a fix for the disclosure itself. Gating this route
+  // and stopping the transaction page's getServerSideProps from embedding the
+  // same payload in server-rendered HTML is tracked separately — that change
+  // alters who can open a transaction link, which is a product decision, and it
+  // must not land before Ledger holders can authenticate at all.
+  const limit = checkRateLimit(
+    rateLimitKey("/api/transaction/[transactionID]", getClientIdentifier(req)),
+    { limit: 30, windowMs: 60_000 },
+  );
+  if (!limit.allowed) {
+    res.setHeader("Retry-After", String(limit.retryAfterSeconds));
+    res.status(429).send("Too many requests");
     return;
   }
 
