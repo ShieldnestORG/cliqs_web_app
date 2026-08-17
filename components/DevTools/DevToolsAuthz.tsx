@@ -21,6 +21,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import ConfirmIrreversibleDialog from "./ConfirmIrreversibleDialog";
+import { IntentSummary, summariseAuthzGrant } from "./intentSummary";
 import { SelectedAccount } from "./types";
 
 type AuthzMode = "grant" | "revoke" | "execute";
@@ -76,6 +78,7 @@ export default function DevToolsAuthz({
   const [existingGrants, setExistingGrants] = useState<ExistingGrant[]>([]);
   const [selectedRevoke, setSelectedRevoke] = useState<Set<string>>(new Set());
   const [loadingGrants, setLoadingGrants] = useState(false);
+  const [pendingGrant, setPendingGrant] = useState<IntentSummary | null>(null);
 
   // Execute mode state
   const [execMsgType, setExecMsgType] = useState(EXEC_MSG_TYPES[0]);
@@ -146,10 +149,49 @@ export default function DevToolsAuthz({
     return getAminoSigner();
   };
 
+  // Single source of the grant message: the confirmation summary is read back out of
+  // the very object that gets signed, so the two cannot drift apart.
+  const buildGrantMsg = useCallback(() => {
+    if (!actorAddress || !granteeAddress || !activeMsgType) return null;
+    const expiryMs = new Date(`${expirationDate}T00:00:00Z`).getTime();
+    if (!Number.isFinite(expiryMs)) return null;
+
+    return {
+      typeUrl: "/cosmos.authz.v1beta1.MsgGrant",
+      value: MsgGrant.fromPartial({
+        granter: actorAddress,
+        grantee: granteeAddress,
+        grant: {
+          authorization: {
+            typeUrl: "/cosmos.authz.v1beta1.GenericAuthorization",
+            value: GenericAuthorization.encode(
+              GenericAuthorization.fromPartial({ msg: activeMsgType }),
+            ).finish(),
+          },
+          expiration: Timestamp.fromPartial({
+            seconds: BigInt(Math.floor(expiryMs / 1000)),
+            nanos: 0,
+          }),
+        },
+      }),
+    };
+  }, [actorAddress, activeMsgType, expirationDate, granteeAddress]);
+
+  const requestGrant = () => {
+    if (!actorAddress || !isWalletSelected) return;
+    const grantMsg = buildGrantMsg();
+    if (!grantMsg) {
+      toastError({ description: "Grantee, msg type and a valid expiration date are required" });
+      return;
+    }
+    setPendingGrant(summariseAuthzGrant(grantMsg.value));
+  };
+
   const handleGrant = async () => {
     if (!actorAddress || !isWalletSelected) return;
-    if (!granteeAddress || !activeMsgType) {
-      toastError({ description: "Grantee and msg type are required" });
+    const grantMsg = buildGrantMsg();
+    if (!grantMsg) {
+      toastError({ description: "Grantee, msg type and a valid expiration date are required" });
       return;
     }
 
@@ -171,25 +213,6 @@ export default function DevToolsAuthz({
           aminoTypes: authzAminoTypes,
         },
       );
-      const expirySeconds = BigInt(
-        Math.floor(new Date(`${expirationDate}T00:00:00Z`).getTime() / 1000),
-      );
-      const grantMsg = {
-        typeUrl: "/cosmos.authz.v1beta1.MsgGrant",
-        value: MsgGrant.fromPartial({
-          granter: actorAddress,
-          grantee: granteeAddress,
-          grant: {
-            authorization: {
-              typeUrl: "/cosmos.authz.v1beta1.GenericAuthorization",
-              value: GenericAuthorization.encode(
-                GenericAuthorization.fromPartial({ msg: activeMsgType }),
-              ).finish(),
-            },
-            expiration: Timestamp.fromPartial({ seconds: expirySeconds, nanos: 0 }),
-          },
-        }),
-      };
 
       const result = await client.signAndBroadcast(
         actorAddress,
@@ -578,7 +601,7 @@ export default function DevToolsAuthz({
             <Button
               variant="action"
               className="w-full gap-2"
-              onClick={handleGrant}
+              onClick={requestGrant}
               disabled={!canGrant || working}
             >
               {working ? (
@@ -871,6 +894,17 @@ export default function DevToolsAuthz({
             <p className="break-all font-mono text-xs text-muted-foreground">{lastTxHash}</p>
           </div>
         )}
+
+        <ConfirmIrreversibleDialog
+          summary={pendingGrant}
+          confirmLabel="Grant Permission"
+          working={working}
+          onCancel={() => setPendingGrant(null)}
+          onConfirm={() => {
+            setPendingGrant(null);
+            void handleGrant();
+          }}
+        />
       </CardContent>
     </Card>
   );
