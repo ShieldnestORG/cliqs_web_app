@@ -21,3 +21,13 @@ if (typeof window !== "undefined") {
     window.TextDecoder = TextDecoder;
   }
 }
+
+// Web Crypto (subtle) for BYODB credential tests.
+// jsdom exposes crypto.getRandomValues but not crypto.subtle, so AES-GCM and
+// PBKDF2 throw — which left security levels 1 and 2 untestable and let a real
+// bug in level 2 ship. defineProperty rather than assignment because jsdom's
+// `crypto` is a non-configurable accessor on some versions.
+if (typeof globalThis.crypto === "undefined" || typeof globalThis.crypto.subtle === "undefined") {
+  const { webcrypto } = require("node:crypto");
+  Object.defineProperty(globalThis, "crypto", { value: webcrypto, configurable: true });
+}

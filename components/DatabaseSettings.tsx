@@ -111,6 +111,16 @@ interface ImportResult {
   message?: string;
 }
 
+/**
+ * The Level 2 key is PBKDF2 over a wallet signature, so save and unlock must sign
+ * byte-identical messages. They were built independently at two call sites, which
+ * is how the chain name silently drifted between them; one builder makes that
+ * class of bug impossible.
+ */
+function byodbSignMessage(chainDisplayName: string): string {
+  return `BYODB credential encryption key for ${chainDisplayName}`;
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -270,12 +280,17 @@ export default function DatabaseSettings() {
         const keplr = window.keplr;
         if (!keplr) throw new Error("Keplr wallet not found");
 
-        const message = `BYODB credential encryption key for ${chain.chainDisplayName}`;
+        const message = byodbSignMessage(chain.chainDisplayName);
         const sig = await keplr.signArbitrary(chain.chainId, key.bech32Address, message);
         material = fromBase64(sig.signature);
       }
 
-      await saveCredential(connectionUri, securityLevel, material);
+      // Record the chain the signature was made against, so unlock can rebuild the
+      // identical message later instead of using whatever chain is selected then.
+      await saveCredential(connectionUri, securityLevel, material, {
+        chainId: chain.chainId,
+        chainDisplayName: chain.chainDisplayName,
+      });
 
       toastSuccess(
         "Database credentials saved",
@@ -316,8 +331,15 @@ export default function DatabaseSettings() {
         const keplr = window.keplr;
         if (!keplr) throw new Error("Keplr wallet not found");
 
-        const message = `BYODB credential encryption key for ${chain.chainDisplayName}`;
-        const sig = await keplr.signArbitrary(chain.chainId, key.bech32Address, message);
+        // Rebuild the message from the chain recorded at save time. Using the
+        // currently-selected chain would derive a different key and fail forever
+        // after a chain switch. Credentials saved before this was recorded have no
+        // stored chain, so fall back to the current one — which is exactly what
+        // they were saved with.
+        const signChainName = status.meta?.chainDisplayName ?? chain.chainDisplayName;
+        const signChainId = status.meta?.chainId ?? chain.chainId;
+        const message = byodbSignMessage(signChainName);
+        const sig = await keplr.signArbitrary(signChainId, key.bech32Address, message);
         material = fromBase64(sig.signature);
       }
 
@@ -334,6 +356,49 @@ export default function DatabaseSettings() {
       setUnlocking(false);
     }
   }, [status.meta, unlockPassphrase, chain]);
+
+  /**
+   * Re-encrypt an already-unlocked Level 0 credential under a passphrase. Never
+   * clears anything on failure: the existing credential must survive a mistyped
+   * or failed upgrade, or this becomes a way to lose database access.
+   */
+  const handleUpgradeToPassphrase = useCallback(async () => {
+    const current = getDecryptedUri();
+    if (!current) {
+      toastError({
+        title: "Credential not available",
+        description: "Reload the page and try again.",
+      });
+      return;
+    }
+    if (passphrase.length < 8) {
+      toastError({ title: "Passphrase must be at least 8 characters" });
+      return;
+    }
+    if (passphrase !== confirmPassphrase) {
+      toastError({ title: "Passphrases do not match" });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await saveCredential(current, 1, passphrase);
+      setPassphrase("");
+      setConfirmPassphrase("");
+      setStatus(getByodbStatus());
+      toastSuccess(
+        "Credential encrypted",
+        "You will be asked for this passphrase after each page reload.",
+      );
+    } catch (err) {
+      toastError({
+        title: "Could not encrypt the credential",
+        description: err instanceof Error ? err.message : "Your existing credential is unchanged.",
+      });
+    } finally {
+      setSaving(false);
+    }
+  }, [passphrase, confirmPassphrase]);
 
   const handleDisconnect = useCallback(() => {
     clearByodb();
@@ -581,14 +646,73 @@ export default function DatabaseSettings() {
                   )}
                   Sign to Unlock
                 </Button>
+                {status.meta?.chainDisplayName && (
+                  <p className="text-xs text-muted-foreground">
+                    The signature is tied to <strong>{status.meta.chainDisplayName}</strong>, the
+                    chain selected when you saved this credential. Signing while a different chain
+                    is selected produces a different key and will not unlock it.
+                  </p>
+                )}
               </div>
             )}
+
+            {/* Escape hatch. Without this, any credential that cannot be unlocked —
+                a forgotten passphrase, a wallet that signs a different message than
+                the one used at save — strands the user here with no way out, because
+                Disconnect lives in the unlocked block below. */}
+            <div className="border-t border-border/[0.06] pt-3">
+              <p className="mb-2 text-xs text-muted-foreground">
+                Can&apos;t unlock? Disconnecting removes the stored credential from this browser
+                only. Your database and its contents are untouched, and you can reconnect by
+                entering the connection string again.
+              </p>
+              <Button variant="outline" size="sm" onClick={handleDisconnect}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Disconnect Custom Database
+              </Button>
+            </div>
           </div>
         )}
 
         {/* Connected Actions (shown when unlocked) */}
         {status.enabled && !status.needsUnlock && (
           <div className="space-y-4">
+            {/* Non-destructive upgrade off Level 0. Previously the only route to
+                encryption was Disconnect + re-paste the connection string, so the
+                honest warning had no affordance attached to it. At Level 0 the
+                plaintext is already unlocked in memory, so re-encrypting needs no
+                re-entry. */}
+            {status.meta?.securityLevel === 0 && (
+              <div className="space-y-2 rounded-xl border border-destructive/30 p-4">
+                <p className="text-sm font-semibold">Encrypt this credential</p>
+                <p className="text-xs text-muted-foreground">
+                  Set a passphrase to encrypt the stored connection string at rest. You will not
+                  need to re-enter the connection string. You will be asked for this passphrase
+                  after each page reload, and you can disconnect at any time.
+                </p>
+                <Input
+                  type="password"
+                  placeholder="Passphrase (min 8 characters)"
+                  value={passphrase}
+                  onChange={(e) => setPassphrase(e.target.value)}
+                />
+                <Input
+                  type="password"
+                  placeholder="Confirm passphrase"
+                  value={confirmPassphrase}
+                  onChange={(e) => setConfirmPassphrase(e.target.value)}
+                />
+                <Button size="sm" onClick={handleUpgradeToPassphrase} disabled={saving}>
+                  {saving ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <KeyRound className="mr-2 h-4 w-4" />
+                  )}
+                  Encrypt with a passphrase
+                </Button>
+              </div>
+            )}
+
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" onClick={handleTestConnection} disabled={testing}>

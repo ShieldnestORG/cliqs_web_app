@@ -49,6 +49,17 @@ export interface ByodbMeta {
   securityLevel: SecurityLevel;
   /** Masked connection string for display (password hidden) */
   maskedUri: string;
+  /**
+   * Chain selected when the credential was saved. Level 2 derives its key from a
+   * wallet signature over a message containing the chain's display name, so the
+   * unlock must rebuild that message from these stored values rather than from
+   * whatever chain happens to be selected later — otherwise switching chains
+   * produces a different key and the credential can never be opened again.
+   * Absent on credentials saved before this was recorded; callers fall back to
+   * the current chain in that case.
+   */
+  chainId?: string;
+  chainDisplayName?: string;
   /** ISO timestamp when credential was last saved */
   savedAt: string;
   /** ISO timestamp of last successful connection test */
@@ -131,6 +142,11 @@ export async function saveCredential(
   connectionString: string,
   level: SecurityLevel,
   material?: string | Uint8Array,
+  /**
+   * Chain the key material was derived against. Required in practice for level 2,
+   * where the unlock has to reproduce the exact signed message; ignored otherwise.
+   */
+  chain?: { chainId: string; chainDisplayName: string },
 ): Promise<ByodbMeta> {
   // Strip trailing newlines/whitespace common when pasting from MongoDB Atlas
   const normalizedUri = connectionString.replace(/[\n\r]/g, "").trim();
@@ -165,6 +181,7 @@ export async function saveCredential(
     enabled: true,
     securityLevel: level,
     maskedUri: maskConnectionString(normalizedUri),
+    ...(chain ? { chainId: chain.chainId, chainDisplayName: chain.chainDisplayName } : {}),
     savedAt: new Date().toISOString(),
     lastTestedAt: null,
     provisioned: false,

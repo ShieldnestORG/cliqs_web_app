@@ -538,9 +538,9 @@ export const userJourneys: UserJourney[] = [
         title: "Choose Security Level",
         description: "Select how your database credentials are protected.",
         details: [
-          "Level 0 (Base): Credentials stored encoded in localStorage. HTTPS provides transport security.",
+          "Level 0 (Base): NOT encrypted — base64-encoded only. Anyone who can read this browser's storage can recover the credential. HTTPS protects it in transit, not at rest.",
           "Level 1 (Passphrase): Encrypted with AES-256-GCM using a passphrase you set. You'll need to enter the passphrase each session.",
-          "Level 2 (Wallet Signature): Encrypted using a key derived from your wallet signature. Most secure — requires wallet to unlock.",
+          "Level 2 (Wallet Signature): Encrypted with AES-256-GCM using a key derived from a wallet signature. The signature is tied to the chain selected when you save, so unlocking asks you to sign on that same chain.",
         ],
         tip: "Level 2 is recommended for production use. It ensures only your wallet can decrypt the database credentials.",
       },
