@@ -1,2 +1,5 @@
 # Shadcn ui components
 /components/ui/
+
+# Claude Code worktrees (other sessions' checkouts — never format them)
+/.claude/

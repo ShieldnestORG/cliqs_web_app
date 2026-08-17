@@ -47,3 +47,6 @@ next-env.d.ts
 
 # Log files
 *.log
+
+# Claude Code worktrees (other sessions' checkouts)
+.claude/worktrees/

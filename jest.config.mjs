@@ -26,6 +26,7 @@ const config = {
   testPathIgnorePatterns: [
     "/node_modules/",
     "/.next/",
+    "/.claude/",
     "/__tests__/helpers.ts",
     "/__tests__/mocks/",
     "/__tests__/adapters/",
