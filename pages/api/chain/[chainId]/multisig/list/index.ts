@@ -1,6 +1,5 @@
 import { getBelongedMultisigs, getCreatedMultisigs } from "@/graphql/multisig";
 import type { DbMultisig } from "@/graphql/multisig";
-import { getNonce, incrementNonce } from "@/graphql/nonce";
 import {
   discoverMultisigsWhereMember,
   registerDiscoveredMultisigs,
@@ -8,7 +7,6 @@ import {
 import { GetDbUserMultisigsBody } from "@/lib/api";
 import { withByodbMiddleware } from "@/lib/byodb/middleware";
 import { ensureDbReady } from "@/lib/dbInit";
-import { verifyKeplrSignature } from "@/lib/keplr";
 import { decodeSignature, pubkeyToAddress } from "@cosmjs/amino";
 import { toBase64 } from "@cosmjs/encoding";
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -52,32 +50,27 @@ async function apiListMultisigs(req: NextApiRequest, res: NextApiResponse) {
     let pubkey: string;
 
     if (body.signature) {
-      // Verified request: extract address and pubkey from signature
+      // Read the caller's identity out of the signature. We deliberately do NOT
+      // verify it, and deliberately do NOT touch the nonce.
+      //
+      // This route grants nothing that the unverified branch below does not
+      // already grant for the same public inputs: both converge on the same
+      // response, and everything returned is derivable from chain data by
+      // discoverMultisigsWhereMember, which this route calls itself. So a
+      // verification step here bought no access control.
+      //
+      // It did, however, cost one: the previous implementation advanced the
+      // shared per-(chainId,address) nonce BEFORE verifying, on a route that is
+      // unauthenticated and unrate-limited, with `address` derived from a
+      // caller-supplied pub_key. Any stranger could therefore burn any member's
+      // nonce at will and invalidate an ADR-36 proof that member had already
+      // signed but not yet spent — a remote, unauthenticated denial of signing,
+      // which surfaces to the victim as an unexplained 401 mid-broadcast.
+      //
+      // If this route ever needs real authorization, it must gate on a verified
+      // proof and reject on failure. Consuming the nonce before verification,
+      // then continuing regardless, is the one shape it must not take.
       address = pubkeyToAddress(body.signature.pub_key, body.chain.addressPrefix);
-
-      // Verify nonce and signature to prevent replay attacks.
-      // If verification fails, fall through to use the pubkey from
-      // the signature directly (still proves key ownership).
-      let signatureVerified = false;
-      try {
-        const dbNonce = await getNonce(chainId, address);
-        const incrementedNonce = await incrementNonce(chainId, address);
-
-        if (incrementedNonce === dbNonce + 1) {
-          signatureVerified = await verifyKeplrSignature(body.signature, body.chain, dbNonce);
-        }
-      } catch (e) {
-        console.log(
-          `[list] Nonce verification issue for ${address}:`,
-          e instanceof Error ? e.message : e,
-        );
-      }
-
-      if (!signatureVerified) {
-        console.log(
-          `[list] Signature verification failed for ${address}, using pubkey from signature directly`,
-        );
-      }
 
       const { pubkey: decodedPubKey } = decodeSignature(body.signature);
       pubkey = toBase64(decodedPubKey);
