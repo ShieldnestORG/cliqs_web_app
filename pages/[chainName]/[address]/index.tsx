@@ -44,6 +44,7 @@ import { useChains } from "@/context/ChainsContext";
 import BalancesTable from "@/components/dataViews/BalancesTable";
 import ListMultisigTxs from "@/components/dataViews/ListMultisigTxs";
 import ContractMultisigDashboard from "@/components/dataViews/ContractMultisigDashboard";
+import TransactionPrivacy from "@/components/dataViews/TransactionPrivacy";
 import { useMultisigType } from "@/lib/hooks/useMultisigType";
 import {
   Breadcrumb,
@@ -540,26 +541,31 @@ export default function CliqDashboardPage() {
         {/* Transactions Tab */}
         <TabsContent value="transactions" className="mt-6">
           {hostedMultisig.hosted === "db+chain" && cliqAddress && (
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Transactions</CardTitle>
-                  <CardDescription>View and manage all transactions for this Cliq.</CardDescription>
-                </div>
-                <Link href={`/${chain.registryName}/${cliqAddress}/transaction/new`}>
-                  <Button variant="action-outline" size="sm" className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    New
-                  </Button>
-                </Link>
-              </CardHeader>
-              <CardContent>
-                <ListMultisigTxs
-                  multisigAddress={cliqAddress}
-                  multisigThreshold={Number(pubkey?.value.threshold || 1)}
-                />
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Transactions</CardTitle>
+                    <CardDescription>
+                      View and manage all transactions for this Cliq.
+                    </CardDescription>
+                  </div>
+                  <Link href={`/${chain.registryName}/${cliqAddress}/transaction/new`}>
+                    <Button variant="action-outline" size="sm" className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      New
+                    </Button>
+                  </Link>
+                </CardHeader>
+                <CardContent>
+                  <ListMultisigTxs
+                    multisigAddress={cliqAddress}
+                    multisigThreshold={Number(pubkey?.value.threshold || 1)}
+                  />
+                </CardContent>
+              </Card>
+              <TransactionPrivacy multisigAddress={cliqAddress} memberCount={memberCount} />
+            </div>
           )}
         </TabsContent>
 

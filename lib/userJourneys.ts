@@ -32,6 +32,7 @@ export interface UserJourney {
   title: string;
   subtitle: string;
   description: string;
+  highlights: string[];
   icon: LucideIcon;
   category: "create" | "transact" | "manage";
   estimatedTime: string;
@@ -55,6 +56,12 @@ export const userJourneys: UserJourney[] = [
     subtitle: "Traditional Cosmos SDK multisig",
     description:
       "The most secure option for cold storage and treasury management. Uses public keys to derive the multisig address. Ideal when members have hardware wallets.",
+    highlights: [
+      "Classic Cosmos SDK multisig — the address is derived from members' public keys.",
+      "The most secure option for cold storage and treasury management.",
+      "Ideal when members sign with hardware wallets like Ledger.",
+      "The address changes if the member set changes.",
+    ],
     icon: Key,
     category: "create",
     estimatedTime: "5-10 min",
@@ -137,6 +144,12 @@ export const userJourneys: UserJourney[] = [
     subtitle: "CW3-Fixed smart contract multisig",
     description:
       "A guided wizard that uploads and deploys a CW3-Fixed contract for you. Provides a stable address that never changes, with weighted voting. No Code IDs or technical knowledge needed — just fill in the form.",
+    highlights: [
+      "A guided wizard uploads and deploys a CW3-Fixed contract for you.",
+      "Stable contract address that never changes.",
+      "Weighted voting — some members' votes can count for more.",
+      "No Code IDs or technical knowledge needed; requires a CosmWasm chain.",
+    ],
     icon: FileCode2,
     category: "create",
     estimatedTime: "5-10 min",
@@ -223,6 +236,12 @@ export const userJourneys: UserJourney[] = [
     subtitle: "CW3-Flex + CW4-Group dynamic multisig",
     description:
       "A guided wizard that uploads and deploys both CW4-Group and CW3-Flex contracts. Members can be added or removed via proposals without changing the multisig address. The app handles all contract setup automatically.",
+    highlights: [
+      "Deploys CW4-Group + CW3-Flex contracts in one guided flow.",
+      "Add or remove members later via governance proposals.",
+      "The multisig address never changes as membership evolves.",
+      "Costs more gas than Fixed — it uploads two contracts.",
+    ],
     icon: UserPlus,
     category: "create",
     estimatedTime: "10-15 min",
@@ -317,6 +336,12 @@ export const userJourneys: UserJourney[] = [
     subtitle: "For PubKey multisigs",
     description:
       "Walk through creating a new transaction on a PubKey multisig, collecting signatures from members, and broadcasting it to the chain.",
+    highlights: [
+      "Create a transaction: Send, Delegate, Vote, IBC Transfer, and more.",
+      "Share the link — members sign in any order, off-chain.",
+      "A progress tracker shows signatures collected vs. threshold.",
+      "Broadcast to the chain once the threshold is met.",
+    ],
     icon: PenTool,
     category: "transact",
     estimatedTime: "5-15 min (per signer)",
@@ -396,6 +421,12 @@ export const userJourneys: UserJourney[] = [
     subtitle: "For Contract (Fixed/Flex) multisigs",
     description:
       "Submit a proposal to your contract-based multisig. Members vote on-chain and the proposal executes automatically when the threshold is met.",
+    highlights: [
+      "Submit an on-chain proposal: Send Tokens or custom CosmWasm JSON.",
+      "Members vote Yes, No, or Abstain — votes are weighted.",
+      "Executes automatically once vote weight meets the threshold.",
+      "Fails if the voting period expires before the threshold is met.",
+    ],
     icon: Radio,
     category: "transact",
     estimatedTime: "5-10 min",
@@ -466,6 +497,12 @@ export const userJourneys: UserJourney[] = [
     subtitle: "Bring Your Own Database (BYODB)",
     description:
       "Configure your own MongoDB instance for complete data sovereignty. Your multisig data, transactions, and signatures are stored in your own database instead of the shared instance.",
+    highlights: [
+      "Store multisigs, transactions, and signatures in your own MongoDB.",
+      "Complete data sovereignty — nothing lives on the shared instance.",
+      "Three credential security levels, up to wallet-signature encryption.",
+      "MongoDB Atlas free tier is plenty — test and provision from Settings.",
+    ],
     icon: Database,
     category: "manage",
     estimatedTime: "10-15 min",
@@ -548,6 +585,11 @@ export const userJourneys: UserJourney[] = [
     subtitle: "Look up existing multisigs",
     description:
       "Find an existing multisig by its address, view its details, and add it to your dashboard for quick access.",
+    highlights: [
+      "Look up any existing multisig by its bech32 address.",
+      "See members, threshold, balances, and recent activity.",
+      "Found multisigs are added to 'My CLIQS' for quick access.",
+    ],
     icon: Search,
     category: "manage",
     estimatedTime: "2-5 min",
@@ -592,6 +634,12 @@ export const userJourneys: UserJourney[] = [
     subtitle: "Keplr or Ledger setup",
     description:
       "Get started by connecting your Cosmos wallet. CLIQS supports both Keplr browser extension and Ledger hardware wallets for maximum flexibility and security.",
+    highlights: [
+      "Connect with the Keplr extension or a Ledger hardware wallet.",
+      "Pick your chain — Cosmos Hub, Osmosis, Juno, Coreum, and more.",
+      "Your address appears in the sidebar once connected.",
+      "Ledger gives hardware-level key security for signing.",
+    ],
     icon: Wallet,
     category: "manage",
     estimatedTime: "2-5 min",

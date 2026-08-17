@@ -35,7 +35,7 @@ export default function ChainDigest({ chain, simplify }: ChainItemProps) {
           </Avatar>
           {!simplify && isConnected && (
             <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[hsl(var(--accent-green))] shadow-md">
-              <CheckCircle2 className="h-3 w-3 text-white" />
+              <CheckCircle2 className="h-3 w-3 text-primary-foreground" />
             </div>
           )}
         </div>

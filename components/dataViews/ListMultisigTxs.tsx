@@ -4,6 +4,7 @@ import { DbTransaction } from "@/graphql";
 import { getDbMultisigTxs, getPendingDbTxs } from "@/lib/api";
 import {
   categorizeTransaction,
+  MsgChipTone,
   msgTypeCountsFromJson,
   TransactionCategory,
 } from "@/lib/txMsgHelpers";
@@ -20,6 +21,17 @@ interface ListMultisigTxsProps {
   readonly multisigAddress: string;
   readonly multisigThreshold: number;
 }
+
+/* Categorical tints for the msg-type chips. Must live here rather than in
+   lib/txMsgHelpers.ts: the Tailwind content globs only scan pages/ and
+   components/, so class strings in lib/ would be purged. */
+const chipToneClasses: Record<MsgChipTone, string> = {
+  success: "border-success/30 bg-success/10 text-success",
+  info: "border-info/30 bg-info/10 text-info",
+  purple: "border-purple-accent/30 bg-purple-accent/10 text-purple-accent",
+  destructive: "border-destructive/30 bg-destructive/10 text-destructive",
+  neutral: "border-border/50 bg-muted/50",
+};
 
 interface TransactionCardProps {
   tx: DbTransaction;
@@ -76,11 +88,12 @@ const TransactionCard = ({
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
-            {msgTypeCounts.map(({ msgType, count }) => (
+            {msgTypeCounts.map(({ msgType, count, tone }) => (
               <span
                 key={msgType}
                 className={cn(
-                  "rounded border border-border/50 bg-muted/50 px-2 py-1 font-mono text-xs font-medium",
+                  "rounded border px-2 py-1 font-mono text-xs font-medium",
+                  chipToneClasses[tone],
                   isCancelled && "line-through opacity-60",
                 )}
               >
@@ -106,11 +119,12 @@ const TransactionCard = ({
 
           {/* Message types - full width, no truncation */}
           <div className="flex min-w-0 flex-1 items-center gap-2">
-            {msgTypeCounts.map(({ msgType, count }) => (
+            {msgTypeCounts.map(({ msgType, count, tone }) => (
               <span
                 key={msgType}
                 className={cn(
-                  "whitespace-nowrap rounded border border-border/50 bg-muted/50 px-2 py-1 font-mono text-xs font-medium",
+                  "whitespace-nowrap rounded border px-2 py-1 font-mono text-xs font-medium",
+                  chipToneClasses[tone],
                   isCancelled && "line-through opacity-60",
                 )}
               >
@@ -414,7 +428,7 @@ export default function ListMultisigTxs({
           />
           <CategorySection
             title="Validator"
-            icon={<Shield className="h-4 w-4 text-green-accent" />}
+            icon={<Shield className="h-4 w-4 text-info" />}
             transactions={categorizedTxs.validator}
             multisigAddress={multisigAddress}
             multisigThreshold={multisigThreshold}

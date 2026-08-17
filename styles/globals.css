@@ -107,8 +107,16 @@
   * {
     @apply border-border/[0.06];
   }
+  /* Base canvas colour lives on <html> so the fixed GridSpotlight canvas
+     (z-index:-1, components/GridSpotlight.tsx) paints above it while staying
+     below all page content. body and the page wrappers are transparent so
+     the animated dot field shows through everywhere. */
+  html {
+    background-color: hsl(var(--background));
+  }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background-color: transparent;
     /* Geist is the Coherence Daddy typeface. The portal loads it via the geist
        npm package; this repo loads webfonts from the Google Fonts CDN in
        pages/_document.tsx, so Geist is requested there the same way. */
@@ -375,7 +383,7 @@
     @apply border-2;
     background: hsl(var(--accent-green));
     border-color: hsl(var(--accent-green));
-    color: white;
+    color: hsl(var(--primary-foreground));
   }
 
   .btn-tab-inactive {
@@ -765,15 +773,15 @@
   @apply relative z-10 mx-auto max-w-[1600px] px-[0.75in];
 }
 
-/* Dot Pattern Background */
+/* Dot Pattern Background.
+   Superseded by the animated GridSpotlight canvas (components/GridSpotlight.tsx,
+   mounted in pages/_app.tsx): the class now paints nothing so the fixed
+   z-index:-1 canvas shows through wherever the class is still applied
+   (e.g. components/layout/DashboardLayout.tsx). An opaque background here
+   would hide the canvas, and the old static 24px lattice would moiré with
+   the animated 26px one. */
 .bg-pattern-dots {
-  background-color: hsl(var(--background));
-  background-image: radial-gradient(
-    circle at center,
-    hsl(var(--muted-foreground) / 0.1) 1px,
-    transparent 1px
-  );
-  background-size: 24px 24px;
+  background: transparent;
 }
 
 /* Grid Pattern Background */

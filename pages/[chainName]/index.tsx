@@ -90,7 +90,7 @@ const ChainHomePage = () => {
       <Head title={`${chain.chainDisplayName || "Cosmos"} CLIQ Manager`} />
 
       {/* Hero Section */}
-      <section className="section-wrapper bg-pattern-dots">
+      <section className="section-wrapper">
         <div className="section-inner max-w-6xl space-y-6 py-8 text-center">
           {/* Label */}
           <div className="inline-flex items-center gap-2 rounded-full border border-border/[0.06] bg-muted/50 px-4 py-2 font-mono text-xs uppercase tracking-wider text-muted-foreground">
@@ -153,7 +153,7 @@ const ChainHomePage = () => {
                   variant="institutional"
                   bracket="green"
                   hover
-                  className="bg-card/80 backdrop-blur"
+                  className="bg-card/80 bg-none backdrop-blur"
                 >
                   <CardHeader className="space-y-4">
                     <div className="flex items-center gap-3">

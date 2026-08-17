@@ -230,10 +230,18 @@ export default function ProposalViewer({
   };
 
   const voteOptions = [
-    { label: "Yes", value: 1, color: "bg-success hover:bg-success/80" },
+    { label: "Yes", value: 1, color: "bg-success hover:bg-success/80 text-success-foreground" },
     { label: "Abstain", value: 2, color: "bg-muted hover:bg-muted/80 text-foreground" },
-    { label: "No", value: 3, color: "bg-destructive hover:bg-destructive/80" },
-    { label: "No with Veto", value: 4, color: "bg-warning hover:bg-warning/80" },
+    {
+      label: "No",
+      value: 3,
+      color: "bg-destructive hover:bg-destructive/80 text-destructive-foreground",
+    },
+    {
+      label: "No with Veto",
+      value: 4,
+      color: "bg-warning hover:bg-warning/80 text-warning-foreground",
+    },
   ];
 
   return (
@@ -346,7 +354,7 @@ export default function ProposalViewer({
                 <Button
                   key={option.value}
                   disabled={readOnly || isVoting}
-                  className={`${option.color} h-12 font-bold text-white`}
+                  className={`${option.color} h-12 font-bold`}
                   onClick={() =>
                     submitVote(selectedProposal?.proposalId as unknown as number, option.value)
                   }

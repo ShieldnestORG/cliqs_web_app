@@ -51,7 +51,7 @@ export default function BalancesTable({ walletAddress }: BalancesTableProps) {
               <TableCell className="w-0 pr-0">
                 <Avatar>
                   <AvatarImage src={logo} alt={`${coin.denom} logo`} className="h-auto" />
-                  <AvatarFallback className="text-white">
+                  <AvatarFallback className="text-foreground">
                     {coin.denom.slice(1, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>

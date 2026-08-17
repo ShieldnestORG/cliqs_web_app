@@ -16,7 +16,7 @@ const compat = new FlatCompat({
 
 export default [
   {
-    ignores: [".next/", "components/ui/", "next-env.d.ts", "scripts/"],
+    ignores: [".claude/", ".next/", "components/ui/", "next-env.d.ts", "scripts/"],
   },
   ...compat.extends("next/core-web-vitals", "plugin:@typescript-eslint/recommended", "prettier"),
   {
@@ -124,6 +124,7 @@ export default [
   {
     files: [
       "lib/byodb/dynamicMongo.ts",
+      "lib/byodb/hostValidation.ts",
       "lib/contract/wasmValidator.ts",
       "lib/msg.ts",
       "lib/tokenMetadata.ts",

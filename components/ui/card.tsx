@@ -18,8 +18,8 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, variant = "default", accent = "none", bracket = "none", hover = false, ...props }, ref) => {
     const variantClasses = {
-      default: "rounded-xl border bg-card text-card-foreground shadow",
-      institutional: "rounded-xl border-2 bg-card text-card-foreground transition-all duration-200",
+      default: "rounded-xl border bg-card bg-gradient-to-br from-card to-muted/30 text-card-foreground shadow",
+      institutional: "rounded-xl border-2 bg-card bg-gradient-to-br from-card to-muted/30 text-card-foreground transition-all duration-200",
       elevated: "rounded-xl border bg-card text-card-foreground shadow-lg",
       outline: "rounded-xl border-2 bg-transparent text-card-foreground",
     }

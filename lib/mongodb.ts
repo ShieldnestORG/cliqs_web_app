@@ -544,6 +544,43 @@ export const wipeAllTransactions = async (
 };
 
 /**
+ * Delete a multisig record and everything attached to it: signatures first,
+ * then transactions, then the multisigs row. Nonces are per-signer login
+ * counters shared across multisigs, so they are intentionally left in place.
+ *
+ * Danger: after this the multisig is invisible to ALL members until someone
+ * re-imports it (address/pubkeys are recoverable on-chain; name/description
+ * are not).
+ */
+export const deleteMultisig = async (
+  multisigId: string,
+): Promise<{
+  deletedTransactions: number;
+  deletedSignatures: number;
+  deletedMultisigs: number;
+}> => {
+  const db = await getDb();
+  if (!db) throw new Error("MongoDB not available");
+
+  const txCol = db.collection<MongoTransaction>(Collections.TRANSACTIONS);
+  const sigCol = db.collection<MongoSignature>(Collections.SIGNATURES);
+  const multisigCol = db.collection<MongoMultisig>(Collections.MULTISIGS);
+
+  const allTxs = await txCol.find({ creatorId: multisigId }).toArray();
+  const txIds = allTxs.map((t) => docId(t));
+
+  const sigResult = await sigCol.deleteMany({ transactionId: { $in: txIds } });
+  const txResult = await txCol.deleteMany({ creatorId: multisigId });
+  const multisigResult = await multisigCol.deleteOne({ _id: new ObjectId(multisigId) });
+
+  return {
+    deletedTransactions: txResult.deletedCount,
+    deletedSignatures: sigResult.deletedCount,
+    deletedMultisigs: multisigResult.deletedCount,
+  };
+};
+
+/**
  * Export all transactions for a multisig as a JSON array.
  * Users can download this before wiping.
  */

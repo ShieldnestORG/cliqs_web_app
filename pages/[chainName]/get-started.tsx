@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useChains } from "@/context/ChainsContext";
 import { userJourneys, journeyCategories, type UserJourney } from "@/lib/userJourneys";
@@ -59,40 +60,63 @@ function JourneyCard({
   const diff = difficultyConfig[journey.difficulty];
 
   return (
-    <Card
-      className="group cursor-pointer border-border/[0.06] bg-card transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg"
-      onClick={() => onSelect(journey)}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => e.key === "Enter" && onSelect(journey)}
-    >
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="rounded-xl bg-primary/10 p-2.5 text-primary transition-colors group-hover:bg-primary/20">
-            <Icon className="h-5 w-5" />
+    <HoverCard openDelay={300} closeDelay={100}>
+      <HoverCardTrigger asChild>
+        <Card
+          className="group cursor-pointer border-border/[0.06] bg-card transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg"
+          onClick={() => onSelect(journey)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === "Enter" && onSelect(journey)}
+        >
+          <CardHeader className="pb-3">
+            <div className="flex items-start justify-between">
+              <div className="rounded-xl bg-primary/10 p-2.5 text-primary transition-colors group-hover:bg-primary/20">
+                <Icon className="h-5 w-5" />
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
+            </div>
+            <CardTitle className="mt-3 text-base">{journey.title}</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="flex items-center gap-3 text-xs">
+              <span className={cn("rounded-full border px-2 py-0.5 font-medium", diff.color)}>
+                {diff.label}
+              </span>
+              <span className="flex items-center gap-1 text-muted-foreground">
+                <Clock className="h-3 w-3" />
+                {journey.estimatedTime}
+              </span>
+              <span className="flex items-center gap-1 text-muted-foreground">
+                <Signal className="h-3 w-3" />
+                {journey.steps.length} steps
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      </HoverCardTrigger>
+      <HoverCardContent
+        side="top"
+        align="center"
+        sideOffset={8}
+        className="w-96 border-border/[0.06] bg-card/90 shadow-lg backdrop-blur-md"
+      >
+        <div className="space-y-3">
+          <div>
+            <p className="text-sm font-semibold text-foreground">{journey.title}</p>
+            <p className="text-xs text-muted-foreground">{journey.subtitle}</p>
           </div>
-          <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
+          <ul className="space-y-1.5">
+            {journey.highlights.map((point, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                <span className="mt-0.5 text-primary">•</span>
+                {point}
+              </li>
+            ))}
+          </ul>
         </div>
-        <CardTitle className="mt-3 text-base">{journey.title}</CardTitle>
-        <CardDescription className="text-xs">{journey.subtitle}</CardDescription>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <p className="mb-4 line-clamp-2 text-sm text-muted-foreground">{journey.description}</p>
-        <div className="flex items-center gap-3 text-xs">
-          <span className={cn("rounded-full border px-2 py-0.5 font-medium", diff.color)}>
-            {diff.label}
-          </span>
-          <span className="flex items-center gap-1 text-muted-foreground">
-            <Clock className="h-3 w-3" />
-            {journey.estimatedTime}
-          </span>
-          <span className="flex items-center gap-1 text-muted-foreground">
-            <Signal className="h-3 w-3" />
-            {journey.steps.length} steps
-          </span>
-        </div>
-      </CardContent>
-    </Card>
+      </HoverCardContent>
+    </HoverCard>
   );
 }
 
@@ -149,6 +173,7 @@ function JourneyWalkthrough({
               <p className="text-sm text-muted-foreground">{journey.subtitle}</p>
             </div>
           </div>
+          <p className="max-w-2xl text-sm text-muted-foreground">{journey.description}</p>
           <div className="mt-3 flex items-center gap-3 text-xs">
             <span className={cn("rounded-full border px-2 py-0.5 font-medium", diff.color)}>
               {diff.label}

@@ -171,16 +171,16 @@ const DashboardPage = () => {
             {associatedValidators.map((item, idx) => (
               <div
                 key={idx}
-                className="flex flex-col items-center justify-between gap-4 rounded-xl border border-green-accent/30 bg-green-accent/10 p-4 animate-in fade-in slide-in-from-top-4 sm:flex-row"
+                className="flex flex-col items-center justify-between gap-4 rounded-xl border border-info/30 bg-info/10 p-4 animate-in fade-in slide-in-from-top-4 sm:flex-row"
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-accent/20">
-                    <Shield className="h-5 w-5 text-green-accent" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-info/20">
+                    <Shield className="h-5 w-5 text-info" />
                   </div>
                   <div>
                     <h3 className="font-heading font-bold text-foreground">
                       Validator Associated:{" "}
-                      <span className="text-green-accent">{item.validator.moniker}</span>
+                      <span className="text-info">{item.validator.moniker}</span>
                     </h3>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       {item.address === walletInfo?.address ? (
@@ -302,7 +302,7 @@ const DashboardPage = () => {
           <QuickStat
             label="Status"
             value="Online"
-            icon={<Shield className="h-5 w-5 text-green-accent" />}
+            icon={<Shield className="h-5 w-5 text-success" />}
             trend={{ value: "Connected", direction: "up" }}
           />
           <QuickStat

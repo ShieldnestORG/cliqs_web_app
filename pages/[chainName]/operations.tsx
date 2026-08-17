@@ -322,14 +322,11 @@ export default function OperationsPage() {
             </CardContent>
           </Card>
 
-          <Card
-            variant="institutional"
-            className="bg-gradient-to-br from-primary/10 to-transparent"
-          >
+          <Card variant="institutional" className="bg-gradient-to-br from-info/10 to-transparent">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/20">
-                  <Shield className="h-5 w-5 text-primary" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-info/20">
+                  <Shield className="h-5 w-5 text-info" />
                 </div>
                 <div>
                   <p className="font-heading text-2xl font-bold">{validatorCount}</p>
@@ -432,7 +429,10 @@ export default function OperationsPage() {
           <TabsContent value="overview" className="space-y-6">
             {/* Pending Transactions Alert */}
             {totalPendingTxs > 0 && (
-              <Card variant="institutional" className="border-warning/30 bg-warning/5">
+              <Card
+                variant="institutional"
+                className="border-warning/30 bg-gradient-to-br from-warning/10 to-transparent"
+              >
                 <CardContent className="py-4">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
@@ -468,7 +468,7 @@ export default function OperationsPage() {
                 <CardHeader>
                   <CardLabel>Quick Access</CardLabel>
                   <CardTitle className="flex items-center gap-2">
-                    <Shield className="h-5 w-5 text-green-accent" />
+                    <Shield className="h-5 w-5 text-info" />
                     Validator Operations
                   </CardTitle>
                 </CardHeader>
@@ -488,11 +488,11 @@ export default function OperationsPage() {
                           href={`/${chain.registryName}/validator?address=${cliq.address}`}
                           className="block"
                         >
-                          <div className="group rounded-xl border border-border/50 bg-muted/30 p-4 transition-all hover:border-green-accent/50 hover:bg-green-accent/5">
+                          <div className="group rounded-xl border border-border/50 bg-muted/30 p-4 transition-all hover:border-info/50 hover:bg-info/5">
                             <div className="flex items-center justify-between gap-3">
                               <div className="flex min-w-0 items-center gap-3">
-                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-accent/20">
-                                  <Shield className="h-5 w-5 text-green-accent" />
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-info/20">
+                                  <Shield className="h-5 w-5 text-info" />
                                 </div>
                                 <div className="min-w-0">
                                   <h4 className="truncate font-heading font-bold">
@@ -509,7 +509,7 @@ export default function OperationsPage() {
                                     {cliq.pendingTxCount} pending
                                   </Badge>
                                 )}
-                                <ArrowRight className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-green-accent" />
+                                <ArrowRight className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-info" />
                               </div>
                             </div>
                           </div>
@@ -531,7 +531,7 @@ export default function OperationsPage() {
                 <CardContent className="space-y-3">
                   {pendingTxs.length === 0 ? (
                     <div className="py-6 text-center text-muted-foreground">
-                      <CheckCircle2 className="mx-auto mb-2 h-8 w-8 text-green-accent opacity-50" />
+                      <CheckCircle2 className="mx-auto mb-2 h-8 w-8 text-success opacity-50" />
                       <p className="text-sm">All caught up!</p>
                       <p className="mt-1 text-xs">No pending transactions</p>
                     </div>
@@ -556,7 +556,7 @@ export default function OperationsPage() {
                                   {tx.isValidator && (
                                     <Badge
                                       variant="outline"
-                                      className="h-4 border-green-accent/50 px-1.5 py-0 text-[10px] text-green-accent"
+                                      className="h-4 border-info/50 px-1.5 py-0 text-[10px] text-info"
                                     >
                                       Validator
                                     </Badge>
@@ -601,7 +601,7 @@ export default function OperationsPage() {
             {pendingTxs.length === 0 ? (
               <Card variant="institutional" className="mx-auto max-w-4xl">
                 <CardContent className="py-12 text-center">
-                  <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-green-accent opacity-50" />
+                  <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-success opacity-50" />
                   <h3 className="mb-2 font-heading text-lg font-bold">All Caught Up!</h3>
                   <p className="text-muted-foreground">
                     No pending transactions require your signature.
@@ -631,10 +631,10 @@ export default function OperationsPage() {
                           <div className="flex items-center justify-between gap-4">
                             <div className="flex min-w-0 items-center gap-4">
                               <div
-                                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${tx.isValidator ? "bg-green-accent/20" : "bg-muted"}`}
+                                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${tx.isValidator ? "bg-info/20" : "bg-muted"}`}
                               >
                                 {tx.isValidator ? (
-                                  <Shield className="h-6 w-6 text-green-accent" />
+                                  <Shield className="h-6 w-6 text-info" />
                                 ) : (
                                   <FileText className="h-6 w-6 text-muted-foreground" />
                                 )}
@@ -712,8 +712,8 @@ export default function OperationsPage() {
                       <CardHeader>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-accent/20">
-                              <Shield className="h-6 w-6 text-green-accent" />
+                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-info/20">
+                              <Shield className="h-6 w-6 text-info" />
                             </div>
                             <div>
                               <CardTitle>{cliq.validator?.moniker || "Validator"}</CardTitle>
@@ -804,10 +804,10 @@ export default function OperationsPage() {
                         <div className="flex items-center justify-between gap-4">
                           <div className="flex min-w-0 items-center gap-4">
                             <div
-                              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${cliq.isValidator ? "bg-green-accent/20" : "bg-muted"}`}
+                              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${cliq.isValidator ? "bg-info/20" : "bg-muted"}`}
                             >
                               {cliq.isValidator ? (
-                                <Shield className="h-6 w-6 text-green-accent" />
+                                <Shield className="h-6 w-6 text-info" />
                               ) : (
                                 <Users className="h-6 w-6 text-muted-foreground" />
                               )}
@@ -820,7 +820,7 @@ export default function OperationsPage() {
                                 {cliq.isValidator && (
                                   <Badge
                                     variant="outline"
-                                    className="border-green-accent/50 text-xs text-green-accent"
+                                    className="border-info/50 text-xs text-info"
                                   >
                                     Validator
                                   </Badge>

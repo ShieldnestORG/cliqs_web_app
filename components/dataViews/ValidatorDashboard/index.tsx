@@ -464,8 +464,8 @@ export default function ValidatorDashboard() {
 
         <Card variant="institutional" bracket="green" className="mx-auto max-w-4xl">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-green-accent/20">
-              <Shield className="h-8 w-8 text-green-accent" />
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-info/20">
+              <Shield className="h-8 w-8 text-info" />
             </div>
             <CardLabel comment className="justify-center">
               Validator Tools
@@ -609,11 +609,11 @@ export default function ValidatorDashboard() {
           <Card variant="institutional" bracket="green" className="mx-auto max-w-2xl">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-accent/20">
-                  <CheckCircle className="h-6 w-6 text-green-accent" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-info/20">
+                  <CheckCircle className="h-6 w-6 text-info" />
                 </div>
                 <div>
-                  <CardLabel className="text-green-accent">Validators Found</CardLabel>
+                  <CardLabel className="text-info">Validators Found</CardLabel>
                   <CardTitle>Your CLIQ Validators</CardTitle>
                 </div>
               </div>
@@ -633,10 +633,10 @@ export default function ValidatorDashboard() {
                   href={`/${chain.registryName}/validator?address=${item.address}`}
                   className="block"
                 >
-                  <div className="group flex items-center justify-between gap-4 rounded-xl border border-border/50 bg-muted/30 p-4 transition-all hover:border-green-accent/50 hover:bg-green-accent/5">
+                  <div className="group flex items-center justify-between gap-4 rounded-xl border border-border/50 bg-muted/30 p-4 transition-all hover:border-info/50 hover:bg-info/5">
                     <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-accent/20">
-                        <Shield className="h-5 w-5 text-green-accent" />
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-info/20">
+                        <Shield className="h-5 w-5 text-info" />
                       </div>
                       <div className="min-w-0">
                         <h4 className="truncate font-heading font-bold text-foreground">
@@ -654,7 +654,7 @@ export default function ValidatorDashboard() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="shrink-0 gap-2 group-hover:bg-green-accent/10 group-hover:text-green-accent"
+                      className="shrink-0 gap-2 group-hover:bg-info/10 group-hover:text-info"
                     >
                       Manage
                       <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />

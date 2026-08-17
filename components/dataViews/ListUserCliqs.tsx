@@ -332,7 +332,7 @@ export default function ListUserCliqs() {
                     <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-green-accent/30 bg-gradient-to-br from-green-accent/20 to-green-accent/10">
                       <Users className="h-5 w-5 text-green-accent" />
                       {pendingCount > 0 && (
-                        <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-card bg-warning text-[10px] font-bold text-white">
+                        <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-card bg-warning text-[10px] font-bold text-warning-foreground">
                           {pendingCount}
                         </span>
                       )}

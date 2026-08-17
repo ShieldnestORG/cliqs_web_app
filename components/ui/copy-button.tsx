@@ -49,7 +49,7 @@ export function CopyButton({
 
   return (
     <TooltipProvider delayDuration={0}>
-      <Tooltip open={hasCopied ? true : undefined}>
+      <Tooltip open={hasCopied}>
         <TooltipTrigger asChild>
           <Button
             variant={variant}
@@ -59,14 +59,14 @@ export function CopyButton({
             {...props}
           >
             {hasCopied ? (
-              <Check className="h-4 w-4 text-green-accent" />
+              <Check className="h-4 w-4 text-success" />
             ) : (
               <Copy className="h-4 w-4" />
             )}
             {children || <span className="sr-only">Copy {copyLabel}</span>}
           </Button>
         </TooltipTrigger>
-        <TooltipContent side="top" className="bg-green-accent text-white border-green-accent">
+        <TooltipContent side="top" className="bg-success text-success-foreground border-success">
           <p className="text-xs font-bold">Copied!</p>
         </TooltipContent>
       </Tooltip>

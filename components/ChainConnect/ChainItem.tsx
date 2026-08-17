@@ -41,7 +41,7 @@ export default function ChainItem({ chain, hoverCardElementBoundary }: ChainItem
           {/* Connected Badge */}
           {isConnected && (
             <div className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[hsl(var(--accent-green))] shadow-md">
-              <CheckCircle2 className="h-3.5 w-3.5 text-white" />
+              <CheckCircle2 className="h-3.5 w-3.5 text-primary-foreground" />
             </div>
           )}
 

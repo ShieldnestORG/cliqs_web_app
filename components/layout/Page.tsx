@@ -14,10 +14,9 @@ interface PageProps {
   };
   readonly children: React.ReactNode;
   readonly variant?: "default" | "centered" | "full";
-  readonly showPattern?: boolean;
 }
 
-const Page = ({ title, goBack, children, variant = "default", showPattern = true }: PageProps) => {
+const Page = ({ title, goBack, children, variant = "default" }: PageProps) => {
   const router = useRouter();
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -40,7 +39,7 @@ const Page = ({ title, goBack, children, variant = "default", showPattern = true
   };
 
   return (
-    <div className={`w-full flex-1 ${showPattern ? "bg-pattern-dots" : "gradient-bg"}`}>
+    <div className="w-full flex-1">
       <Head title={title || "Cosmos Multisig Manager"} />
 
       <main

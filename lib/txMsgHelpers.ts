@@ -311,9 +311,44 @@ export const dbTxFromJson = (txJson: string): DbTransactionParsedDataJson | null
   return result.error || !result.tx ? null : result.tx;
 };
 
+/** Categorical tint for a msg-type chip. Tailwind classes mapping these to
+ * colours live in the consumer (components/dataViews/ListMultisigTxs.tsx) —
+ * lib/ is not scanned by the Tailwind content globs, so class strings here
+ * would get purged. */
+export type MsgChipTone = "success" | "info" | "purple" | "destructive" | "neutral";
+
+const chipToneOfMsg = (typeUrl: string): MsgChipTone => {
+  switch (typeUrl) {
+    case MsgTypeUrls.Send:
+      return "success"; // funds movement
+    case MsgTypeUrls.Delegate:
+    case MsgTypeUrls.Undelegate:
+    case MsgTypeUrls.BeginRedelegate:
+    case MsgTypeUrls.CreateValidator:
+    case MsgTypeUrls.EditValidator:
+    case MsgTypeUrls.Unjail:
+    case MsgTypeUrls.FundCommunityPool:
+    case MsgTypeUrls.SetWithdrawAddress:
+    case MsgTypeUrls.WithdrawDelegatorReward:
+    case MsgTypeUrls.WithdrawValidatorCommission:
+      return "info"; // validator/staking domain
+    case MsgTypeUrls.Vote:
+    case MsgTypeUrls.InstantiateContract:
+    case MsgTypeUrls.InstantiateContract2:
+    case MsgTypeUrls.ExecuteContract:
+      return "purple"; // governance + developer
+    case MsgTypeUrls.MigrateContract:
+    case MsgTypeUrls.UpdateAdmin:
+      return "destructive"; // contract-admin: genuinely dangerous
+    default:
+      return "neutral";
+  }
+};
+
 interface MsgTypeCount {
   readonly msgType: string;
   readonly count: number;
+  readonly tone: MsgChipTone;
 }
 
 export const msgTypeCountsFromJson = (txJson: string): readonly MsgTypeCount[] => {
@@ -322,17 +357,20 @@ export const msgTypeCountsFromJson = (txJson: string): readonly MsgTypeCount[] =
     return [];
   }
 
-  const msgTypeCounts: { msgType: string; count: number }[] = [];
+  const msgTypeCounts: { msgType: string; count: number; tone: MsgChipTone }[] = [];
 
-  const msgTypes = tx.msgs.map(({ typeUrl }) => typeUrl.split(".Msg")[1]);
+  const msgTypes = tx.msgs.map(({ typeUrl }) => ({
+    msgType: typeUrl.split(".Msg")[1],
+    tone: chipToneOfMsg(typeUrl),
+  }));
 
-  for (const msgType of msgTypes) {
+  for (const { msgType, tone } of msgTypes) {
     const foundIndex = msgTypeCounts.findIndex((msgTypeCount) => msgTypeCount.msgType === msgType);
 
     if (foundIndex !== -1) {
       msgTypeCounts[foundIndex].count++;
     } else {
-      msgTypeCounts.push({ msgType, count: 1 });
+      msgTypeCounts.push({ msgType, count: 1, tone });
     }
   }
 

@@ -347,7 +347,7 @@ const TransactionSigning = (props: TransactionSigningProps) => {
         {signing === "signed" ? (
           <div className="confirmation">
             <svg viewBox="0 0 77 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M5 30L26 51L72 5" stroke="white" strokeWidth="12" />
+              <path d="M5 30L26 51L72 5" stroke="currentColor" strokeWidth="12" />
             </svg>
             <p>You've signed this transaction</p>
           </div>

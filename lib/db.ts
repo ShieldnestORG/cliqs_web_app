@@ -552,6 +552,35 @@ export const wipeAllTransactions = async (multisigId: string) => {
   };
 };
 
+export const deleteMultisig = async (multisigId: string) => {
+  const byodb = await getByodbInstance();
+  if (byodb) {
+    const txCol = byodb.collection<BTransaction>(COL.TRANSACTIONS);
+    const sigCol = byodb.collection<BSignature>(COL.SIGNATURES);
+    const multisigCol = byodb.collection<BMultisig>(COL.MULTISIGS);
+    const allTxs = await txCol.find({ creatorId: multisigId }).toArray();
+    const txIds = allTxs.map((t) => docId(t));
+    const sigResult = await sigCol.deleteMany({ transactionId: { $in: txIds } });
+    const txResult = await txCol.deleteMany({ creatorId: multisigId });
+    const multisigResult = await multisigCol.deleteOne({ _id: new ObjectId(multisigId) });
+    return {
+      deletedTransactions: txResult.deletedCount,
+      deletedSignatures: sigResult.deletedCount,
+      deletedMultisigs: multisigResult.deletedCount,
+    };
+  }
+
+  const backend = await requireMongoOrLocalDb();
+  if (backend === "mongo") return mongoDb.deleteMultisig(multisigId);
+  return {
+    deletedTransactions: 0,
+    deletedSignatures: 0,
+    deletedMultisigs: 0,
+    localDbNotice:
+      "Deletion is not supported for local JSON database. To delete your data, manually remove or edit the data/local-db.json file on your computer.",
+  };
+};
+
 export const exportTransactionHistory = async (multisigId: string) => {
   const byodb = await getByodbInstance();
   if (byodb) {

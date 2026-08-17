@@ -16,6 +16,8 @@ npm run dev                   # Runs on http://localhost:3003
 
 **Operations**: [INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md) — where production lives, how it is deployed, the 2026-08-12 outage post-mortem, and chain/database gotchas.
 
+**Security**: [SOC2-GAP-ASSESSMENT.md](docs/security/SOC2-GAP-ASSESSMENT.md) — technical-controls gap assessment against the Security TSC: full API route inventory, remediations shipped, and the prioritized follow-up list.
+
 **Design**: [STYLE-GUIDE.md](docs/STYLE-GUIDE.md) is the canonical token reference (Coherence Daddy colours, Geist typography, radius/elevation/motion scales). Read it before touching styles — it documents two naming traps that silently produce no CSS. Component specs live in [docs/ui/](docs/ui/INDEX.md).
 
 ## Architecture

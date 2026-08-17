@@ -1,3 +1,4 @@
+import GridSpotlight from "@/components/GridSpotlight";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import GeneralNews from "@/components/GeneralNews";
@@ -51,31 +52,34 @@ export default function MultisigApp({ Component, pageProps }: AppProps) {
   }, []);
 
   return (
-    <ChainsProvider>
-      <WalletProvider>
-        <PendingTransactionsProvider>
-          <TooltipProvider>
-            <div className="flex min-h-screen bg-background text-foreground">
-              {!isLandingPage && <Sidebar />}
+    <>
+      <GridSpotlight />
+      <ChainsProvider>
+        <WalletProvider>
+          <PendingTransactionsProvider>
+            <TooltipProvider>
+              <div className="flex min-h-screen text-foreground">
+                {!isLandingPage && <Sidebar />}
 
-              <div className="flex min-w-0 flex-1 flex-col">
-                {!isLandingPage && (
-                  <div className="lg:hidden">
-                    <Header />
-                  </div>
-                )}
-                {!isLandingPage && <GeneralNews active={false} />}
+                <div className="flex min-w-0 flex-1 flex-col">
+                  {!isLandingPage && (
+                    <div className="lg:hidden">
+                      <Header />
+                    </div>
+                  )}
+                  {!isLandingPage && <GeneralNews active={false} />}
 
-                <main className="relative flex flex-1 flex-col">
-                  <Component {...pageProps} />
-                </main>
+                  <main className="relative flex flex-1 flex-col">
+                    <Component {...pageProps} />
+                  </main>
+                </div>
               </div>
-            </div>
-            <Toaster closeButton />
-            <Analytics />
-          </TooltipProvider>
-        </PendingTransactionsProvider>
-      </WalletProvider>
-    </ChainsProvider>
+              <Toaster closeButton />
+              <Analytics />
+            </TooltipProvider>
+          </PendingTransactionsProvider>
+        </WalletProvider>
+      </ChainsProvider>
+    </>
   );
 }

@@ -696,7 +696,7 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
                             />
                           ) : null}
                           <div
-                            className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-black text-white shadow-lg"
+                            className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-black text-foreground shadow-lg"
                             style={{
                               background: `linear-gradient(135deg, ${getTokenColor(selectedToken.symbol)} 0%, ${getTokenColor(selectedToken.symbol)}dd 100%)`,
                               display: selectedToken.logo ? "none" : "flex",
@@ -804,7 +804,7 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
                                         ) : null}
                                         <div
                                           className={cn(
-                                            "flex h-12 w-12 items-center justify-center rounded-full text-sm font-black text-white shadow-lg",
+                                            "flex h-12 w-12 items-center justify-center rounded-full text-sm font-black text-foreground shadow-lg",
                                             token.logo ? "hidden" : "flex",
                                           )}
                                           style={{
