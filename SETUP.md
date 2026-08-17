@@ -40,13 +40,47 @@ npm install
 ```
 
 3. **Environment Configuration**:
-   The `.env.local` file is already configured with:
+   Copy `.env.sample` to `.env.local`. `.env.sample` is a curated starting point,
+   **not** a complete inventory. The containment runs one way only: every variable
+   in `.env.sample` is read somewhere in the code, but the code reads 66 distinct
+   names in total, so most are absent from the sample. `.env.sample` has **16**
+   active assignments (`grep -cE '^[A-Z0-9_]+=' .env.sample`), leaving **50**
+   absent; counting the two commented-out migration entries at `.env.sample:17-18`
+   — which `scripts/migrate-mongo-to-mongo.mjs:36-37` does read — gives 18 and 48.
+   Missing names include
+   `NEXT_PUBLIC_NODE_ADDRESSES` (which this file tells you to set, below),
+   `NEXT_PUBLIC_CHAIN_ID`, `NEXT_PUBLIC_GAS_PRICE`, `NEXT_PUBLIC_EXPLORER_LINKS`,
+   `NEXT_PUBLIC_ENABLE_DEVTOOLS`, `GITHUB_TOKEN`, the indexer service's own
+   `MULTISIG_INDEXER_PG_*` / `MULTISIG_INDEXER_CHAIN_*` / `MULTISIG_INDEXER_REFRESH_*`
+   settings, and platform ambients such as `NODE_ENV` and `VERCEL`. Regenerate the
+   real list from tracked files (counts above were produced by this command):
+
+```bash
+git ls-files '*.ts' '*.tsx' '*.js' '*.mjs' \
+  | xargs grep -hoE 'process\.env\.[A-Z0-9_]+' \
+  | sed 's/process\.env\.//' | sort -u
+```
+
+   The variables that matter for a first run are:
 
 - `NEXT_PUBLIC_MULTICHAIN=true` - Enables multichain support
 - `NEXT_PUBLIC_REGISTRY_NAME=cosmoshub` - Default chain registry
-- `NEXT_PUBLIC_NODE_ADDRESS=https://rpc.cosmos.network:443` - Public RPC endpoint
+- `NEXT_PUBLIC_TESTNETS_ENABLED=false` - Show testnets in the chain selector
 
-You can modify these values as needed. To use a local node, change the `NEXT_PUBLIC_NODE_ADDRESS` to your local node URL (e.g., `http://localhost:26657`).
+Leave `MONGODB_URI` blank for local development; the app then uses
+`data/local-db.json`. Setting it switches the app to MongoDB with **no** local
+fallback (a connection failure throws rather than degrading).
+
+To point the app at specific nodes, set `NEXT_PUBLIC_NODE_ADDRESSES` — note the
+**plural**, and note it is parsed as a **JSON array**, not a bare URL:
+
+```
+NEXT_PUBLIC_NODE_ADDRESSES=["http://localhost:26657"]
+```
+
+`context/ChainsContext/storage.ts` (`getChainFromEnvfile`) reads it, and only for
+the chain named by `NEXT_PUBLIC_REGISTRY_NAME`. A singular
+`NEXT_PUBLIC_NODE_ADDRESS` is read by nothing and is silently ignored.
 
 4. **Run the development server**:
 
@@ -110,8 +144,19 @@ MongoDB collections:
 
 - Completed (broadcast) transactions and their signatures are automatically
   deleted after `MONGODB_AUTO_CLEANUP_DAYS` days (default: 30). The cleanup runs
-  on server startup.
+  once per server process, inside `initDb()` — in practice on the first API
+  request after a cold start, not on a timer.
 - Everything else is kept until a member deletes it.
+- Do not confuse `MONGODB_AUTO_CLEANUP_DAYS` with `DATA_RETENTION_DAYS`
+  (default: 90). The latter is display-only: `getRetentionDays()` renders a
+  "N days" label in the two create-cliq forms and deletes nothing.
+  `DATA_WARNING_DAYS_BEFORE` and `MAX_STORAGE_PER_USER_KB` **are** read
+  (`lib/dataRetention.ts:23` and `:30`), but nothing surfaces them: the only
+  reader of the first is `getWarningDaysBefore()`, called at `lib/dataRetention.ts:46`
+  by `getRetentionInfo()`, which itself has no caller outside that file;
+  `getMaxStorageKB()` has no caller anywhere. So both are dead *transitively* —
+  reachable code with no live entry point — rather than simply unreferenced.
+  `MONGODB_AUTO_CLEANUP_DAYS` is the only variable that actually removes records.
 
 ### Member deletion rights
 
@@ -120,19 +165,31 @@ are exposed in the app on the cliq dashboard's Transactions tab ("Data & Privacy
 
 - **Export history** — download the full transaction history, including
   signatures, as JSON.
-- **Wipe completed** — any verified member may delete all completed transactions
-  and their signatures. On-chain records are unaffected.
-- **Delete cliq** — removes pending transactions and the `multisigs` record
-  itself (the cliq disappears for all members until re-imported; its name and
-  description are unrecoverable). The API also exposes a `wipe all` mode that
-  clears pending transactions without deleting the cliq record; it has no button
-  in the app today. Both are refused with a `409` while pending transactions
-  carry signatures from other members — cancel those transactions first.
+- **Wipe completed** — any verified member may delete the `broadcast`
+  transactions and their signatures. Pending transactions and the cliq itself
+  survive. On-chain records are unaffected.
+- **Delete cliq** — cascades in order: every signature attached to the cliq's
+  transactions, then **every** transaction (pending *and* broadcast), then the
+  `multisigs` row itself. The cliq disappears for all members until someone
+  re-imports it; address and member pubkeys are recoverable on-chain, its name
+  and description are not.
+- The API also exposes a third `wipe` mode, `all`, which deletes **every**
+  transaction and signature but keeps the `multisigs` row. It has no button in
+  the app — `TransactionPrivacy.tsx` only ever sends `completed` and `multisig`.
+- Both `all` and `multisig` are refused with a `409` while any pending
+  transaction carries a signature from an address other than the caller's —
+  cancel those transactions first.
 - Nonces are never deleted: they are per-signer login-replay counters shared
   across cliqs.
 
 Users with a custom database (BYODB, via the `x-byodb-uri` header) are exempt
-from the membership gate — those operations run against their own database.
+from the membership gate — those operations run against their own database. The
+`409` other-member-signature guard is skipped on that path too, since there is no
+verified caller address to compare against.
+
+On the local JSON database none of the three deletions are implemented: the API
+returns a `localDbNotice` telling you to edit or remove `data/local-db.json`
+yourself.
 
 ## Building for Production
 
@@ -184,11 +241,13 @@ The app supports:
 
 ### Port Already in Use
 
-If you get a port error, the app will automatically try the next available port (3001, 3002, etc.). You can also specify a custom port:
+In dev, if 3003 is taken Next increments from the configured port and retries — 3004, 3005, and so on (up to 10 attempts). To choose a port yourself, pass the flag through npm with `--`:
 
 ```bash
-PORT=3002 npm run dev
+npm run dev -- -p 3005
 ```
+
+`PORT=3005 npm run dev` does **not** work: `package.json` hard-codes `next dev -p 3003`, and an explicit `-p` flag beats the `PORT` env var. Omitting the `--` does not work either — npm consumes `-p` as its own `--parseable` flag and Next then reads the number as a directory argument.
 
 ### RPC Connection Issues
 

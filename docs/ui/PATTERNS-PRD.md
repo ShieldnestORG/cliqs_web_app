@@ -1,10 +1,10 @@
 # Patterns PRD
 
-> **Cluster:** design-system · **Tags:** ui, patterns, backgrounds, tokens, coherence-daddy · **Related:** [STYLE-GUIDE.md](../STYLE-GUIDE.md), [UI Index](./INDEX.md), [Cards PRD](./CARDS-PRD.md)
+> **Cluster:** design-system · **Tags:** ui, patterns, gridspotlight, sidebar, hover-card, tokens · **Related:** [STYLE-GUIDE.md](../STYLE-GUIDE.md), [UI Index](./INDEX.md), [Cards PRD](./CARDS-PRD.md), [Buttons PRD](./BUTTONS-PRD.md)
 
 **Cosmos Multisig UI - Visual Patterns Specification**  
-**Version:** 1.1  
-**Last Updated:** 2026-08-13
+**Version:** 1.2  
+**Last Updated:** 2026-08-16
 
 ---
 
@@ -12,11 +12,14 @@
 
 Visual patterns for consistent styling across the application:
 
-- **Background patterns** for texture and depth
+- **The animated page background** (§3) — one global canvas, and the transparency
+  contract every page must honour
 - **Color palette** optimized for dark mode
 - **Shadow system** for elevation
 - **Animation patterns** for micro-interactions
 - **Status indicators** for feedback
+- **Interaction patterns** (§17–§19) — hover-card disclosure, click-only copy
+  confirmation, and the auto-collapsing sidebar rail
 
 ---
 
@@ -65,29 +68,86 @@ Visual patterns for consistent styling across the application:
 ```
 
 > **`--accent-green` is hue 11 — coral, not green.** The name is inherited from an
-> earlier migration and kept because ~60 call sites use `green-accent`. Never map a
+> earlier migration and kept because 97 call sites (77 lines across 22 files) use
+> `green-accent`. Never map a
 > success meaning onto it; it renders orange and collides with `destructive`. Use
 > `--success` for success.
 
 ---
 
-## 3. Background Patterns
+## 3. Page Background (GridSpotlight)
 
-### Dot Pattern
+Every page sits on a single animated dotted-grid canvas —
+`components/GridSpotlight.tsx`, mounted once in `pages/_app.tsx` above all the providers.
+It is the brand background; pages do not paint their own.
 
-Subtle dot grid for page backgrounds.
+### How it renders
+
+A single `<canvas>`, `position: fixed`, `inset: 0`, `z-index: -1`,
+`pointer-events: none`, `aria-hidden="true"`. Each frame draws three layers:
+
+1. **Dot lattice** on a 26px grid, resting radius 1.0–1.6px, colour
+   `rgba(242,241,237,α)` — the dot sizes drift through a smooth 2D value-noise field, so
+   "bigness" migrates across the field instead of pulsing in lockstep. (A wave would
+   line its peaks up on diagonals; the noise field is what avoids that.)
+2. **Cursor spotlight** — dots within 160px of the pointer brighten.
+3. **Comet trail** — small dots along the pointer's path, fading over 650ms.
+
+### The transparency contract — read this before styling a page
 
 ```css
+/* styles/globals.css, @layer base */
+html { background-color: hsl(var(--background)); }  /* the opaque canvas colour */
+body { background-color: transparent; }             /* lets the <canvas> show through */
+```
+
+The opaque `#0E0E10` lives on **`<html>`**, and `body` plus the page wrappers are
+transparent, so the `z-index: -1` canvas paints above the html background and below all
+content.
+
+**Consequence: a page must not paint its own opaque, full-bleed background.** A
+`bg-background` on a page-level wrapper covers the canvas completely and silently
+deletes the effect for that route. This is why `.bg-pattern-dots` was neutralised rather
+than deleted:
+
+```css
+/* styles/globals.css, as shipped */
 .bg-pattern-dots {
-  background-color: hsl(var(--background));
-  background-image: radial-gradient(
-    circle at center,
-    hsl(var(--muted-foreground) / 0.1) 1px,
-    transparent 1px
-  );
-  background-size: 24px 24px;
+  background: transparent;
 }
 ```
+
+It still has one consumer — `components/layout/DashboardLayout.tsx` applies it to its
+`min-h-screen` wrapper — so the class must stay, but it now paints nothing. Two reasons
+it could not simply keep its old rule: the old opaque `background-color` would have
+hidden the canvas, and its static 24px lattice would have moiréd against the animated
+26px one.
+
+### Opting out / interacting with it
+
+| You want | Do this |
+|----------|---------|
+| A full-bleed page background | Nothing. Leave wrappers transparent; the canvas is the background. |
+| An opaque panel over it | Give the panel its own `bg-card` / `bg-muted` — cards, headers and dialogs are meant to occlude the field. |
+| To suppress the cursor spotlight under a surface | Nothing — automatic. The canvas walks up from the hovered element and suppresses the spotlight and trail whenever it finds a computed `background-color` with alpha ≥ 0.12. Surfaces below that threshold (e.g. `bg-card/10`) will let the spotlight bleed through; raise the alpha rather than fighting the canvas. |
+| To kill the effect on one route | Not supported by design. If a route genuinely needs it gone, paint an opaque background on that page's own wrapper and say so in review — do not edit `GridSpotlight`. |
+
+### Cost and accessibility controls
+
+| Control | Behaviour |
+|---------|-----------|
+| Frame rate | Capped at ~30fps (`if (now - last < 33) return`) |
+| Hidden tab | `visibilitychange` cancels the RAF loop entirely; it restarts on return |
+| `prefers-reduced-motion: reduce` | Draws **one** static frame and never starts the loop; a resize redraws that single frame |
+| Coarse pointer (touch) | Spotlight and trail listeners are only attached for `(pointer: fine)`; the dot drift still renders |
+| DPR | Clamped to 2 (`Math.min(window.devicePixelRatio || 1, 2)`) |
+
+---
+
+## 3a. Legacy Background Patterns
+
+These predate the canvas. They still exist in `globals.css` but currently have **no
+consumers** under `components/` or `pages/`.
 
 ### Grid Pattern
 
@@ -102,6 +162,10 @@ Engineering-paper style grid.
   background-size: 20px 20px;
 }
 ```
+
+> ⚠️ `.bg-pattern-grid` sets an **opaque** `background-color`. Applying it to a
+> full-bleed page wrapper will hide the GridSpotlight canvas on that route (§3). Scope it
+> to a bounded panel, or don't use it.
 
 ### Diagonal Stripes
 
@@ -122,6 +186,17 @@ For section accents.
 ---
 
 ## 4. Gradient Backgrounds
+
+### Card gradient (the default)
+
+`default` and `institutional` cards, and the `default` / `highlight` / `accent` bento
+variants, all ship with `bg-gradient-to-br from-card to-muted/30` **by default**. Opt out
+with `bg-none`, which zeroes `background-image` and leaves your `bg-*` colour intact.
+Full treatment in [Cards PRD §2.1](./CARDS-PRD.md#21-the-default-gradient-and-how-to-opt-out).
+
+```tsx
+<Card className="bg-muted/30 bg-none">Flat, tinted panel</Card>
+```
 
 ### Default Gradient
 
@@ -169,11 +244,27 @@ box-shadow:
 
 ### Focus Ring
 
+Two mechanisms exist, and they are **different colours**:
+
 ```css
-box-shadow: 
-  0 0 0 3px hsl(var(--ring) / 0.3),
-  0 4px 12px hsl(var(--ring) / 0.12);
+/* 1. The .focus-ring helper class (styles/globals.css) — purple */
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px hsl(var(--accent-purple) / 0.3),
+    0 4px 12px hsl(var(--accent-purple) / 0.12);
+}
 ```
+
+```css
+/* 2. The token-driven ring utilities used by components/ui/button.tsx — coral */
+focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+/* --ring = 10.9 100% 64.5% = #FF6B4A */
+```
+
+`tailwind.config.js` also carries a `shadow-focus-ring` key hardcoded to purple
+(`hsl(260 28% 55% / 0.3)`). Prefer the `ring-ring` utilities on new work so focus reads
+as the brand coral; the two purple survivors are cleanup, not intent.
 
 ---
 
@@ -193,11 +284,21 @@ box-shadow:
 
 ### Active Dot (Pulsing)
 
+The shape lives on `.status-dot`; the state classes only set colour and animation. The
+active dot is `--accent-green`, i.e. **coral** — it means "live", not "success".
+
 ```css
+.status-dot {
+  @apply h-2 w-2 rounded-full;
+}
+
 .status-dot-active {
-  @apply w-2 h-2 rounded-full;
   background: hsl(var(--accent-green));
   animation: status-pulse 2s ease-in-out infinite;
+}
+
+.status-dot-inactive {
+  background: hsl(var(--muted-foreground));
 }
 
 @keyframes status-pulse {
@@ -213,14 +314,21 @@ box-shadow:
 ### Change Indicators
 
 ```css
+/* styles/globals.css, as shipped */
 .change-positive {
-  color: hsl(var(--success));
+  color: hsl(11 100% 71%);
 }
 
 .change-negative {
-  color: hsl(var(--destructive));
+  color: hsl(0 84% 60%);
 }
 ```
+
+> **Known deviation — outstanding, not fixed.** Both classes hardcode raw HSL instead of
+> the semantic tokens, and `.change-positive` is hue 11, i.e. **coral, not green**, so a
+> positive delta currently renders as the brand accent. `.change-negative` is a raw red
+> that is not `--destructive` (`0 66.4% 55.7%`). New code should use `text-success` /
+> `text-destructive` directly; migrating these two classes is open work.
 
 ---
 
@@ -229,8 +337,9 @@ box-shadow:
 ### Gradient Progress
 
 ```css
+/* styles/globals.css, as shipped */
 .progress-track {
-  @apply h-2 rounded-full overflow-hidden;
+  @apply h-2 overflow-hidden rounded-full;
   background: hsl(var(--muted));
 }
 
@@ -238,15 +347,19 @@ box-shadow:
   @apply h-full rounded-full;
   background: linear-gradient(
     90deg,
-    hsl(var(--success) / 0.7) 0%,
-    hsl(var(--success)) 50%,
-    hsl(var(--success) / 0.85) 100%
+    hsl(11 100% 80%) 0%,
+    hsl(11 100% 71%) 50%,
+    hsl(11 100% 60%) 100%
   );
-  box-shadow: 
-    0 0 12px hsl(var(--success) / 0.4),
+  box-shadow:
+    0 0 12px hsl(var(--accent-green) / 0.4),
     inset 0 1px 2px rgba(255, 255, 255, 0.3);
 }
 ```
+
+The fill is a **coral** ramp (hue 11), not green — progress is brand-coloured, not a
+success signal. The three gradient stops are still raw HSL rather than tokens; that is a
+known deviation, same family as the change indicators in §7.
 
 ---
 
@@ -388,32 +501,67 @@ Icons are used directly without containers for a cleaner, lighter appearance. Us
 ### Institutional Card Hover
 
 ```css
+/* styles/globals.css, as shipped */
 .card-institutional:hover {
   transform: translateY(-3px);
-  border-color: hsl(var(--border) / 0.8);
+  border-color: hsl(var(--border) / 0.12);
   box-shadow: 
     0 8px 24px rgba(0, 0, 0, 0.12),
     0 4px 8px rgba(0, 0, 0, 0.08);
 }
 ```
 
+### The border alpha convention
+
+`--border` is `0 0% 100%` with **no alpha baked into the token**, so consumers supply it:
+
+| State | Value |
+|-------|-------|
+| Resting | `border-border/[0.06]` — set globally by `* { @apply border-border/[0.06] }` |
+| Hover | `hsl(var(--border) / 0.12)` — used by `.card-institutional:hover` and `.quick-stat:hover` |
+
+Doubling the alpha on hover is the whole border interaction; do not add a colour change.
+Never move the alpha inside the token — `0 0% 100% / 0.06` makes every `border-border/NN`
+expand to a two-slash colour the browser drops silently.
+
 ---
 
 ## 14. Section Wrappers
 
 ```css
+/* styles/globals.css, as shipped */
 .section-wrapper {
   @apply relative w-full py-12;
 }
 
 .section-inner {
-  @apply relative z-10 max-w-6xl mx-auto px-[0.75in];
+  @apply relative z-10 mx-auto max-w-[1600px] px-[0.75in];
 }
 ```
+
+`max-w-[1600px]` matches `DashboardLayout`'s `default` variant width, so section content
+lines up with dashboard content.
 
 ---
 
 ## 15. Reduced Motion Support
+
+Two layers. First, a global guard in `@layer base` that collapses every animation and
+transition:
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+```
+
+Second, a component-level block that also cancels the hover lifts:
 
 ```css
 @media (prefers-reduced-motion: reduce) {
@@ -422,17 +570,25 @@ Icons are used directly without containers for a cleaner, lighter appearance. Us
   .card-institutional::after,
   .btn-action-primary,
   .btn-action-secondary,
-  .animate-in {
+  .btn-tab,
+  .animate-in,
+  .bento-card,
+  .quick-stat {
     transition: none;
     animation: none;
   }
-  
+
   .card-institutional:hover,
-  .card-hover:hover {
+  .card-hover:hover,
+  .bento-card:hover,
+  .quick-stat:hover {
     transform: none;
   }
 }
 ```
+
+CSS cannot reach the canvas background, so `GridSpotlight` checks the media query in JS
+and renders a single static frame instead (§3).
 
 ---
 
@@ -458,6 +614,162 @@ Icons are used directly without containers for a cleaner, lighter appearance. Us
   background: hsl(var(--muted-foreground) / 0.5);
 }
 ```
+
+---
+
+## 17. Hover-Card Disclosure
+
+**Where:** the journey cards on `pages/[chainName]/get-started.tsx`.
+
+A progressive-disclosure pattern: the card shows title, difficulty, duration and step
+count; hovering (or keyboard-focusing) it reveals a translucent panel with the journey's
+subtitle and highlight bullets. Clicking the card opens the full walkthrough.
+
+```tsx
+<HoverCard openDelay={300} closeDelay={100}>
+  <HoverCardTrigger asChild>
+    <Card
+      className="group cursor-pointer border-border/[0.06] bg-card transition-all duration-200
+                 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg"
+      onClick={() => onSelect(journey)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === "Enter" && onSelect(journey)}
+    >
+      …
+    </Card>
+  </HoverCardTrigger>
+  <HoverCardContent
+    side="top"
+    align="center"
+    sideOffset={8}
+    className="w-96 border-border/[0.06] bg-card/90 shadow-lg backdrop-blur-md"
+  >
+    {/* title + subtitle, then a bulleted highlight list with text-primary bullets */}
+  </HoverCardContent>
+</HoverCard>
+```
+
+### Rules
+
+| Concern | Rule |
+|---------|------|
+| Panel surface | `bg-card/90` + `backdrop-blur-md` — translucent, so the page reads through it. Note this is above the 0.12 alpha threshold, so the background canvas's spotlight is correctly suppressed under it (§3). |
+| Timing | `openDelay={300}` so a pointer crossing the grid doesn't strobe panels; `closeDelay={100}` so travel into the panel doesn't close it. |
+| Keyboard | Radix `HoverCardTrigger` opens on **focus** as well as pointer-enter, so tabbing through the grid discloses the same content. The trigger must therefore be focusable — hence `tabIndex={0}` on the `asChild` card. |
+| Touch | Radix `preventDefault()`s `touchstart` on the trigger and gates pointer-enter to non-touch, so the panel **never opens on touch**. That is intentional: on touch the tap goes straight to `onSelect`, and the walkthrough is the fallback that carries the same information. |
+| Content duty | Because touch users never see the panel, it must stay **supplementary**. Anything required to make a choice belongs on the card face or in the walkthrough — never only in the hover panel. |
+| Interactive content | None. Panels are read-only; a hover panel is not a place for buttons. |
+
+---
+
+## 18. Copy-Button Tooltip (click-only)
+
+**Where:** `components/ui/copy-button.tsx`, used anywhere an address or hash is copyable.
+
+The tooltip is a **confirmation**, not a hint. It is a controlled Radix tooltip whose
+open state is driven purely by copy success:
+
+```tsx
+const [hasCopied, setHasCopied] = React.useState(false);
+
+React.useEffect(() => {
+  if (hasCopied) {
+    const timer = setTimeout(() => setHasCopied(false), 2000);
+    return () => clearTimeout(timer);
+  }
+}, [hasCopied]);
+
+<Tooltip open={hasCopied}>          {/* controlled — hover can never open it */}
+  <TooltipTrigger asChild>
+    <Button onClick={onCopy}>
+      {hasCopied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
+      <span className="sr-only">Copy {copyLabel}</span>
+    </Button>
+  </TooltipTrigger>
+  <TooltipContent side="top" className="border-success bg-success text-success-foreground">
+    <p className="text-xs font-bold">Copied!</p>
+  </TooltipContent>
+</Tooltip>
+```
+
+### Rules
+
+- **Never opens on hover.** Passing `open` to Radix's `Tooltip` makes it fully
+  controlled, so the usual hover/focus triggers are inert. Address rows are dense; a
+  hover tooltip on every copy affordance would be noise.
+- **Opens on click, closes on a 2s timer.** The icon swaps `Copy` → `Check` for the same
+  window, so the confirmation is visible even if the tooltip is clipped.
+- **Success colour is `--success`,** the real green `#4A9D7C` — on the tooltip surface
+  and on the check icon. Never `green-accent`, which is coral.
+- **`e.stopPropagation()` in the click handler** so a copy button inside a clickable row
+  or card does not also trigger the row's navigation.
+- A Sonner toast fires alongside by default (`showToast`), naming what was copied.
+
+---
+
+## 19. Sidebar Rail (auto-collapsing overlay)
+
+**Where:** `components/Sidebar.tsx`, mounted in `pages/_app.tsx` on every non-landing
+route.
+
+The desktop sidebar rests as a 20-unit icon rail and expands to 64 on hover or keyboard
+focus. Expansion is an **overlay**, not a push.
+
+### Layout mechanics
+
+```tsx
+{/* Spacer — reserves rail width in the flex row */}
+<div aria-hidden="true"
+     className={cn("hidden shrink-0 transition-[width] duration-300 ease-in-out lg:block",
+                   pinned ? "w-64" : "w-20")} />
+
+{/* The rail itself — fixed, so expanding it never reflows content */}
+<aside data-state={collapsed ? "collapsed" : "expanded"}
+       className={cn("fixed inset-y-0 left-0 z-50 hidden flex-col overflow-hidden border-r-2 " +
+                     "border-border/[0.06] bg-card/50 backdrop-blur-md " +
+                     "transition-all duration-300 ease-in-out lg:flex",
+                     collapsed ? "w-20" : "w-64 bg-card shadow-card-hover")} />
+```
+
+The spacer is what makes this work: it holds the rail's footprint in normal flow while
+the `fixed` aside floats above. Hover-expand widens only the aside, so **page content
+never reflows**. Pinning widens the spacer too, which turns it into push mode where
+nothing is occluded. The pin is persisted as `sidebarPinned` via
+`lib/settingsStorage.ts` (default `false`) and hydrated after mount, so server and
+client both render collapsed.
+
+Note the rail is translucent at rest (`bg-card/50 backdrop-blur-md`) and turns opaque
+`bg-card` when expanded — so the page background canvas (§3) shows through the collapsed
+rail but not through the expanded overlay.
+
+### Implementation notes worth keeping
+
+These two are load-bearing. Both were bugs before they were rules.
+
+1. **Pointer tracking must use native `mouseenter` / `mouseleave` listeners, not React's
+   `onMouseEnter` / `onMouseLeave`.** Clicking a nav item re-renders the tree mid-gesture
+   and React's synthetic `mouseleave` is dropped — which left the rail stuck open for the
+   rest of the session. The native events still fire reliably in that case. The listeners
+   are attached once in a `useEffect` on the `aside` ref.
+
+2. **The keyboard "keep open" guard must test `:focus-visible`, not focus.** On leave,
+   the rail stays open only if the focused element is inside it *and* matches
+   `:focus-visible`:
+
+   ```tsx
+   const active = document.activeElement;
+   if (active && el.contains(active) && active.matches(":focus-visible")) return;
+   scheduleCollapse();
+   ```
+
+   Testing focus alone pins the rail open permanently, because a mouse click also focuses
+   the button — and since the sidebar is mounted in `_app` and never unmounts, there is
+   no remount to recover from that state.
+
+Supporting details: a 150ms leave delay kills edge flicker; a `useEffect` on `asPath`
+reconciles against `:hover` after navigation (in case the pointer left during the route
+change and no leave event arrived); `Escape` collapses an unpinned rail.
 
 ---
 
