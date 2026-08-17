@@ -14,7 +14,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: 24
           cache: "npm"
       - run: npm ci
       - run: npm run lint
@@ -26,7 +26,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: 24
           cache: "npm"
       - run: npm ci
       - run: npm run format:check
@@ -38,7 +38,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: 24
           cache: "npm"
       - run: npm ci
       - run: npm run test:ci
@@ -50,8 +50,28 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: 24
           cache: "npm"
       - run: npm ci
       - run: cp .env.sample .env.local
       - run: npm run build
+
+  # Fails the build on a known-vulnerable dependency at high or critical severity.
+  # Dependabot alerts on the default branch are after-the-fact; this blocks the PR
+  # that would introduce one. Moderate and low are reported without failing, so a
+  # transitive advisory with no upgrade path cannot wedge every PR in the repo.
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 24
+          cache: "npm"
+      - run: npm ci
+      - name: Fail on high/critical advisories
+        run: npm audit --audit-level=high
+      - name: Report moderate and low (non-blocking)
+        if: always()
+        run: npm audit --audit-level=low || true
