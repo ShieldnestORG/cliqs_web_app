@@ -12,8 +12,10 @@
 
 import type { NextApiRequest, NextApiResponse } from "next";
 import { provisionDatabase, getDynamicDbStats } from "@/lib/byodb/dynamicMongo";
+import { assertPublicMongoTarget, HostValidationError } from "@/lib/byodb/hostValidation";
+import { withByodbMiddleware } from "@/lib/byodb/middleware";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -32,6 +34,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    // SSRF guard: resolve the target and refuse private/reserved addresses
+    await assertPublicMongoTarget(connectionUri);
+
     const result = await provisionDatabase(connectionUri);
     const stats = await getDynamicDbStats(connectionUri);
 
@@ -42,6 +47,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       stats,
     });
   } catch (err) {
+    if (err instanceof HostValidationError) {
+      res.status(400).json({
+        ok: false,
+        error: "Connection target not allowed",
+        message: err.message,
+      });
+      return;
+    }
+
     const message =
       err instanceof Error
         ? err.message.replace(/mongodb(\+srv)?:\/\/[^\s]+/gi, "mongodb://***")
@@ -54,3 +68,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   }
 }
+
+export default withByodbMiddleware(handler);

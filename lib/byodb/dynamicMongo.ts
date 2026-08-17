@@ -11,6 +11,7 @@
  */
 
 import { MongoClient, Db } from "mongodb";
+import { assertPublicMongoTarget } from "./hostValidation";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -116,6 +117,9 @@ export async function getDynamicDb(connectionUri: string): Promise<Db> {
     return existing.db;
   }
 
+  // SSRF guard: refuse to open connections to private/reserved targets
+  await assertPublicMongoTarget(connectionUri);
+
   // Evict oldest if at capacity
   if (cache.size >= MAX_CONNECTIONS) {
     let oldestKey: string | null = null;
@@ -167,6 +171,9 @@ export async function testConnection(connectionUri: string): Promise<{
   dbName: string;
 }> {
   const start = Date.now();
+
+  // SSRF guard: refuse to open connections to private/reserved targets
+  await assertPublicMongoTarget(connectionUri);
 
   const client = new MongoClient(connectionUri, {
     connectTimeoutMS: 8_000,

@@ -64,6 +64,14 @@ interface CLITransaction {
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Dev-only tooling (used via curl against localhost — see
+  // docs/DEBUG-WITHDRAW-COMMISSION.md). No UI caller exists; keep it out of
+  // production to reduce attack surface.
+  if (process.env.NODE_ENV === "production") {
+    res.status(404).end();
+    return;
+  }
+
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
