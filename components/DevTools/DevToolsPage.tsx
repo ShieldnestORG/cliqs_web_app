@@ -47,11 +47,15 @@ import { toast } from "sonner";
 import MsgForm from "../forms/OldCreateTxForm/MsgForm";
 import { MsgGetter } from "../forms/OldCreateTxForm";
 import { ContractExecute } from "@/components/ContractExecute";
+import ConfirmIrreversibleDialog from "./ConfirmIrreversibleDialog";
+import DevToolsArrivalGate from "./DevToolsArrivalGate";
 import DevToolsAuthz from "./DevToolsAuthz";
 import DevToolsImport from "./DevToolsImport";
 import DevToolsLog from "./DevToolsLog";
+import DevToolsPowersBanner from "./DevToolsPowersBanner";
 import DevToolsQuery from "./DevToolsQuery";
 import DevToolsUploader from "./DevToolsUploader";
+import { IntentSummary, needsTypedConfirmation, summariseWasmMsg } from "./intentSummary";
 import NetworkToggle from "./NetworkToggle";
 import { DevCommandType, DevNetwork, SelectedAccount } from "./types";
 import { AddressDisplay } from "@/components/ui/address-display";
@@ -167,6 +171,10 @@ export default function DevTools() {
   const [msgKey, setMsgKey] = useState(crypto.randomUUID());
   const [logs, setLogs] = useState<DeploymentLogEntry[]>([]);
   const [preferredNetworkApplied, setPreferredNetworkApplied] = useState(false);
+  const [pendingConfirm, setPendingConfirm] = useState<{
+    summary: IntentSummary;
+    msgType: MsgTypeUrl;
+  } | null>(null);
 
   const currentNetwork: DevNetwork = chain.chainId.toLowerCase().includes("testnet")
     ? "testnet"
@@ -459,8 +467,51 @@ export default function DevTools() {
     }
   };
 
+  // Migrate and Update Admin cannot be undone, so they get a plain-language summary
+  // read back out of the message itself plus a typed confirmation before signing.
+  const requestMsgTx = (msgType: MsgTypeUrl) => {
+    if (!needsTypedConfirmation(msgType)) {
+      void executeMsgTx(msgType);
+      return;
+    }
+
+    const msgGetter = msgGetters.current[0];
+    if (!msgGetter || !msgGetter.isMsgValid()) {
+      toast.error("Please fill in all required fields correctly.");
+      return;
+    }
+
+    const summary = summariseWasmMsg(msgType, msgGetter.msg);
+    if (!summary) {
+      toastError({
+        title: "Cannot describe this transaction",
+        description:
+          "This message is not the shape this page knows how to explain, so it will not be signed here. " +
+          "Reload the page and build the message again.",
+      });
+      return;
+    }
+
+    setPendingConfirm({ summary, msgType });
+  };
+
+  const confirmPendingMsgTx = () => {
+    const pending = pendingConfirm;
+    setPendingConfirm(null);
+    if (pending) {
+      void executeMsgTx(pending.msgType);
+    }
+  };
+
   return (
     <div className="space-y-8">
+      <DevToolsArrivalGate
+        chainDisplayName={chain.chainDisplayName}
+        chainId={chain.chainId}
+        network={currentNetwork}
+        leaveHref={chain.registryName ? `/${chain.registryName}/dashboard` : "/"}
+      />
+
       <div>
         <h1 className="mb-2 flex items-center gap-2 font-heading text-3xl font-bold tracking-tight">
           <Terminal className="h-8 w-8 text-green-accent" />
@@ -470,6 +521,12 @@ export default function DevTools() {
           Perform developer operations using your connected wallet or a multisig account.
         </p>
       </div>
+
+      <DevToolsPowersBanner
+        chainDisplayName={chain.chainDisplayName}
+        chainId={chain.chainId}
+        network={currentNetwork}
+      />
 
       <NetworkToggle
         currentNetwork={currentNetwork}
@@ -802,7 +859,7 @@ export default function DevTools() {
                       <Button
                         variant="action"
                         size="lg"
-                        onClick={() => executeMsgTx(selectedCommand)}
+                        onClick={() => requestMsgTx(selectedCommand)}
                         disabled={processing || !selectedAccount}
                         className="flex-[2] gap-2"
                       >
@@ -835,6 +892,16 @@ export default function DevTools() {
           clearDeploymentLog();
           setLogs([]);
         }}
+      />
+
+      <ConfirmIrreversibleDialog
+        summary={pendingConfirm?.summary ?? null}
+        confirmLabel={
+          selectedAccount?.type === "wallet" ? "Sign & Broadcast" : "Create Multisig Transaction"
+        }
+        working={processing}
+        onCancel={() => setPendingConfirm(null)}
+        onConfirm={confirmPendingMsgTx}
       />
     </div>
   );
