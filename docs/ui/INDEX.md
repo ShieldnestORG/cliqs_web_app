@@ -1,10 +1,10 @@
 # Cosmos Multisig UI - Design System Documentation
 
-> **Cluster:** design-system · **Tags:** ui, design-system, tokens, coherence-daddy, geist · **Related:** [STYLE-GUIDE.md](../STYLE-GUIDE.md), [Typography PRD](./TYPOGRAPHY-PRD.md), [Cards PRD](./CARDS-PRD.md), [Buttons PRD](./BUTTONS-PRD.md)
+> **Cluster:** design-system · **Tags:** ui, design-system, tokens, coherence-daddy, geist, index · **Related:** [STYLE-GUIDE.md](../STYLE-GUIDE.md), [Typography PRD](./TYPOGRAPHY-PRD.md), [Cards PRD](./CARDS-PRD.md), [Buttons PRD](./BUTTONS-PRD.md), [Forms PRD](./FORMS-PRD.md), [Patterns PRD](./PATTERNS-PRD.md), [Validator Dashboard PRD](./VALIDATOR-DASHBOARD-PRD.md), [Transaction Page Redesign PRD](./TRANSACTION-PAGE-REDESIGN-PRD.md)
 
 **UI4 Institutional Design System**  
-**Version:** 1.0  
-**Last Updated:** 2026-08-13
+**Version:** 1.1  
+**Last Updated:** 2026-08-16
 
 > **Canonical token reference: [`docs/STYLE-GUIDE.md`](../STYLE-GUIDE.md).**
 > It carries the current Coherence Daddy colour, typography, radius, elevation and
@@ -26,11 +26,17 @@ The Cosmos Multisig UI implements an institutional-grade design system inspired 
 ### Core UI System
 | Document | Description |
 |----------|-------------|
-| [CARDS-PRD.md](./CARDS-PRD.md) | Card system specification with variants and accents |
-| [BUTTONS-PRD.md](./BUTTONS-PRD.md) | Button system with action, tab, and nav variants |
-| [TYPOGRAPHY-PRD.md](./TYPOGRAPHY-PRD.md) | Font system (Geist, Geist Mono) |
+| [CARDS-PRD.md](./CARDS-PRD.md) | Card system: variants, the default gradient and its `bg-none` opt-out, accents, brackets |
+| [BUTTONS-PRD.md](./BUTTONS-PRD.md) | Button system with action, tab, and nav variants; the near-black-on-coral contrast rule |
+| [TYPOGRAPHY-PRD.md](./TYPOGRAPHY-PRD.md) | Font system (Geist, Geist Mono — no third family) |
 | [FORMS-PRD.md](./FORMS-PRD.md) | Input fields, validation states, slider components |
-| [PATTERNS-PRD.md](./PATTERNS-PRD.md) | CSS patterns, backgrounds, and visual language |
+| [PATTERNS-PRD.md](./PATTERNS-PRD.md) | The GridSpotlight page background, visual language, and the hover-card / copy-tooltip / sidebar-rail interaction patterns |
+
+### Page & Feature Specs
+| Document | Description |
+|----------|-------------|
+| [VALIDATOR-DASHBOARD-PRD.md](./VALIDATOR-DASHBOARD-PRD.md) | Free validator dashboard — CLIQ mode, gas handling, validator actions (partly reconciled against shipped code) |
+| [TRANSACTION-PAGE-REDESIGN-PRD.md](./TRANSACTION-PAGE-REDESIGN-PRD.md) | In-progress transaction page redesign — verification, fees, broadcast-safety states (shipped, with documented drift) |
 
 ---
 
@@ -39,66 +45,87 @@ The Cosmos Multisig UI implements an institutional-grade design system inspired 
 ### Color Variables (Dark Mode)
 
 ```css
-/* Background */
---background: 220 13% 18%;        /* Dark slate */
---card: 220 13% 22%;              /* Slightly lighter */
---muted: 217.2 10% 25%;           /* Subtle gray */
+/* Background — Coherence Daddy dark canvas */
+--background: 240 6.7% 5.9%;         /* #0E0E10 */
+--card:       240 5.9% 10%;          /* #18181B — card + popover */
+--muted:      240 4.6% 12.7%;        /* #1F1F22 */
 
 /* Foreground */
---foreground: 210 40% 98%;        /* Near white */
---muted-foreground: 215 20.2% 65.1%;
+--foreground:       48 16.1% 93.9%;  /* #F2F1ED — warm off-white */
+--muted-foreground: 240 2.7% 64.1%;  /* #A1A1A6 */
 
-/* Accents */
---accent-green: 142 71% 45%;      /* Primary green */
---accent-purple: 263 70% 65%;     /* Secondary purple */
---destructive: 0 62.8% 50%;       /* Error red */
+/* Brand */
+--primary:            10.9 100% 64.5%;  /* #FF6B4A coral */
+--primary-foreground: 240 6.7% 5.9%;    /* #0E0E10 — text ON coral */
+--accent-green:       10.9 100% 64.5%;  /* #FF6B4A — hue 11: CORAL, not green */
+--accent-purple:      260 28% 55%;      /* #7B68AE */
+
+/* Semantic status */
+--success:     156.1 35.9% 45.3%;    /* #4A9D7C — the real green */
+--warning:     37.4 72.3% 56.1%;     /* #E0A33E */
+--info:        219.7 82.2% 64.7%;    /* #5B8DEF */
+--destructive: 0 66.4% 55.7%;        /* #D94343 */
 ```
+
+### Page background
+
+Never paint an opaque, full-bleed background on a page wrapper — one animated canvas
+(`components/GridSpotlight.tsx`) sits behind every route, with the opaque colour on
+`<html>` and a transparent `body`. See
+[Patterns PRD §3](./PATTERNS-PRD.md#3-page-background-gridspotlight).
 
 ### Card Classes
 
 ```css
-/* Variants */
-.card-institutional              /* Square corners, 2px border */
+/* Variants — all rounded-xl; `institutional` differs by border weight, not radius */
+.card-institutional              /* 2px border + transition */
 
-/* Accents */
-.card-accent-left               /* 4px green left border */
-.card-accent-top                /* 3px green top border */
+/* Accents (coral — `--accent-green` is hue 11) */
+.card-accent-left               /* 4px coral left border */
+.card-accent-top                /* 3px coral top border */
 
-/* Angular Brackets (for square cards) */
-.card-bracket-corner            /* Green angular brackets */
-.card-bracket-purple            /* Purple angular brackets */
-
-/* Rounded Brackets (for rounded cards) */
-.card-bracket-corner-round      /* Green curved brackets */
-.card-bracket-corner-round.card-bracket-purple  /* Purple curved */
+/* Brackets */
+.card-bracket-corner            /* Coral corner brackets */
+.card-bracket-purple            /* Purple override */
+.card-bracket-corner-round      /* Alias of .card-bracket-corner — identical output */
 ```
 
 ### Bracket Corners Quick Reference
 
-| Card Style | Use Bracket | Example |
-|------------|-------------|---------|
-| Square (`institutional`) | `bracket="green"` or `"purple"` | Angular L-shaped |
-| Round (`default`, `elevated`) | `bracket="green-round"` or `"purple-round"` | Curved arcs |
+| Prop | Renders |
+|------|---------|
+| `bracket="green"` / `"green-round"` | The same coral brackets — `-round` is an alias |
+| `bracket="purple"` / `"purple-round"` | The same purple brackets |
+| `bracket="all"` | Adds two extra corner divs for a four-corner frame |
+
+### Card background gradient
+
+`default` and `institutional` cards (and the bento variants) ship with
+`bg-gradient-to-br from-card to-muted/30` **by default**. Opt out with `bg-none`.
 
 ### Button Variants
 
 ```css
 /* Action Buttons (Pill Shape) */
-.btn-action-primary             /* Filled pill */
+.btn-action-primary             /* Filled pill  — bg-foreground / text-background */
 .btn-action-secondary           /* Outlined pill */
 
-/* Card CTAs (Square) */
-.btn-card-primary               /* Filled square */
-.btn-card-secondary             /* Outlined square */
+/* Card CTAs (rounded-xl, not square) */
+.btn-card-primary               /* Filled */
+.btn-card-secondary             /* Outlined */
 
 /* Tab Buttons */
-.btn-tab-active                 /* Green active state */
+.btn-tab-active                 /* Coral fill, near-black text (--primary-foreground) */
 .btn-tab-inactive               /* Gray inactive */
 
 /* Navigation */
-.btn-nav-active                 /* Active nav item */
+.btn-nav-active                 /* Active nav item — coral tint + 4px coral left border */
 .btn-nav-inactive               /* Inactive nav item */
 ```
+
+> **Text on coral is near-black, never white.** `--primary-foreground` (`#0E0E10`) is
+> the canonical pairing; white on `#FF6B4A` fails WCAG AA. Zero `text-white` remain
+> under `components/` and `pages/`.
 
 ### Typography Classes
 
@@ -150,7 +177,7 @@ The Cosmos Multisig UI implements an institutional-grade design system inspired 
 ### Card with Accent
 
 ```tsx
-{/* Square card with angular brackets */}
+{/* 2px border, coral left accent, coral corner brackets */}
 <Card variant="institutional" accent="left" bracket="green">
   <CardHeader>
     <CardLabel comment>Section Title</CardLabel>
@@ -161,14 +188,19 @@ The Cosmos Multisig UI implements an institutional-grade design system inspired 
   </CardContent>
 </Card>
 
-{/* Round card with curved brackets */}
-<Card variant="default" bracket="green-round" hover>
+{/* 1px border + shadow, hover lift */}
+<Card variant="default" bracket="green" hover>
   <CardHeader>
     <CardTitle>Feature Card</CardTitle>
   </CardHeader>
   <CardContent>
     {/* Content */}
   </CardContent>
+</Card>
+
+{/* Flat, tinted panel — gradient removed with bg-none */}
+<Card className="border-border/[0.06] bg-muted/30 bg-none">
+  <CardContent className="pt-6">{/* Content */}</CardContent>
 </Card>
 ```
 
@@ -202,19 +234,35 @@ The Cosmos Multisig UI implements an institutional-grade design system inspired 
 /styles/
   └── globals.css                 # All CSS variables & utilities
 
-/components/ui/
-  ├── button.tsx                  # Button with UI4 variants
-  ├── card.tsx                    # Card with accents & brackets
-  ├── input.tsx                   # Input with variants
-  └── slider.tsx                  # Enhanced slider
+/pages/
+  ├── _app.tsx                    # Mounts GridSpotlight + Sidebar
+  └── _document.tsx               # Geist / Geist Mono webfont loading
 
-/docs/ui/
-  ├── INDEX.md                    # This file
-  ├── BUTTONS-PRD.md              # Button specifications
-  ├── CARDS-PRD.md                # Card specifications
-  ├── TYPOGRAPHY-PRD.md           # Font specifications
-  ├── FORMS-PRD.md                # Form specifications
-  └── PATTERNS-PRD.md             # Visual patterns
+/components/
+  ├── GridSpotlight.tsx           # Animated dotted-grid page background
+  ├── Sidebar.tsx                 # Auto-collapsing icon rail (overlay expand)
+  └── ui/
+      ├── button.tsx              # Button with UI4 variants
+      ├── card.tsx                # Card with gradient, accents & brackets
+      ├── bento-grid.tsx          # Bento grid + stat/action cards
+      ├── copy-button.tsx         # Click-only "Copied!" tooltip
+      ├── input.tsx               # Input with variants
+      └── slider.tsx              # Enhanced slider
+
+/lib/
+  └── settingsStorage.ts          # sidebarPinned + other user prefs
+
+/docs/
+  ├── STYLE-GUIDE.md              # Canonical token reference
+  └── ui/
+      ├── INDEX.md                        # This file
+      ├── BUTTONS-PRD.md                  # Button specifications
+      ├── CARDS-PRD.md                    # Card specifications
+      ├── TYPOGRAPHY-PRD.md               # Font specifications
+      ├── FORMS-PRD.md                    # Form specifications
+      ├── PATTERNS-PRD.md                 # Background + interaction patterns
+      ├── VALIDATOR-DASHBOARD-PRD.md      # Validator dashboard spec
+      └── TRANSACTION-PAGE-REDESIGN-PRD.md # Transaction page redesign spec
 ```
 
 ---

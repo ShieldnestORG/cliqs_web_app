@@ -1,20 +1,27 @@
 # Typography PRD
 
+> **Cluster:** design-system · **Tags:** typography, geist, fonts, tracking, tokens · **Related:** [STYLE-GUIDE.md](../STYLE-GUIDE.md), [UI Index](./INDEX.md), [Cards PRD](./CARDS-PRD.md), [Buttons PRD](./BUTTONS-PRD.md)
+
 **Cosmos Multisig UI - Font System Specification**  
-**Version:** 1.0  
-**Last Updated:** December 2024
+**Version:** 1.1  
+**Last Updated:** 2026-08-16
 
 ---
 
 ## 1. Overview
 
-A **three-font system** optimized for crypto data display:
+A **two-family system** — one sans and one mono — optimized for crypto data display:
 
 | Font | Role | Personality |
 |------|------|-------------|
-| **Geist** | Headlines, KPIs, bold values | The Coherence Daddy typeface; hierarchy via weight + tight tracking |
-| **Geist** | Body text, paragraphs | Same family as headings — one typeface throughout |
-| **Geist Mono** | Code, labels, buttons, data | Technical, monospaced, precise |
+| **Geist** | Headlines, KPIs, body text, navigation | The Coherence Daddy typeface; hierarchy via weight + tight tracking |
+| **Geist Mono** | Code, addresses, labels, action buttons | Technical, monospaced, precise |
+
+> **There is no third family.** `pages/_document.tsx` loads exactly two Google Fonts
+> families — `Geist` and `Geist+Mono` — and `styles/globals.css` names only those two
+> in every `font-family` declaration. Inter, JetBrains Mono and Space Grotesk are **not**
+> loaded and must not be referenced in specs or components; earlier revisions of this
+> document listed Inter for body text and navigation, which never matched the code.
 
 ---
 
@@ -23,14 +30,18 @@ A **three-font system** optimized for crypto data display:
 ### Tailwind Config
 
 ```javascript
-// tailwind.config.js
+// tailwind.config.js — theme.extend.fontFamily, verbatim
 fontFamily: {
-  sans: ['Geist', 'system-ui', '-apple-system', 'sans-serif'],
-  heading: ['Geist', 'system-ui', 'sans-serif'],
-  mono: ['Geist Mono', 'ui-monospace', 'SF Mono', 'monospace'],
-  body: ['Geist', 'system-ui', '-apple-system', 'sans-serif'],
+  sans:    ["Geist", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
+  heading: ["Geist", "system-ui", "sans-serif"],
+  mono:    ["Geist Mono", "ui-monospace", "SF Mono", "Menlo", "monospace"],
+  body:    ["Geist", "system-ui", "-apple-system", "sans-serif"],
 }
 ```
+
+`font-heading` is kept as a separate key only because ~104 call sites use it; it resolves
+to Geist, the same family as `font-sans`. Hierarchy comes from weight and tracking, not
+from a second display face.
 
 ### Google Fonts Import
 
@@ -50,44 +61,51 @@ fontFamily: {
 | **Page Title (h1)** | Geist | 30-36px | Bold | Title |
 | **Section Heading (h2)** | Geist | 24px | Semibold | Title |
 | **Card Title (h3)** | Geist | 18-20px | Semibold | Title |
-| **Body Text** | Inter | 14-16px | Normal | Sentence |
+| **Body Text** | Geist | 14-16px | Normal | Sentence |
 | **KPI Value** | Geist | 24-48px | Bold | — |
 | **Data Label** | Geist Mono | 10-12px | Normal | UPPERCASE |
 | **Button Text** | Geist Mono | 11-14px | Semibold | UPPERCASE |
 | **Code/Address** | Geist Mono | 12-14px | Normal | As-is |
 | **Table Header** | Geist Mono | 10-12px | Medium | UPPERCASE |
-| **Navigation** | Inter | 14px | Medium | Title |
+| **Navigation** | Geist | 14px | Medium | Title |
 
 ---
 
-## 4. CSS Variables
+## 4. Scales and CSS Variables
+
+### Font sizes
+
+Sizes come from Tailwind's default scale. `tailwind.config.js` extends it with three
+extra keys — everything else (`text-sm`, `text-2xl`, …) is stock Tailwind. There are
+**no** `--text-*` or `--font-*` CSS variables in `styles/globals.css`.
+
+```javascript
+// tailwind.config.js — theme.extend.fontSize
+micro:     ["0.625rem",  { lineHeight: "1" }],     // 10px
+label:     ["0.75rem",   { lineHeight: "1.25" }],  // 12px
+"body-sm": ["0.8125rem", { lineHeight: "1.5" }],   // 13px
+```
+
+### Letter spacing
+
+The tracking scale **is** a set of CSS variables, defined in `styles/globals.css`
+(`:root`). `tailwind.config.js` does not extend `letterSpacing`, so the `tracking-*`
+utilities remain Tailwind's own scale and are a **separate** set of values from these
+variables — reach for `var(--tracking-*)` when you want the brand scale.
 
 ```css
 :root {
-  /* Font Sizes (rem) */
-  --text-micro: 0.625rem;    /* 10px - Tiny labels */
-  --text-label: 0.75rem;     /* 12px - Labels */
-  --text-sm: 0.875rem;       /* 14px - Body small */
-  --text-base: 1rem;         /* 16px - Body */
-  --text-lg: 1.125rem;       /* 18px - Large body */
-  --text-xl: 1.25rem;        /* 20px - Card titles */
-  --text-2xl: 1.5rem;        /* 24px - Section heads */
-  --text-3xl: 1.875rem;      /* 30px - Page heads */
-  --text-4xl: 2.25rem;       /* 36px - Hero heads */
-  
-  /* Font Weights */
-  --font-normal: 400;
-  --font-medium: 500;
-  --font-semibold: 600;
-  --font-bold: 700;
-  
-  /* Letter Spacing */
-  --tracking-tight: -0.025em;
-  --tracking-normal: 0;
-  --tracking-wide: 0.025em;
-  --tracking-wider: 0.05em;
+  --tracking-tighter: -0.035em;  /* h1 */
+  --tracking-tight:   -0.02em;   /* h2, h3, h4 */
+  --tracking-normal:  0;         /* body */
+  --tracking-wide:    0.02em;
+  --tracking-wider:   0.06em;
+  --tracking-widest:  0.14em;    /* .label-caps */
 }
 ```
+
+`body` also sets `font-feature-settings: "cv11", "ss01", "ss03"` — Geist's stylistic
+alternates.
 
 ---
 
@@ -210,7 +228,7 @@ The `// label` and title serve **different purposes** and should NOT repeat the 
 ```css
 /* Section Labels */
 .text-label {
-  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-family: "Geist Mono", ui-monospace, "SF Mono", monospace;
   font-size: 10px;
   font-weight: 500;
   text-transform: uppercase;
@@ -234,57 +252,80 @@ The `// label` and title serve **different purposes** and should NOT repeat the 
 .text-kpi-lg { font-size: 2.25rem; line-height: 1.1; }
 .text-kpi-md { font-size: 1.5rem; line-height: 1.2; }
 .text-kpi-sm { font-size: 1.125rem; line-height: 1.3; }
+
+/* Portal small-caps label treatment (@layer base) */
+.label-caps {
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+}
 ```
 
 ---
 
 ## 7. Status Indicators
 
-### Positive (success)
+### Positive
 
 ```tsx
 <span className="change-positive">+2.4%</span>
 ```
 
 ```css
+/* styles/globals.css, as shipped */
 .change-positive {
-  color: hsl(var(--success));
+  color: hsl(11 100% 71%);
 }
 ```
 
-### Negative (destructive)
+### Negative
 
 ```tsx
 <span className="change-negative">-1.2%</span>
 ```
 
 ```css
+/* styles/globals.css, as shipped */
 .change-negative {
-  color: hsl(var(--destructive));
+  color: hsl(0 84% 60%);
 }
 ```
+
+> **Known deviation — do not copy this pattern.** Both classes still hardcode raw HSL
+> instead of the semantic tokens. `.change-positive` is hue 11, i.e. **coral, not
+> green**, so a "positive" change currently reads as the brand accent rather than as
+> success; `.change-negative` is a raw red that is not `--destructive`
+> (`0 66.4% 55.7%`). New code should use `text-success` / `text-destructive` directly.
+> Migrating these two classes to `hsl(var(--success))` / `hsl(var(--destructive))` is
+> outstanding work, not something that has shipped.
 
 ---
 
 ## 8. Responsive Typography
 
-### Mobile Adjustments
+### Base heading rules
+
+`styles/globals.css` sets a single, non-responsive size per heading level, plus the
+brand tracking. There is **no** base `p` rule.
 
 ```css
-/* Page Title */
-h1 {
-  @apply text-3xl sm:text-4xl lg:text-5xl;
-}
+h1 { @apply text-3xl font-bold;      letter-spacing: var(--tracking-tighter); }
+h2 { @apply text-2xl font-semibold;  letter-spacing: var(--tracking-tight); }
+h3 { @apply text-xl  font-semibold;  letter-spacing: var(--tracking-tight); }
+h4 { @apply text-lg  font-semibold;  letter-spacing: var(--tracking-tight); }
+```
 
-/* Section Heading */
-h2 {
-  @apply text-xl sm:text-2xl;
-}
+### Responsive steps
 
-/* Body Text - Slightly larger on mobile for readability */
-p {
-  @apply text-sm sm:text-base;
-}
+Responsive sizing is applied **per usage** with Tailwind classes, not globally — so a
+hero heading opts in explicitly:
+
+```tsx
+<h1 className="text-3xl font-heading font-bold tracking-tight sm:text-4xl">
+  Cosmos Multisig
+</h1>
 ```
 
 ---

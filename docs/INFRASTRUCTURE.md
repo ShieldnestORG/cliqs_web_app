@@ -1,8 +1,10 @@
 # Infrastructure & Outage Notes
 
-> **Cluster:** deployment · **Tags:** vercel, mongodb-atlas, chain-registry, outage, coreum, byodb · **Related:** [PRD.md](PRD.md), [SETUP.md](../SETUP.md), [multisig-indexer.md](multisig-indexer.md)
+> **Cluster:** deployment · **Tags:** vercel, mongodb-atlas, chain-registry, outage, coreum, byodb, security-headers, ssrf · **Related:** [PRD.md](PRD.md), [SETUP.md](../SETUP.md), [multisig-indexer.md](multisig-indexer.md), [SOC2-GAP-ASSESSMENT.md](security/SOC2-GAP-ASSESSMENT.md)
 
-Operational reference for the deployed app. Written 2026-08-12 after a full-site outage; everything below was verified against the live deployment rather than inferred.
+Operational reference for the deployed app. Written 2026-08-12 after a full-site outage; everything up to the "Edge & outbound controls" section was verified against the live deployment rather than inferred.
+
+**Scope note (2026-08-16):** the "Edge & outbound controls" section was added after the outage write-up and is **verified from the repository only** — the code is in `main`, but nobody has re-checked the response headers on `app.cliqs.io`. Treat it as "what a deploy of this tree will do", not as a live-deployment observation.
 
 ## Where this app actually lives
 
@@ -62,3 +64,40 @@ Environment changes require a redeploy to take effect.
 ## BYODB
 
 BYODB never replaces the default database silently. It activates only when the browser sends an `x-byodb-uri` header (`lib/byodb/middleware.ts`), stored client-side in Settings. A missing CLIQ is therefore not explained by BYODB unless that header is actually being sent.
+
+## Edge & outbound controls
+
+Repo-verified (see the scope note at the top): read out of `main`, not measured against `app.cliqs.io`.
+
+### Security headers
+
+`next.config.js` defines a `securityHeaders` array and returns it from `async headers()` for `source: "/:path*"`, so it applies to pages **and** API routes:
+
+| Header | Value |
+|---|---|
+| `Strict-Transport-Security` | `max-age=63072000; includeSubDomains` (2 years, no `preload`) |
+| `X-Frame-Options` | `DENY` |
+| `X-Content-Type-Options` | `nosniff` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` |
+
+**There is deliberately no Content-Security-Policy.** The app loads Google Fonts and connects to arbitrary user-supplied RPC and MongoDB endpoints, so an untested CSP is a production-outage risk of exactly the kind this document exists to prevent. The rationale lives in a comment in `next.config.js`; a report-only rollout is tracked as a follow-up in [SOC2-GAP-ASSESSMENT.md](security/SOC2-GAP-ASSESSMENT.md).
+
+There is no `vercel.json` in the repo (VERIFIED), so `next.config.js` is the only header source under version control. If a header ever turns up missing on `app.cliqs.io`, check the Vercel project dashboard for a header override there before suspecting this config — INFERRED, not tested.
+
+### Outbound SSRF guard on BYODB connections
+
+A client-supplied Mongo URI makes the *server* open an outbound connection, which is a route into private infrastructure. `lib/byodb/hostValidation.ts` resolves every host in the URI via DNS and refuses the connection if any resolved address is loopback, RFC 1918, CGNAT, link-local (including `169.254.169.254`, the cloud metadata address), or otherwise reserved. `mongodb+srv://` URIs are handled by resolving the same `_mongodb._tcp.<host>` SRV record the driver uses and validating each SRV target — Atlas targets resolve to public IPs, so legitimate Atlas URIs pass.
+
+It is enforced at four points, so the header path is covered as well as the explicit setup routes:
+
+- `pages/api/db/setup.ts`
+- `pages/api/db/test-connection.ts`
+- `lib/byodb/dynamicMongo.ts` → `getDynamicDb`
+- `lib/byodb/dynamicMongo.ts` → `testConnection`
+
+Two residual risks are documented in the module header and tracked as follow-up L4: **DNS rebinding** (the driver re-resolves after the check) and **replica-set discovery** (a validated public mongod can advertise private member addresses in its hello response, which the driver connects to unvalidated).
+
+Operational consequence: this is why a BYODB URI pointing at `localhost` or a VPC-internal host now fails with a host-validation error rather than hanging or connecting. That is the guard working, not a regression.
+
+Client-supplied **RPC** endpoints (`body.chain` on `multisig/list` and `multisig/[multisigAddress]/ensure`) are **not** yet validated — open follow-up L4.

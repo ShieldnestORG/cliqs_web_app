@@ -1,5 +1,35 @@
 # MsgWithdrawValidatorCommission Debugging Summary
 
+> **Historical snapshot — do not copy the gas and fee numbers.** This file is a verbatim
+> debugging transcript from the investigation, kept for its reasoning and its `cored`
+> invocations, not as current reference. It is linked from the README under
+> "Debugging & history", so read it with that framing. The `--gas` / `--fees` values
+> throughout are **stale**: every `cored` invocation and signdoc below that covers the
+> `MsgWithdrawDelegationReward` + `MsgWithdrawValidatorCommission` pair uses
+> `--gas 1100000` / `--fees 68750ucore`, and the one standalone commission withdrawal
+> uses `--gas 600000` / `--fees 37500ucore`. (Grep `1100000\|68750\|600000\|37500` to
+> find them; line numbers are deliberately not listed, since editing this file moves
+> them.) The transcripts are left unedited on purpose — rewriting them would
+> misrepresent what was actually run.
+>
+> Current figures, recomputed from `lib/txMsgHelpers.ts` at the time of this note:
+> `gasOfTx()` (`:65-69`) adds a flat 100,000 to the sum of `gasOfMsg()` (`:6-63`) per
+> message, where `WithdrawDelegatorReward` is 500,000 (`:31-34`) and
+> `WithdrawValidatorCommission` is 600,000 (`:35-39`). So:
+>
+> | Messages | Gas then | **Gas now** | Fee then | **Fee now** |
+> |---|---|---|---|---|
+> | `WithdrawDelegatorReward` + `WithdrawValidatorCommission` | 1,100,000 | **1,200,000** | 68,750 ucore | **75,000 ucore** |
+> | `WithdrawValidatorCommission` alone | 600,000 | **700,000** | 37,500 ucore | **43,750 ucore** |
+>
+> **Assumed gas price: 0.0625 ucore/gas**, stated explicitly because the fee figures are
+> meaningless without it. That rate is not a repo constant — it is derived from this
+> file's own transcripts, where 68,750 / 1,100,000 and 37,500 / 600,000 both give exactly
+> 0.0625. At runtime the app does not hardcode it: `lib/validatorTx.ts:58,61` computes
+> `calculateFee(gasOfTx(msgTypeUrls), chain.gasPrice)`, and `chain.gasPrice` comes from
+> the chain registry or `NEXT_PUBLIC_GAS_PRICE`. At a different gas price the "Fee now"
+> column changes; the "Gas now" column does not.
+
 ## Problem Statement
 `MsgWithdrawValidatorCommission` transactions fail with "signature verification failed" error despite:
 - All local signature verifications passing ✅

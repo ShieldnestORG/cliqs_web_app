@@ -1,8 +1,8 @@
 # Cosmos Multisig UI Style Guide
 
-> **Cluster:** design-system · **Tags:** coherence-daddy, tokens, tailwind, typography, branding, geist · **Related:** [UI Docs Index](ui/INDEX.md), [Typography PRD](ui/TYPOGRAPHY-PRD.md), [Buttons PRD](ui/BUTTONS-PRD.md), [Cards PRD](ui/CARDS-PRD.md)
+> **Cluster:** design-system · **Tags:** coherence-daddy, tokens, tailwind, typography, geist, gridspotlight · **Related:** [UI Docs Index](ui/INDEX.md), [Typography PRD](ui/TYPOGRAPHY-PRD.md), [Buttons PRD](ui/BUTTONS-PRD.md), [Cards PRD](ui/CARDS-PRD.md), [Patterns PRD](ui/PATTERNS-PRD.md)
 
-**Updated:** 2026-08-13
+**Updated:** 2026-08-16
 **Brand:** Coherence Daddy (ShieldNest ecosystem)
 
 ## Source of truth
@@ -54,7 +54,8 @@ utilities (`text-green-500`, `bg-amber-500`, `text-red-500`).
 ### The `green-accent` naming trap
 
 `--accent-green` is **hue 11 — the brand coral, not a green.** The name is
-inherited from an earlier migration and is kept only because ~60 call sites use
+inherited from an earlier migration and is kept only because 97 call sites (77
+lines across 22 files, `grep -ro "green-accent" components pages`) use
 `green-accent`.
 
 **Never map "success" to `green-accent`.** It renders orange and becomes nearly
@@ -91,7 +92,15 @@ The Tailwind config nests these as `purple: { accent }`, so the utility is
 `--border` is a plain HSL triplet (`0 0% 100%`) with **no alpha baked in**, so
 opacity modifiers work: `border-border/30` → `hsl(0 0% 100% / .3)`.
 
-The default subtle border is applied globally as `border-border/[0.06]`.
+The consumer supplies the alpha, and there are exactly two levels:
+
+| State | Value |
+|-------|-------|
+| Resting | `border-border/[0.06]` — applied globally by `* { @apply border-border/[0.06] }` |
+| Hover | `hsl(var(--border) / 0.12)` — e.g. `.card-institutional:hover`, `.quick-stat:hover` |
+
+Doubling the alpha on hover is the whole border interaction; don't add a colour
+shift on top of it.
 
 Do **not** put an alpha inside the token (e.g. `0 0% 100% / 0.06`). That makes
 every `border-border/NN` expand to `hsl(... / 0.06 / .5)` — two slashes, an
@@ -151,12 +160,39 @@ durations globally.
 
 ## Styling Rules
 
+### Page background
+
+The app paints one animated dotted-grid canvas behind every page —
+`components/GridSpotlight.tsx`, mounted once in `pages/_app.tsx`. The mechanism
+matters:
+
+- **`<html>` carries the opaque `--background`; `body` is `transparent`.** The
+  canvas is `position: fixed`, `z-index: -1`, `pointer-events: none`, so it paints
+  above the html background and below all content.
+- **Pages must not paint their own opaque, full-bleed background.** A
+  `bg-background` on a page-level wrapper covers the canvas and deletes the effect
+  for that route. `.bg-pattern-dots` was neutralised to `background: transparent`
+  for exactly this reason — it still has a consumer in
+  `components/layout/DashboardLayout.tsx`, so it could not be deleted.
+- Panels, cards, headers and dialogs *should* paint their own backgrounds — they
+  are meant to occlude the field.
+- The canvas caps itself at ~30fps, pauses on a hidden tab, and renders a single
+  static frame under `prefers-reduced-motion: reduce`.
+
+Full rules, including the spotlight-suppression threshold, in
+[Patterns PRD §3](ui/PATTERNS-PRD.md#3-page-background-gridspotlight).
+
 ### Cards
 
 - Background `bg-card` (`#18181B`)
+- **A linear gradient is the default:** `bg-gradient-to-br from-card to-muted/30`
+  on the `default` and `institutional` card variants and on the bento variants.
+  Opt out with **`bg-none`**, which clears `background-image` and keeps your
+  `bg-*` colour — use it for flat or status-tinted panels.
+- **No radial gradients.** The card gradient is the only background gradient a
+  surface should carry.
 - Border inherits the global `border-border/[0.06]`
-- `rounded-xl`
-- **No radial gradients.** Flat backgrounds only.
+- `rounded-xl` on every variant — there is no square card
 
 ### Buttons
 
@@ -166,9 +202,23 @@ durations globally.
 - Ghost/outline: standard Shadcn patterns using `--secondary`
 - Do not hardcode `bg-[#ff876d]`; use `bg-primary`
 
+### Text on coral
+
+The canonical pairing on any coral surface is near-black
+`--primary-foreground` / `#0E0E10`. White on `#FF6B4A` lands at roughly 2.8:1 and
+fails WCAG AA; `#0E0E10` lands at roughly 6.9:1 and passes. There are currently
+**zero** `text-white` occurrences under `components/` and `pages/` — keep it that
+way. When you need light text, use `text-foreground` (`#F2F1ED`) on a dark
+surface.
+
 ### Focus states
 
-Ring is `--ring` = brand coral `#FF6B4A`.
+Ring is `--ring` = brand coral `#FF6B4A`, via
+`focus-visible:ring-2 focus-visible:ring-ring`.
+
+Two purple survivors are outstanding cleanup, not intent: the `.focus-ring`
+helper class in `styles/globals.css` and the `shadow-focus-ring` key in
+`tailwind.config.js` both still resolve to `--accent-purple` (`260 28% 55%`).
 
 ### Hardcoded colours to avoid
 
@@ -187,6 +237,17 @@ dialogs and dashboard panels. When touching such a file, migrate it:
 `dark:` variants are dead code here: `tailwind.config.js` sets
 `darkMode: ["class"]` but nothing ever adds the `dark` class.
 
+### Known deviations still in `globals.css`
+
+These three utilities bypass the tokens today. They are **open cleanup**, not the
+intended pattern — do not copy them, and prefer the semantic classes in new code.
+
+| Class | As shipped | Should be |
+|-------|-----------|-----------|
+| `.change-positive` | `hsl(11 100% 71%)` — coral, so a positive delta is not green | `hsl(var(--success))` |
+| `.change-negative` | `hsl(0 84% 60%)` — a raw red that is not `--destructive` | `hsl(var(--destructive))` |
+| `.progress-gradient` | three raw `hsl(11 …)` coral stops | tokenised coral stops |
+
 ## Component framework
 
 - **UI components**: Shadcn/Radix — inherit CSS variables automatically
@@ -204,5 +265,7 @@ dialogs and dashboard panels. When touching such a file, migrate it:
 - CSS variables: `styles/globals.css` (`:root`)
 - Tailwind config: `tailwind.config.js`
 - Font loading: `pages/_document.tsx`
+- Page background canvas: `components/GridSpotlight.tsx`, mounted in `pages/_app.tsx`
 - Shadcn components: `components/ui/*`
+- Sidebar rail + pin persistence: `components/Sidebar.tsx`, `lib/settingsStorage.ts`
 - Feature flags: `lib/featureFlags.ts`

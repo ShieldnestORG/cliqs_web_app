@@ -1,5 +1,7 @@
 # Multisig Membership Indexer Contract
 
+> **Cluster:** services · **Tags:** indexer, multisig-discovery, http-contract, railway, env · **Related:** [INFRASTRUCTURE.md](INFRASTRUCTURE.md), [SETUP.md](../SETUP.md), [PRD.md](PRD.md)
+
 This app now treats external multisig discovery as a dedicated indexer domain:
 `multisig membership discovery`.
 
@@ -105,8 +107,17 @@ Request body:
 
 Current source values sent by the app:
 
-- `app_import`
-- `account_pubkey`
+- `app_import` — a multisig created through the app (`pages/api/chain/[chainId]/multisig/index.ts`)
+- `account_pubkey` — rehydrated from an on-chain account pubkey. **Two senders**, not one:
+  `lib/multisigRegistry.ts:92`, and `lib/chainMultisigDiscovery.ts:71` inside
+  `registerDiscoveredMultisigs` (`:52`), which persists each discovered multisig with
+  `createMultisig` and then syncs it onward; that path is reached from
+  `pages/api/chain/[chainId]/multisig/list/index.ts:115`. The indexer therefore also
+  receives multisigs found by RPC discovery, not only those rehydrated via the registry
+- `manual_admin` — resolved by asking the indexer itself, then persisted back (`lib/multisigRegistry.ts`)
+
+`lib/multisigIndexer.ts` also types `observed_tx` and `contract_query`, but nothing
+in the app sends them today.
 
 ## Current App Behavior
 

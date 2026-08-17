@@ -1,5 +1,12 @@
 # Bundle Size Optimization PRD
 
+> **Cluster:** performance · **Tags:** bundle-size, code-splitting, lazy-import, next-bundle-analyzer · **Related:** [Bundle-Optimization summary](Appendix/Bundle-Optimization.md), [PRD.md](PRD.md), [README.md](../README.md)
+
+**Status: complete and historical.** This records work finished on 2025-12-12; the
+numbers below are the measurements taken then and have not been re-measured since.
+[`docs/Appendix/Bundle-Optimization.md`](Appendix/Bundle-Optimization.md) is a
+one-paragraph summary of this document — this file is the canonical version.
+
 ## Overview
 
 **Problem**: The application's initial JavaScript bundle is 1.32 MB, with the `_app` chunk alone being 1.21 MB. This significantly impacts:
