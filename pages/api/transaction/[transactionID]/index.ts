@@ -1,7 +1,13 @@
 import { cancelTransaction, getTransaction, updateTxHash } from "@/graphql/transaction";
 import { UpdateDbTxHashBody } from "@/lib/api";
 import { withByodbMiddleware } from "@/lib/byodb/middleware";
-import { checkRateLimit, getClientIdentifier, rateLimitKey } from "@/lib/rateLimit";
+import {
+  TRANSACTION_READ_LIMIT,
+  TRANSACTION_READ_ROUTE,
+  checkRateLimit,
+  getClientIdentifier,
+  rateLimitKey,
+} from "@/lib/rateLimit";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 const endpointErrMsg = "Failed to update transaction";
@@ -14,31 +20,48 @@ async function apiTransactionActions(req: NextApiRequest, res: NextApiResponse) 
     return;
   }
 
-  // Rate limit BOTH methods, and do it before the GET branch below.
+  // READS ARE LIMITED. WRITES ARE NOT. Do not "simplify" this by hoisting the
+  // limit above the method branch — that is what an earlier revision did, and it
+  // is a funds bug, not a style nit.
   //
-  // The GET is unauthenticated and returns the full transaction — dataJSON
-  // (messages, amounts, recipients, memo) plus every collected signature. With
-  // no limit, an attacker holding or guessing transaction ids can sweep them
-  // for free, one request per id. A limit does not make the read private; it
-  // makes bulk harvesting cost something, which is the cheap half of the fix.
+  // POST on this route carries updateDbTxHash, which runs immediately AFTER a
+  // transaction has been broadcast and is already on chain
+  // (pages/[chainName]/[address]/transaction/[transactionID].tsx records the
+  // hash first, for the reason stated in the comment there). lib/request.ts
+  // turns any non-2xx into a rejected promise, so a 429 here throws past
+  // setTransactionHash / setTransactionStatus("broadcast") and the row stays
+  // status=pending with an empty txHash while the funds have already moved. The
+  // operator then sees a generic broadcast failure and is steered toward
+  // cancel-and-recreate — a double-execution risk for a MsgSend. A shared
+  // budget made that reachable from nothing worse than several CLIQ members
+  // sitting behind one office NAT or mobile CGNAT egress IP.
   //
-  // This is deliberately NOT a fix for the disclosure itself. Gating this route
-  // and stopping the transaction page's getServerSideProps from embedding the
-  // same payload in server-rendered HTML is tracked separately — that change
-  // alters who can open a transaction link, which is a product decision, and it
-  // must not land before Ledger holders can authenticate at all.
-  const limit = checkRateLimit(
-    rateLimitKey("/api/transaction/[transactionID]", getClientIdentifier(req)),
-    { limit: 30, windowMs: 60_000 },
-  );
-  if (!limit.allowed) {
-    res.setHeader("Retry-After", String(limit.retryAfterSeconds));
-    res.status(429).send("Too many requests");
-    return;
-  }
-
+  // The write path is authenticated only by knowing the transaction id, exactly
+  // as before; declining to rate limit it does not widen access.
   try {
     if (req.method === "GET") {
+      // The GET is unauthenticated and returns the full transaction — dataJSON
+      // (messages, amounts, recipients, memo) plus every collected signature.
+      // With no limit, an attacker holding or guessing transaction ids can sweep
+      // them for free. A limit does not make the read private; it makes bulk
+      // harvesting cost something. The same budget is charged in the transaction
+      // page's getServerSideProps, which returns the identical payload — without
+      // that, this limit was bypassable by requesting the page instead.
+      //
+      // Still NOT a fix for the disclosure itself: anyone with a transaction id
+      // can read it. Closing that changes who can open a transaction link, which
+      // is a product decision, and it must not land before Ledger holders can
+      // authenticate at all.
+      const limit = checkRateLimit(
+        rateLimitKey(TRANSACTION_READ_ROUTE, getClientIdentifier(req)),
+        TRANSACTION_READ_LIMIT,
+      );
+      if (!limit.allowed) {
+        res.setHeader("Retry-After", String(limit.retryAfterSeconds));
+        res.status(429).send("Too many requests");
+        return;
+      }
+
       const tx = await getTransaction(txId);
       if (!tx) {
         res.status(404).send({ error: "Transaction not found" });

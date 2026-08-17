@@ -13,6 +13,7 @@ import TransactionViewPage, {
   getServerSideProps,
 } from "@/pages/[chainName]/[address]/transaction/[transactionID]";
 import { getTransaction } from "@/graphql/transaction";
+import { TRANSACTION_READ_LIMIT, resetRateLimits } from "@/lib/rateLimit";
 
 jest.mock("@/graphql/transaction", () => ({
   getTransaction: jest.fn(),
@@ -188,5 +189,90 @@ describe("View Transaction Route (/[chainName]/[address]/transaction/[id]): P0",
       },
       { timeout: 5000 },
     );
+  });
+});
+
+/**
+ * This SSR render returns the same payload as GET /api/transaction/<id> —
+ * dataJSON, every signature, txHash — straight from the database without going
+ * through that route. Rate limiting only the API route was therefore bypassable
+ * by requesting the page instead. These tests hold that door shut.
+ */
+describe("View Transaction SSR: shares the transaction-read budget: P0", () => {
+  const CALLER_IP = "203.0.113.99";
+
+  const ssr = async (ip: string = CALLER_IP) => {
+    const res = { statusCode: 200, setHeader: jest.fn() };
+    const result = await getServerSideProps({
+      params: { transactionID: "ssr-budget-tx" },
+      req: { headers: { "x-forwarded-for": ip } },
+      res,
+      query: {},
+      resolvedUrl: "",
+    } as never);
+
+    return { result: result as unknown as { props: Record<string, unknown> }, res };
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    resetRateLimits();
+    mockGetTransaction.mockResolvedValue({
+      id: "ssr-budget-tx",
+      dataJSON: mockTransactionJSON,
+      txHash: "",
+      signatures: [],
+      status: "pending",
+    } as never);
+  });
+
+  it("refuses to render the payload once the shared read budget is spent", async () => {
+    for (let i = 0; i < TRANSACTION_READ_LIMIT.limit; i++) {
+      const { result } = await ssr();
+      expect(result.props.transactionJSON).toBe(mockTransactionJSON);
+    }
+
+    const { result, res } = await ssr();
+
+    // The harvest is refused: no dataJSON, no signatures, and a real 429.
+    expect(result.props.readLimited).toBe(true);
+    expect(result.props.transactionJSON).toBeNull();
+    expect(result.props.signatures).toEqual([]);
+    expect(res.statusCode).toBe(429);
+    expect(res.setHeader).toHaveBeenCalledWith("Retry-After", expect.any(String));
+  });
+
+  it("does not hit the database at all once refused", async () => {
+    for (let i = 0; i < TRANSACTION_READ_LIMIT.limit; i++) await ssr();
+    mockGetTransaction.mockClear();
+
+    await ssr();
+
+    expect(mockGetTransaction).not.toHaveBeenCalled();
+  });
+
+  it("budgets each caller separately", async () => {
+    for (let i = 0; i < TRANSACTION_READ_LIMIT.limit; i++) await ssr();
+    expect((await ssr()).result.props.readLimited).toBe(true);
+
+    const other = await ssr("198.51.100.7");
+    expect(other.result.props.readLimited).toBeUndefined();
+    expect(other.result.props.transactionJSON).toBe(mockTransactionJSON);
+  });
+
+  it("shows the retry card instead of firing a doomed client fetch when refused", async () => {
+    render(
+      <TransactionViewPage
+        transactionJSON={null}
+        transactionID="ssr-budget-tx"
+        txHash=""
+        signatures={[]}
+        status="pending"
+        readLimited
+      />,
+    );
+
+    expect(await screen.findByText("Could not load this transaction")).toBeInTheDocument();
+    expect(screen.getByText(/Too many requests from this network/)).toBeInTheDocument();
   });
 });

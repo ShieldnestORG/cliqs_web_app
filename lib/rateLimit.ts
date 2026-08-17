@@ -20,7 +20,37 @@
  * window boundary. That is the accepted trade for keeping this dependency-free.
  */
 
-import type { NextApiRequest } from "next";
+/**
+ * Minimal shape needed to identify a caller. Typed structurally rather than as
+ * NextApiRequest so getServerSideProps can share one budget with the API route —
+ * its `context.req` is a plain IncomingMessage, not a NextApiRequest.
+ */
+export interface IdentifiableRequest {
+  readonly headers: Record<string, string | string[] | undefined>;
+  readonly socket?: { readonly remoteAddress?: string };
+}
+
+/**
+ * Shared budget for reading one transaction.
+ *
+ * Both read surfaces count against this single key on purpose: the API GET and
+ * the transaction page's getServerSideProps return the same payload (dataJSON,
+ * signatures, txHash), so budgeting them separately would let a sweep spend the
+ * allowance twice and halve the cost of the exact harvest this limits.
+ *
+ * Legitimate volume is ~1 SSR render + ~1 API GET per page open — `loadTx` runs
+ * once on mount and on the manual Retry button, and nothing on that page polls
+ * (VERIFIED: no setInterval in pages/[chainName]/[address]/transaction/
+ * [transactionID].tsx). 60/min/IP is therefore far above any human, including a
+ * whole office behind one NAT egress address, while still capping a scripted
+ * id-sweep at 60/min per instance instead of unlimited.
+ *
+ * WRITES ARE DELIBERATELY NOT LIMITED — see the route handler for why.
+ */
+export const TRANSACTION_READ_LIMIT = { limit: 60, windowMs: 60_000 } as const;
+
+/** Single key for both read surfaces. */
+export const TRANSACTION_READ_ROUTE = "transaction-read";
 
 export interface RateLimitOptions {
   /** Maximum number of allowed requests per window. */
@@ -76,12 +106,16 @@ export function rateLimitKey(route: string, identifier: string): string {
  * On Vercel it is set by the platform, so the first entry is the real client;
  * anywhere else, treat this as a hint rather than an identity.
  */
-export function getClientIdentifier(req: NextApiRequest): string {
-  const forwarded = req.headers["x-forwarded-for"];
+export function getClientIdentifier(req: IdentifiableRequest | undefined): string {
+  // Must never throw. This runs inside the transaction page's getServerSideProps,
+  // where an exception would 500 the whole page — a worse outcome than any abuse
+  // the limit prevents. A caller we cannot identify falls back to the shared
+  // "unknown" bucket, which is the documented behaviour above.
+  const forwarded = req?.headers?.["x-forwarded-for"];
   const raw = Array.isArray(forwarded) ? forwarded[0] : forwarded;
-  const first = raw?.split(",")[0]?.trim();
+  const first = typeof raw === "string" ? raw.split(",")[0]?.trim() : undefined;
 
-  return first || req.socket?.remoteAddress || "unknown";
+  return first || req?.socket?.remoteAddress || "unknown";
 }
 
 /**
