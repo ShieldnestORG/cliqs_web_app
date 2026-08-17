@@ -69,7 +69,7 @@ jobs:
 
       - name: Trigger WASM rebuild
         if: steps.compare.outputs.up_to_date == 'false' || steps.quality.outputs.coreum_safe == 'false'
-        uses: peter-evans/repository-dispatch@v3
+        uses: peter-evans/repository-dispatch@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           event-type: new-cw-plus-release
