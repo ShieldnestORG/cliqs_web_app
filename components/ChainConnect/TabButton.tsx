@@ -16,7 +16,7 @@ export default function TabButton({
         "border-2 bg-transparent transition-all duration-200",
         "data-[state=inactive]:border-muted-foreground data-[state=inactive]:text-muted-foreground",
         "data-[state=inactive]:hover:border-foreground data-[state=inactive]:hover:bg-muted/50",
-        "data-[state=active]:border-[hsl(var(--accent-green))] data-[state=active]:bg-[hsl(var(--accent-green))] data-[state=active]:text-white",
+        "data-[state=active]:border-[hsl(var(--accent-green))] data-[state=active]:bg-[hsl(var(--accent-green))] data-[state=active]:text-primary-foreground",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent-purple)/0.5)]",
         className,
       )}

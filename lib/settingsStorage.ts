@@ -14,11 +14,15 @@ export interface UserSettings {
   requireWalletSignInForCliqs: boolean;
   // Preferred developer console network mode
   preferredDevNetwork: "mainnet" | "testnet";
+  // Keep the desktop sidebar pinned open (push mode) instead of hover-expand
+  // Default: false (auto-collapsed icon rail)
+  sidebarPinned: boolean;
 }
 
 const defaultSettings: UserSettings = {
   requireWalletSignInForCliqs: false,
   preferredDevNetwork: "mainnet",
+  sidebarPinned: false,
 };
 
 /**

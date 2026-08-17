@@ -73,7 +73,7 @@ export default function CreateCliqPage() {
             </div>
 
             {/* Type Comparison Card */}
-            <Card className="border-border/[0.06] bg-muted/30">
+            <Card className="border-border/[0.06] bg-muted/30 bg-none">
               <CardContent className="p-4">
                 <div className="grid gap-4 text-sm sm:grid-cols-3">
                   {/* PubKey Features */}

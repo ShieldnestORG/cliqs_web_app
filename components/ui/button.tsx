@@ -34,7 +34,7 @@ const buttonVariants = cva(
         "card-cta-outline":
           "bg-transparent border-2 border-foreground text-foreground hover:bg-muted rounded-xl font-heading",
         tab:
-          "rounded-full uppercase tracking-wide font-mono text-xs border-2 data-[active=true]:bg-green-accent data-[active=true]:text-white data-[active=true]:border-green-accent data-[active=false]:border-muted-foreground data-[active=false]:text-muted-foreground data-[active=false]:hover:border-foreground data-[active=false]:hover:bg-muted/50",
+          "rounded-full uppercase tracking-wide font-mono text-xs border-2 data-[active=true]:bg-green-accent data-[active=true]:text-primary-foreground data-[active=true]:border-green-accent data-[active=false]:border-muted-foreground data-[active=false]:text-muted-foreground data-[active=false]:hover:border-foreground data-[active=false]:hover:bg-muted/50",
         nav:
           "w-full justify-start gap-3 rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground data-[active=true]:bg-green-accent/20 data-[active=true]:border-l-4 data-[active=true]:border-l-green-accent data-[active=true]:text-foreground data-[active=true]:font-semibold",
         icon:

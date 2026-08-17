@@ -40,18 +40,18 @@ const Button = (props: Props) => (
         border: none;
         padding: 12px;
         font-size: 1rem;
-        color: white;
+        color: hsl(var(--foreground));
         font-style: italic;
         margin-top: 20px;
         text-decoration: none;
         text-align: center;
       }
       .primary {
-        border: 2px solid white;
+        border: 2px solid hsl(var(--foreground));
       }
       button:hover,
       button:focus {
-        outline: 1px solid white;
+        outline: 1px solid hsl(var(--foreground));
       }
       button:first-child {
         margin-top: 0;

@@ -76,7 +76,7 @@ export default function BalanceDisplay({
 
   if (loading) {
     return (
-      <Card className={cn("border-muted bg-muted/30", className)}>
+      <Card className={cn("border-muted bg-muted/30 bg-none", className)}>
         <CardContent className="pt-6">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Wallet className="h-4 w-4 animate-pulse" />
@@ -89,7 +89,7 @@ export default function BalanceDisplay({
 
   if (treasuryError) {
     return (
-      <Card className={cn("border-destructive/50 bg-destructive/10", className)}>
+      <Card className={cn("border-destructive/50 bg-destructive/10 bg-none", className)}>
         <CardContent className="pt-6">
           <div className="flex items-center gap-2 text-sm text-destructive">
             <AlertCircle className="h-4 w-4" />
@@ -149,7 +149,7 @@ export default function BalanceDisplay({
       : null;
 
   return (
-    <Card className={cn("border-muted bg-muted/30", className)}>
+    <Card className={cn("border-muted bg-muted/30 bg-none", className)}>
       <CardContent className="pt-6">
         <div className="grid grid-cols-2 gap-4">
           {/* Treasury Balance - This is what will be used for transactions */}

@@ -283,7 +283,7 @@ const TransactionInfo = ({ tx, currentOnChainSequence, compact }: TransactionInf
           background: transparent;
           font-size: 14px;
           font-weight: bold;
-          color: rgba(255, 255, 255, 0.7);
+          color: hsl(var(--muted-foreground));
         }
         .meta-data li div {
           padding: 3px 6px;
