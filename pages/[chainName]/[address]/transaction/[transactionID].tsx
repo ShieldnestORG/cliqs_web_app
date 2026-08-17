@@ -2,6 +2,13 @@ import { isChainInfoFilled } from "@/context/ChainsContext/helpers";
 import { DbSignatureObj } from "@/graphql";
 import { getTransaction } from "@/graphql/transaction";
 import { cancelDbTx, updateDbTxHash } from "@/lib/api";
+import {
+  TRANSACTION_READ_LIMIT,
+  TRANSACTION_READ_ROUTE,
+  checkRateLimit,
+  getClientIdentifier,
+  rateLimitKey,
+} from "@/lib/rateLimit";
 import { makeMultisignedTxBytesDirect, shouldUseDirectMode } from "@/lib/multisigDirect";
 import { normalizePubkey, safeAminoMultisigTxBytes } from "@/lib/multisigAmino";
 import { createMultiRpcVerifier, BroadcastResult } from "@/lib/rpc";
@@ -46,12 +53,42 @@ interface PageProps {
   txHash: string;
   signatures: readonly DbSignatureObj[];
   status: "pending" | "broadcast" | "cancelled";
+  /** True when this render was refused by the shared transaction-read budget. */
+  readLimited?: boolean;
 }
 
 export const getServerSideProps: GetServerSideProps<PageProps> = async (context) => {
   // get transaction info
   const transactionID = context.params?.transactionID?.toString();
   assert(transactionID, "Transaction ID missing");
+
+  // This render returns the same payload as GET /api/transaction/<id> —
+  // dataJSON, every signature, and txHash — straight out of the database,
+  // without going through that route. Limiting only the API route therefore
+  // bought nothing: a sweep could request this page instead and harvest the
+  // identical data for free, one request per id. Both surfaces charge the same
+  // key so the budget cannot be spent twice.
+  //
+  // Only reads are charged. Nothing on the write path renders this page.
+  const readLimit = checkRateLimit(
+    rateLimitKey(TRANSACTION_READ_ROUTE, getClientIdentifier(context.req)),
+    TRANSACTION_READ_LIMIT,
+  );
+  if (!readLimit.allowed) {
+    context.res.statusCode = 429;
+    context.res.setHeader("Retry-After", String(readLimit.retryAfterSeconds));
+    return {
+      props: {
+        transactionJSON: null,
+        txHash: "",
+        transactionID,
+        signatures: [],
+        status: "pending",
+        readLimited: true,
+      },
+    };
+  }
+
   const tx = await getTransaction(transactionID);
 
   if (!tx) {
@@ -85,6 +122,7 @@ const TransactionPage = ({
   signatures: initialSignatures,
   txHash: initialTxHash,
   status: initialStatus,
+  readLimited = false,
 }: PageProps) => {
   const { chain } = useChains();
   const router = useRouter();
@@ -95,9 +133,11 @@ const TransactionPage = ({
   const [isCancelling, setIsCancelling] = useState(false);
   const [transactionHash, setTransactionHash] = useState(initialTxHash);
   const [transactionStatus, setTransactionStatus] = useState(initialStatus);
-  const [isLoadingTx, setIsLoadingTx] = useState(!initialTransactionJSON);
+  const [isLoadingTx, setIsLoadingTx] = useState(!initialTransactionJSON && !readLimited);
   // Transient tx-fetch failure — offer an inline retry instead of bouncing to /404
-  const [txLoadError, setTxLoadError] = useState<string | null>(null);
+  const [txLoadError, setTxLoadError] = useState<string | null>(
+    readLimited ? "Too many requests from this network. Wait a minute and retry." : null,
+  );
 
   const [accountOnChain, setAccountOnChain] = useState<Account | null>(null);
   const [pubkey, setPubkey] = useState<MultisigThresholdPubkey>();
@@ -154,8 +194,12 @@ const TransactionPage = ({
 
   useEffect(() => {
     if (initialTransactionJSON) return;
+    // The SSR render was refused by the read budget, so an immediate client
+    // fetch would draw on the same exhausted key and fail too. Show the retry
+    // card instead of spending another slot on a request that cannot succeed.
+    if (readLimited) return;
     loadTx();
-  }, [initialTransactionJSON, loadTx]);
+  }, [initialTransactionJSON, readLimited, loadTx]);
 
   const multisigAddress = router.query.address?.toString();
 
