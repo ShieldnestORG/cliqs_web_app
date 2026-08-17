@@ -2,7 +2,9 @@
 
 > **Cluster:** security · **Tags:** soc2, api-auth, adr36, nonce, review, held · **Related:** [SOC2-GAP-ASSESSMENT.md](SOC2-GAP-ASSESSMENT.md), [README.md](README.md), [INFRASTRUCTURE.md](../INFRASTRUCTURE.md)
 
-**Status: HELD FROM RELEASE by owner decision, 2026-08-17.** Branch `fix/flow-security-soc2` is local-only at `84c30e8`. Not merged, not pushed, not deployed.
+**Status: HELD FROM RELEASE by owner decision, 2026-08-17.** The hold applies to the **authorization code** on branch `fix/flow-security-soc2` — that branch is not merged, not deployed, and nothing it describes as built is live.
+
+The hold does **not** apply to this diary. The document itself reached `main` via PR #34 (it was authored while the shared working tree was on that PR's branch, and was carried along with it), so a reader finding it here should treat it as a record of held work, not as evidence that the work shipped. The only security change from that PR which *is* live is the credential-fingerprint removal described in §"open findings not actioned"; everything else here remains pending review.
 
 This is a working diary, not a finished assessment. It records what was attempted, what was measured, what broke, and every decision with who made it. Anything stated here as verified cites a file:line or a command output; anything unverified says so.
 
