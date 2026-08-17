@@ -4,6 +4,13 @@
 
 **Status: HELD FROM RELEASE by owner decision, 2026-08-17.** The hold applies to the **authorization code** on branch `fix/flow-security-soc2` — that branch is not merged, not deployed, and nothing it describes as built is live.
 
+**The hold still stands as of 2026-08-17 evening, and the way forward is now decided.** The owner reviewed the four breaks below, endorsed a **session-token** design to replace the per-call proof (one signature at wallet connect mints a short-TTL bearer, so N fanned-out reads no longer contend for one nonce), and placed the implementation in the backlog rather than starting it. See **[AUTH-REWORK-PLAN.md](AUTH-REWORK-PLAN.md)** for the design, the rejected alternatives, and the five non-negotiables taken from the breaks recorded here. The audit log was confirmed separable from that work and should ship ahead of it.
+
+One item from §8 below did ship the same day, and one changed shape:
+
+- `multisig/list` nonce burn — **fixed and live** ([PR #38](https://github.com/ShieldnestORG/cliqs_web_app/pull/38)). The decorative `verifyKeplrSignature` call was removed rather than enforced: it verified and then proceeded regardless, so it protected nothing while consuming a member's shared nonce on every call. Authorization on that route remains open.
+- Rate limiting on the unauthenticated transaction read — **shipped in a corrected form** ([PR #39](https://github.com/ShieldnestORG/cliqs_web_app/pull/39)). The first revision shared one budget across GET and both POST actions, so a throttled `updateDbTxHash` could leave a transaction marked pending after it was already on chain — the double-execution risk that §"open findings" warns about. Reads are limited, writes are not, and the transaction page's `getServerSideProps` now charges the same budget because it returned the identical payload and made the limit bypassable.
+
 The hold does **not** apply to this diary. The document itself reached `main` via PR #34 (it was authored while the shared working tree was on that PR's branch, and was carried along with it), so a reader finding it here should treat it as a record of held work, not as evidence that the work shipped. The only security change from that PR which *is* live is the credential-fingerprint removal described in §"open findings not actioned"; everything else here remains pending review.
 
 This is a working diary, not a finished assessment. It records what was attempted, what was measured, what broke, and every decision with who made it. Anything stated here as verified cites a file:line or a command output; anything unverified says so.
