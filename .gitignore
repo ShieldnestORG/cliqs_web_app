@@ -27,7 +27,16 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
+# @next/env loads four files: .env, .env.local, .env.<NODE_ENV> and
+# .env.<NODE_ENV>.local. Ignoring only *.local left two of the four committable,
+# so a real secret could be added without git objecting. The tracked *.sample
+# templates are re-allowed on the last line.
+.env
+.env.development
+.env.production
+.env.test
 .env*.local
+!*.sample
 
 # local database
 /data

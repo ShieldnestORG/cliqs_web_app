@@ -4,7 +4,9 @@
 
 Operational reference for the deployed app. Written 2026-08-12 after a full-site outage; everything up to the "Edge & outbound controls" section was verified against the live deployment rather than inferred.
 
-**Scope note (2026-08-16):** the "Edge & outbound controls" section was added after the outage write-up and is **verified from the repository only** — the code is in `main`, but nobody has re-checked the response headers on `app.cliqs.io`. Treat it as "what a deploy of this tree will do", not as a live-deployment observation.
+**Scope note (2026-08-16):** the "Edge & outbound controls" section was added after the outage write-up and was **verified from the repository only** — the code was in `main`, but nobody had re-checked the response headers on `app.cliqs.io`.
+
+**Resolved 2026-08-17:** the headers were measured against the live deployment. `curl -sSI https://app.cliqs.io/` returns `strict-transport-security: max-age=63072000; includeSubDomains`, `x-frame-options: DENY`, `x-content-type-options: nosniff`, `referrer-policy: strict-origin-when-cross-origin` and `permissions-policy: camera=(), microphone=(), geolocation=()`. All five match the tree. **No `content-security-policy` header is served** — the report-only CSP lives on the held `fix/flow-security-soc2` branch and is not deployed.
 
 ## Where this app actually lives
 
@@ -13,9 +15,42 @@ Operational reference for the deployed app. Written 2026-08-12 after a full-site
 | Production URL | `https://app.cliqs.io` |
 | Vercel project | `cliqs-web-app` (team `shieldnestorg`) |
 | Repo | `ShieldnestORG/cliqs_web_app` |
-| Deploy method | **Vercel CLI (`vercel --prod`)** — the project has no git connection, so pushing to `main` ships nothing |
+| Deploy method | **Git push to `main` auto-deploys production.** See the correction below — this row previously said the opposite |
 
 There is a second Vercel project named `cosmos-multisig-ui` with zero environment variables. It is a dead duplicate — ignore it.
+
+### Correction, 2026-08-17: `main` auto-deploys to production
+
+This document previously stated that the project had **no git connection** and that "pushing to `main` ships nothing". **That is false, and it was the most dangerous sentence in this runbook** — it tells an operator that merging a PR is inert when merging a PR ships to real users who move real funds.
+
+VERIFIED against the Vercel API on 2026-08-17:
+
+```
+GET /v9/projects/prj_iTlVqki62iErJysdgwyLedsHTX8P
+  link.type            = "github"
+  link.org/repo        = ShieldnestORG/cliqs_web_app
+  link.productionBranch = "main"
+
+GET /v6/deployments?target=production
+  every deployment carries meta.githubCommitSha / meta.githubCommitRef = "main"
+```
+
+Confirmed empirically the same day: merging PRs #41, #38, #40 and #29 produced four production deployments with no CLI command run by anyone.
+
+Practical consequences:
+
+- **A merge to `main` is a production release.** There is no manual promotion gate and no approval step between the merge button and `app.cliqs.io`.
+- `vercel --prod` from a laptop still works and is still how an out-of-band hotfix would ship, but it is no longer the normal path, and using it deploys the **local working tree**, not `main`.
+- A branch whose PR is open gets a preview deployment only. Preview URLs are safe to share for review.
+- Because `link.sourceless` is `true` in the API response, `vercel project inspect` does **not** print a Git section. Do not read that omission as "no git connection" — query `link.productionBranch` instead. That is most likely how the original wrong claim was reached.
+
+### Deployment safety implications (SOC 2 CC8.1)
+
+Change management currently rests entirely on branch protection plus CI, because merge *is* deploy:
+
+- CI (`.github/workflows/ci.yml`) runs lint, format, test, build and dependency audit on every PR. As of 2026-08-17 all five jobs run **Node 24** to match the Vercel build image; they previously ran Node 20 against a Node 24 production, so a green CI did not prove the shipped build compiled.
+- A failed Vercel build does **not** take the site down — the previous deployment stays aliased. The realistic bad outcome is a build that succeeds and is wrong, which is why the four-measured-breaks class of failure (see [AUTHORIZATION-REVIEW-DIARY.md](security/AUTHORIZATION-REVIEW-DIARY.md)) has to be caught before merge, not after.
+- Rollback is `vercel rollback` or re-aliasing the prior deployment in the dashboard; both are fast, but nobody has rehearsed either against `app.cliqs.io`. **Untested — do not record this as a working control.**
 
 ## Outage post-mortem, 2026-08-12
 
@@ -35,7 +70,20 @@ from origin 'https://app.cliqs.io' blocked by CORS policy
 
 Fixed by routing those three calls through `pages/api/chain-registry/[...path].ts`, which applies the token server-side (5,000/hour), caches at the CDN for an hour, restricts paths to `cosmos/chain-registry`, and falls back to anonymous access if the token is ever rejected.
 
-### 2. MongoDB Atlas cluster deleted (open)
+### 2. MongoDB Atlas cluster deleted (RESOLVED 2026-08-17)
+
+**Status update:** the database is reachable again. `MONGODB_URI` is present on the Vercel **production** target (confirmed via the project env API, value not read), and a live probe of a DB-backed route returns cleanly rather than throwing:
+
+```
+POST https://app.cliqs.io/api/transaction/pending
+  {"chainId":"cosmoshub-4","multisigAddress":"cosmos1zt50..."}  ->  200  []
+```
+
+That route calls `getMultisig()` before anything else, so a dead cluster would surface as a 400 carrying the connection error, not an empty array. The `200 []` therefore proves the driver connected. Which cluster it now points at was **not** determined from here — the value is stored encrypted and was deliberately not decrypted. Confirm the target cluster in the Vercel dashboard before treating the M0-has-no-backups warning below as addressed.
+
+The original write-up follows, kept for the post-mortem record.
+
+
 
 The `cliqs` Atlas integration is **Suspended** and `cliqs.pya1snh.mongodb.net` returns **NXDOMAIN** — the cluster was deleted, not merely paused. Atlas M0 auto-pauses after 30 days of inactivity and can be reclaimed after prolonged inactivity.
 

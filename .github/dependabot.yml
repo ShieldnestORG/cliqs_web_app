@@ -1,0 +1,53 @@
+version: 2
+
+# Dependabot *alerts* were already on for this repo — that is what surfaced the 87
+# advisories cleared in PR #29. What was missing is *version updates*: without this
+# file nothing opens the upgrade PRs, so the tree drifts back into advisory debt
+# until someone runs a manual remediation pass again.
+#
+# Grouped so a week of patches arrives as a few reviewable PRs rather than dozens.
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      # Signing and chain encoding. Kept separate and never auto-grouped with
+      # anything else: a wire-encoding change here can break transaction signing
+      # in a way tests do not catch, so these want a human on every bump.
+      cosmos-signing:
+        patterns:
+          - "@cosmjs/*"
+          - "@keplr-wallet/*"
+          - "cosmjs-types"
+          - "protobufjs"
+      next:
+        patterns:
+          - "next"
+          - "@next/*"
+          - "react"
+          - "react-dom"
+      dev-tooling:
+        patterns:
+          - "@types/*"
+          - "eslint*"
+          - "prettier"
+          - "jest*"
+          - "@testing-library/*"
+          - "typescript"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # The indexer ships its own lockfile and was included in the PR #29 sweep.
+  - package-ecosystem: "npm"
+    directory: "/services/multisig-indexer"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
