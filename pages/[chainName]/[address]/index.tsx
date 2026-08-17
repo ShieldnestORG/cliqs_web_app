@@ -21,6 +21,7 @@ import { isSecp256k1Pubkey, pubkeyToAddress } from "@cosmjs/amino";
 import copy from "copy-to-clipboard";
 import {
   AlertCircle,
+  AlertTriangle,
   ArrowUpRightSquare,
   Copy,
   Loader2,
@@ -37,7 +38,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { CopyButton } from "@/components/ui/copy-button";
 import { useChains } from "@/context/ChainsContext";
@@ -61,6 +62,9 @@ export default function CliqDashboardPage() {
   const [hostedMultisig, setHostedMultisig] = useState<HostedMultisig>();
   const [activeTab, setActiveTab] = useState("overview");
   const [userAddress, setUserAddress] = useState<string>();
+  // Set when the hosted multisig fetch fails — without it the loading guard below
+  // never clears for a pubkey multisig, so surface a retry card instead
+  const [multisigError, setMultisigError] = useState<string | null>(null);
 
   const cliqAddress = typeof router.query.address === "string" ? router.query.address : null;
 
@@ -85,30 +89,36 @@ export default function CliqDashboardPage() {
     })();
   }, [chain.chainId]);
 
-  useEffect(() => {
-    (async function updateHostedMultisig() {
-      try {
-        if (!cliqAddress || !isChainInfoFilled(chain) || !chain.nodeAddress) {
-          return;
-        }
-
-        const resolved = await ensureChainMultisigInDb(cliqAddress, chain);
-        if (!resolved.multisig) {
-          throw new Error(resolved.reason ?? "Failed to resolve multisig address");
-        }
-        const newHostedMultisig = await getHostedMultisig(cliqAddress, chain);
-
-        setHostedMultisig(newHostedMultisig);
-      } catch (e) {
-        console.error("Failed to find cliq:", e);
-        toastError({
-          title: "Failed to find cliq",
-          description: e instanceof Error ? e.message : "Could not resolve this multisig.",
-          fullError: e instanceof Error ? e : undefined,
-        });
+  // Extracted so the error card below can re-invoke it — a thrown fetch would
+  // otherwise leave hostedMultisig undefined forever, pinning the loading spinner.
+  const fetchMultisig = useCallback(async () => {
+    try {
+      if (!cliqAddress || !isChainInfoFilled(chain) || !chain.nodeAddress) {
+        return;
       }
-    })();
+      setMultisigError(null);
+
+      const resolved = await ensureChainMultisigInDb(cliqAddress, chain);
+      if (!resolved.multisig) {
+        throw new Error(resolved.reason ?? "Failed to resolve multisig address");
+      }
+      const newHostedMultisig = await getHostedMultisig(cliqAddress, chain);
+
+      setHostedMultisig(newHostedMultisig);
+    } catch (e) {
+      console.error("Failed to find cliq:", e);
+      setMultisigError(e instanceof Error ? e.message : "Could not resolve this multisig.");
+      toastError({
+        title: "Failed to find cliq",
+        description: e instanceof Error ? e.message : "Could not resolve this multisig.",
+        fullError: e instanceof Error ? e : undefined,
+      });
+    }
   }, [chain, cliqAddress]);
+
+  useEffect(() => {
+    fetchMultisig();
+  }, [fetchMultisig]);
 
   // For pubkey multisigs, use the hosted multisig's explorer link.
   // For contract multisigs, construct from chain's explorer config.
@@ -165,6 +175,45 @@ export default function CliqDashboardPage() {
       </div>
     </div>
   );
+
+  // Hosted multisig fetch failure — without it the loading guard below never clears
+  // for a pubkey multisig, so surface the error with a retry instead of a spinner
+  if (
+    !multisigTypeResult.isLoading &&
+    multisigError &&
+    !hostedMultisig &&
+    multisigTypeResult.type !== "contract"
+  ) {
+    return (
+      <DashboardLayout
+        title={`Cliq - ${chain.chainDisplayName || "Cosmos"}`}
+        variant="wide"
+        subheader={subheader}
+      >
+        <div className="mx-auto max-w-4xl py-12">
+          <Card variant="institutional" className="border-destructive/50 bg-destructive/10">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="mt-0.5 h-5 w-5 text-destructive" />
+                <div className="flex-1">
+                  <h3 className="mb-2 text-lg font-semibold text-destructive">
+                    Could not load this Cliq
+                  </h3>
+                  <p className="mb-2 text-sm">{multisigError}</p>
+                  <p className="mb-3 text-sm">
+                    Balances, transactions and members are unavailable until the Cliq is loaded.
+                  </p>
+                  <Button variant="outline" onClick={fetchMultisig}>
+                    Retry
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   // Loading state (both multisig detection and hosted check)
   if (multisigTypeResult.isLoading || (!hostedMultisig && multisigTypeResult.type !== "contract")) {

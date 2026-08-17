@@ -52,7 +52,7 @@
 
     /* Coherence Daddy accent colours.
        NOTE the historical name: --accent-green is hue 11, i.e. the coral
-       primary, not a green. It is kept because ~60 call sites use
+       primary, not a green. It is kept because 97 call sites use
        `green-accent`, and is now pinned to the brand coral #FF6B4A. */
     --accent-green: 10.9 100% 64.5%;
     --accent-green-bright: 10.9 100% 70%;
