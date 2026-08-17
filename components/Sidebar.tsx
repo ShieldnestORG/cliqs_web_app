@@ -57,6 +57,41 @@ export default function Sidebar() {
     collapseTimer.current = setTimeout(() => setHovered(false), 150); // leave-delay kills edge flicker
   };
 
+  // Pointer tracking uses native listeners rather than React's onMouseEnter/
+  // onMouseLeave: clicking a nav item re-renders the tree mid-gesture and the
+  // synthetic mouseleave is dropped, which left the rail stuck open for the rest
+  // of the session. The native events still fire reliably in that case.
+  useEffect(() => {
+    const el = asideRef.current;
+    if (!el) return;
+    const onEnter = () => expand();
+    const onLeave = () => {
+      // Keep it open only for KEYBOARD focus; a click also focuses the button,
+      // and testing focus alone would pin the rail open permanently.
+      const active = document.activeElement;
+      if (active && el.contains(active) && active.matches(":focus-visible")) return;
+      scheduleCollapse();
+    };
+    el.addEventListener("mouseenter", onEnter);
+    el.addEventListener("mouseleave", onLeave);
+    return () => {
+      el.removeEventListener("mouseenter", onEnter);
+      el.removeEventListener("mouseleave", onLeave);
+    };
+    // expand/scheduleCollapse only touch refs and setState, so the first
+    // closures stay correct for the component's lifetime.
+  }, []);
+
+  // After a navigation, reconcile against the browser's own hover truth: if the
+  // pointer is no longer over the rail, collapse it. Guards the case where the
+  // pointer left during the route change and no leave event ever arrived.
+  useEffect(() => {
+    if (asideRef.current && !asideRef.current.matches(":hover")) {
+      if (collapseTimer.current) clearTimeout(collapseTimer.current);
+      setHovered(false);
+    }
+  }, [asPath]);
+
   // Hydrate the persisted pin after mount (server and client both render collapsed)
   useEffect(() => {
     setPinned(getUserSettings().sidebarPinned);
@@ -112,12 +147,6 @@ export default function Sidebar() {
       <aside
         ref={asideRef}
         data-state={collapsed ? "collapsed" : "expanded"}
-        onMouseEnter={expand}
-        onMouseLeave={() => {
-          // Keep the rail expanded while keyboard focus is inside it
-          if (asideRef.current?.contains(document.activeElement)) return;
-          scheduleCollapse();
-        }}
         onFocus={expand}
         onBlur={(e) => {
           if (!e.currentTarget.contains(e.relatedTarget as Node | null)) scheduleCollapse();
