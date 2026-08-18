@@ -875,6 +875,7 @@ async function handleHealth(_req, res) {
         ok: false,
         service: "multisig-indexer",
         database: "initializing",
+        node: process.version,
         error: schemaError,
         time: new Date().toISOString(),
       });
@@ -886,6 +887,7 @@ async function handleHealth(_req, res) {
       ok: true,
       service: "multisig-indexer",
       database: "up",
+      node: process.version,
       time: new Date().toISOString(),
     });
   } catch (error) {
@@ -893,6 +895,7 @@ async function handleHealth(_req, res) {
       ok: false,
       service: "multisig-indexer",
       database: "down",
+      node: process.version,
       error: sanitizeError(error),
     });
   }
