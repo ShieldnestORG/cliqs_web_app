@@ -1,14 +1,6 @@
 import { isChainInfoFilled } from "@/context/ChainsContext/helpers";
 import { DbSignatureObj } from "@/graphql";
-import { getTransaction } from "@/graphql/transaction";
 import { cancelDbTx, updateDbTxHash } from "@/lib/api";
-import {
-  TRANSACTION_READ_LIMIT,
-  TRANSACTION_READ_ROUTE,
-  checkRateLimit,
-  getClientIdentifier,
-  rateLimitKey,
-} from "@/lib/rateLimit";
 import { makeMultisignedTxBytesDirect, shouldUseDirectMode } from "@/lib/multisigDirect";
 import { normalizePubkey, safeAminoMultisigTxBytes } from "@/lib/multisigAmino";
 import { createMultiRpcVerifier, BroadcastResult } from "@/lib/rpc";
@@ -48,81 +40,55 @@ import {
 import { Card, CardContent, CardLabel } from "../../../../components/ui/card";
 
 interface PageProps {
-  transactionJSON: string | null;
   transactionID: string;
-  txHash: string;
-  signatures: readonly DbSignatureObj[];
-  status: "pending" | "broadcast" | "cancelled";
-  /** True when this render was refused by the shared transaction-read budget. */
-  readLimited?: boolean;
+  /**
+   * Initial transaction data. NOT supplied by getServerSideProps any more — the
+   * page hydrates from the API instead (see below). Kept optional so the
+   * component can be rendered with seeded data, which the tests rely on.
+   */
+  transactionJSON?: string | null;
+  txHash?: string;
+  signatures?: readonly DbSignatureObj[];
+  status?: "pending" | "broadcast" | "cancelled";
 }
 
 export const getServerSideProps: GetServerSideProps<PageProps> = async (context) => {
-  // get transaction info
   const transactionID = context.params?.transactionID?.toString();
   assert(transactionID, "Transaction ID missing");
 
-  // This render returns the same payload as GET /api/transaction/<id> —
-  // dataJSON, every signature, and txHash — straight out of the database,
-  // without going through that route. Limiting only the API route therefore
-  // bought nothing: a sweep could request this page instead and harvest the
-  // identical data for free, one request per id. Both surfaces charge the same
-  // key so the budget cannot be spent twice.
+  // DELIBERATELY DOES NOT READ THE TRANSACTION.
   //
-  // Only reads are charged. Nothing on the write path renders this page.
-  const readLimit = checkRateLimit(
-    rateLimitKey(TRANSACTION_READ_ROUTE, getClientIdentifier(context.req)),
-    TRANSACTION_READ_LIMIT,
-  );
-  if (!readLimit.allowed) {
-    context.res.statusCode = 429;
-    context.res.setHeader("Retry-After", String(readLimit.retryAfterSeconds));
-    return {
-      props: {
-        transactionJSON: null,
-        txHash: "",
-        transactionID,
-        signatures: [],
-        status: "pending",
-        readLimited: true,
-      },
-    };
-  }
-
-  const tx = await getTransaction(transactionID);
-
-  if (!tx) {
-    return {
-      props: {
-        transactionJSON: null,
-        txHash: "",
-        transactionID,
-        signatures: [],
-        status: "pending",
-      },
-    };
-  }
-
-  return {
-    props: {
-      transactionJSON: tx.dataJSON,
-      txHash: tx.txHash || "",
-      transactionID,
-      signatures: tx.signatures ?? [],
-      status:
-        tx.status ||
-        ((tx.txHash ? "broadcast" : "pending") as "pending" | "broadcast" | "cancelled"),
-    },
-  };
+  // This used to return tx.dataJSON, every collected signature and txHash as
+  // page props, which Next.js serialises into __NEXT_DATA__ inside the
+  // server-rendered HTML. That put the amounts, recipients and memos of a
+  // transaction into anything that touches the response but never asked for the
+  // data: shared-cache proxies, and every link-unfurling bot that fetches a URL
+  // pasted into a chat app. Multisig links get pasted into chat apps by design —
+  // that is how co-signers are reached — so the leak was on the normal path,
+  // not an edge case.
+  //
+  // The page already re-fetches the same data client-side on mount (loadTx), so
+  // serving it here was duplicate disclosure that bought nothing.
+  //
+  // This does NOT change who can open a transaction link. Anyone holding the id
+  // can still read it, now via GET /api/transaction/<id>, which is rate limited
+  // and is the single place that read can be gated later. Requiring membership
+  // to open a link would break passing one to a co-signer who has not connected
+  // a wallet yet, and cannot work for Ledger holders until the authorization
+  // rework lands — see docs/security/AUTH-REWORK-PLAN.md.
+  //
+  // No rate-limit charge here either: with nothing disclosed there is nothing to
+  // harvest, and charging would spend a legitimate visitor's budget twice per
+  // page open.
+  return { props: { transactionID } };
 };
 
 const TransactionPage = ({
-  transactionJSON: initialTransactionJSON,
+  transactionJSON: initialTransactionJSON = null,
   transactionID,
-  signatures: initialSignatures,
-  txHash: initialTxHash,
-  status: initialStatus,
-  readLimited = false,
+  signatures: initialSignatures = [],
+  txHash: initialTxHash = "",
+  status: initialStatus = "pending",
 }: PageProps) => {
   const { chain } = useChains();
   const router = useRouter();
@@ -133,11 +99,9 @@ const TransactionPage = ({
   const [isCancelling, setIsCancelling] = useState(false);
   const [transactionHash, setTransactionHash] = useState(initialTxHash);
   const [transactionStatus, setTransactionStatus] = useState(initialStatus);
-  const [isLoadingTx, setIsLoadingTx] = useState(!initialTransactionJSON && !readLimited);
+  const [isLoadingTx, setIsLoadingTx] = useState(!initialTransactionJSON);
   // Transient tx-fetch failure — offer an inline retry instead of bouncing to /404
-  const [txLoadError, setTxLoadError] = useState<string | null>(
-    readLimited ? "Too many requests from this network. Wait a minute and retry." : null,
-  );
+  const [txLoadError, setTxLoadError] = useState<string | null>(null);
 
   const [accountOnChain, setAccountOnChain] = useState<Account | null>(null);
   const [pubkey, setPubkey] = useState<MultisigThresholdPubkey>();
@@ -193,13 +157,12 @@ const TransactionPage = ({
   }, [transactionID, router]);
 
   useEffect(() => {
+    // The server sends no transaction data, so this is the normal load path for
+    // every visit, not just a fallback. A 429 from the rate-limited read surfaces
+    // through loadTx's catch as the inline retry card.
     if (initialTransactionJSON) return;
-    // The SSR render was refused by the read budget, so an immediate client
-    // fetch would draw on the same exhausted key and fail too. Show the retry
-    // card instead of spending another slot on a request that cannot succeed.
-    if (readLimited) return;
     loadTx();
-  }, [initialTransactionJSON, readLimited, loadTx]);
+  }, [initialTransactionJSON, loadTx]);
 
   const multisigAddress = router.query.address?.toString();
 
