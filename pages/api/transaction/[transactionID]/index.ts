@@ -1,5 +1,7 @@
 import { cancelTransaction, getTransaction, updateTxHash } from "@/graphql/transaction";
 import { UpdateDbTxHashBody } from "@/lib/api";
+import { recordAuditEvent } from "@/lib/audit";
+import * as db from "@/lib/db";
 import { withByodbMiddleware } from "@/lib/byodb/middleware";
 import {
   TRANSACTION_READ_LIMIT,
@@ -11,6 +13,55 @@ import {
 import type { NextApiRequest, NextApiResponse } from "next";
 
 const endpointErrMsg = "Failed to update transaction";
+
+/**
+ * Audit a transaction action. Deliberately called AFTER the response has been
+ * sent, and wrapped in its own try/catch, because this route carries the
+ * post-broadcast hash write: by the time it runs the funds have already moved,
+ * and nothing here may turn a completed broadcast into an error. The outer
+ * handler's catch would try to respond a second time on an already-sent
+ * response, so this must never throw into it.
+ *
+ * The audit chain is partitioned by multisig address, which the request body
+ * does not carry — only a transaction id. `creatorId` on the stored transaction
+ * IS the multisig address (see MongoTransaction in lib/mongodb.ts), so one
+ * cheap lookup resolves it without a join.
+ */
+async function auditTxAction(
+  action: "TX_CANCELLED" | "TX_BROADCAST",
+  txId: string,
+  payload?: unknown,
+): Promise<void> {
+  try {
+    const tx = await db.getTransaction(txId);
+    const multisigAddress = tx?.creatorId;
+
+    if (typeof multisigAddress !== "string" || !multisigAddress) {
+      // Same class of gap recordAuditEvent reports, logged in the same shape so
+      // one alert can match both.
+      console.error(
+        `[Audit] CONTROL GAP: ${action} not recorded, could not resolve the multisig for transaction ${txId}`,
+      );
+      return;
+    }
+
+    await recordAuditEvent({
+      action,
+      multisigAddress,
+      outcome: "allow",
+      // This route has no caller proof — see docs/security/AUTH-REWORK-PLAN.md.
+      // The action is evidenced; the actor is not.
+      authMethod: "none",
+      targetId: txId,
+      payload,
+    });
+  } catch (err: unknown) {
+    console.error(
+      `[Audit] CONTROL GAP: ${action} not recorded for transaction ${txId}:`,
+      err instanceof Error ? err.message : err,
+    );
+  }
+}
 
 async function apiTransactionActions(req: NextApiRequest, res: NextApiResponse) {
   const txId = req.query.transactionID;
@@ -78,6 +129,7 @@ async function apiTransactionActions(req: NextApiRequest, res: NextApiResponse) 
       await cancelTransaction(txId);
       res.status(200).send({ cancelled: true, txId });
       console.log("Cancel transaction success", JSON.stringify({ txId }, null, 2));
+      await auditTxAction("TX_CANCELLED", txId);
       return;
     }
 
@@ -86,6 +138,7 @@ async function apiTransactionActions(req: NextApiRequest, res: NextApiResponse) 
     const dbTxHash = await updateTxHash(txId, updateBody.txHash);
     res.status(200).send({ dbTxHash });
     console.log("Update txHash success", JSON.stringify({ dbTxHash }, null, 2));
+    await auditTxAction("TX_BROADCAST", txId, { txHash: updateBody.txHash });
   } catch (err: unknown) {
     console.error(err);
     res

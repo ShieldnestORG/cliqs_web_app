@@ -21,6 +21,7 @@
 import { ChainInfo } from "@/context/ChainsContext/types";
 import { getMultisig } from "@/graphql";
 import { getNonce, incrementNonce } from "@/graphql/nonce";
+import { recordAuditEvent } from "@/lib/audit";
 import { isUsingByodb, withByodbMiddleware } from "@/lib/byodb/middleware";
 import * as db from "@/lib/db";
 import { ensureDbReady } from "@/lib/dbInit";
@@ -127,6 +128,19 @@ async function apiWipeTransactions(req: NextApiRequest, res: NextApiResponse) {
         }
       }
       if (blockedCount > 0) {
+        // A refused destructive attempt is worth more to an auditor than a
+        // successful one — it is the control demonstrably working.
+        await recordAuditEvent({
+          action: body.mode === "multisig" ? "MULTISIG_DELETED" : "HISTORY_WIPED",
+          multisigAddress: body.multisigAddress,
+          chainId: body.chainId,
+          outcome: "deny",
+          actorAddress: callerAddress,
+          authMethod: "adr36",
+          targetId: multisig.id,
+          denyReason: `${blockedCount} pending transaction(s) carry signatures from other members`,
+        });
+
         res
           .status(409)
           .send(
@@ -144,6 +158,21 @@ async function apiWipeTransactions(req: NextApiRequest, res: NextApiResponse) {
     } else {
       result = await db.wipeCompletedTransactions(multisig.id);
     }
+
+    // Audited AFTER the destructive call succeeds, so the log records what
+    // actually happened rather than what was attempted. recordAuditEvent is
+    // fail-safe and never throws, so it cannot turn a completed wipe into an
+    // error response — a dropped write logs "[Audit] CONTROL GAP" instead.
+    await recordAuditEvent({
+      action: body.mode === "multisig" ? "MULTISIG_DELETED" : "HISTORY_WIPED",
+      multisigAddress: body.multisigAddress,
+      chainId: body.chainId,
+      outcome: "allow",
+      actorAddress: callerAddress,
+      authMethod: callerAddress ? "adr36" : "byodb-header",
+      targetId: multisig.id,
+      payload: { mode: body.mode, ...result },
+    });
 
     res.status(200).send({
       success: true,

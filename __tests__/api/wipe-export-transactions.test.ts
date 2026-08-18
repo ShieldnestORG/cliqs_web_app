@@ -18,6 +18,7 @@ import { getNonce, incrementNonce } from "@/graphql/nonce";
 import * as db from "@/lib/db";
 import { pubkeyToAddress } from "@cosmjs/amino";
 import { parseResponseData } from "../helpers";
+import { recordAuditEvent } from "@/lib/audit";
 
 jest.mock("@/lib/dbInit", () => ({
   ensureDbReady: jest.fn().mockResolvedValue(undefined),
@@ -50,6 +51,10 @@ jest.mock("@/lib/db", () => ({
   exportTransactionHistory: jest.fn(),
 }));
 
+jest.mock("@/lib/audit", () => ({
+  recordAuditEvent: jest.fn().mockResolvedValue(null),
+}));
+
 // jest.setup.js mocks @cosmjs/amino and @cosmjs/encoding with CONSTANT return
 // values (toBase64 always "AQID", pubkeyToAddress always "cosmos1test"), which
 // makes every pubkey "a member". Override them here with pass-through
@@ -68,6 +73,7 @@ jest.mock("@cosmjs/encoding", () => ({
   toBase64: jest.fn((value: unknown) => String(value)),
 }));
 
+const mockRecordAuditEvent = recordAuditEvent as jest.MockedFunction<typeof recordAuditEvent>;
 const mockGetMultisig = getMultisig as jest.MockedFunction<typeof getMultisig>;
 const mockGetNonce = getNonce as jest.MockedFunction<typeof getNonce>;
 const mockIncrementNonce = incrementNonce as jest.MockedFunction<typeof incrementNonce>;
@@ -317,5 +323,129 @@ describe("API: POST /api/transaction/export - Auth gate: P0", () => {
     const data = parseResponseData(res._getData());
     expect(data.transactionCount).toBe(1);
     expect(mockExportHistory).toHaveBeenCalledWith("multisig-id-1");
+  });
+});
+
+/**
+ * Wiring tests for the audit log.
+ *
+ * lib/audit.ts is proven separately in __tests__/lib/audit.test.ts. What these
+ * assert is that the destructive routes actually CALL it — a correct audit
+ * module that nothing invokes evidences nothing, and that failure mode is
+ * invisible without a test like this.
+ */
+describe("Audit log wiring on destructive routes: P0", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetMultisig.mockResolvedValue(dbMultisig);
+    mockGetNonce.mockResolvedValue(1);
+    mockIncrementNonce.mockResolvedValue(2);
+    mockGetPendingTxs.mockResolvedValue([]);
+  });
+
+  const wipe = async (mode: string) => {
+    const { req, res } = createMocks({
+      method: "POST",
+      body: {
+        multisigAddress,
+        chainId,
+        mode,
+        signature: signatureFor(memberPubkeyB64),
+        chain: chainBody,
+      },
+    });
+    await apiWipeTransactions(req, res);
+    return res;
+  };
+
+  it("records HISTORY_WIPED with the real caller after a successful wipe", async () => {
+    mockWipeCompleted.mockResolvedValue({ deletedCount: 3 } as never);
+
+    const res = await wipe("completed");
+
+    expect(res._getStatusCode()).toBe(200);
+    expect(mockRecordAuditEvent).toHaveBeenCalledTimes(1);
+    expect(mockRecordAuditEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "HISTORY_WIPED",
+        multisigAddress,
+        chainId,
+        outcome: "allow",
+        actorAddress: memberAddress,
+        authMethod: "adr36",
+      }),
+    );
+  });
+
+  it("records MULTISIG_DELETED, not HISTORY_WIPED, when the cliq itself is deleted", async () => {
+    mockDeleteMultisig.mockResolvedValue({ deletedCount: 1 } as never);
+
+    await wipe("multisig");
+
+    expect(mockRecordAuditEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ action: "MULTISIG_DELETED", outcome: "allow" }),
+    );
+  });
+
+  it("records a DENY with a reason when the shared-data guard refuses the wipe", async () => {
+    mockGetPendingTxs.mockResolvedValue([{ id: "tx-1" }] as never);
+    mockGetSignatures.mockResolvedValue([{ address: "cosmos1someoneelse" }] as never);
+
+    const res = await wipe("all");
+
+    expect(res._getStatusCode()).toBe(409);
+    expect(mockRecordAuditEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "HISTORY_WIPED",
+        outcome: "deny",
+        denyReason: expect.stringContaining("other members"),
+      }),
+    );
+    // The refusal is what gets logged — nothing was destroyed.
+    expect(mockWipeAll).not.toHaveBeenCalled();
+  });
+
+  it("records HISTORY_EXPORTED with only a count, never the exported bodies", async () => {
+    mockExportHistory.mockResolvedValue([
+      { id: "tx-1", dataJSON: '{"memo":"rent","amount":"1000000"}' },
+      { id: "tx-2", dataJSON: '{"memo":"salary"}' },
+    ] as never);
+
+    const { req, res } = createMocks({
+      method: "POST",
+      body: {
+        multisigAddress,
+        chainId,
+        signature: signatureFor(memberPubkeyB64),
+        chain: chainBody,
+      },
+    });
+    await apiExportTransactions(req, res);
+
+    expect(res._getStatusCode()).toBe(200);
+
+    const call = mockRecordAuditEvent.mock.calls[0][0];
+    expect(call).toEqual(
+      expect.objectContaining({
+        action: "HISTORY_EXPORTED",
+        multisigAddress,
+        outcome: "allow",
+        actorAddress: memberAddress,
+      }),
+    );
+    // Privacy: the audit input carries a count, not the transaction bodies.
+    expect(JSON.stringify(call.payload)).not.toContain("rent");
+    expect(JSON.stringify(call.payload)).not.toContain("1000000");
+  });
+
+  it("does not record anything when authorization is refused", async () => {
+    const { req, res } = createMocks({
+      method: "POST",
+      body: { multisigAddress, chainId, mode: "completed" },
+    });
+    await apiWipeTransactions(req, res);
+
+    expect(res._getStatusCode()).toBe(401);
+    expect(mockRecordAuditEvent).not.toHaveBeenCalled();
   });
 });
