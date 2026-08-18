@@ -1,13 +1,7 @@
 import { MsgTypeUrl, MsgTypeUrls } from "@/types/txMsg";
 
 export type MessageCategory =
-  | "Bank"
-  | "Staking"
-  | "Distribution"
-  | "Vesting"
-  | "Governance"
-  | "IBC"
-  | "CosmWasm";
+  "Bank" | "Staking" | "Distribution" | "Vesting" | "Governance" | "IBC" | "CosmWasm";
 
 export interface MessageCategoryInfo {
   category: MessageCategory;

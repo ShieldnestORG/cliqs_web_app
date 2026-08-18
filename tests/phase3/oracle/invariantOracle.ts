@@ -20,14 +20,7 @@
 // ============================================================================
 
 export type ProposalState =
-  | "DRAFT"
-  | "OPEN"
-  | "APPROVED"
-  | "EXECUTABLE"
-  | "EXECUTED"
-  | "FAILED"
-  | "REJECTED"
-  | "EXPIRED";
+  "DRAFT" | "OPEN" | "APPROVED" | "EXECUTABLE" | "EXECUTED" | "FAILED" | "REJECTED" | "EXPIRED";
 
 // Valid state transitions (strict monotonicity)
 const VALID_TRANSITIONS: Record<ProposalState, ProposalState[]> = {

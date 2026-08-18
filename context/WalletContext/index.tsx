@@ -36,13 +36,13 @@ interface StoredWalletInfo {
 const isChainReadyForWalletConnect = (chain: ChainInfo) =>
   Boolean(
     chain.chainId &&
-      chain.addressPrefix &&
-      chain.denom &&
-      chain.displayDenom &&
-      typeof chain.displayDenomExponent === "number" &&
-      Number.isFinite(chain.displayDenomExponent) &&
-      chain.gasPrice &&
-      (chain.nodeAddress || chain.nodeAddresses.length),
+    chain.addressPrefix &&
+    chain.denom &&
+    chain.displayDenom &&
+    typeof chain.displayDenomExponent === "number" &&
+    Number.isFinite(chain.displayDenomExponent) &&
+    chain.gasPrice &&
+    (chain.nodeAddress || chain.nodeAddresses.length),
   );
 
 interface WalletContextType {

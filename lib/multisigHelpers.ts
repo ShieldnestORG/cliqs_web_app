@@ -143,6 +143,6 @@ export async function ensureChainMultisigInDb(
 export const isAccount = (account: Partial<Account> | null): account is Account =>
   Boolean(
     account?.address &&
-      typeof account.accountNumber === "number" &&
-      typeof account.sequence === "number",
+    typeof account.accountNumber === "number" &&
+    typeof account.sequence === "number",
   );

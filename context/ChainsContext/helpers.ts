@@ -114,19 +114,19 @@ export const rebrandChains = (chains: ChainItems): ChainItems => {
 export const isChainInfoFilled = (chain: Partial<ChainInfo>): chain is ChainInfo =>
   Boolean(
     chain.registryName &&
-      typeof chain.logo === "string" &&
-      chain.chainId &&
-      chain.chainDisplayName &&
-      typeof chain.nodeAddress === "string" &&
-      chain.nodeAddresses?.length &&
-      chain.denom &&
-      chain.displayDenom &&
-      Number.isSafeInteger(chain.displayDenomExponent) &&
-      typeof chain.displayDenomExponent === "number" &&
-      chain.displayDenomExponent >= 0 &&
-      chain.assets?.length &&
-      chain.gasPrice &&
-      chain.addressPrefix,
+    typeof chain.logo === "string" &&
+    chain.chainId &&
+    chain.chainDisplayName &&
+    typeof chain.nodeAddress === "string" &&
+    chain.nodeAddresses?.length &&
+    chain.denom &&
+    chain.displayDenom &&
+    Number.isSafeInteger(chain.displayDenomExponent) &&
+    typeof chain.displayDenomExponent === "number" &&
+    chain.displayDenomExponent >= 0 &&
+    chain.assets?.length &&
+    chain.gasPrice &&
+    chain.addressPrefix,
   );
 
 export const setChains = (dispatch: Dispatch, chains: ChainItems) => {
