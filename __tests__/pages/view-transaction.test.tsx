@@ -13,13 +13,18 @@ import TransactionViewPage, {
   getServerSideProps,
 } from "@/pages/[chainName]/[address]/transaction/[transactionID]";
 import { getTransaction } from "@/graphql/transaction";
-import { TRANSACTION_READ_LIMIT, resetRateLimits } from "@/lib/rateLimit";
+import { requestJson } from "@/lib/request";
 
 jest.mock("@/graphql/transaction", () => ({
   getTransaction: jest.fn(),
 }));
 
+jest.mock("@/lib/request", () => ({
+  requestJson: jest.fn(),
+}));
+
 const mockGetTransaction = getTransaction as jest.MockedFunction<typeof getTransaction>;
+const mockRequestJson = requestJson as jest.MockedFunction<typeof requestJson>;
 
 // Mock components that are used by TransactionViewPage
 jest.mock("@/components/dataViews/TransactionInfo", () => {
@@ -99,22 +104,20 @@ describe("View Transaction Route (/[chainName]/[address]/transaction/[id]): P0",
     jest.clearAllMocks();
   });
 
-  it("returns props with null transactionJSON when the transaction does not exist", async () => {
-    mockGetTransaction.mockResolvedValue(null);
-
+  it("returns only the transaction id, and does not read the database", async () => {
+    // The page no longer server-renders transaction data; it hydrates from the
+    // rate-limited API. A missing transaction is therefore resolved client-side
+    // by loadTx, which routes to /404.
     const result = await getServerSideProps({
       params: { transactionID: "missing-transaction" },
+      req: { headers: {} },
+      res: { statusCode: 200, setHeader: jest.fn() },
+      query: {},
+      resolvedUrl: "",
     } as never);
 
-    expect(result).toEqual({
-      props: {
-        transactionJSON: null,
-        txHash: "",
-        transactionID: "missing-transaction",
-        signatures: [],
-        status: "pending",
-      },
-    });
+    expect(result).toEqual({ props: { transactionID: "missing-transaction" } });
+    expect(mockGetTransaction).not.toHaveBeenCalled();
   });
 
   it("should load transaction view page", async () => {
@@ -193,86 +196,91 @@ describe("View Transaction Route (/[chainName]/[address]/transaction/[id]): P0",
 });
 
 /**
- * This SSR render returns the same payload as GET /api/transaction/<id> —
- * dataJSON, every signature, txHash — straight from the database without going
- * through that route. Rate limiting only the API route was therefore bypassable
- * by requesting the page instead. These tests hold that door shut.
+ * The transaction page used to serialise tx.dataJSON, every collected signature
+ * and txHash into __NEXT_DATA__ in the server-rendered HTML. Multisig links are
+ * pasted into chat apps by design, so that payload reached shared-cache proxies
+ * and every link-unfurling bot that fetched the URL — parties that never asked
+ * for it and are not the co-signer the link was meant for.
+ *
+ * These tests hold that door shut. If someone reintroduces a database read into
+ * getServerSideProps, the first one fails.
  */
-describe("View Transaction SSR: shares the transaction-read budget: P0", () => {
-  const CALLER_IP = "203.0.113.99";
-
-  const ssr = async (ip: string = CALLER_IP) => {
+describe("View Transaction SSR: discloses nothing: P0", () => {
+  const ssr = async (transactionID = "ssr-secret-tx") => {
     const res = { statusCode: 200, setHeader: jest.fn() };
     const result = await getServerSideProps({
-      params: { transactionID: "ssr-budget-tx" },
-      req: { headers: { "x-forwarded-for": ip } },
+      params: { transactionID },
+      req: { headers: {} },
       res,
       query: {},
       resolvedUrl: "",
     } as never);
-
-    return { result: result as unknown as { props: Record<string, unknown> }, res };
+    return (result as unknown as { props: Record<string, unknown> }).props;
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    resetRateLimits();
+    // If the page reads the database at all, it would get this back.
     mockGetTransaction.mockResolvedValue({
-      id: "ssr-budget-tx",
-      dataJSON: mockTransactionJSON,
-      txHash: "",
-      signatures: [],
+      id: "ssr-secret-tx",
+      dataJSON: JSON.stringify({ memo: "rent", amount: "1000000", to: "cosmos1victim" }),
+      txHash: "SECRETHASH",
+      signatures: [{ address: "cosmos1signer", signature: "sig" }],
       status: "pending",
     } as never);
   });
 
-  it("refuses to render the payload once the shared read budget is spent", async () => {
-    for (let i = 0; i < TRANSACTION_READ_LIMIT.limit; i++) {
-      const { result } = await ssr();
-      expect(result.props.transactionJSON).toBe(mockTransactionJSON);
-    }
-
-    const { result, res } = await ssr();
-
-    // The harvest is refused: no dataJSON, no signatures, and a real 429.
-    expect(result.props.readLimited).toBe(true);
-    expect(result.props.transactionJSON).toBeNull();
-    expect(result.props.signatures).toEqual([]);
-    expect(res.statusCode).toBe(429);
-    expect(res.setHeader).toHaveBeenCalledWith("Retry-After", expect.any(String));
-  });
-
-  it("does not hit the database at all once refused", async () => {
-    for (let i = 0; i < TRANSACTION_READ_LIMIT.limit; i++) await ssr();
-    mockGetTransaction.mockClear();
-
+  it("never reads the transaction while rendering the page", async () => {
     await ssr();
 
     expect(mockGetTransaction).not.toHaveBeenCalled();
   });
 
-  it("budgets each caller separately", async () => {
-    for (let i = 0; i < TRANSACTION_READ_LIMIT.limit; i++) await ssr();
-    expect((await ssr()).result.props.readLimited).toBe(true);
+  it("returns only the id, so no transaction data reaches the HTML", async () => {
+    const props = await ssr();
 
-    const other = await ssr("198.51.100.7");
-    expect(other.result.props.readLimited).toBeUndefined();
-    expect(other.result.props.transactionJSON).toBe(mockTransactionJSON);
+    expect(props).toEqual({ transactionID: "ssr-secret-tx" });
+
+    const serialized = JSON.stringify(props);
+    expect(serialized).not.toContain("rent");
+    expect(serialized).not.toContain("1000000");
+    expect(serialized).not.toContain("cosmos1victim");
+    expect(serialized).not.toContain("SECRETHASH");
+    expect(serialized).not.toContain("cosmos1signer");
   });
 
-  it("shows the retry card instead of firing a doomed client fetch when refused", async () => {
-    render(
-      <TransactionViewPage
-        transactionJSON={null}
-        transactionID="ssr-budget-tx"
-        txHash=""
-        signatures={[]}
-        status="pending"
-        readLimited
-      />,
-    );
+  it("still serves the page for any holder of the link, rather than gating it", async () => {
+    // Access is deliberately unchanged: a co-signer who has not connected a
+    // wallet must still be able to open a link that was sent to them.
+    const res = { statusCode: 200, setHeader: jest.fn() };
+    const result = await getServerSideProps({
+      params: { transactionID: "any-id" },
+      req: { headers: {} },
+      res,
+      query: {},
+      resolvedUrl: "",
+    } as never);
 
-    expect(await screen.findByText("Could not load this transaction")).toBeInTheDocument();
-    expect(screen.getByText(/Too many requests from this network/)).toBeInTheDocument();
+    expect(result).not.toHaveProperty("notFound");
+    expect(result).not.toHaveProperty("redirect");
+    expect(res.statusCode).toBe(200);
+  });
+
+  it("hydrates from the rate-limited API instead, on mount", async () => {
+    mockRequestJson.mockResolvedValue({
+      dataJSON: mockTransactionJSON,
+      signatures: [],
+      txHash: "",
+      status: "pending",
+    });
+
+    render(<TransactionViewPage transactionID="ssr-secret-tx" />);
+
+    // With no server-supplied data, the client fetch is the normal load path for
+    // every visit — and it goes through the rate-limited route, which is now the
+    // single place this read can be gated.
+    await waitFor(() => {
+      expect(mockRequestJson).toHaveBeenCalledWith("/api/transaction/ssr-secret-tx");
+    });
   });
 });
