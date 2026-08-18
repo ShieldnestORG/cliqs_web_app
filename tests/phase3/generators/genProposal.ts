@@ -43,13 +43,7 @@ export interface GeneratedMessage {
 }
 
 export type ProposalAction =
-  | "CREATE"
-  | "VOTE_APPROVE"
-  | "VOTE_REJECT"
-  | "EXECUTE"
-  | "EXPIRE"
-  | "CANCEL"
-  | "FAIL";
+  "CREATE" | "VOTE_APPROVE" | "VOTE_REJECT" | "EXECUTE" | "EXPIRE" | "CANCEL" | "FAIL";
 
 // ============================================================================
 // RANDOM UTILITIES

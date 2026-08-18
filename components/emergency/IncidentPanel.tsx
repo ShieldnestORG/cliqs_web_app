@@ -228,9 +228,7 @@ export function IncidentPanel({
                               <Badge
                                 variant={
                                   getSeverityBadge(incident.severity) as
-                                    | "destructive"
-                                    | "default"
-                                    | "secondary"
+                                    "destructive" | "default" | "secondary"
                                 }
                               >
                                 {incident.severity}
@@ -323,9 +321,7 @@ export function IncidentPanel({
                   <Badge
                     variant={
                       getSeverityBadge(selectedIncident.severity) as
-                        | "destructive"
-                        | "default"
-                        | "secondary"
+                        "destructive" | "default" | "secondary"
                     }
                   >
                     {selectedIncident.severity}

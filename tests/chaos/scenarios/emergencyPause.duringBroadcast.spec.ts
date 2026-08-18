@@ -32,9 +32,8 @@ describe("CHAOS: emergency pause during broadcast", () => {
 
         // Afterwards, any policy evaluation must deny
         hh.schedule(hh.now() + 1, "post-pause deny", async () => {
-          const { evaluatePoliciesMinimal } = await import(
-            "../../../__tests__/adapters/policyEngine.adapter"
-          );
+          const { evaluatePoliciesMinimal } =
+            await import("../../../__tests__/adapters/policyEngine.adapter");
           const res = await evaluatePoliciesMinimal(
             {
               timelock: { unlockAtMs: 0 },

@@ -36,13 +36,7 @@ import { Proposal } from "@/lib/multisig/types";
  * 5. allowlist/denylist - Recipient filtering (weakest protection)
  */
 export type PolicyType =
-  | "timelock"
-  | "emergency"
-  | "msg_type"
-  | "spend_limit"
-  | "allowlist"
-  | "denylist"
-  | "custom";
+  "timelock" | "emergency" | "msg_type" | "spend_limit" | "allowlist" | "denylist" | "custom";
 
 /**
  * Severity levels for policy violations

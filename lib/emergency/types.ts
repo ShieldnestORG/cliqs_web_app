@@ -171,10 +171,7 @@ export interface SafeModeDeactivateResult {
  * Types of emergency events
  */
 export type EmergencyEventType =
-  | "EMERGENCY_PAUSED"
-  | "EMERGENCY_UNPAUSED"
-  | "SAFE_MODE_ACTIVATED"
-  | "SAFE_MODE_DEACTIVATED";
+  "EMERGENCY_PAUSED" | "EMERGENCY_UNPAUSED" | "SAFE_MODE_ACTIVATED" | "SAFE_MODE_DEACTIVATED";
 
 /**
  * Emergency event with guaranteed attributes

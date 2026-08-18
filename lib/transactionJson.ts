@@ -1,8 +1,7 @@
 import { DbTransactionParsedDataJson } from "@/graphql";
 
 type ParsedTxResult =
-  | { tx: DbTransactionParsedDataJson; error?: never }
-  | { tx?: never; error: string };
+  { tx: DbTransactionParsedDataJson; error?: never } | { tx?: never; error: string };
 
 type ParseOptions = {
   readonly expectedChainId?: string;

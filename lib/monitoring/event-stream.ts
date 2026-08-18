@@ -425,10 +425,7 @@ export class EventStream {
    */
   async emitEmergencyEvent(
     type:
-      | "EMERGENCY_PAUSED"
-      | "EMERGENCY_UNPAUSED"
-      | "SAFE_MODE_ACTIVATED"
-      | "SAFE_MODE_DEACTIVATED",
+      "EMERGENCY_PAUSED" | "EMERGENCY_UNPAUSED" | "SAFE_MODE_ACTIVATED" | "SAFE_MODE_DEACTIVATED",
     multisigAddress: string,
     chainId: string,
     actor: string,

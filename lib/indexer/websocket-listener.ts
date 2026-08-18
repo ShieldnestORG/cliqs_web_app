@@ -47,10 +47,7 @@ export type ContractEventType = CW3EventType | CW4EventType;
  * Types of TX assetnft events for credentials
  */
 export type CredentialEventType =
-  | "credential_mint"
-  | "credential_burn"
-  | "credential_freeze"
-  | "credential_unfreeze";
+  "credential_mint" | "credential_burn" | "credential_freeze" | "credential_unfreeze";
 
 /**
  * All contract event types including credentials

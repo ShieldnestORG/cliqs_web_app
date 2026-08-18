@@ -12,11 +12,7 @@ import {
 import { normalizePubkey } from "./multisigAmino";
 
 type MultisigIndexerImportSource =
-  | "app_import"
-  | "observed_tx"
-  | "account_pubkey"
-  | "contract_query"
-  | "manual_admin";
+  "app_import" | "observed_tx" | "account_pubkey" | "contract_query" | "manual_admin";
 
 type DiscoveryContext = {
   readonly chain: ChainInfo;

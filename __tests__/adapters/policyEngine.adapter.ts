@@ -28,8 +28,7 @@ try {
 }
 
 export type PolicyDecision =
-  | { allowed: true }
-  | { allowed: false; reason: string; policy?: string };
+  { allowed: true } | { allowed: false; reason: string; policy?: string };
 
 /**
  * Normalize policy decision result for consistent testing interface

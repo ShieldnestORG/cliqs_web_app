@@ -256,13 +256,7 @@ export interface RotationResult extends CredentialOperationResult {
  * Types of credential events
  */
 export type CredentialEventType =
-  | "class_created"
-  | "issued"
-  | "revoked"
-  | "frozen"
-  | "unfrozen"
-  | "rotated"
-  | "expired";
+  "class_created" | "issued" | "revoked" | "frozen" | "unfrozen" | "rotated" | "expired";
 
 /**
  * A credential event from the chain

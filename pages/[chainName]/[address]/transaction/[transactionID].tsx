@@ -378,9 +378,8 @@ const TransactionPage = ({
 
       // Import SignDoc debug utilities for comprehensive comparison
       const { generateSignDocDebugInfo, logSignDocDebug } = await import("@/lib/signDocDebug");
-      const { makeDirectModeAuthInfo, makeDirectSignDoc, logDirectSignDocDebug } = await import(
-        "@/lib/multisigDirect"
-      );
+      const { makeDirectModeAuthInfo, makeDirectSignDoc, logDirectSignDocDebug } =
+        await import("@/lib/multisigDirect");
       const { aminoConverters } = await import("@/lib/msg");
       const { makeSignDoc, serializeSignDoc } = await import("@cosmjs/amino");
       const { sha256 } = await import("@cosmjs/crypto");
