@@ -50,7 +50,7 @@ Change management currently rests entirely on branch protection plus CI, because
 
 - CI (`.github/workflows/ci.yml`) runs lint, format, test, build and dependency audit on every PR. As of 2026-08-17 all five jobs run **Node 24** to match the Vercel build image; they previously ran Node 20 against a Node 24 production, so a green CI did not prove the shipped build compiled.
 - A failed Vercel build does **not** take the site down — the previous deployment stays aliased. The realistic bad outcome is a build that succeeds and is wrong, which is why the four-measured-breaks class of failure (see [AUTHORIZATION-REVIEW-DIARY.md](security/AUTHORIZATION-REVIEW-DIARY.md)) has to be caught before merge, not after.
-- Rollback is `vercel rollback` or re-aliasing the prior deployment in the dashboard; both are fast, but nobody has rehearsed either against `app.cliqs.io`. **Untested — do not record this as a working control.**
+- Rollback is **rehearsed and measured** as of 2026-08-17 — see **[ROLLBACK-RUNBOOK.md](ROLLBACK-RUNBOOK.md)**. `vercel rollback <url> --yes` returns in ~3 s and the previous build is serving within ~5 s, with **zero non-200 responses** across 58 one-second samples covering a rollback and a roll-forward. Two things the drill established that theory would have missed: the switch is **not atomic across edges** (a request was still served by the old build 3 s after the new one began serving, so expect a 5–10 s mixed window and never verify from a single `curl`), and **a rollback does not revert `main`** — since `main` auto-deploys, the next merge re-ships the bad commit unless it is reverted or merges are frozen.
 
 ## Outage post-mortem, 2026-08-12
 
