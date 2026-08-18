@@ -18,6 +18,11 @@ const securityHeaders = [
 const nextConfig = {
   reactStrictMode: true,
   eslint: { ignoreDuringBuilds: true },
+  // escape-string-regexp v5 is ESM-only. next/jest builds jest's
+  // transformIgnorePatterns exceptions from this list, so without it every
+  // suite that reaches the real mongodb helpers (@/lib/audit, @/lib/db) dies
+  // parsing the untransformed ESM. Add future ESM-only deps here too.
+  transpilePackages: ["escape-string-regexp"],
   async headers() {
     return [
       {
