@@ -19,6 +19,7 @@
 import { ChainInfo } from "@/context/ChainsContext/types";
 import { getMultisig } from "@/graphql";
 import { getNonce, incrementNonce } from "@/graphql/nonce";
+import { recordAuditEvent } from "@/lib/audit";
 import { isUsingByodb, withByodbMiddleware } from "@/lib/byodb/middleware";
 import * as db from "@/lib/db";
 import { ensureDbReady } from "@/lib/dbInit";
@@ -67,6 +68,10 @@ async function apiExportTransactions(req: NextApiRequest, res: NextApiResponse) 
     // - The on-chain StargateClient.getAccount check is intentionally dropped:
     //   membership + nonce replay protection suffice, and this path should not
     //   depend on RPC availability.
+    // Hoisted so the audit record below can name the caller. Stays null on the
+    // BYODB path, where the request carries no wallet proof.
+    let callerAddress: string | null = null;
+
     if (!isUsingByodb()) {
       if (!body.signature || !body.chain) {
         res.status(401).send("Authentication required: missing signature or chain");
@@ -86,6 +91,7 @@ async function apiExportTransactions(req: NextApiRequest, res: NextApiResponse) 
       }
 
       const address = pubkeyToAddress(body.signature.pub_key, body.chain.addressPrefix);
+      callerAddress = address;
 
       const dbNonce = await getNonce(body.chainId, address);
       const incrementedNonce = await incrementNonce(body.chainId, address);
@@ -102,6 +108,21 @@ async function apiExportTransactions(req: NextApiRequest, res: NextApiResponse) 
     }
 
     const history = await db.exportTransactionHistory(multisig.id);
+
+    // A full history dump is a disclosure event: it is the whole record of a
+    // cliq's activity leaving the system. Only the count is recorded — the
+    // exported bodies carry amounts, recipients and memos and must not be
+    // duplicated into the log.
+    await recordAuditEvent({
+      action: "HISTORY_EXPORTED",
+      multisigAddress: body.multisigAddress,
+      chainId: body.chainId,
+      outcome: "allow",
+      actorAddress: callerAddress,
+      authMethod: callerAddress ? "adr36" : "byodb-header",
+      targetId: multisig.id,
+      payload: { transactionCount: history.length },
+    });
 
     res.status(200).json({
       multisigAddress: body.multisigAddress,

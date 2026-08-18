@@ -35,6 +35,13 @@ const config = {
   // Module name mapping for path aliases
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
+    // Under the jsdom environment bson resolves through its "browser" export
+    // condition to lib/bson.mjs, which jest does not transform (node_modules is
+    // not transformed) and so fails to parse. Any test that reaches the real
+    // mongodb driver — every route importing @/lib/audit or @/lib/db does —
+    // dies with "SyntaxError: Unexpected token 'export'". Point it at the
+    // CommonJS build, which is the same library.
+    "^bson$": "<rootDir>/node_modules/bson/lib/bson.cjs",
   },
 
   // Coverage configuration

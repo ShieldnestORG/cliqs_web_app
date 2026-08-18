@@ -81,6 +81,13 @@ export const Collections = {
   TRANSACTIONS: "transactions",
   SIGNATURES: "signatures",
   NONCES: "nonces",
+  /**
+   * Append-only security audit log (lib/audit.ts). Nothing in this repo issues
+   * an update or delete against it, and nothing should — see that file's
+   * "HONEST SCOPE" header for what append-only does and does not guarantee
+   * while the database user still holds update/delete grants.
+   */
+  AUDIT_EVENTS: "audit_events",
 };
 
 // ============================================================================
