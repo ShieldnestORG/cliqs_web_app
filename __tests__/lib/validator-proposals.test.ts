@@ -44,7 +44,6 @@ const throwingQueryClient = {
         ),
       ),
   },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } as any;
 
 describe("deriveRestEndpoints: P0", () => {
