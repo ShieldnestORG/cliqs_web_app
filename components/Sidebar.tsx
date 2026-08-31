@@ -217,11 +217,18 @@ export default function Sidebar() {
         </div>
 
         <div className={cn("mb-6 px-4", collapsed && "px-2 text-center")}>
-          {!collapsed ? (
-            <div className="duration-200 animate-in fade-in">
-              <ChainConnect />
-            </div>
-          ) : (
+          {/* ChainConnect holds the chain dialog's open state in its own useState,
+              so it has to stay mounted across a collapse. Unmounting it threw that
+              state away and the dialog shut itself ~150ms after opening: the modal
+              moves focus into a portal outside the aside, the mouseleave guard
+              below therefore does not match, scheduleCollapse fires, and this
+              branch flipped. Hide the trigger with CSS instead -- the dialog is
+              portaled to body, so it survives. Compare DonateDialog, which is
+              already mounted outside every `collapsed ?` branch. */}
+          <div className={cn(collapsed ? "hidden" : "duration-200 animate-in fade-in")}>
+            <ChainConnect />
+          </div>
+          {collapsed && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="mx-auto flex h-10 w-10 cursor-help items-center justify-center rounded-full bg-muted">
