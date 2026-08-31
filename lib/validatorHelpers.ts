@@ -545,25 +545,65 @@ export async function getValidatorUnbondingDelegations(
 }
 
 /**
- * Derive REST/LCD endpoints from an RPC endpoint.
- * Many nodes serve REST on port 1317 when RPC is on 26657.
+ * Derive REST/LCD endpoint candidates, best first.
+ *
+ * The chain's registry restEndpoint (ChainInfo.restEndpoint) is the
+ * authoritative answer when present. The hostname swaps cover hosted providers
+ * that pair rpc/api hostnames (e.g. coreum-rpc.polkachu.com ->
+ * coreum-api.polkachu.com, verified live); the port swap covers self-hosted
+ * nodes on the standard 26657/1317 pair. The raw RPC URL goes LAST, not first:
+ * a Tendermint RPC host 404s REST paths, and the previous version returned
+ * ONLY that URL for port-less hosted RPCs, which is why the gov v1 fallback
+ * never worked on TX/Coreum.
+ *
+ * Exported for tests.
  */
-function deriveRestEndpoints(rpcEndpoint: string): string[] {
-  const endpoints = [rpcEndpoint];
+export function deriveRestEndpoints(rpcEndpoint: string, restEndpoint?: string): string[] {
+  const endpoints: string[] = [];
+  const push = (e: string) => {
+    const trimmed = e.replace(/\/$/, "");
+    if (trimmed && !endpoints.includes(trimmed)) {
+      endpoints.push(trimmed);
+    }
+  };
+
+  if (restEndpoint) {
+    push(restEndpoint);
+  }
+
   try {
     const url = new URL(rpcEndpoint);
+
+    for (const [pattern, replacement] of [
+      ["-rpc.", "-api."],
+      ["-rpc.", "-rest."],
+      ["rpc.", "api."],
+      ["rpc.", "rest."],
+    ] as const) {
+      if (url.hostname.includes(pattern.replace(/\.$/, "."))) {
+        const swapped = new URL(rpcEndpoint);
+        swapped.hostname = url.hostname.replace(pattern, replacement);
+        if (swapped.hostname !== url.hostname) {
+          push(swapped.toString());
+        }
+      }
+    }
+
     if (url.port === "26657") {
-      url.port = "1317";
-      endpoints.push(url.toString().replace(/\/$/, ""));
+      const restPort = new URL(rpcEndpoint);
+      restPort.port = "1317";
+      push(restPort.toString());
     }
     if (url.port) {
       const noPort = new URL(rpcEndpoint);
       noPort.port = "";
-      endpoints.push(noPort.toString().replace(/\/$/, ""));
+      push(noPort.toString());
     }
   } catch {
-    // Invalid URL, just use as-is
+    // Invalid URL, fall through to the raw endpoint
   }
+
+  push(rpcEndpoint);
   return endpoints;
 }
 
@@ -643,39 +683,55 @@ function convertV1ToV1Beta1Proposal(v1: GovV1Proposal): Proposal {
   };
 }
 
+const GOV_REST_TIMEOUT_MS = 6000; // matches RPC_PROBE_TIMEOUT_MS in ChainsContext/service
+
 /**
- * Fetch proposals via gov v1 REST API (fallback for chains that migrated from v1beta1)
+ * Fetch raw gov v1 proposals via REST. Returns null when NO endpoint answered
+ * (so callers can distinguish "unreachable" from "genuinely zero proposals" —
+ * a valid response with an empty list is authoritative and returned as []).
  */
-async function fetchProposalsViaRest(rpcUrl: string): Promise<Proposal[]> {
-  const endpoints = deriveRestEndpoints(rpcUrl);
+async function fetchGovV1Proposals(
+  rpcUrl: string,
+  restEndpoint: string | undefined,
+  query: string,
+): Promise<GovV1Proposal[] | null> {
+  const endpoints = deriveRestEndpoints(rpcUrl, restEndpoint);
 
   for (const endpoint of endpoints) {
     try {
-      const response = await fetch(`${endpoint}/cosmos/gov/v1/proposals?proposal_status=2`, {
+      const response = await fetch(`${endpoint}/cosmos/gov/v1/proposals?${query}`, {
         headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(GOV_REST_TIMEOUT_MS),
       });
 
       if (!response.ok) continue;
 
       const data: GovV1ProposalsResponse = await response.json();
-      if (data.proposals && data.proposals.length > 0) {
-        return data.proposals.map(convertV1ToV1Beta1Proposal);
+      if (Array.isArray(data.proposals)) {
+        return data.proposals;
       }
     } catch {
       // Try next endpoint
     }
   }
 
-  return [];
+  return null;
 }
 
 /**
  * Get active proposals that need voting.
- * Tries v1beta1 first, falls back to v1 REST API for newer chains.
+ * Tries v1beta1 first (fast on older chains), falls back to gov v1 REST.
+ *
+ * The fallback is load-bearing on TX/Coreum: its node rejects the entire
+ * v1beta1 query with "can't convert a gov/v1 Proposal to gov/v1beta1 Proposal
+ * when amount of proposal messages not exactly one" whenever any live proposal
+ * is a v1 text proposal (empty messages array) — measured against
+ * coreum-rpc.polkachu.com with proposal #46 in voting period.
  */
 export async function getActiveProposals(
   queryClient: ValidatorQueryClient,
   rpcUrl: string,
+  restEndpoint?: string,
 ): Promise<Proposal[]> {
   try {
     // Try v1beta1 first (older chains)
@@ -693,10 +749,55 @@ export async function getActiveProposals(
 
   // Fallback to gov v1 REST API for chains that migrated
   try {
-    return await fetchProposalsViaRest(rpcUrl);
+    const raw = await fetchGovV1Proposals(rpcUrl, restEndpoint, "proposal_status=2");
+    return raw ? raw.map(convertV1ToV1Beta1Proposal) : [];
   } catch (e) {
     console.error("Failed to get active proposals:", e);
     return [];
+  }
+}
+
+// Raw gov v1 statuses that count as a finished proposal. Filtered on the RAW
+// v1 status string, NOT after conversion: convertV1ToV1Beta1Proposal maps
+// unknown statuses (e.g. deposit period) to 2, which would leak them into the
+// past list if filtered post-conversion.
+const PAST_PROPOSAL_STATUSES = new Set([
+  "PROPOSAL_STATUS_PASSED",
+  "PROPOSAL_STATUS_REJECTED",
+  "PROPOSAL_STATUS_FAILED",
+]);
+
+const PAST_PROPOSALS_LIMIT = 20;
+
+/**
+ * Get the most recent finished proposals (passed / rejected / failed).
+ *
+ * gov v1 REST only: it supports reverse pagination, so one cheap call returns
+ * the latest N. The v1beta1 gRPC path cannot do this — it pages oldest-first
+ * with no reverse flag, which would need a full pagination walk on chains with
+ * long governance histories (and throws outright on TX/Coreum anyway).
+ *
+ * Returns null when no REST endpoint answered, so the UI can say "history
+ * unavailable" instead of the false claim "no past proposals".
+ */
+export async function getPastProposals(
+  rpcUrl: string,
+  restEndpoint?: string,
+): Promise<Proposal[] | null> {
+  try {
+    const raw = await fetchGovV1Proposals(
+      rpcUrl,
+      restEndpoint,
+      `pagination.limit=${PAST_PROPOSALS_LIMIT}&pagination.reverse=true`,
+    );
+    if (raw === null) {
+      return null;
+    }
+
+    return raw.filter((p) => PAST_PROPOSAL_STATUSES.has(p.status)).map(convertV1ToV1Beta1Proposal);
+  } catch (e) {
+    console.error("Failed to get past proposals:", e);
+    return null;
   }
 }
 
@@ -729,6 +830,8 @@ export interface ValidatorDashboardData {
   delegations: DelegationResponse[];
   unbondingDelegations: UnbondingDelegation[];
   activeProposals: Proposal[];
+  /** null = no REST endpoint answered (history unavailable), [] = none exist */
+  pastProposals: Proposal[] | null;
   validatorVotes: Record<number, Vote | null>;
   selfDelegation: Coin | null;
   ranking: number | null;
@@ -742,6 +845,7 @@ export async function getValidatorDashboardData(
   rpcUrl: string,
   delegatorAddress: string,
   addressPrefix: string,
+  restEndpoint?: string,
 ): Promise<ValidatorDashboardData | null> {
   try {
     const queryClient = await createValidatorQueryClient(rpcUrl);
@@ -762,6 +866,7 @@ export async function getValidatorDashboardData(
       delegationsResult,
       unbondingsResult,
       activeProposalsResult,
+      pastProposalsResult,
     ] = await Promise.all([
       getValidatorCommission(queryClient, validatorAddress),
       getSelfDelegationRewards(queryClient, delegatorAddress, validatorAddress),
@@ -769,7 +874,8 @@ export async function getValidatorDashboardData(
       getSelfDelegation(queryClient, delegatorAddress, validatorAddress),
       getValidatorDelegations(queryClient, validatorAddress),
       getValidatorUnbondingDelegations(queryClient, validatorAddress),
-      getActiveProposals(queryClient, rpcUrl),
+      getActiveProposals(queryClient, rpcUrl, restEndpoint),
+      getPastProposals(rpcUrl, restEndpoint),
     ]);
 
     // Check votes for active proposals
@@ -799,6 +905,7 @@ export async function getValidatorDashboardData(
       delegations: delegationsResult,
       unbondingDelegations: unbondingsResult,
       activeProposals: activeProposalsResult,
+      pastProposals: pastProposalsResult,
       validatorVotes,
       selfDelegation: selfDelegationResult,
       ranking,

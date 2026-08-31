@@ -170,6 +170,7 @@ export default function ValidatorDashboard() {
           chain.nodeAddress,
           normalizedEffectiveAddress,
           chain.addressPrefix,
+          chain.restEndpoint,
         );
 
         if (!data) {
@@ -187,7 +188,7 @@ export default function ValidatorDashboard() {
         setIsRefreshing(false);
       }
     },
-    [normalizedEffectiveAddress, chain.nodeAddress, chain.addressPrefix],
+    [normalizedEffectiveAddress, chain.nodeAddress, chain.addressPrefix, chain.restEndpoint],
   );
 
   // Fetch data when wallet connects or address param changes

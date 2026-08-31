@@ -69,7 +69,7 @@ export default function ProposalViewer({
   const { chain } = useChains();
   const { walletInfo, getDirectSigner } = useWallet();
   const router = useRouter();
-  const { activeProposals, validatorVotes, validator: _validator } = data;
+  const { activeProposals, pastProposals, validatorVotes, validator: _validator } = data;
 
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [isVoting, setIsVoting] = useState(false);
@@ -100,6 +100,21 @@ export default function ProposalViewer({
         className: "bg-primary/20 text-primary border-primary/30",
       }
     );
+  };
+
+  // v1beta1 numeric statuses for finished proposals (see convertV1ToV1Beta1Proposal)
+  const pastStatusBadges: Record<number, { label: string; className: string }> = {
+    3: { label: "PASSED", className: "bg-success/20 text-success border-success/30" },
+    4: { label: "REJECTED", className: "bg-destructive/20 text-destructive border-destructive/30" },
+    5: { label: "FAILED", className: "bg-muted text-muted-foreground" },
+  };
+
+  const formatVotingEnd = (proposal: Proposal): string | null => {
+    const seconds = proposal.votingEndTime?.seconds;
+    if (!seconds) return null;
+    const ms = Number(seconds) * 1000;
+    if (!Number.isFinite(ms) || ms <= 0) return null;
+    return new Date(ms).toLocaleDateString();
   };
 
   const submitVote = async (proposalId: number, option: number) => {
@@ -370,6 +385,64 @@ export default function ProposalViewer({
             </p>
           </DialogContent>
         </Dialog>
+
+        {/* Past Proposals */}
+        <div className="border-t border-border/50 pt-4">
+          <span className="font-mono text-[10px] uppercase tracking-tighter text-muted-foreground">
+            Past Proposals
+          </span>
+          {pastProposals === null ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Proposal history unavailable — no REST endpoint answered for this chain.
+            </p>
+          ) : pastProposals.length === 0 ? (
+            <p className="mt-2 text-xs text-muted-foreground">No past proposals found.</p>
+          ) : (
+            <div className="mt-2 space-y-1.5">
+              {pastProposals.slice(0, 10).map((proposal) => {
+                const proposalId = proposal.proposalId as unknown as number;
+                const badge = pastStatusBadges[proposal.status] ?? {
+                  label: "CLOSED",
+                  className: "bg-muted text-muted-foreground",
+                };
+                const endDate = formatVotingEnd(proposal);
+                const explorerLink = chain.explorerLinks.proposal?.replace(
+                  "${proposalId}",
+                  proposalId.toString(),
+                );
+
+                const row = (
+                  <div className="flex items-center justify-between gap-2 rounded-md border border-border/30 bg-muted/20 px-3 py-2 transition-colors hover:bg-muted/40">
+                    <div className="min-w-0 space-y-0.5">
+                      <span className="font-mono text-[10px] text-muted-foreground">
+                        #{proposalId}
+                        {endDate ? ` · ended ${endDate}` : ""}
+                      </span>
+                      <p className="truncate text-xs font-medium leading-tight">
+                        {getProposalTitle(proposal)}
+                      </p>
+                    </div>
+                    <Badge className={`shrink-0 ${badge.className}`}>{badge.label}</Badge>
+                  </div>
+                );
+
+                return explorerLink ? (
+                  <a
+                    key={proposalId}
+                    href={explorerLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
+                  >
+                    {row}
+                  </a>
+                ) : (
+                  <div key={proposalId}>{row}</div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         {/* Info/Help */}
         <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
