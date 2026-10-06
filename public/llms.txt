@@ -1,0 +1,10 @@
+# Cliqs app
+
+> The Cliqs app lets the members of a multisig account (a "CLIQ") create, sign and broadcast transactions together on any Stargate-enabled Cosmos chain. For what Cliqs is and how it works, read https://www.cliqs.io.
+
+This site is the interactive app only. Its pages are rendered in the browser, so fetching them without JavaScript returns an empty app shell rather than readable content.
+
+## Links
+
+- [Cliqs](https://www.cliqs.io): product description and overview
+- [Cliqs app](https://app.cliqs.io): the app itself; needs a browser with JavaScript
