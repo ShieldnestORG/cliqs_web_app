@@ -1,5 +1,10 @@
 import { CSSProperties, useEffect, useRef } from "react";
-import { JSONEditorPropsOptional, Mode, JSONEditor as VanillaJsonEditor } from "vanilla-jsoneditor";
+import {
+  createJSONEditor,
+  JSONEditorPropsOptional,
+  Mode,
+  JsonEditor as VanillaJsonEditor,
+} from "vanilla-jsoneditor";
 
 const editorStyle: { [key: string]: string } & CSSProperties = {
   "--jse-a-color": "hsl(var(--foreground))",
@@ -29,7 +34,7 @@ export default function JsonEditor({ label, ...editorProps }: JsonEditorProps) {
 
   useEffect(() => {
     if (refContainer.current) {
-      refEditor.current = new VanillaJsonEditor({ target: refContainer.current, props: {} });
+      refEditor.current = createJSONEditor({ target: refContainer.current, props: {} });
     }
 
     return () => {
