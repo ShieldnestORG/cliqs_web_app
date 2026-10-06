@@ -107,7 +107,7 @@
     "tailwindcss": "3.4.4",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "~5.9",
-    "vanilla-jsoneditor": "^0.23.7",
+    "vanilla-jsoneditor": "^3.13.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
