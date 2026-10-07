@@ -227,11 +227,11 @@ export default function CreateFlexCliqForm() {
   useEffect(() => {
     setChainConstraints(getChainConstraints(chain.chainId));
     if (chain.nodeAddress) {
-      queryChainConstraints(ensureProtocol(chain.nodeAddress), chain.chainId)
+      queryChainConstraints(ensureProtocol(chain.nodeAddress), chain.chainId, chain.restEndpoint)
         .then((live) => setChainConstraints(live))
         .catch(() => {});
     }
-  }, [chain.chainId, chain.nodeAddress]);
+  }, [chain.chainId, chain.nodeAddress, chain.restEndpoint]);
 
   // Validate CW3-Flex code ID (only in advanced mode)
   const watchedCw3CodeId = form.watch("cw3FlexCodeId");
