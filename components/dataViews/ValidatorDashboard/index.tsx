@@ -941,7 +941,14 @@ export default function ValidatorDashboard() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         {/* Identity Card - 2 cols */}
         <div className="lg:col-span-2">
-          <ValidatorIdentityCard validator={dashboardData.validator} />
+          <ValidatorIdentityCard
+            validator={dashboardData.validator}
+            signingInfo={dashboardData.signingInfo}
+            onTransactionComplete={handleTransactionComplete}
+            isCliqMode={isCliqMode}
+            cliqAddress={cliqAddress}
+            readOnly={cliqReadOnly}
+          />
         </div>
 
         {/* Performance Card - 3 cols */}

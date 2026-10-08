@@ -204,6 +204,24 @@ export function buildVoteMsg(voter: string, proposalId: number, option: number):
 }
 
 /**
+ * Build message for unjailing a validator.
+ *
+ * `validatorAddr` is the operator (valoper) address and is the MsgUnjail field name in
+ * cosmjs-types; the amino form (`cosmos-sdk/MsgUnjail`) calls it `address`. The same
+ * account that signs must be the validator's operator account.
+ */
+export function buildUnjailMsg(validatorAddress: string): EncodeObject[] {
+  return [
+    {
+      typeUrl: MsgTypeUrls.Unjail,
+      value: {
+        validatorAddr: validatorAddress,
+      },
+    },
+  ];
+}
+
+/**
  * Sentinel value for MsgEditValidator - indicates field should not be modified.
  * This is required by the Cosmos SDK for any description fields that shouldn't change.
  */
