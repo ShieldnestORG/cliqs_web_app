@@ -315,7 +315,9 @@ amino and gas support (`lib/msg.ts`, `types/txMsg.ts`, `gasOfMsg` = 200,000, so
   operator address bytes) and disables the button when the validator is tombstoned (can
   never be unjailed) or `jailed_until` is still in the future (the time is shown).
 - If the signing info cannot be read the button stays enabled with a notice, and the chain
-  decides.
+  decides. A jailed validator with no signing record at all was never bonded; Cosmos SDK
+  v0.53.8 (`x/slashing/keeper/unjail.go`) applies no tombstone or jail-time check to it, so
+  it is treated as unrestricted (3 of 165 jailed validators on coreum-testnet-1 on 2026-10-08).
 - CLIQ operator: `createCliqTransaction` and redirect to the signing page. Single wallet:
   signs and broadcasts with the connected wallet; this path must pass `makeAppRegistry()`
   to `SigningStargateClient` because cosmjs' default registry has no `MsgUnjail`.

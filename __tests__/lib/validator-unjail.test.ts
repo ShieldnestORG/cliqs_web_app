@@ -231,14 +231,40 @@ describe("getValidatorSigningInfo: P0", () => {
     expect(info?.jailedUntil).toBeNull();
   });
 
-  it("returns null (never throws) when the query fails or has no signing info", async () => {
+  it("returns null (never throws) when the query fails or answers without signing info", async () => {
     const failing = {
-      slashing: { signingInfo: jest.fn().mockRejectedValue(new Error("SigningInfo not found")) },
+      slashing: { signingInfo: jest.fn().mockRejectedValue(new Error("fetch failed")) },
     } as never;
     await expect(getValidatorSigningInfo(failing, CONSENSUS_ADDRESS)).resolves.toBeNull();
     await expect(
       getValidatorSigningInfo(clientReturning({ valSigningInfo: undefined }), CONSENSUS_ADDRESS),
     ).resolves.toBeNull();
+  });
+
+  // Measured on coreum-testnet-1 2026-10-08: 3 of 165 jailed validators (chainsaw, IPL2023,
+  // sychonix; unbonded, never signed) answer exactly this. Cosmos SDK v0.53.8 (the version the
+  // chain runs, node_info) x/slashing keeper/unjail.go: "A validator that is jailed but has no
+  // ValidatorSigningInfo object ... was never bonded ... can unjail at any point", so the chain
+  // applies no tombstone or jail-time check to it.
+  it("treats a jailed validator with no signing record (never bonded) as unrestricted, not as unreadable", async () => {
+    const notFound = {
+      slashing: {
+        signingInfo: jest
+          .fn()
+          .mockRejectedValue(
+            new Error(
+              "Query failed with (22): rpc error: code = NotFound desc = SigningInfo not found for validator testcorevalcons15e8ej4xltxnpjpeqv6k6c26hl9elje",
+            ),
+          ),
+      },
+    } as never;
+    const info = await getValidatorSigningInfo(notFound, CONSENSUS_ADDRESS);
+    expect(info).not.toBeNull();
+    expect(info?.tombstoned).toBe(false);
+    expect(info?.jailedUntil).toBeNull();
+    expect(getUnjailGate({ jailed: true, signingInfo: info, now: NOW })).toEqual({
+      status: "ready",
+    });
   });
 });
 

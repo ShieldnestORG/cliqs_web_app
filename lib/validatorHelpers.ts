@@ -334,8 +334,13 @@ export interface ValidatorSigningInfo {
  * consensusPubkeyToAddress / ValidatorInfo.consensusAddress).
  *
  * Same query as GET /cosmos/slashing/v1beta1/signing_infos/{cons_address}, sent over the
- * RPC connection the dashboard already uses. Returns null when the chain has no answer
- * (query failed, no signing info) so callers can tell "unknown" from a real value.
+ * RPC connection the dashboard already uses. Returns null when the query itself fails, so
+ * callers can tell "unknown" from a real value.
+ *
+ * "SigningInfo not found" is a real answer, not a failure: Cosmos SDK v0.53.8
+ * x/slashing/keeper/unjail.go (the version tx-chain v8 runs) says a jailed validator with
+ * no signing info was never bonded and "can unjail at any point", i.e. the chain applies no
+ * tombstone or jail-time check to it. That is returned as an unrestricted record.
  */
 export async function getValidatorSigningInfo(
   queryClient: ValidatorQueryClient,
@@ -358,10 +363,17 @@ export async function getValidatorSigningInfo(
       startHeight: info.startHeight,
     };
   } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    if (message.includes("SigningInfo not found")) {
+      return {
+        missedBlocksCounter: BigInt(0),
+        jailedUntil: null,
+        tombstoned: false,
+        startHeight: BigInt(0),
+      };
+    }
     // Log as a warning string, not a raw Error object, to prevent Next.js from spawning an error overlay.
-    console.warn(
-      `Failed to get validator signing info: ${e instanceof Error ? e.message : String(e)}`,
-    );
+    console.warn(`Failed to get validator signing info: ${message}`);
     return null;
   }
 }
