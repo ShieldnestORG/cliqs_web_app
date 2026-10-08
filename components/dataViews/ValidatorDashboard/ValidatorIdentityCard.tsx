@@ -4,22 +4,37 @@
  * File: components/dataViews/ValidatorDashboard/ValidatorIdentityCard.tsx
  *
  * Displays validator moniker, status, commission rate, and operator address.
+ * While the validator is jailed it also hosts the Unjail action (UnjailAction).
  */
 
 import { Card, CardContent, CardHeader, CardTitle, CardLabel } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ValidatorInfo } from "@/lib/validatorHelpers";
+import { ValidatorInfo, ValidatorSigningInfo } from "@/lib/validatorHelpers";
 import { ExternalLink, Shield, AlertTriangle, CircleDashed } from "lucide-react";
 import { explorerLinkAccount } from "@/lib/displayHelpers";
 import { useChains } from "@/context/ChainsContext";
 import { AddressDisplay } from "@/components/ui/address-display";
+import UnjailAction from "./UnjailAction";
 
 interface ValidatorIdentityCardProps {
   validator: ValidatorInfo;
+  /** Chain signing info, only fetched while jailed; null = unavailable */
+  signingInfo?: ValidatorSigningInfo | null;
+  onTransactionComplete?: () => void;
+  isCliqMode?: boolean;
+  cliqAddress?: string;
+  readOnly?: boolean;
 }
 
-export default function ValidatorIdentityCard({ validator }: ValidatorIdentityCardProps) {
+export default function ValidatorIdentityCard({
+  validator,
+  signingInfo = null,
+  onTransactionComplete,
+  isCliqMode = false,
+  cliqAddress,
+  readOnly = false,
+}: ValidatorIdentityCardProps) {
   const { chain } = useChains();
 
   const getStatusConfig = (status: ValidatorInfo["status"], jailed: boolean) => {
@@ -148,6 +163,14 @@ export default function ValidatorIdentityCard({ validator }: ValidatorIdentityCa
                 </p>
               </div>
             </div>
+            <UnjailAction
+              validator={validator}
+              signingInfo={signingInfo}
+              onTransactionComplete={onTransactionComplete}
+              isCliqMode={isCliqMode}
+              cliqAddress={cliqAddress}
+              readOnly={readOnly}
+            />
           </div>
         )}
       </CardContent>

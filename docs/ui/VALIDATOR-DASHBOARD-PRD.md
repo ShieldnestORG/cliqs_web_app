@@ -4,7 +4,7 @@
 
 **Cosmos Multisig UI - Free Validator Dashboard Specification**  
 **Version:** 1.1  
-**Last Updated:** 2026-08-16
+**Last Updated:** 2026-10-08
 
 > **Reconciled against the shipped code.** Sections 4, 6, 7, 9 and 12 were rewritten
 > to match `components/dataViews/ValidatorDashboard/` as it exists today; the rest is
@@ -170,6 +170,11 @@ content was folded into the identity and performance cards instead.
 - Commission rate
 - Validator operator address (truncated with copy)
 - "View in Explorer" link
+- Jailed banner. While `validator.jailed` it also hosts the **Unjail validator** action
+  (`UnjailAction.tsx`): `Button variant="action" size="action"`, a one-line warning
+  ("unjail only after your node is synced and signing again"), and a status line in
+  `text-destructive` (tombstoned) or `text-warning` (jail period not over / signing info
+  unreadable). See §6, Unjail.
 
 ### 4.2 Pending Rewards Card (Primary Action Card)
 `PendingRewardsCard.tsx` · **Variant:** `institutional` with `accent="left"`
@@ -188,7 +193,9 @@ content was folded into the identity and performance cards instead.
 **Content:** Voting Power, Ranking, Delegators, Total Stake, Self-Delegation,
 Commission, Min Self-Delegation.
 Uptime percentage and missed-block counts were specified but are **not implemented** —
-they need signing-info/slashing queries that the dashboard does not make.
+they need signing-info/slashing queries that the dashboard does not make for healthy
+validators. (Since 2026-10-08 the dashboard does read signing info, but only while the
+validator is jailed, to gate Unjail; it is not shown as uptime.)
 
 ### 4.4 Validator Delegators Card
 `ValidatorDelegatorsCard.tsx` · **Variant:** `institutional`
@@ -230,10 +237,14 @@ CTA into `/[chainName]/create`.
 | Rewards | `distribution.delegationRewards(delegatorAddr, validatorAddr)` |
 | Withdraw address | `distribution.delegatorWithdrawAddress(delegatorAddr)` |
 | Delegators count | `staking.validatorDelegations(operatorAddr)` (paginated) |
+| Signing info (only while jailed) | `slashing.signingInfo(consAddress)`, with `consAddress` from `consensusPubkeyToAddress` (sha256 of the consensus pubkey) |
 
-`slashing.signingInfo(consAddress)` is **not** queried — `lib/validatorHelpers.ts`
-carries a comment about consensus-pubkey derivation but makes no slashing call, which
-is why there are no uptime or missed-block figures in the UI.
+Signing info is queried **only for a jailed validator**, to gate the Unjail action
+(`getValidatorSigningInfo`). It is not shown as uptime, so there are still no uptime or
+missed-block figures in the UI. *(This paragraph said "`slashing.signingInfo(consAddress)`
+is **not** queried" until 2026-10-08.)* `validatorToConsensusAddress` in
+`lib/validatorHelpers.ts` is **not** the consensus address (it re-encodes the operator
+bytes; the chain answers 404 for it) and has no callers.
 
 ### External APIs (never integrated)
 None of the following ship. Amounts are shown in the native denom, and there is no
@@ -289,15 +300,30 @@ these components any more. Call sites: `PendingRewardsCard.tsx`,
 | Set Withdraw Address | MsgSetWithdrawAddress | 200,000 |
 | Edit Validator | MsgEditValidator | 600,000 |
 | Vote (Proposal Viewer) | MsgVote | 200,000 |
+| Unjail Validator (jailed banner) | MsgUnjail | 300,000 |
 
 These are recomputed from `gasOfMsg` as it stands today. `WithdrawValidatorCommission`
 was raised to 600,000 in an earlier PR, which is why the claim-all figure is 1,200,000
 and not the 1,100,000 this document used to state.
 
-**Not available in the UI:** `MsgUnjail`. It has codec, amino and gas support
-(`lib/msg.ts`, `types/txMsg.ts`, `gasOfMsg` = 200,000) but **no entry point anywhere in
-the dashboard or the transaction type selector**. A jailed validator cannot unjail from
-this app.
+**Unjail** (added 2026-10-08, after the testnet validator Tokns.fi was jailed and could
+only be unjailed through Developer Tools → Import Transaction). `MsgUnjail` has codec,
+amino and gas support (`lib/msg.ts`, `types/txMsg.ts`, `gasOfMsg` = 200,000, so
+`gasOfTx` = 300,000). The dashboard now offers it in the jailed banner:
+- Shown only while `validator.jailed`. The dashboard reads the chain's signing info for the
+  validator's consensus address (derived from its consensus pubkey, **not** from the
+  operator address bytes) and disables the button when the validator is tombstoned (can
+  never be unjailed) or `jailed_until` is still in the future (the time is shown).
+- If the signing info cannot be read the button stays enabled with a notice, and the chain
+  decides.
+- CLIQ operator: `createCliqTransaction` and redirect to the signing page. Single wallet:
+  signs and broadcasts with the connected wallet; this path must pass `makeAppRegistry()`
+  to `SigningStargateClient` because cosmjs' default registry has no `MsgUnjail`.
+- Not checked: the validator's self-delegation must still be at least its
+  `min_self_delegation`, or the chain rejects the unjail.
+
+*(This paragraph said "Not available in the UI: `MsgUnjail` ... A jailed validator cannot
+unjail from this app" until 2026-10-08.)*
 
 ### Transaction Flow (direct mode)
 1. User clicks action button
@@ -490,12 +516,14 @@ As shipped:
           ├── ValidatorCommandsCard.tsx
           ├── ProposalViewer.tsx
           ├── CliqUpgradeCTA.tsx
+          ├── UnjailAction.tsx       # Unjail validator, hosted in the identity card's jailed banner
           └── WithdrawAddressCard.tsx
 
 /lib/
   ├── validatorHelpers.ts            # Validator-specific queries and utils
   ├── validatorTx.ts                 # Tx assembly (gas via gasOfTx)
   ├── validatorEdit.ts               # MsgEditValidator helpers
+  ├── validatorUnjail.ts             # getUnjailGate: pure show/disable rule for Unjail
   └── txMsgHelpers.ts                # gasOfMsg / gasOfTx — the single gas table
 ```
 

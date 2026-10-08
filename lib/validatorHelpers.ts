@@ -15,10 +15,14 @@ import {
   setupStakingExtension,
   setupDistributionExtension,
   setupGovExtension,
+  setupSlashingExtension,
   Coin,
 } from "@cosmjs/stargate";
 import { connectComet } from "@cosmjs/tendermint-rpc";
+import { sha256 } from "@cosmjs/crypto";
 import { fromBech32, toBech32 } from "@cosmjs/encoding";
+import { PubKey as Ed25519PubKey } from "cosmjs-types/cosmos/crypto/ed25519/keys";
+import { Any } from "cosmjs-types/google/protobuf/any";
 import {
   Validator,
   DelegationResponse,
@@ -33,10 +37,12 @@ import { Proposal, Vote, ProposalStatus } from "cosmjs-types/cosmos/gov/v1beta1/
 export type ValidatorQueryClient = QueryClient &
   StakingExtension &
   DistributionExtension &
-  GovExtension;
+  GovExtension &
+  // @cosmjs/stargate exports setupSlashingExtension but not its SlashingExtension type
+  ReturnType<typeof setupSlashingExtension>;
 
 /**
- * Create a query client with staking, distribution and gov extensions
+ * Create a query client with staking, distribution, gov and slashing extensions
  */
 export async function createValidatorQueryClient(rpcUrl: string): Promise<ValidatorQueryClient> {
   const cometClient = await connectComet(rpcUrl);
@@ -45,6 +51,7 @@ export async function createValidatorQueryClient(rpcUrl: string): Promise<Valida
     setupStakingExtension,
     setupDistributionExtension,
     setupGovExtension,
+    setupSlashingExtension,
   );
 }
 
@@ -90,6 +97,11 @@ export function validatorToDelegatorAddress(
 /**
  * Convert validator operator address to consensus address
  * For slashing info queries (signing info uses consensus pubkey)
+ *
+ * WARNING (measured 2026-10-08 on coreum-testnet-1): this re-encodes the OPERATOR
+ * address bytes, which are not the chain's consensus address, so a signing-info
+ * query with its result answers 404 "SigningInfo not found". It has no callers. To
+ * query signing info use consensusPubkeyToAddress (sha256 of the consensus pubkey).
  */
 export function validatorToConsensusAddress(
   validatorAddress: string,
@@ -103,6 +115,32 @@ export function validatorToConsensusAddress(
     throw new Error(
       `Failed to convert to consensus address: ${e instanceof Error ? e.message : "Unknown error"}`,
     );
+  }
+}
+
+/**
+ * Derive the bech32 consensus (valcons) address from a validator's consensus pubkey.
+ *
+ * CometBFT's address for an ed25519 key is the first 20 bytes of sha256(raw key).
+ * Returns undefined for a missing, malformed or non-ed25519 key (secp256k1 consensus
+ * keys hash differently and no validator on Coreum uses one), so callers treat the
+ * signing info as unavailable instead of querying a wrong address.
+ */
+export function consensusPubkeyToAddress(
+  pubkey: Any | undefined,
+  addressPrefix: string,
+): string | undefined {
+  if (!pubkey || pubkey.typeUrl !== "/cosmos.crypto.ed25519.PubKey") {
+    return undefined;
+  }
+  try {
+    const { key } = Ed25519PubKey.decode(pubkey.value);
+    if (key.length !== 32) {
+      return undefined;
+    }
+    return toBech32(`${addressPrefix}valcons`, sha256(key).slice(0, 20));
+  } catch {
+    return undefined;
   }
 }
 
@@ -137,6 +175,8 @@ export interface ValidatorInfo {
   status: "BONDED" | "UNBONDING" | "UNBONDED";
   tokens: string;
   delegatorShares: string;
+  /** valcons address derived from the consensus pubkey; undefined if it cannot be derived */
+  consensusAddress?: string;
 }
 
 /**
@@ -176,6 +216,7 @@ export function parseValidator(validator: Validator, addressPrefix: string): Val
     status: parseValidatorStatus(validator.status),
     tokens: validator.tokens,
     delegatorShares: validator.delegatorShares,
+    consensusAddress: consensusPubkeyToAddress(validator.consensusPubkey, addressPrefix),
   };
 }
 
@@ -289,18 +330,40 @@ export interface ValidatorSigningInfo {
 }
 
 /**
- * Get validator signing info (requires consensus address)
- * Note: This requires the consensus pubkey to derive the consensus address
- * For now, we'll skip this as it requires additional info
+ * Get validator signing info (requires the consensus address, see
+ * consensusPubkeyToAddress / ValidatorInfo.consensusAddress).
+ *
+ * Same query as GET /cosmos/slashing/v1beta1/signing_infos/{cons_address}, sent over the
+ * RPC connection the dashboard already uses. Returns null when the chain has no answer
+ * (query failed, no signing info) so callers can tell "unknown" from a real value.
  */
 export async function getValidatorSigningInfo(
-  _queryClient: ValidatorQueryClient,
-  _consensusAddress: string,
+  queryClient: ValidatorQueryClient,
+  consensusAddress: string,
 ): Promise<ValidatorSigningInfo | null> {
-  // This query requires the validator's consensus pubkey-derived address
-  // which isn't directly available from the operator address
-  // For now, return null - we can enhance this later
-  return null;
+  try {
+    const response = await queryClient.slashing.signingInfo(consensusAddress);
+    const info = response.valSigningInfo;
+    if (!info) {
+      return null;
+    }
+    return {
+      missedBlocksCounter: info.missedBlocksCounter,
+      jailedUntil: info.jailedUntil
+        ? new Date(
+            Number(info.jailedUntil.seconds) * 1000 + Math.floor(info.jailedUntil.nanos / 1e6),
+          )
+        : null,
+      tombstoned: info.tombstoned,
+      startHeight: info.startHeight,
+    };
+  } catch (e) {
+    // Log as a warning string, not a raw Error object, to prevent Next.js from spawning an error overlay.
+    console.warn(
+      `Failed to get validator signing info: ${e instanceof Error ? e.message : String(e)}`,
+    );
+    return null;
+  }
 }
 
 /**
@@ -836,6 +899,8 @@ export interface ValidatorDashboardData {
   selfDelegation: Coin | null;
   ranking: number | null;
   votingPowerPercentage: string;
+  /** Only fetched for a jailed validator (it gates the Unjail action); null otherwise or when unreadable */
+  signingInfo: ValidatorSigningInfo | null;
 }
 
 /**
@@ -867,6 +932,7 @@ export async function getValidatorDashboardData(
       unbondingsResult,
       activeProposalsResult,
       pastProposalsResult,
+      signingInfoResult,
     ] = await Promise.all([
       getValidatorCommission(queryClient, validatorAddress),
       getSelfDelegationRewards(queryClient, delegatorAddress, validatorAddress),
@@ -876,6 +942,9 @@ export async function getValidatorDashboardData(
       getValidatorUnbondingDelegations(queryClient, validatorAddress),
       getActiveProposals(queryClient, rpcUrl, restEndpoint),
       getPastProposals(rpcUrl, restEndpoint),
+      validator.jailed && validator.consensusAddress
+        ? getValidatorSigningInfo(queryClient, validator.consensusAddress)
+        : Promise.resolve(null),
     ]);
 
     // Check votes for active proposals
@@ -910,6 +979,7 @@ export async function getValidatorDashboardData(
       selfDelegation: selfDelegationResult,
       ranking,
       votingPowerPercentage,
+      signingInfo: signingInfoResult,
     };
   } catch (e) {
     console.error("Failed to fetch validator dashboard data:", e);
