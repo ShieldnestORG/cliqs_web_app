@@ -11,6 +11,7 @@ import { fromBase64 } from "@cosmjs/encoding";
 import { Account, StargateClient } from "@cosmjs/stargate";
 import { assert } from "@cosmjs/utils";
 import type { GetServerSideProps } from "next";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
@@ -702,7 +703,7 @@ const TransactionPage = ({
         chain.registryName
           ? {
               pathname: `/${chain.registryName}/${multisigAddress}`,
-              title: "multisig",
+              title: "CLIQ",
             }
           : undefined
       }
@@ -886,7 +887,7 @@ const TransactionPage = ({
       txInfo ? (
         <div className="flex flex-col gap-4 md:gap-6 lg:flex-row">
           {/* LEFT COLUMN: Signing Status Card */}
-          <div className="w-full lg:w-[380px] lg:flex-shrink-0">
+          <div className="order-2 w-full lg:order-none lg:w-[380px] lg:flex-shrink-0">
             <BentoCard variant="highlight" className="flex h-full flex-col p-6">
               <BentoCardHeader>
                 <BentoCardTitle icon={<Users className="h-5 w-5 text-foreground" />}>
@@ -976,9 +977,11 @@ const TransactionPage = ({
           </div>
 
           {/* RIGHT COLUMN: Transaction Details + Message stacked vertically */}
-          <div className="flex min-w-0 flex-1 flex-col gap-4 md:gap-6">
+          {/* Below lg the wrapper is transparent so the cards reorder against the
+              signing column: Message, Signing Status, Details. */}
+          <div className="contents lg:flex lg:min-w-0 lg:flex-1 lg:flex-col lg:gap-6">
             {/* Transaction Details Card */}
-            <BentoCard variant="default" className="p-6">
+            <BentoCard variant="default" className="order-3 p-6 lg:order-none">
               <BentoCardHeader>
                 <BentoCardTitle icon={<FileText className="h-5 w-5 text-foreground" />}>
                   Transaction Details
@@ -1052,7 +1055,7 @@ const TransactionPage = ({
             </BentoCard>
 
             {/* Message Details Card */}
-            <BentoCard variant="accent" className="flex-1 p-6">
+            <BentoCard variant="accent" className="order-1 flex-1 p-6 lg:order-none">
               <BentoCardHeader>
                 <BentoCardTitle icon={<MessageSquare className="h-5 w-5 text-foreground" />}>
                   Message
@@ -1385,6 +1388,26 @@ const TransactionPage = ({
             </BentoCard>
           )}
         </BentoGrid>
+      ) : null}
+
+      {/* Terminal states (completed, cancelled, sequence mismatch): the way onward */}
+      {!isLoadingTx &&
+      chain.registryName &&
+      (transactionHash || transactionStatus === "cancelled" || sequenceMismatch) ? (
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border/50 pt-4 text-sm">
+          <Link
+            href={`/${chain.registryName}/${multisigAddress}`}
+            className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            Back to CLIQ
+          </Link>
+          <Link
+            href={`/${chain.registryName}/dashboard`}
+            className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            Home
+          </Link>
+        </div>
       ) : null}
     </Page>
   );
