@@ -154,14 +154,11 @@ export function isNavItemActive(item: NavItem, asPath: string): boolean {
 }
 
 /**
- * The count behind the Home badge and the Header bell.
- *
- * Today this is every pending transaction on the user's CLIQs, because that is
- * all PendingTransactionsContext exposes. The spec wants only those that need
- * MY signature: when Track 2 adds `needsMyCount` to the context, read it here
- * and nowhere else changes.
+ * The count behind the Home badge and the Header bell: pending transactions on
+ * the user's CLIQs that still need THIS wallet's signature (not every pending
+ * transaction). Sidebar and Header both read it from here.
  */
 export function useNeedsMyCount(): number {
-  const { totalPendingCount } = usePendingTransactions();
-  return totalPendingCount;
+  const { needsMyCount } = usePendingTransactions();
+  return needsMyCount;
 }

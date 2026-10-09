@@ -135,27 +135,27 @@ export const TransactionCard = ({
             <span className={cn("h-2 w-2 rounded-full", statusColor)} />
           </div>
 
-          {cliqLabel !== undefined && (
-            <p className="w-40 shrink-0 truncate text-sm font-medium text-foreground">
-              {cliqLabel}
-            </p>
-          )}
-
-          {/* Message types - full width, no truncation */}
-          <div className="flex min-w-0 flex-1 items-center gap-2">
-            {msgTypeCounts.map(({ msgType, count, tone }) => (
-              <span
-                key={msgType}
-                className={cn(
-                  "whitespace-nowrap rounded border px-2 py-1 font-mono text-xs font-medium",
-                  chipToneClasses[tone],
-                  isCancelled && "line-through opacity-60",
-                )}
-              >
-                {msgType}
-                {count > 1 && ` ×${count}`}
-              </span>
-            ))}
+          {/* CLIQ label (inbox rows only) above the message types; chips wrap so
+              the fixed-width columns to the right never get overlapped. */}
+          <div className="min-w-0 flex-1">
+            {cliqLabel !== undefined && (
+              <p className="mb-1 truncate text-sm font-medium text-foreground">{cliqLabel}</p>
+            )}
+            <div className="flex flex-wrap items-center gap-2">
+              {msgTypeCounts.map(({ msgType, count, tone }) => (
+                <span
+                  key={msgType}
+                  className={cn(
+                    "whitespace-nowrap rounded border px-2 py-1 font-mono text-xs font-medium",
+                    chipToneClasses[tone],
+                    isCancelled && "line-through opacity-60",
+                  )}
+                >
+                  {msgType}
+                  {count > 1 && ` ×${count}`}
+                </span>
+              ))}
+            </div>
           </div>
 
           {/* Status text */}

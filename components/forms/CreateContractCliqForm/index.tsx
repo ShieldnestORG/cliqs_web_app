@@ -646,7 +646,7 @@ export default function CreateContractCliqForm() {
                     Name Your CLIQ
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Give your multisig a name and optionally a description
+                    Give your CLIQ a name and optionally a description
                   </p>
                 </div>
 
@@ -1349,7 +1349,7 @@ export default function CreateContractCliqForm() {
                   <p className="text-sm text-muted-foreground">
                     {watchedCodeId > 0 && codeIdStatus === "valid"
                       ? "Using existing Code ID — skipping upload."
-                      : "The app will upload the contract code and then create your multisig."}
+                      : "The app will upload the contract code and then create your CLIQ."}
                   </p>
                 </div>
 

@@ -47,16 +47,7 @@ function rowFromPubkeyJSON(
 
 export default function ListUserCliqs() {
   const { chain } = useChains();
-  const {
-    walletInfo,
-    loading: walletLoading,
-    connectKeplr,
-    isConnecting,
-    verify,
-    verificationSignature,
-    isVerified,
-    isVerifying,
-  } = useWallet();
+  const { walletInfo, verify, verificationSignature, isVerified, isVerifying } = useWallet();
 
   const {
     multisigsWithPending,
@@ -194,10 +185,6 @@ export default function ListUserCliqs() {
     }
   }, [walletInfo]);
 
-  const handleConnect = useCallback(async () => {
-    await connectKeplr();
-  }, [connectKeplr]);
-
   const handleVerifyAndFetch = useCallback(async () => {
     await fetchCliqs();
   }, [fetchCliqs]);
@@ -244,23 +231,6 @@ export default function ListUserCliqs() {
   return (
     <Card>
       <CardContent className="flex flex-col gap-5 pt-6">
-        {/* Not connected state */}
-        {!walletInfo ? (
-          <Button
-            onClick={handleConnect}
-            disabled={isConnecting}
-            variant="outline"
-            className="gap-2"
-          >
-            {walletLoading.keplr ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : (
-              <Image alt="" src="/assets/icons/keplr.svg" width={20} height={20} />
-            )}
-            Connect Keplr
-          </Button>
-        ) : null}
-
         {/* Connected but not verified - Keplr only (only show if verification is required by settings, and chain is ready) */}
         {walletInfo &&
         walletInfo.type === "Keplr" &&

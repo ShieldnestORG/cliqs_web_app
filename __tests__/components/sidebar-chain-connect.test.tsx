@@ -46,7 +46,10 @@ jest.mock("next/link", () => {
 jest.mock("@/lib/hooks/usePendingTransactions", () => ({
   usePendingTransactions: () => ({
     hasPendingTransactions: mockPendingCount > 0,
-    totalPendingCount: mockPendingCount,
+    // The badge reads needsMyCount; totalPendingCount is deliberately different
+    // so a regression back to "all pending" fails the badge assertions.
+    totalPendingCount: mockPendingCount + 5,
+    needsMyCount: mockPendingCount,
   }),
 }));
 

@@ -1,8 +1,8 @@
 /**
  * User Journey Definitions
  *
- * Structured walkthroughs for each major flow in CLIQS.
- * Each journey has steps displayed as tabs on the Get Started page.
+ * Structured walkthroughs for each major flow in CLIQs.
+ * Each journey has steps displayed as tabs on the Guides page (/[chainName]/get-started).
  */
 
 import {
@@ -633,7 +633,7 @@ export const userJourneys: UserJourney[] = [
     title: "Connect Your Wallet",
     subtitle: "Keplr or Ledger setup",
     description:
-      "Get started by connecting your Cosmos wallet. CLIQS supports both Keplr browser extension and Ledger hardware wallets for maximum flexibility and security.",
+      "Get started by connecting your Cosmos wallet. CLIQs supports both Keplr browser extension and Ledger hardware wallets for maximum flexibility and security.",
     highlights: [
       "Connect with the Keplr extension or a Ledger hardware wallet.",
       "Pick your chain — Cosmos Hub, Osmosis, Juno, Coreum, and more.",
