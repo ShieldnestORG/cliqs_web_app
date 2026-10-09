@@ -548,7 +548,7 @@ not exist.
 
 - No private key handling (all signing via wallet)
 - No address storage or tracking
-- ~~Rate limiting on RPC queries~~ — **not implemented**; there is no rate limiting anywhere in the app
+- ~~Rate limiting on RPC queries~~ — **not implemented** for this dashboard's RPC queries. The app's only limiter (`lib/rateLimit.ts`, PR #39) covers unauthenticated transaction reads on `/api/transaction/[transactionID]`, counted per serverless instance; see [SOC2-GAP-ASSESSMENT.md](../security/SOC2-GAP-ASSESSMENT.md) L3. *(This line said "there is no rate limiting anywhere in the app" until 2026-10-09; it was written on 2026-08-17, before PR #39 merged.)*
 - Clear transaction preview before signing
 - Validate all user inputs
 - CLIQ mode verifies membership before enabling any action; a non-member gets a read-only dashboard
