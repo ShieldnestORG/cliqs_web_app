@@ -39,7 +39,7 @@ export default function ConfirmConnection({ closeDialog }: ConfirmConnectionProp
         <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-[hsl(43_100%_50%)]" />
         <div className="space-y-1">
           <p className="text-sm font-medium text-foreground">
-            Switching networks will redirect you to the homepage
+            Switching networks will take you to Home
           </p>
           <p className="text-xs text-muted-foreground">
             Any unsaved form data will be lost. Make sure to save your work before proceeding.

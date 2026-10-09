@@ -23,6 +23,32 @@ const nextConfig = {
   // suite that reaches the real mongodb helpers (@/lib/audit, @/lib/db) dies
   // parsing the untransformed ESM. Add future ESM-only deps here too.
   transpilePackages: ["escape-string-regexp"],
+  // Old URLs from before the 2026-10 flow cleanup. permanent: false (307) until a
+  // preview check confirms them: a cached 308 cannot be taken back.
+  // /:chainName itself is NOT redirected here: a config redirect runs before
+  // public/ and would catch /robots.txt, /llms.txt and /favicon.ico. That one is
+  // a getServerSideProps stub in pages/[chainName]/index.tsx.
+  async redirects() {
+    return [
+      // First: a more specific rule must precede the catch-all for the same source.
+      {
+        source: "/:chainName/operations",
+        has: [{ type: "query", key: "tab", value: "validators" }],
+        destination: "/:chainName/validator",
+        permanent: false,
+      },
+      {
+        source: "/:chainName/operations",
+        destination: "/:chainName/dashboard",
+        permanent: false,
+      },
+      {
+        source: "/:chainName/account",
+        destination: "/:chainName/settings",
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     return [
       {

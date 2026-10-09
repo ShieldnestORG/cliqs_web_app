@@ -5,19 +5,16 @@ import Head from "../head";
 interface DashboardLayoutProps {
   title?: string;
   children: ReactNode;
-  /** Optional sidebar content */
-  sidebar?: ReactNode;
   /** Optional header content (will be placed below the main header) */
   subheader?: ReactNode;
   /** Layout variant */
-  variant?: "default" | "wide" | "full";
+  variant?: "default" | "wide";
   className?: string;
 }
 
 export default function DashboardLayout({
   title,
   children,
-  sidebar,
   subheader,
   variant = "default",
   className,
@@ -25,7 +22,6 @@ export default function DashboardLayout({
   const maxWidthClasses = {
     default: "max-w-[1600px]",
     wide: "max-w-[1800px]",
-    full: "max-w-[1800px]",
   };
 
   return (
@@ -35,29 +31,26 @@ export default function DashboardLayout({
       {/* Subheader slot */}
       {subheader && (
         <div className="border-b border-border/50 bg-background/80 backdrop-blur-sm">
-          <div className={cn("container mx-auto px-[0.75in] py-3", maxWidthClasses[variant])}>
+          <div
+            className={cn(
+              "container mx-auto px-4 py-3 sm:px-6 lg:px-[0.75in]",
+              maxWidthClasses[variant],
+            )}
+          >
             {subheader}
           </div>
         </div>
       )}
 
       {/* Main Content Area */}
-      <div className={cn("container mx-auto px-[0.75in] py-6", maxWidthClasses[variant])}>
-        {sidebar ? (
-          // Layout with sidebar
-          <div className="flex gap-6">
-            {/* Sidebar - fixed on desktop */}
-            <aside className="hidden w-72 shrink-0 lg:block">
-              <div className="sticky top-24 space-y-4">{sidebar}</div>
-            </aside>
-
-            {/* Main content */}
-            <main className={cn("min-w-0 flex-1", className)}>{children}</main>
-          </div>
-        ) : (
-          // Full width layout
-          <main className={cn("w-full", className)}>{children}</main>
+      <div
+        className={cn(
+          "container mx-auto px-4 py-6 sm:px-6 lg:px-[0.75in]",
+          maxWidthClasses[variant],
         )}
+      >
+        {/* The app shell (pages/_app.tsx) already provides <main>. */}
+        <div className={cn("w-full", className)}>{children}</div>
       </div>
     </div>
   );

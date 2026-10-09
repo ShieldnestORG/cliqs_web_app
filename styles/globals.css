@@ -764,15 +764,6 @@
   -webkit-backdrop-filter: blur(12px);
 }
 
-/* Section Backgrounds */
-.section-wrapper {
-  @apply relative w-full py-12;
-}
-
-.section-inner {
-  @apply relative z-10 mx-auto max-w-[1600px] px-[0.75in];
-}
-
 /* Dot Pattern Background.
    Superseded by the animated GridSpotlight canvas (components/GridSpotlight.tsx,
    mounted in pages/_app.tsx): the class now paints nothing so the fixed
