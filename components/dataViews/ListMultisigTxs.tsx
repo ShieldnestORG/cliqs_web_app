@@ -10,7 +10,7 @@ import {
 } from "@/lib/txMsgHelpers";
 import { cn, toastError } from "@/lib/utils";
 import { CardLabel } from "@/components/ui/card";
-import { Loader2, MoveRightIcon, RefreshCw, Code2, Shield, Wallet } from "lucide-react";
+import { ArrowRight, Loader2, MoveRightIcon, RefreshCw, Code2, Shield, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "../ui/button";
@@ -39,19 +39,28 @@ interface TransactionCardProps {
   multisigThreshold: number;
   chainName: string;
   walletAddress?: string;
+  /**
+   * Set only where rows from several CLIQs share one list (Home). Shows the
+   * CLIQ's name above the row and, on a row still waiting for my signature,
+   * a trailing "Review and sign".
+   */
+  cliqLabel?: string;
 }
 
-const TransactionCard = ({
+export const TransactionCard = ({
   tx,
   multisigAddress,
   multisigThreshold,
   chainName,
   walletAddress,
+  cliqLabel,
 }: TransactionCardProps) => {
   const msgTypeCounts = msgTypeCountsFromJson(tx.dataJSON);
   const hasSigned = Boolean(tx.signatures.find(({ address }) => address === walletAddress));
   const isCancelled = tx.status === "cancelled";
   const isBroadcast = Boolean(tx.txHash);
+
+  const showReviewAction = cliqLabel !== undefined && !hasSigned && !isBroadcast && !isCancelled;
 
   const statusColor = isCancelled
     ? "bg-muted-foreground"
@@ -80,6 +89,9 @@ const TransactionCard = ({
       >
         {/* Mobile: Vertical layout */}
         <div className="flex flex-col gap-3 md:hidden">
+          {cliqLabel !== undefined && (
+            <p className="truncate text-sm font-medium text-foreground">{cliqLabel}</p>
+          )}
           <div className="flex items-center gap-2">
             <span className={cn("h-2 w-2 shrink-0 rounded-full", statusColor)} />
             <span className="font-mono text-xs tabular-nums text-muted-foreground">
@@ -108,6 +120,12 @@ const TransactionCard = ({
               {isCancelled ? "—" : `${tx.signatures.length}/${multisigThreshold}`}
             </span>
           </div>
+          {showReviewAction && (
+            <span className="flex items-center gap-1 text-sm font-medium text-foreground">
+              Review and sign
+              <ArrowRight className="h-4 w-4" />
+            </span>
+          )}
         </div>
 
         {/* Desktop: Horizontal linear layout */}
@@ -116,6 +134,12 @@ const TransactionCard = ({
           <div className="flex shrink-0 items-center gap-2">
             <span className={cn("h-2 w-2 rounded-full", statusColor)} />
           </div>
+
+          {cliqLabel !== undefined && (
+            <p className="w-40 shrink-0 truncate text-sm font-medium text-foreground">
+              {cliqLabel}
+            </p>
+          )}
 
           {/* Message types - full width, no truncation */}
           <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -150,8 +174,14 @@ const TransactionCard = ({
             {isCancelled ? "—" : `${tx.signatures.length}/${multisigThreshold}`}
           </div>
 
-          {/* Arrow icon */}
-          <MoveRightIcon className="h-4 w-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+          {showReviewAction ? (
+            <span className="flex shrink-0 items-center gap-1 whitespace-nowrap text-sm font-medium text-foreground">
+              Review and sign
+              <ArrowRight className="h-4 w-4" />
+            </span>
+          ) : (
+            <MoveRightIcon className="h-4 w-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+          )}
         </div>
       </div>
     </Link>

@@ -1,7 +1,9 @@
 /**
- * List User Cliqs Component
+ * List User CLIQs Component
  *
- * Displays a list of Cliqs (multisigs) that the user has created or is a member of.
+ * Home's "Your CLIQs" list: the CLIQs the user created or belongs to, merged and
+ * de-duplicated by address. Ledger wallets (no verification signature) are
+ * served from PendingTransactionsContext while the sign-in requirement is off.
  */
 
 import { useChains } from "@/context/ChainsContext";
@@ -14,13 +16,33 @@ import { MultisigThresholdPubkey } from "@cosmjs/amino";
 import { Loader2, MoveRightIcon, RefreshCw, Users, Shield, ShieldPlus, Clock } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { Label } from "../ui/label";
-import { Switch } from "../ui/switch";
+import { Card, CardContent } from "../ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+
+/** One row of the list, whichever source it came from. */
+interface CliqRow {
+  readonly address: string;
+  readonly name?: string | null;
+  readonly threshold: number;
+  readonly memberCount: number;
+}
+
+function rowFromPubkeyJSON(
+  address: string,
+  name: string | null | undefined,
+  pubkeyJSON: string,
+): CliqRow {
+  const pubkey: MultisigThresholdPubkey = JSON.parse(pubkeyJSON);
+  return {
+    address,
+    name,
+    threshold: Number(pubkey.value.threshold),
+    memberCount: pubkey.value.pubkeys.length,
+  };
+}
 
 export default function ListUserCliqs() {
   const { chain } = useChains();
@@ -35,10 +57,15 @@ export default function ListUserCliqs() {
     isVerifying,
   } = useWallet();
 
-  const { multisigsWithPending } = usePendingTransactions();
+  const {
+    multisigsWithPending,
+    cliqs: contextCliqs,
+    hasLoaded: contextLoaded,
+    isLoading: contextLoading,
+    refresh: refreshContext,
+  } = usePendingTransactions();
 
   const [loadingCliqs, setLoadingCliqs] = useState(false);
-  const [showBelonged, setShowBelonged] = useState(false);
   const [cliqs, setCliqs] = useState<FetchedMultisigs | null>(null);
   const hasAttemptedFetch = useRef<string | null>(null);
   const fetchError = useRef<Error | null>(null);
@@ -174,23 +201,48 @@ export default function ListUserCliqs() {
     await fetchCliqs();
   }, [fetchCliqs]);
 
+  const requiresSignIn = getUserSettings().requireWalletSignInForCliqs;
+  const isLedger = walletInfo?.type === "Ledger";
+  // Ledger cannot produce the verification signature, so it reads the context's list
+  // (which the context only fills while the sign-in requirement is off).
+  const useContextRows = isLedger && !requiresSignIn;
+
+  const rows = useMemo<CliqRow[]>(() => {
+    if (cliqs) {
+      const byAddress = new Map<string, CliqRow>();
+      for (const m of [...cliqs.created, ...cliqs.belonged]) {
+        if (!byAddress.has(m.address)) {
+          byAddress.set(m.address, rowFromPubkeyJSON(m.address, m.name, m.pubkeyJSON));
+        }
+      }
+      return Array.from(byAddress.values());
+    }
+    return useContextRows ? contextCliqs : [];
+  }, [cliqs, useContextRows, contextCliqs]);
+
+  const listLoaded = cliqs !== null || (useContextRows && contextLoaded);
+  const listLoading = loadingCliqs || (useContextRows && contextLoading && !contextLoaded);
+
+  const handleRefresh = () => {
+    if (useContextRows) {
+      refreshContext();
+      return;
+    }
+    // Reset fetch attempt flag to allow manual refresh
+    const walletKey =
+      walletInfo?.address && walletInfo?.type === "Keplr"
+        ? `${walletInfo.address}-${chainId}`
+        : null;
+    if (walletKey) {
+      hasAttemptedFetch.current = null;
+      fetchError.current = null;
+    }
+    fetchCliqs();
+  };
+
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Users className="h-5 w-5 text-green-accent" />
-          Your Cliqs
-        </CardTitle>
-        <CardDescription>
-          Your cliqs on {chain.chainDisplayName}.
-          {!walletInfo && " Connect your wallet to see your Cliqs."}
-          {walletInfo &&
-            getUserSettings().requireWalletSignInForCliqs &&
-            !isVerified &&
-            " Verify your identity to see your Cliqs."}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-5">
+      <CardContent className="flex flex-col gap-5 pt-6">
         {/* Not connected state */}
         {!walletInfo ? (
           <Button
@@ -212,27 +264,31 @@ export default function ListUserCliqs() {
         {walletInfo &&
         walletInfo.type === "Keplr" &&
         chain.nodeAddress &&
-        getUserSettings().requireWalletSignInForCliqs &&
+        requiresSignIn &&
         !isVerified &&
         !cliqs &&
         !loadingCliqs &&
         !isVerifying ? (
-          <Button
-            onClick={handleVerifyAndFetch}
-            disabled={loadingCliqs || isVerifying}
-            variant="outline"
-            className="gap-2"
-          >
-            <Image alt="" src="/assets/icons/keplr.svg" width={20} height={20} />
-            Verify identity to see Cliqs
-          </Button>
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-muted-foreground">Verify your identity to see your CLIQs.</p>
+            <Button
+              onClick={handleVerifyAndFetch}
+              disabled={loadingCliqs || isVerifying}
+              variant="outline"
+              className="gap-2"
+            >
+              <Image alt="" src="/assets/icons/keplr.svg" width={20} height={20} />
+              Verify identity to see CLIQs
+            </Button>
+          </div>
         ) : null}
 
-        {/* Ledger connected - can't easily verify */}
-        {walletInfo && walletInfo.type === "Ledger" && !cliqs ? (
+        {/* Ledger with the sign-in requirement on - it cannot verify */}
+        {isLedger && requiresSignIn ? (
           <div className="rounded-lg border border-border/[0.06] p-4 text-sm text-muted-foreground">
             <p>
-              Ledger wallet connected. To view your Cliqs, please use Keplr to verify your identity.
+              Ledger can&apos;t verify identity. Turn off the sign-in requirement in Settings, or
+              use Keplr.
             </p>
           </div>
         ) : null}
@@ -246,80 +302,59 @@ export default function ListUserCliqs() {
         )}
 
         {/* Loading states */}
-        {(loadingCliqs || isVerifying) && chain.nodeAddress && (
+        {(listLoading || isVerifying) && chain.nodeAddress && (
           <div className="flex items-center gap-2">
             <Loader2 className="animate-spin text-green-accent" />
-            <p>{isVerifying ? "Verifying wallet..." : "Loading your Cliqs..."}</p>
+            <p>{isVerifying ? "Verifying wallet..." : "Loading your CLIQs..."}</p>
           </div>
         )}
 
-        {/* Empty states */}
-        {cliqs && !showBelonged && !cliqs.created.length && (
+        {/* Empty state */}
+        {listLoaded && !rows.length && (
           <div className="py-6 text-center">
             <div className="mb-3 flex justify-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
                 <ShieldPlus className="h-6 w-6 text-muted-foreground" />
               </div>
             </div>
-            <p className="mb-3 text-sm text-muted-foreground">
-              You haven&apos;t created any Cliqs yet
+            <p className="mb-4 text-sm text-muted-foreground">
+              You don&apos;t have any CLIQs on {chain.chainDisplayName} yet.
             </p>
             {chainRegistryName && (
               <Link href={`/${chainRegistryName}/create`}>
-                <Button variant="action-outline" size="sm" className="gap-2">
+                <Button variant="action" size="action-lg" className="gap-2">
                   <Users className="h-4 w-4" />
-                  Create Your First Cliq
+                  Create your first CLIQ
                 </Button>
               </Link>
             )}
+            <p className="mt-4 text-sm text-muted-foreground">
+              Or{" "}
+              <Link href="#open-by-address" className="underline underline-offset-4">
+                open one you were added to
+              </Link>
+            </p>
           </div>
         )}
-        {cliqs && showBelonged && !cliqs.belonged.length && (
-          <p className="text-sm text-muted-foreground">You are not a member of any Cliq</p>
-        )}
 
-        {/* Cliq list */}
-        {cliqs?.created.length || cliqs?.belonged.length ? (
+        {/* CLIQ list */}
+        {rows.length ? (
           <>
-            <div className="flex items-center justify-between">
-              {cliqs.created.length !== cliqs.belonged.length ? (
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="cliqs-type"
-                    checked={showBelonged}
-                    onCheckedChange={setShowBelonged}
-                  />
-                  <Label htmlFor="cliqs-type">Show all Cliqs I&apos;m a member of</Label>
-                </div>
-              ) : (
-                <div />
-              )}
+            <div className="flex items-center justify-end">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => {
-                  // Reset fetch attempt flag to allow manual refresh
-                  const walletKey =
-                    walletInfo?.address && walletInfo?.type === "Keplr"
-                      ? `${walletInfo.address}-${chainId}`
-                      : null;
-                  if (walletKey) {
-                    hasAttemptedFetch.current = null;
-                    fetchError.current = null;
-                  }
-                  fetchCliqs();
-                }}
-                disabled={loadingCliqs || isVerifying}
+                onClick={handleRefresh}
+                disabled={listLoading || isVerifying}
               >
-                <RefreshCw className={`mr-1 h-4 w-4 ${loadingCliqs ? "animate-spin" : ""}`} />
+                <RefreshCw className={`mr-1 h-4 w-4 ${listLoading ? "animate-spin" : ""}`} />
                 Refresh
               </Button>
             </div>
             <div className="flex flex-col gap-2">
-              {(showBelonged ? cliqs.belonged : cliqs.created).map((cliq) => {
-                const pubkey: MultisigThresholdPubkey = JSON.parse(cliq.pubkeyJSON);
-                const pendingData = multisigsWithPending.find((m) => m.address === cliq.address);
-                const pendingCount = pendingData?.pendingCount || 0;
+              {rows.map((cliq) => {
+                const needsMeCount =
+                  multisigsWithPending.find((m) => m.address === cliq.address)?.needsMeCount || 0;
 
                 return (
                   <Link
@@ -329,9 +364,9 @@ export default function ListUserCliqs() {
                   >
                     <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-green-accent/30 bg-gradient-to-br from-green-accent/20 to-green-accent/10">
                       <Users className="h-5 w-5 text-green-accent" />
-                      {pendingCount > 0 && (
+                      {needsMeCount > 0 && (
                         <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-card bg-warning text-[10px] font-bold text-warning-foreground">
-                          {pendingCount}
+                          {needsMeCount}
                         </span>
                       )}
                     </div>
@@ -347,13 +382,10 @@ export default function ListUserCliqs() {
                             </p>
                           )}
                         </div>
-                        {pendingCount > 0 && (
-                          <Badge
-                            variant="outline"
-                            className="ml-auto h-5 gap-1 border-warning/20 bg-warning/10 px-1.5 text-warning sm:ml-0"
-                          >
+                        {needsMeCount > 0 && (
+                          <Badge variant="warning" className="ml-auto h-5 gap-1 px-1.5 sm:ml-0">
                             <Clock className="h-3 w-3" />
-                            {pendingCount} pending
+                            {needsMeCount} waiting for you
                           </Badge>
                         )}
                       </div>
@@ -362,13 +394,13 @@ export default function ListUserCliqs() {
                           <TooltipTrigger>
                             <Badge variant="outline" className="gap-1 text-xs">
                               <Shield className="h-3 w-3" />
-                              {pubkey.value.threshold}/{pubkey.value.pubkeys.length}
+                              {cliq.threshold}/{cliq.memberCount}
                             </Badge>
                           </TooltipTrigger>
                           <TooltipContent>
                             <div>
-                              <p>Threshold: {pubkey.value.threshold} signatures required</p>
-                              <p>Members: {pubkey.value.pubkeys.length}</p>
+                              <p>Threshold: {cliq.threshold} signatures required</p>
+                              <p>Members: {cliq.memberCount}</p>
                             </div>
                           </TooltipContent>
                         </Tooltip>
