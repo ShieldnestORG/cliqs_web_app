@@ -162,7 +162,7 @@ export default function ContractMultisigDashboard({
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link href={`/${chainName}/dashboard`}>Home</Link>
+              <Link href={chainName ? `/${chainName}/dashboard` : "/"}>Home</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
@@ -189,7 +189,12 @@ export default function ContractMultisigDashboard({
           <CopyButton value={contractAddress} copyLabel="contract address" />
           {explorerLink && (
             <Button variant="ghost" size="sm" asChild>
-              <a href={explorerLink} target="_blank" rel="noopener noreferrer">
+              <a
+                href={explorerLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="View on explorer"
+              >
                 <ExternalLink className="h-4 w-4" />
               </a>
             </Button>

@@ -247,6 +247,26 @@ describe("Multisig View Route (/[chainName]/[address]): P0", () => {
     expect(screen.queryByRole("link", { name: /New transaction/i })).not.toBeInTheDocument();
   });
 
+  it.each(["transactions", "balances", "privacy"])(
+    "unfunded CLIQ: the %s tab says it is available once funded",
+    async (tab) => {
+      mockGetHostedMultisig.mockResolvedValue(unfunded);
+      mockQuery = { tab };
+      render(<MultisigViewPage />);
+
+      expect(await screen.findByText("Available once this CLIQ is funded.")).toBeInTheDocument();
+    },
+  );
+
+  it("unfunded CLIQ: the disabled New transaction button explains itself in a tooltip", async () => {
+    mockGetHostedMultisig.mockResolvedValue(unfunded);
+    render(<MultisigViewPage />);
+
+    const button = await screen.findByRole("button", { name: /New transaction/i });
+    fireEvent.focus(button.closest("span") as HTMLElement);
+    expect((await screen.findAllByText("Fund this CLIQ first")).length).toBeGreaterThan(0);
+  });
+
   it("not found: Go Home is the primary action and Create a CLIQ is a text link", async () => {
     mockGetHostedMultisig.mockResolvedValue({ hosted: "nowhere" });
     render(<MultisigViewPage />);

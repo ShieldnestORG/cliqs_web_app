@@ -122,10 +122,20 @@ describe("Create Transaction Route (/[chainName]/[address]/transaction/new): P0"
 
     expect(await screen.findByText("CLIQ not available")).toBeInTheDocument();
     expect(screen.queryByText(/Multisig Not Available/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/multisig/i)).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "recreate it with this tool" })).toHaveAttribute(
       "href",
       "/cosmos/create",
     );
+  });
+
+  it("unavailable CLIQ: an assert-style failure says CLIQ address, not Multisig address", async () => {
+    const helpers = jest.requireMock("@/lib/multisigHelpers");
+    helpers.getHostedMultisig.mockResolvedValueOnce({ hosted: "db" });
+    render(<CreateTransactionPage />);
+
+    expect(await screen.findByText("CLIQ address could not be found")).toBeInTheDocument();
+    expect(screen.queryByText(/multisig/i)).not.toBeInTheDocument();
   });
 
   it("should display transaction form when account is loaded", async () => {

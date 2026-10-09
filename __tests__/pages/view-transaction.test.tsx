@@ -372,6 +372,8 @@ describe("View Transaction layout: P0", () => {
     expect(cardOf("Message")?.className).toContain("lg:order-none");
     expect(cardOf("Transaction Details")?.className).toContain("lg:order-none");
     expect(signingColumn?.className).toContain("lg:order-none");
+    // The transparent wrapper is what lets the right-column cards reorder against the signing column.
+    expect(cardOf("Transaction Details")?.parentElement?.className).toContain("contents");
   });
 
   it("pending: no terminal footer", async () => {

@@ -1392,24 +1392,21 @@ const TransactionPage = ({
 
       {/* Terminal states (completed, cancelled, sequence mismatch): the way onward */}
       {!isLoadingTx &&
+      chain.registryName &&
       (transactionHash || transactionStatus === "cancelled" || sequenceMismatch) ? (
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border/50 pt-4 text-sm">
-          {chain.registryName ? (
-            <>
-              <Link
-                href={`/${chain.registryName}/${multisigAddress}`}
-                className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-              >
-                Back to CLIQ
-              </Link>
-              <Link
-                href={`/${chain.registryName}/dashboard`}
-                className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-              >
-                Home
-              </Link>
-            </>
-          ) : null}
+          <Link
+            href={`/${chain.registryName}/${multisigAddress}`}
+            className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            Back to CLIQ
+          </Link>
+          <Link
+            href={`/${chain.registryName}/dashboard`}
+            className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            Home
+          </Link>
         </div>
       ) : null}
     </Page>

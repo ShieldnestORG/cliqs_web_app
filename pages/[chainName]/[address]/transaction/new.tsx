@@ -352,13 +352,13 @@ export default function CreateTxPage() {
 
         const resolved = await ensureChainMultisigInDb(multisigAddress, chain);
         if (!resolved.multisig) {
-          throw new Error(resolved.reason ?? "Multisig address could not be resolved");
+          throw new Error(resolved.reason ?? "CLIQ address could not be resolved");
         }
         const hostedMultisig = await getHostedMultisig(multisigAddress, chain);
 
         assert(
           hostedMultisig.hosted === "db+chain" && isAccount(hostedMultisig.accountOnChain),
-          "Multisig address could not be found",
+          "CLIQ address could not be found",
         );
 
         setAccountOnChain(hostedMultisig.accountOnChain);
@@ -375,11 +375,9 @@ export default function CreateTxPage() {
       } catch (error: unknown) {
         setHasAccountError(true);
         setAccountErrorMessage(
-          error instanceof Error ? error.message : "Multisig address could not be found",
+          error instanceof Error ? error.message : "CLIQ address could not be found",
         );
-        console.error(
-          error instanceof Error ? error.message : "Multisig address could not be found",
-        );
+        console.error(error instanceof Error ? error.message : "CLIQ address could not be found");
       }
     })();
   }, [chain, multisigAddress, isContractMultisig, multisigTypeResult.isLoading]);
@@ -472,7 +470,7 @@ export default function CreateTxPage() {
               <p>
                 You can{" "}
                 <Link
-                  href={`/${chain.registryName}/create`}
+                  href={chain.registryName ? `/${chain.registryName}/create` : "/"}
                   className="underline underline-offset-4"
                 >
                   recreate it with this tool

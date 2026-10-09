@@ -423,6 +423,9 @@ export default function CliqDashboardPage() {
               </CardContent>
             </Card>
           )}
+          {!isFunded && (
+            <p className="text-sm text-muted-foreground">Available once this CLIQ is funded.</p>
+          )}
         </TabsContent>
 
         {/* Members Tab */}
@@ -493,6 +496,9 @@ export default function CliqDashboardPage() {
               </CardContent>
             </Card>
           )}
+          {!isFunded && (
+            <p className="text-sm text-muted-foreground">Available once this CLIQ is funded.</p>
+          )}
         </TabsContent>
 
         {/* Data & Privacy Tab */}
@@ -511,6 +517,9 @@ export default function CliqDashboardPage() {
                 .
               </p>
             </>
+          )}
+          {!isFunded && (
+            <p className="text-sm text-muted-foreground">Available once this CLIQ is funded.</p>
           )}
         </TabsContent>
       </Tabs>
