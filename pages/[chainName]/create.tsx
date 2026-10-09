@@ -1,7 +1,7 @@
 /**
- * Create Cliq Page
+ * Create CLIQ Page
  *
- * Page for creating a new Cliq (multisig group).
+ * Page for creating a new CLIQ (multisig group).
  * Supports three multisig types:
  * - PubKey Multisig: Traditional Cosmos SDK multisig (address derived from pubkeys)
  * - Contract Fixed: CW3-Fixed smart contract multisig (stable address, fixed members)
@@ -36,22 +36,22 @@ export default function CreateCliqPage() {
   const [multisigType, setMultisigType] = useState<MultisigType>("pubkey");
 
   return (
-    <div className="container mx-auto max-w-[1600px] px-[0.75in] py-8">
-      <Head title={`Create Cliq - ${chain.chainDisplayName || "Cosmos"}`} />
+    <div className="container mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-[0.75in]">
+      <Head title={`Create CLIQ - ${chain.chainDisplayName || "Cosmos"}`} />
 
       <div className="space-y-6">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href={`/${chain.registryName || ""}`}>Home</Link>
+                <Link href={`/${chain.registryName || ""}/dashboard`}>Home</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbPage className="flex items-center gap-1.5">
                 <Users className="h-3.5 w-3.5" />
-                Create Cliq
+                Create CLIQ
               </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
@@ -63,9 +63,11 @@ export default function CreateCliqPage() {
             {/* Header */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Create a CLIQ</h1>
+                <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+                  Create CLIQ
+                </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Choose your multisig type based on your security needs
+                  Choose the type of CLIQ that fits your security needs
                 </p>
               </div>
             </div>
@@ -86,7 +88,7 @@ export default function CreateCliqPage() {
                         : "border-border/[0.06] bg-background/50 hover:bg-background/80"
                     }`}
                   >
-                    <div className="mb-3 flex items-center gap-2">
+                    <div className="flex items-center gap-2 sm:mb-3">
                       <div
                         className={`rounded-lg p-1.5 ${
                           multisigType === "pubkey"
@@ -98,7 +100,7 @@ export default function CreateCliqPage() {
                       </div>
                       <h3 className="font-semibold text-foreground">PubKey</h3>
                     </div>
-                    <ul className="space-y-2 text-muted-foreground">
+                    <ul className="hidden space-y-2 text-muted-foreground sm:block">
                       <li className="flex items-start gap-2">
                         <Shield
                           className={`mt-0.5 h-4 w-4 shrink-0 ${multisigType === "pubkey" ? "text-primary" : "text-muted-foreground/60"}`}
@@ -130,7 +132,7 @@ export default function CreateCliqPage() {
                         : "border-border/[0.06] bg-background/50 hover:bg-background/80"
                     }`}
                   >
-                    <div className="mb-3 flex items-center gap-2">
+                    <div className="flex items-center gap-2 sm:mb-3">
                       <div
                         className={`rounded-lg p-1.5 ${
                           multisigType === "contract"
@@ -142,7 +144,7 @@ export default function CreateCliqPage() {
                       </div>
                       <h3 className="font-semibold text-foreground">Fixed</h3>
                     </div>
-                    <ul className="space-y-2 text-muted-foreground">
+                    <ul className="hidden space-y-2 text-muted-foreground sm:block">
                       <li className="flex items-start gap-2">
                         <RefreshCw
                           className={`mt-0.5 h-4 w-4 shrink-0 ${multisigType === "contract" ? "text-primary" : "text-muted-foreground/60"}`}
@@ -174,7 +176,7 @@ export default function CreateCliqPage() {
                         : "border-border/[0.06] bg-background/50 hover:bg-background/80"
                     }`}
                   >
-                    <div className="mb-3 flex items-center gap-2">
+                    <div className="flex items-center gap-2 sm:mb-3">
                       <div
                         className={`rounded-lg p-1.5 ${
                           multisigType === "flex"
@@ -186,7 +188,7 @@ export default function CreateCliqPage() {
                       </div>
                       <h3 className="font-semibold text-foreground">Flex</h3>
                     </div>
-                    <ul className="space-y-2 text-muted-foreground">
+                    <ul className="hidden space-y-2 text-muted-foreground sm:block">
                       <li className="flex items-start gap-2">
                         <RefreshCw
                           className={`mt-0.5 h-4 w-4 shrink-0 ${multisigType === "flex" ? "text-primary" : "text-muted-foreground/60"}`}

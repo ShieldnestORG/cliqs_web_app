@@ -1,7 +1,7 @@
 /**
- * Get Started Page
+ * Guides Page
  *
- * Interactive guided walkthroughs for every major flow in CLIQS.
+ * Interactive guided walkthroughs for every major flow in CLIQs.
  * Users select a journey, then walk through tab-based steps.
  */
 
@@ -341,17 +341,11 @@ function JourneyWalkthrough({
               <h3 className="font-semibold text-foreground">Journey Complete!</h3>
               <p className="mt-1 text-sm text-muted-foreground">
                 You&apos;ve reviewed all steps.{" "}
-                {navigateHref ? "Ready to get started for real?" : "You're all set!"}
+                {navigateHref
+                  ? "Ready to get started for real? Use Go Do It above."
+                  : "You're all set!"}
               </p>
             </div>
-            {navigateHref && (
-              <Link href={navigateHref}>
-                <Button size="lg" className="gap-2">
-                  <Rocket className="h-5 w-5" />
-                  Let&apos;s Go
-                </Button>
-              </Link>
-            )}
           </CardContent>
         </Card>
       )}
@@ -379,27 +373,27 @@ export default function GetStartedPage() {
       : userJourneys.filter((j) => j.category === categoryFilter);
 
   return (
-    <div className="container mx-auto max-w-[1600px] px-[0.75in] py-8">
-      <Head title={`Get Started - ${chain.chainDisplayName || "CLIQS"}`} />
+    <div className="container mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-[0.75in]">
+      <Head title={`Guides - ${chain.chainDisplayName || "CLIQs"}`} />
 
       <div className="space-y-6">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href={`/${chain.registryName || ""}`}>Home</Link>
+                <Link href={`/${chain.registryName || ""}/dashboard`}>Home</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               {selectedJourney ? (
                 <BreadcrumbLink className="cursor-pointer" onClick={() => setSelectedJourney(null)}>
-                  Get Started
+                  Guides
                 </BreadcrumbLink>
               ) : (
                 <BreadcrumbPage className="flex items-center gap-1.5">
                   <BookOpen className="h-3.5 w-3.5" />
-                  Get Started
+                  Guides
                 </BreadcrumbPage>
               )}
             </BreadcrumbItem>
@@ -424,19 +418,19 @@ export default function GetStartedPage() {
           <>
             {/* Page Header */}
             <div className="space-y-2">
-              <h1 className="flex items-center gap-3 font-heading text-3xl font-bold">
+              <h1 className="flex items-center gap-3 font-heading text-3xl font-bold tracking-tight sm:text-4xl">
                 <BookOpen className="h-8 w-8 text-primary" />
-                Get Started
+                Guides
               </h1>
               <p className="max-w-2xl text-muted-foreground">
-                Choose a guided walkthrough to learn how CLIQS works. Each journey takes you
-                step-by-step through a specific flow — from creating your first multisig to managing
+                Choose a guided walkthrough to learn how CLIQs works. Each journey takes you
+                step-by-step through a specific flow — from creating your first CLIQ to managing
                 your own database.
               </p>
             </div>
 
             {/* Category Filter */}
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-row flex-wrap items-center gap-2">
               <Button
                 variant={categoryFilter === "all" ? "default" : "outline"}
                 size="sm"

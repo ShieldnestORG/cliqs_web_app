@@ -1,11 +1,13 @@
 /**
  * Settings Page
  *
- * User settings page for managing security preferences, database
- * configuration (BYODB), and other options.
+ * Wallet (absorbs the former Account page), the sign-in requirement for
+ * CLIQs, and database configuration (BYODB). Sections 2 and 3 work without a
+ * connected wallet; only the Wallet section asks to connect.
  */
 
-import Head from "@/components/head";
+import AccountView from "@/components/dataViews/AccountView";
+import DashboardLayout, { DashboardSection } from "@/components/layout/DashboardLayout";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -14,12 +16,12 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { useChains } from "@/context/ChainsContext";
 import { getUserSettings, updateUserSettings } from "@/lib/settingsStorage";
-import { Shield, Settings as SettingsIcon } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toastSuccess } from "@/lib/utils";
@@ -42,95 +44,100 @@ export default function SettingsPage() {
     updateUserSettings({ requireWalletSignInForCliqs: checked });
     toastSuccess(
       checked
-        ? "Additional security enabled. You'll need to sign in to access your Cliqs."
-        : "Additional security disabled. You can access your Cliqs without signing in.",
+        ? "Additional security enabled. You'll need to sign in to access your CLIQs."
+        : "Additional security disabled. You can access your CLIQs without signing in.",
     );
   };
 
-  if (!mounted) {
-    return null; // Prevent hydration mismatch
-  }
+  const subheader = (
+    <Breadcrumb>
+      <BreadcrumbList>
+        <BreadcrumbItem>
+          <BreadcrumbLink asChild>
+            {chain.registryName ? (
+              <Link href={`/${chain.registryName}/dashboard`}>Home</Link>
+            ) : null}
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator />
+        <BreadcrumbItem>
+          <BreadcrumbPage>Settings</BreadcrumbPage>
+        </BreadcrumbItem>
+      </BreadcrumbList>
+    </Breadcrumb>
+  );
 
   return (
-    <div className="container mx-auto max-w-[1600px] px-[0.75in] py-8">
-      <Head title={`Settings - ${chain.chainDisplayName || "Cosmos Hub"}`} />
-
+    <DashboardLayout
+      title={`Settings - ${chain.chainDisplayName || "Cosmos Hub"}`}
+      subheader={subheader}
+    >
       <div className="space-y-6">
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                {chain.registryName ? <Link href={`/${chain.registryName}`}>Home</Link> : null}
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Settings</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-
-        <div className="space-y-6">
-          <div>
-            <h1 className="flex items-center gap-2 font-heading text-3xl font-bold">
-              <SettingsIcon className="h-8 w-8" />
-              Settings
-            </h1>
-            <p className="mt-2 text-muted-foreground">
-              Manage your security preferences, database configuration, and account settings
-            </p>
-          </div>
-
-          {/* Security Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-green-accent" />
-                Additional Security
-              </CardTitle>
-              <CardDescription>
-                Configure additional security measures for accessing your Cliqs
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between space-x-2 rounded-lg border border-border/[0.06] p-4">
-                <div className="flex-1 space-y-0.5">
-                  <Label htmlFor="require-wallet-signin" className="text-base font-medium">
-                    Require Wallet Sign-In for Cliqs
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    When enabled, you&apos;ll need to sign a message with your wallet each time you
-                    want to access your Cliqs. This provides an extra layer of security.
-                  </p>
-                </div>
-                <Switch
-                  id="require-wallet-signin"
-                  checked={requireWalletSignIn}
-                  onCheckedChange={handleToggleRequireWalletSignIn}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Database Settings (BYODB) */}
-          <div id="database-config" className="scroll-mt-8">
-            <p className="mb-4 text-sm text-muted-foreground">
-              New to BYODB?{" "}
-              <Link
-                href={
-                  chain.registryName
-                    ? `/${chain.registryName}/get-started?journey=setup-byodb`
-                    : "#"
-                }
-                className="underline hover:text-foreground"
-              >
-                See our step-by-step guide
-              </Link>
-            </p>
-            <DatabaseSettings />
-          </div>
+        <div>
+          <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">Settings</h1>
+          <p className="mt-2 text-muted-foreground">Wallet, security and database.</p>
         </div>
+
+        {!mounted ? (
+          <div className="space-y-6" data-testid="settings-loading">
+            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-40 w-full" />
+          </div>
+        ) : (
+          <>
+            {/* Wallet (absorbs the former Account page) */}
+            <DashboardSection title="Wallet">
+              <div id="wallet" className="scroll-mt-8">
+                <AccountView />
+              </div>
+            </DashboardSection>
+
+            {/* Security */}
+            <DashboardSection title="Security">
+              <Card>
+                <CardContent className="space-y-4 pt-6">
+                  <div className="flex items-center justify-between space-x-2 rounded-lg border border-border/[0.06] p-4">
+                    <div className="flex-1 space-y-0.5">
+                      <Label htmlFor="require-wallet-signin" className="text-base font-medium">
+                        Require wallet sign-in for CLIQs
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        When on, your CLIQs and waiting signatures appear only after you verify your
+                        identity.
+                      </p>
+                    </div>
+                    <Switch
+                      id="require-wallet-signin"
+                      checked={requireWalletSignIn}
+                      onCheckedChange={handleToggleRequireWalletSignIn}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </DashboardSection>
+
+            {/* Database (BYODB) */}
+            <div id="database-config" className="scroll-mt-8">
+              <DashboardSection title="Your own database (BYODB)">
+                <p className="text-sm text-muted-foreground">
+                  New to using your own database?{" "}
+                  <Link
+                    href={
+                      chain.registryName
+                        ? `/${chain.registryName}/get-started?journey=setup-byodb`
+                        : "#"
+                    }
+                    className="underline hover:text-foreground"
+                  >
+                    See our step-by-step guide
+                  </Link>
+                </p>
+                <DatabaseSettings />
+              </DashboardSection>
+            </div>
+          </>
+        )}
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

@@ -7,7 +7,7 @@
  * Priority: P0
  */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import CreateCliqPage from "@/pages/[chainName]/create";
 
 // Mock the ChainsContext
@@ -49,12 +49,13 @@ describe("Create Multisig Route (/[chainName]/create): P0", () => {
     jest.clearAllMocks();
   });
 
-  it("should load create multisig page", () => {
+  it("should show a single H1 reading Create CLIQ", () => {
     render(<CreateCliqPage />);
 
-    // Use getAllByText since "Create Cliq" appears multiple times (title, breadcrumb, etc.)
-    const createCliqElements = screen.getAllByText(/Create Cliq/i);
-    expect(createCliqElements.length).toBeGreaterThan(0);
+    expect(screen.getByRole("heading", { level: 1, name: "Create CLIQ" })).toBeInTheDocument();
+    // Retired wording must not come back
+    expect(screen.queryByText(/Create Cliq/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Create a CLIQ")).not.toBeInTheDocument();
   });
 
   it("should display create CLIQ form", () => {
@@ -64,19 +65,40 @@ describe("Create Multisig Route (/[chainName]/create): P0", () => {
     expect(form).toBeInTheDocument();
   });
 
-  it("should display breadcrumb navigation", () => {
+  it("should link the breadcrumb Home to the dashboard", () => {
     render(<CreateCliqPage />);
 
-    // Breadcrumb should be present
     const breadcrumb = screen.getByRole("navigation");
-    expect(breadcrumb).toBeInTheDocument();
+    const home = within(breadcrumb).getByText("Home");
+    expect(home.closest("a")).toHaveAttribute("href", "/cosmos/dashboard");
+    expect(within(breadcrumb).getByText("Create CLIQ")).toBeInTheDocument();
   });
 
-  it("should display chain name in page title", () => {
+  it("should offer the three types as cards", () => {
     render(<CreateCliqPage />);
 
-    // Use getAllByText since "Create Cliq" appears multiple times
-    const createCliqElements = screen.getAllByText(/Create Cliq/i);
-    expect(createCliqElements.length).toBeGreaterThan(0);
+    for (const name of ["PubKey", "Fixed", "Flex"]) {
+      expect(screen.getByRole("heading", { level: 3, name })).toBeInTheDocument();
+    }
+  });
+
+  it("should hide the card detail bullets below the sm breakpoint", () => {
+    render(<CreateCliqPage />);
+
+    const bulletLists = screen
+      .getAllByRole("list", { hidden: true })
+      .filter((list) => list.tagName === "UL");
+    expect(bulletLists).toHaveLength(3);
+    for (const list of bulletLists) {
+      expect(list).toHaveClass("hidden", "sm:block");
+    }
+  });
+
+  it("should use the responsive page gutter", () => {
+    const { container } = render(<CreateCliqPage />);
+
+    const root = container.firstElementChild as HTMLElement;
+    expect(root).toHaveClass("px-4", "sm:px-6", "lg:px-[0.75in]");
+    expect(root).not.toHaveClass("px-[0.75in]");
   });
 });
