@@ -1,0 +1,194 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-10-09",
+  "testSuite": {
+    "suites": 63,
+    "tests": 460,
+    "passed": 460,
+    "failed": 0,
+    "command": "npm run test:ci",
+    "commit": "ffadc3f",
+    "ranAt": "2026-10-09"
+  },
+  "entries": [
+    {
+      "id": "validator-unjail-pr-77",
+      "date": "2026-10-08",
+      "area": "ux",
+      "status": "verified",
+      "title": "One-click Unjail on the validator page",
+      "summary": "A jailed validator can now be unjailed with one click from its dashboard, for shared and single wallets alike.",
+      "details": [
+        "Adds an Unjail action inside the jailed banner on the validator dashboard, shown only while the validator is actually jailed.",
+        "The button stays disabled, with a plain-language notice, when the validator can never be unjailed or while the jail period is still running.",
+        "Works for both shared (multisig) operators, who get a transaction to sign, and single-wallet operators, on every supported chain.",
+        "Verified with 63 test suites and 460 tests, all passing (2 new suites, 36 new tests), plus type checks, lint with zero warnings, and formatting checks.",
+        "Nine deliberate code breaks each turned the matching tests red, confirming the tests genuinely guard the feature."
+      ],
+      "evidence": [
+        {
+          "label": "PR #77",
+          "url": "https://github.com/ShieldnestORG/cliqs_web_app/pull/77"
+        }
+      ]
+    },
+    {
+      "id": "json-editor-upgrade-pr-75",
+      "date": "2026-10-06",
+      "area": "security",
+      "status": "verified",
+      "title": "JSON editor upgraded, clearing all six of its advisories",
+      "summary": "The JSON editor was upgraded, clearing all six of its known security advisories.",
+      "details": [
+        "The JSON editor component was upgraded to a major new version, moving its underlying framework to a release with no known advisories.",
+        "Verified: 61 test suites, 424 tests all pass; build, lint, type and formatting checks pass; 6 advisories cleared and none added.",
+        "Checked side by side in the browser against the old editor: identical editing, error highlighting and form updates.",
+        "The editor's download shrank from 148 KB to 127 KB compressed."
+      ],
+      "evidence": [
+        {
+          "label": "PR #75",
+          "url": "https://github.com/ShieldnestORG/cliqs_web_app/pull/75"
+        }
+      ]
+    },
+    {
+      "id": "tooling-dependency-patches-pr-74",
+      "date": "2026-10-06",
+      "area": "security",
+      "status": "verified",
+      "title": "Four more dependency security advisories patched",
+      "summary": "Four more known dependency weaknesses, all in build and test tooling, were patched; none reach users.",
+      "details": [
+        "Patched four tooling dependencies used only for linting, testing and building; none of them ship to the browser.",
+        "Verified: 61 test suites, 424 tests all pass; build, lint and formatting checks pass; 6 advisories cleared and none added.",
+        "The built styles are byte-identical before and after, and the same 403 files pass lint."
+      ],
+      "evidence": [
+        {
+          "label": "PR #74",
+          "url": "https://github.com/ShieldnestORG/cliqs_web_app/pull/74"
+        }
+      ]
+    },
+    {
+      "id": "critical-dependency-patches-pr-73",
+      "date": "2026-10-06",
+      "area": "security",
+      "status": "verified",
+      "title": "All open critical and high dependency alerts fixed",
+      "summary": "All 11 open critical and high dependency security alerts were fixed with small, in-range updates.",
+      "details": [
+        "Cleared all 11 open critical and high dependency alerts using patch releases and lockfile-only updates; no other package changed version.",
+        "The app framework stays on its current major version; every update stays inside the range already allowed.",
+        "Verified: 61 test suites, 424 tests all pass before and after; build, lint and formatting checks pass.",
+        "13 dependency advisories cleared (2 critical, 10 high, 1 moderate); none added.",
+        "A local smoke test confirmed the site serves and image processing works after the update."
+      ],
+      "evidence": [
+        {
+          "label": "PR #73",
+          "url": "https://github.com/ShieldnestORG/cliqs_web_app/pull/73"
+        }
+      ]
+    },
+    {
+      "id": "robots-llms-files-pr-72",
+      "date": "2026-10-06",
+      "area": "docs",
+      "status": "verified",
+      "title": "Crawlers and AI readers now get real robots.txt and llms.txt",
+      "summary": "The site now serves proper robots.txt and llms.txt files to search engines and AI readers.",
+      "details": [
+        "robots.txt and llms.txt previously returned the app's HTML page; real plain-text files are now served.",
+        "Verified on a local server: both files return text/plain and match the committed files byte for byte.",
+        "A break test (temporarily removing the file) confirmed the check can fail; restoring the file made it pass again.",
+        "Lint and build checks pass; normal page routing is unchanged."
+      ],
+      "evidence": [
+        {
+          "label": "PR #72",
+          "url": "https://github.com/ShieldnestORG/cliqs_web_app/pull/72"
+        }
+      ]
+    },
+    {
+      "id": "node-version-floor-pr-61",
+      "date": "2026-08-18",
+      "area": "infrastructure",
+      "status": "verified",
+      "title": "Servers must run a current Node version and report it",
+      "summary": "The required Node.js version was raised to 20.19, and the health check now reports the version in use.",
+      "details": [
+        "Raised the declared minimum Node.js version to 20.19 in both places the service can be built from, matching what its dependencies need.",
+        "The health endpoint now includes the Node version in every response, so one request shows whether the deployed engine is new enough.",
+        "Verified with syntax and formatting checks plus a clean-room install and full test gates, all green."
+      ],
+      "evidence": [
+        {
+          "label": "PR #61",
+          "url": "https://github.com/ShieldnestORG/cliqs_web_app/pull/61"
+        }
+      ]
+    },
+    {
+      "id": "transaction-page-html-pr-59",
+      "date": "2026-08-18",
+      "area": "security",
+      "status": "verified",
+      "title": "Transaction details are no longer embedded in page HTML",
+      "summary": "Transaction pages no longer embed amounts, recipients and memos in the HTML; data loads via a rate-limited route.",
+      "details": [
+        "The page's server-rendered HTML previously carried the transaction's full details; it now returns only the transaction id.",
+        "Details are fetched by the page itself through a rate-limited route, now the single place this read exists.",
+        "A new test asserts no memo, amount, recipient, hash or signer address appears in the page data; 414 tests across 59 suites pass."
+      ],
+      "evidence": [
+        {
+          "label": "PR #59",
+          "url": "https://github.com/ShieldnestORG/cliqs_web_app/pull/59"
+        }
+      ]
+    },
+    {
+      "id": "audit-log-pr-58",
+      "date": "2026-08-18",
+      "area": "security",
+      "status": "verified",
+      "title": "Destructive actions are now recorded in a tamper-evident log",
+      "summary": "Wipe, export, send and cancel actions are now recorded in a per-multisig log that detects tampering.",
+      "details": [
+        "A new log records what happened for the wipe, export and send/cancel routes, including refused destructive attempts with the reason.",
+        "Fifteen tests prove the write completes, the entries chain correctly per multisig, and both edited and deleted entries are detected.",
+        "Tests confirm each multisig's events stay in its own space, and only a fingerprint of the payload is stored — never amounts, recipients or memos.",
+        "Verified: 414 tests across 59 suites pass, plus type, lint and formatting checks."
+      ],
+      "evidence": [
+        {
+          "label": "PR #58",
+          "url": "https://github.com/ShieldnestORG/cliqs_web_app/pull/58"
+        }
+      ]
+    },
+    {
+      "id": "rollback-rehearsal-pr-57",
+      "date": "2026-08-18",
+      "area": "infrastructure",
+      "status": "verified",
+      "title": "Emergency rollback rehearsed against the live site",
+      "summary": "The production rollback was rehearsed live end to end: zero downtime in either direction, measured to the second.",
+      "details": [
+        "Rolled the live site back one deployment and forward again, sampling it once per second: 58 samples, all successful responses.",
+        "Measured: the switch completes in 3–4 seconds and the target build starts serving within about 7 seconds; zero failed responses either way.",
+        "The drill found a brief window where old and new builds serve side by side, so the runbook now requires sampling for 15 seconds to verify a switch.",
+        "The runbook now requires a revert or a merge freeze after any rollback so the same change cannot be shipped again."
+      ],
+      "evidence": [
+        {
+          "label": "PR #57",
+          "url": "https://github.com/ShieldnestORG/cliqs_web_app/pull/57"
+        }
+      ]
+    }
+  ]
+}
