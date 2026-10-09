@@ -357,12 +357,6 @@ jest.mock("@/components/forms/CreateCliqForm", () => ({
     React.createElement("form", { "data-testid": "create-cliq-form" }, "Create CLIQ Form"),
 }));
 
-jest.mock("@/components/forms/CreateTxForm", () => ({
-  __esModule: true,
-  default: () =>
-    React.createElement("form", { "data-testid": "create-tx-form" }, "Create Transaction Form"),
-}));
-
 // Mock common data view components
 jest.mock("@/components/dataViews/ListUserCliqs", () => ({
   __esModule: true,

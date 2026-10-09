@@ -1,4 +1,3 @@
-import CreateTxForm from "@/components/forms/CreateTxForm";
 import Head from "@/components/head";
 import {
   Breadcrumb,
@@ -21,7 +20,7 @@ import { Account } from "@cosmjs/stargate";
 import { assert } from "@cosmjs/utils";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import OldCreateTxForm from "../../../../components/forms/OldCreateTxForm";
 import { useChains } from "../../../../context/ChainsContext";
 import { useWallet } from "@/context/WalletContext";
@@ -325,7 +324,6 @@ function ContractProposalForm({
 
 export default function CreateTxPage() {
   const { chain } = useChains();
-  const [showOldForm, setShowOldForm] = useState(true);
   const [accountOnChain, setAccountOnChain] = useState<Account | null>(null);
   const [hasAccountError, setHasAccountError] = useState(false);
   const [accountErrorMessage, setAccountErrorMessage] = useState<string | null>(null);
@@ -385,20 +383,6 @@ export default function CreateTxPage() {
       }
     })();
   }, [chain, multisigAddress, isContractMultisig, multisigTypeResult.isLoading]);
-
-  const toggleOldNewForm = useCallback((event: KeyboardEvent) => {
-    if (event.ctrlKey && event.key === ".") {
-      setShowOldForm((prev) => !prev);
-      event.preventDefault();
-    }
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener("keyup", toggleOldNewForm);
-    return () => {
-      window.removeEventListener("keyup", toggleOldNewForm);
-    };
-  }, [toggleOldNewForm]);
 
   const breadcrumb = (
     <Breadcrumb>
@@ -469,7 +453,7 @@ export default function CreateTxPage() {
   }
 
   // PubKey Multisig — existing form
-  return showOldForm ? (
+  return (
     <div className="container mx-auto max-w-[1800px] px-[0.75in] py-8">
       <Head title={`New Transaction - ${chain.chainDisplayName || "Cosmos Hub"}`} />
 
@@ -564,15 +548,6 @@ export default function CreateTxPage() {
         {accountOnChain && multisigAddress && (
           <OldCreateTxForm senderAddress={multisigAddress} accountOnChain={accountOnChain} />
         )}
-      </div>
-    </div>
-  ) : (
-    <div className="container mx-auto max-w-2xl px-[0.75in] py-8">
-      <Head title={`New Transaction - ${chain.chainDisplayName || "Cosmos Hub"}`} />
-
-      <div className="space-y-6">
-        {breadcrumb}
-        <CreateTxForm />
       </div>
     </div>
   );
