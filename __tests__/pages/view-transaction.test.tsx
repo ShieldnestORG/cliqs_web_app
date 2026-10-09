@@ -23,6 +23,48 @@ jest.mock("@/lib/request", () => ({
   requestJson: jest.fn(),
 }));
 
+// The shared mocks in jest.setup.js drop `goBack` (Page) and `className` (BentoCard).
+// The layout tests below need both, so this file re-declares them.
+jest.mock("@/components/layout/Page", () => ({
+  __esModule: true,
+  default: ({
+    children,
+    goBack,
+  }: {
+    children: React.ReactNode;
+    goBack?: { pathname: string; title: string };
+  }) => (
+    <div data-testid="page-layout" data-goback-title={goBack?.title}>
+      {children}
+    </div>
+  ),
+}));
+
+jest.mock("@/components/ui/bento-grid", () => ({
+  BentoGrid: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="bento-grid">{children}</div>
+  ),
+  BentoCard: ({ children, className }: { children: React.ReactNode; className?: string }) => (
+    <div data-testid="bento-card" className={className}>
+      {children}
+    </div>
+  ),
+  BentoCardHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  BentoCardTitle: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  BentoCardContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  BentoCardFooter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
+
+jest.mock("next/router", () => ({
+  useRouter: () => ({
+    query: { chainName: "cosmos", address: "cosmos1cliq" },
+    pathname: "/[chainName]/[address]/transaction/[transactionID]",
+    push: jest.fn(),
+    replace: jest.fn(),
+    isReady: true,
+  }),
+}));
+
 const mockGetTransaction = getTransaction as jest.MockedFunction<typeof getTransaction>;
 const mockRequestJson = requestJson as jest.MockedFunction<typeof requestJson>;
 
@@ -282,5 +324,76 @@ describe("View Transaction SSR: discloses nothing: P0", () => {
     await waitFor(() => {
       expect(mockRequestJson).toHaveBeenCalledWith("/api/transaction/ssr-secret-tx");
     });
+  });
+});
+
+/**
+ * Layout only (cleanup 2026-10): the detail page names its parent "CLIQ", reads
+ * Message -> Signing Status -> Details below lg, and ends terminal states with a
+ * way onward. None of this touches signing or broadcast.
+ */
+describe("View Transaction layout: P0", () => {
+  const load = (txHash: string, status: string) => {
+    mockRequestJson.mockResolvedValue({
+      dataJSON: mockTransactionJSON,
+      signatures: [],
+      txHash,
+      status,
+    });
+    render(<TransactionViewPage transactionID="layout-tx" />);
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("names the parent CLIQ in the back control", async () => {
+    load("", "pending");
+
+    const page = await screen.findByTestId("page-layout");
+    expect(page).toHaveAttribute("data-goback-title", "CLIQ");
+  });
+
+  it("pending: reads Message, then Signing Status, then Details below lg", async () => {
+    load("", "pending");
+
+    await screen.findByTestId("transaction-info");
+    const cardOf = (title: string) =>
+      screen.getByText(title).closest('[data-testid="bento-card"]') as HTMLElement | null;
+    const order = (el: HTMLElement | null) =>
+      el?.className.match(/(?:^|\s)order-(\d)(?:\s|$)/)?.[1] ?? null;
+
+    // Signing Status sits in a wrapper column; its card carries no class, the wrapper does.
+    const signingColumn = screen.getByText("Signing Status").closest("div.order-2");
+    expect(signingColumn).not.toBeNull();
+    expect(order(cardOf("Message"))).toBe("1");
+    expect(order(cardOf("Transaction Details"))).toBe("3");
+    // Desktop is unchanged: each reordered element resets to source order at lg.
+    expect(cardOf("Message")?.className).toContain("lg:order-none");
+    expect(cardOf("Transaction Details")?.className).toContain("lg:order-none");
+    expect(signingColumn?.className).toContain("lg:order-none");
+  });
+
+  it("pending: no terminal footer", async () => {
+    load("", "pending");
+
+    await screen.findByTestId("transaction-info");
+    expect(screen.queryByRole("link", { name: "Back to CLIQ" })).not.toBeInTheDocument();
+  });
+
+  it("completed: footer links to the CLIQ and to Home", async () => {
+    load("ABCDEF", "broadcast");
+
+    const back = await screen.findByRole("link", { name: "Back to CLIQ" });
+    expect(back).toHaveAttribute("href", "/cosmos/cosmos1cliq");
+    expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("href", "/cosmos/dashboard");
+  });
+
+  it("cancelled: footer links to the CLIQ and to Home", async () => {
+    load("", "cancelled");
+
+    const back = await screen.findByRole("link", { name: "Back to CLIQ" });
+    expect(back).toHaveAttribute("href", "/cosmos/cosmos1cliq");
+    expect(screen.getByRole("link", { name: "Home" })).toBeInTheDocument();
   });
 });

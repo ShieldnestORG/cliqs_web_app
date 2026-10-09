@@ -37,6 +37,11 @@ jest.mock("next/router", () => ({
   }),
 }));
 
+let mockMultisigType: "pubkey" | "contract" = "pubkey";
+jest.mock("@/lib/hooks/useMultisigType", () => ({
+  useMultisigType: () => ({ type: mockMultisigType, isLoading: false, error: null }),
+}));
+
 // Mock multisig helpers
 jest.mock("@/lib/multisigHelpers", () => ({
   ensureChainMultisigInDb: jest.fn().mockResolvedValue({
@@ -69,33 +74,58 @@ jest.mock("@/components/forms/CreateTxForm", () => {
 describe("Create Transaction Route (/[chainName]/[address]/transaction/new): P0", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockMultisigType = "pubkey";
   });
 
-  it("should load create transaction page", async () => {
+  it("should load create transaction page with an H1", async () => {
     render(<CreateTransactionPage />);
 
-    await waitFor(() => {
-      expect(screen.getByText(/New Transaction/i)).toBeInTheDocument();
-    });
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "New transaction" }),
+    ).toBeInTheDocument();
   });
 
-  it("should display breadcrumb navigation", async () => {
+  it("should display breadcrumb navigation Home > CLIQ > New transaction", async () => {
     render(<CreateTransactionPage />);
 
-    await waitFor(() => {
-      const homeElements = screen.getAllByText(/Home/i);
-      const multisigElements = screen.getAllByText(/Multisig/i);
-      expect(homeElements.length).toBeGreaterThan(0);
-      expect(multisigElements.length).toBeGreaterThan(0);
-    });
+    await screen.findByRole("heading", { level: 1, name: "New transaction" });
+    expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("href", "/cosmos/dashboard");
+    expect(screen.getByRole("link", { name: "CLIQ" })).toHaveAttribute(
+      "href",
+      "/cosmos/cosmos1test1234567890abcdefghijklmnopqrstuvwxyz",
+    );
+    expect(screen.queryByText(/Multisig/)).not.toBeInTheDocument();
   });
 
-  it("should display back button", async () => {
+  it("has no Back to multisig button: the breadcrumb is the one way back", async () => {
     render(<CreateTransactionPage />);
 
-    await waitFor(() => {
-      expect(screen.getByText(/Back to multisig/i)).toBeInTheDocument();
-    });
+    await screen.findByRole("heading", { level: 1, name: "New transaction" });
+    expect(screen.queryByText(/Back to multisig/i)).not.toBeInTheDocument();
+  });
+
+  it("contract CLIQ: H1 New proposal, CLIQ crumb, no Back to multisig button", async () => {
+    mockMultisigType = "contract";
+    render(<CreateTransactionPage />);
+
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "New proposal" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "CLIQ" })).toBeInTheDocument();
+    expect(screen.queryByText(/Back to multisig/i)).not.toBeInTheDocument();
+  });
+
+  it("unavailable CLIQ: error says CLIQ and the recreate text links to /create", async () => {
+    const helpers = jest.requireMock("@/lib/multisigHelpers");
+    helpers.getHostedMultisig.mockRejectedValueOnce(new Error("boom"));
+    render(<CreateTransactionPage />);
+
+    expect(await screen.findByText("CLIQ not available")).toBeInTheDocument();
+    expect(screen.queryByText(/Multisig Not Available/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "recreate it with this tool" })).toHaveAttribute(
+      "href",
+      "/cosmos/create",
+    );
   });
 
   it("should display transaction form when account is loaded", async () => {

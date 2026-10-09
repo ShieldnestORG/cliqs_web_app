@@ -152,7 +152,9 @@ describe("Transaction Creation Flow: Complete Navigation Test", () => {
     // Wait for page to load
     await waitFor(
       () => {
-        expect(screen.getByText(/New Transaction/i)).toBeInTheDocument();
+        expect(
+          screen.getByRole("heading", { level: 1, name: "New transaction" }),
+        ).toBeInTheDocument();
       },
       { timeout: 5000 },
     );
@@ -199,7 +201,9 @@ describe("Transaction Creation Flow: Complete Navigation Test", () => {
     const { unmount } = render(<CreateTransactionPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/New Transaction/i)).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { level: 1, name: "New transaction" }),
+      ).toBeInTheDocument();
     });
 
     // Step 2: Simulate transaction creation
@@ -238,7 +242,9 @@ describe("Transaction Creation Flow: Complete Navigation Test", () => {
     render(<CreateTransactionPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/New Transaction/i)).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { level: 1, name: "New transaction" }),
+      ).toBeInTheDocument();
     });
 
     // Create transaction
@@ -266,7 +272,9 @@ describe("Transaction Creation Flow: Complete Navigation Test", () => {
     render(<CreateTransactionPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/New Transaction/i)).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { level: 1, name: "New transaction" }),
+      ).toBeInTheDocument();
     });
 
     // Create transaction (ID will contain timestamp and random string)

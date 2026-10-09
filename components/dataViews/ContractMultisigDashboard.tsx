@@ -12,6 +12,14 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import {
   Table,
   TableBody,
   TableCell,
@@ -149,27 +157,44 @@ export default function ContractMultisigDashboard({
 
   // Subheader
   const subheader = (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <Badge variant="outline" className="gap-1">
-          <FileCode2 className="h-3 w-3" />
-          Contract Multisig
-        </Badge>
-        {contractInfo && (
-          <Badge variant="secondary" className="font-mono text-xs">
-            Code ID: {contractInfo.codeId}
+    <div className="space-y-2">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href={`/${chainName}/dashboard`}>Home</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage className="font-mono text-xs">
+              {contractAddress.slice(0, 12)}...{contractAddress.slice(-6)}
+            </BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="gap-1">
+            <FileCode2 className="h-3 w-3" />
+            Contract Multisig
           </Badge>
-        )}
-      </div>
-      <div className="flex gap-2">
-        <CopyButton value={contractAddress} copyLabel="contract address" />
-        {explorerLink && (
-          <Button variant="ghost" size="sm" asChild>
-            <a href={explorerLink} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="h-4 w-4" />
-            </a>
-          </Button>
-        )}
+          {contractInfo && (
+            <Badge variant="secondary" className="font-mono text-xs">
+              Code ID: {contractInfo.codeId}
+            </Badge>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <CopyButton value={contractAddress} copyLabel="contract address" />
+          {explorerLink && (
+            <Button variant="ghost" size="sm" asChild>
+              <a href={explorerLink} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
