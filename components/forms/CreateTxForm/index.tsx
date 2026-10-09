@@ -22,13 +22,13 @@ export interface MsgGetter {
   readonly msg: EncodeObject | EncodeObject[]; // Support single or multiple messages
 }
 
-interface OldCreateTxFormProps {
+interface CreateTxFormProps {
   readonly router: NextRouter;
   readonly senderAddress: string;
   readonly accountOnChain: Account;
 }
 
-const OldCreateTxForm = ({ router, senderAddress, accountOnChain }: OldCreateTxFormProps) => {
+const CreateTxForm = ({ router, senderAddress, accountOnChain }: CreateTxFormProps) => {
   const {
     chain,
     validatorState: { validators },
@@ -395,4 +395,4 @@ const OldCreateTxForm = ({ router, senderAddress, accountOnChain }: OldCreateTxF
   );
 };
 
-export default withRouter(OldCreateTxForm);
+export default withRouter(CreateTxForm);

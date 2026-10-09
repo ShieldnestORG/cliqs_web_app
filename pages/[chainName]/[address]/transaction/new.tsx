@@ -21,7 +21,7 @@ import { assert } from "@cosmjs/utils";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import OldCreateTxForm from "../../../../components/forms/OldCreateTxForm";
+import CreateTxForm from "@/components/forms/CreateTxForm";
 import { useChains } from "../../../../context/ChainsContext";
 import { useWallet } from "@/context/WalletContext";
 import {
@@ -546,7 +546,7 @@ export default function CreateTxPage() {
 
         {/* Transaction Form */}
         {accountOnChain && multisigAddress && (
-          <OldCreateTxForm senderAddress={multisigAddress} accountOnChain={accountOnChain} />
+          <CreateTxForm senderAddress={multisigAddress} accountOnChain={accountOnChain} />
         )}
       </div>
     </div>

@@ -59,9 +59,9 @@ jest.mock("@/lib/api", () => ({
   getPendingDbTxs: jest.fn().mockResolvedValue([]),
 }));
 
-// Mock OldCreateTxForm
-jest.mock("@/components/forms/OldCreateTxForm", () => {
-  return function MockOldCreateTxForm() {
+// Mock CreateTxForm
+jest.mock("@/components/forms/CreateTxForm", () => {
+  return function MockCreateTxForm() {
     return <div data-testid="old-create-tx-form">Transaction Form</div>;
   };
 });
