@@ -269,6 +269,19 @@ to `green-accent`, which is coral. Keep it that way.
 
 ---
 
+### Status Badge
+
+`components/ui/badge.tsx` carries three status variants, added 2026-10-09 so pages stop hand-rolling
+`border-success/40 text-success` per call site. Use them for a state, not for emphasis:
+
+| Variant | Means | Example |
+|---|---|---|
+| `success` | done and proven | Audit & tests "Verified" |
+| `info` | done, neutral | Audit & tests "Shipped" |
+| `warning` | needs attention or still running | Audit & tests "In progress" |
+
+Destructive states keep `variant="destructive"`. Never map success to `green-accent` (coral; see STYLE-GUIDE).
+
 ## 6. Design Tokens
 
 There are **no** `--card-padding` / `--card-radius` / `--card-shadow` variables.

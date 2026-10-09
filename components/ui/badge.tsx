@@ -15,6 +15,10 @@ const badgeVariants = cva(
         destructive:
           "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
         outline: "text-foreground",
+        // Status variants (docs/ui/CARDS-PRD.md §5, "Status Badge"). Semantic tokens only.
+        success: "border-success/40 bg-success/10 text-success",
+        info: "border-info/40 bg-info/10 text-info",
+        warning: "border-warning/40 bg-warning/10 text-warning",
       },
     },
     defaultVariants: {

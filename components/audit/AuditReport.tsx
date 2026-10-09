@@ -12,20 +12,12 @@ const GITHUB_BASE = "https://github.com/ShieldnestORG/cliqs_web_app/blob/main";
 
 function StatusBadge({ status }: { status: AuditStatus }) {
   if (status === "verified") {
-    return (
-      <Badge variant="outline" className="border-success/40 text-success">
-        Verified
-      </Badge>
-    );
+    return <Badge variant="success">Verified</Badge>;
   }
   if (status === "shipped") {
-    return <Badge variant="secondary">Shipped</Badge>;
+    return <Badge variant="info">Shipped</Badge>;
   }
-  return (
-    <Badge variant="outline" className="border-warning/40 text-warning">
-      In progress
-    </Badge>
-  );
+  return <Badge variant="warning">In progress</Badge>;
 }
 
 function EvidenceLink({ label, url }: { label: string; url: string }) {
@@ -51,7 +43,9 @@ function EvidenceLink({ label, url }: { label: string; url: string }) {
 export default function AuditReport({ report }: { report: AuditReportType }) {
   return (
     <div className="space-y-4">
-      <h1 className="font-heading text-2xl font-semibold tracking-tight">Audit &amp; tests</h1>
+      <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">
+        Audit &amp; tests
+      </h1>
       <p className="text-sm text-muted-foreground">Last updated {report.updatedAt}</p>
       {report.testSuite ? (
         <p className="text-sm text-muted-foreground">
