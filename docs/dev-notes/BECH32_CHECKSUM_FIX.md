@@ -1,5 +1,7 @@
 # Bech32 Checksum Fix for Validator Addresses
 
+> Note (2026-10-09): components/forms/OldCreateTxForm is now components/forms/CreateTxForm (same live form).
+
 ## Problem Summary
 The application was throwing **"Broadcasting transaction failed with code 1: decoding bech32 failed: invalid checksum (expected 2cr8xh got sxazxf)"** when attempting to broadcast a `MsgCreateValidator` transaction.
 

@@ -65,8 +65,9 @@ gradient would muddy the tint:
 <Card className="border-destructive/50 bg-destructive/10 bg-none">…</Card>
 ```
 
-Shipped examples: `components/forms/OldCreateTxForm/BalanceDisplay.tsx`,
-`pages/[chainName]/create.tsx`, `pages/[chainName]/index.tsx`.
+Shipped examples: `components/forms/CreateTxForm/BalanceDisplay.tsx` (named
+`OldCreateTxForm` until 2026-10-09; same live form), `pages/[chainName]/create.tsx`.
+(`pages/[chainName]/index.tsx` was listed here too; it is now only a redirect to Home.)
 
 ### 2.2 Cards and the animated page background
 
@@ -387,7 +388,7 @@ interface CardKPIProps {
     <div className="flex items-center gap-3 mb-2">
       <Users className="w-5 h-5 text-green-accent" />
       <div>
-        <CardLabel comment>Create Multisig</CardLabel>
+        <CardLabel comment>Create CLIQ</CardLabel>
         <CardTitle className="text-xl">New Multisig Account</CardTitle>
       </div>
     </div>

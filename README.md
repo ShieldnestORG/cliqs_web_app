@@ -1,6 +1,6 @@
 # Cosmos Multisig UI (CLIQs)
 
-> **Cluster:** overview · **Tags:** readme, root-index, cosmos, multisig, nextjs · **Related:** [SETUP.md](SETUP.md), [INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md), [Security docs](docs/security/README.md), [STYLE-GUIDE.md](docs/STYLE-GUIDE.md)
+> **Cluster:** overview · **Tags:** readme, root-index, cosmos, multisig, nextjs · **Related:** [SETUP.md](SETUP.md), [INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md), [Security docs](docs/security/README.md), [STYLE-GUIDE.md](docs/STYLE-GUIDE.md), [CLAUDE.md](CLAUDE.md)
 
 This app allows multisig users to create, sign, and broadcast transactions on any Stargate-enabled Cosmos chain. Built with CosmJS, Next.js, React, and MongoDB (or local JSON for development).
 

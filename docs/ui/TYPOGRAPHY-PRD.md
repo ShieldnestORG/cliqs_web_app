@@ -148,8 +148,8 @@ The `// label` and title serve **different purposes** and should NOT repeat the 
 
 | Element | Purpose | Example |
 |---------|---------|---------|
-| **`// Label`** | Category, context, or section type | `// How It Works`, `// Benefits`, `// New Cliq` |
-| **Title** | Descriptive heading with detail | `Simple & Secure Process`, `Why Use a Cliq?`, `Build Your Shared Wallet` |
+| **`// Label`** | Category, context, or section type | `// How It Works`, `// Benefits`, `// PubKey multisig` |
+| **Title** | Descriptive heading with detail | `Simple & Secure Process`, `Why Use a Cliq?`, `Standard CLIQ` |
 
 #### ❌ BAD (Redundant)
 
@@ -171,8 +171,8 @@ The `// label` and title serve **different purposes** and should NOT repeat the 
 <CardTitle>Simple & Secure Process</CardTitle>
 
 // DO: Label = context, Title = action
-<CardLabel comment>New Cliq</CardLabel>
-<CardTitle>Build Your Shared Wallet</CardTitle>
+<CardLabel comment>PubKey multisig</CardLabel>
+<CardTitle>Standard CLIQ</CardTitle>
 
 // DO: Label = type, Title = details
 <CardLabel comment>Benefits</CardLabel>
@@ -215,7 +215,7 @@ The `// label` and title serve **different purposes** and should NOT repeat the 
 
 // Button Text
 <button className="font-mono text-[11px] font-semibold uppercase tracking-wide">
-  Create Multisig
+  Create CLIQ
 </button>
 ```
 

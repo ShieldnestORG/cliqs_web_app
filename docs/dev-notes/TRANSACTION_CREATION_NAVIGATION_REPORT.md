@@ -1,5 +1,7 @@
 # Transaction Creation Navigation Report
 
+> Note (2026-10-09): components/forms/OldCreateTxForm is now components/forms/CreateTxForm (same live form).
+
 ## Executive Summary
 
 Investigation conducted on 2026-02-15 to verify the transaction creation flow and subsequent navigation in the Cosmos Multisig UI application.

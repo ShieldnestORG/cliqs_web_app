@@ -4,7 +4,7 @@
 
 **Cosmos Multisig UI - Visual Patterns Specification**  
 **Version:** 1.2  
-**Last Updated:** 2026-08-16
+**Last Updated:** 2026-10-09
 
 ---
 
@@ -710,8 +710,22 @@ React.useEffect(() => {
 
 ## 19. Sidebar Rail (auto-collapsing overlay)
 
-**Where:** `components/Sidebar.tsx`, mounted in `pages/_app.tsx` on every non-landing
-route.
+**Where:** `components/Sidebar.tsx`, mounted in `pages/_app.tsx` on every route except
+`/` (which only redirects to Home).
+
+**One nav source.** The Sidebar does not keep its own list of destinations. It renders
+`getNavItems("main")`, `getNavItems("more")` and `getNavItems("utility")` from
+`lib/navigation.ts`, and so does the Header menu (`components/Header.tsx`, below `lg`).
+Add, rename or reorder a destination in that file and both update. The Home badge (count of
+transactions that need *this* wallet's signature) comes from `useNeedsMyCount()` in the same
+file. Active state is `isNavItemActive`: Home also owns CLIQ pages (`/{chain}/{address}`),
+which is why every static page under `pages/[chainName]/` must be listed in
+`RESERVED_CHAIN_SEGMENTS`. This section described a hard-coded item list in `Sidebar.tsx`
+until the 2026-10 flow cleanup.
+
+**Footer does not scroll.** The Sidebar is a flex column. Only the `<nav>` list has
+`overflow-y-auto` (with `min-h-0 flex-1`), so on a short screen the list scrolls and the
+footer stays put: Back to TOKNS, Donate and the wallet block are `shrink-0`.
 
 The desktop sidebar rests as a 20-unit icon rail and expands to 64 on hover or keyboard
 focus. Expansion is an **overlay**, not a push.

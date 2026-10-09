@@ -232,7 +232,7 @@ export default function TransactionPrivacy({
                 ) : (
                   <Trash2 className="mr-2 h-4 w-4" />
                 )}
-                Delete Cliq Data
+                Delete CLIQ data
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
