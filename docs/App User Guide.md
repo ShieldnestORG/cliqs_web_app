@@ -18,7 +18,7 @@ This app requires the [Keplr wallet extension](https://wallet.keplr.app/) to be 
 
 ## Getting Around the App
 
-Everything starts at **Home**. Home has five sections: **Needs your signature** (transactions waiting for your wallet), **Waiting on other signers**, **Your CLIQs**, **Open by address** and, if your wallet is linked to a validator, **Validators**. The Home entry in the menu shows a count of the transactions that need your signature.
+Everything starts at **Home**. Home has five sections: **Needs your signature** (transactions waiting for your wallet, plus fully signed ones marked "Review and broadcast" so someone can send them), **Waiting on other signers**, **Your CLIQs**, **Open by address** and, if your wallet is linked to a validator, **Validators**. The Home entry in the menu shows a count of the transactions that need your signature. If one CLIQ fails to load, the others still show, under a warning with a Retry button.
 
 The menu has the same entries on every screen size:
 
