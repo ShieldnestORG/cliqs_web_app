@@ -321,7 +321,7 @@ export default function ValidatorCommandsCard({
             <div className="rounded-lg border border-border/[0.06] bg-muted/30 p-4">
               <p className="text-sm text-muted-foreground">
                 Delegate, Undelegate, Redelegate and Claim delegation rewards are proposed through a
-                CLIQ so they can be signed by your multisig. Set one up below to enable them.
+                CLIQ so they can be signed by your CLIQ's members. Set one up below to enable them.
               </p>
               <p className="mt-2 text-sm text-muted-foreground">
                 Editing your validator&apos;s details is available now — it signs directly with your

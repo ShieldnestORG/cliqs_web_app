@@ -50,9 +50,10 @@ jest.mock("@/context/ChainsContext", () => ({
 }));
 
 const mockVerify = jest.fn().mockResolvedValue("sig");
+let mockWalletInfo: { address: string; pubKey: string } | null = { address: WALLET, pubKey: "pk" };
 jest.mock("@/context/WalletContext", () => ({
   useWallet: () => ({
-    walletInfo: { address: WALLET, pubKey: "pk" },
+    walletInfo: mockWalletInfo,
     loading: {},
     connectKeplr: jest.fn(),
     connectLedger: jest.fn(),
@@ -103,6 +104,7 @@ const dashboardData = (jailed = false) => ({
 beforeEach(() => {
   jest.clearAllMocks();
   mockQuery = {};
+  mockWalletInfo = { address: WALLET, pubKey: "pk" };
   (getValidatorDashboardData as jest.Mock).mockResolvedValue(dashboardData());
   (getDbUserMultisigs as jest.Mock).mockResolvedValue({
     created: [],
@@ -117,6 +119,17 @@ describe("ValidatorDashboard: Acting as band: P1", () => {
     expect(
       await screen.findByText("Acting as your wallet. Actions sign with your connected wallet."),
     ).toBeInTheDocument();
+  });
+
+  it("with no wallet connected (linked ?address= lookup) never claims to act as your wallet", async () => {
+    mockWalletInfo = null;
+    mockQuery = { address: CLIQ };
+    render(<ValidatorDashboard />);
+
+    expect(
+      await screen.findByText("No wallet connected. Connect a wallet to act on this validator."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Acting as your wallet/)).not.toBeInTheDocument();
   });
 
   it("is the first block of the loaded dashboard, ahead of the identity card", async () => {
@@ -191,6 +204,15 @@ describe("ValidatorDashboard: CLIQ upsell: P1", () => {
     render(<ValidatorDashboard />);
 
     await screen.findByText(/^Acting as CLIQ /);
+    expect(screen.queryByTestId("cliq-upgrade-cta")).not.toBeInTheDocument();
+  });
+
+  it("never shows the upsell when a CLIQ address is not a validator", async () => {
+    mockQuery = { address: CLIQ };
+    (getValidatorDashboardData as jest.Mock).mockResolvedValue(null);
+    render(<ValidatorDashboard />);
+
+    await screen.findByText("No validator found for this wallet");
     expect(screen.queryByTestId("cliq-upgrade-cta")).not.toBeInTheDocument();
   });
 });

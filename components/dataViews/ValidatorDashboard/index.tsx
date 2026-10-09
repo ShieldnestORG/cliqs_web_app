@@ -823,14 +823,16 @@ export default function ValidatorDashboard() {
             <p className="text-sm text-foreground">
               {isCliqMode && cliqAddress
                 ? `Acting as CLIQ ${truncateAddress(cliqAddress, 10, 6)}. Actions create a transaction for this CLIQ; its members sign it, then one member broadcasts.`
-                : "Acting as your wallet. Actions sign with your connected wallet."}
+                : walletInfo?.address
+                  ? "Acting as your wallet. Actions sign with your connected wallet."
+                  : "No wallet connected. Connect a wallet to act on this validator."}
             </p>
           </div>
           {cliqReadOnly && !isVerifyingMembership && (
             <p className="flex items-start gap-3 text-sm text-warning">
               <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
               <span>
-                Read-only: Your connected wallet could not be verified as a member of this CLIQ.
+                Read-only: your connected wallet could not be verified as a member of this CLIQ.
                 Transaction actions are disabled. If you believe this is an error, reconnect with
                 the correct wallet or ensure the CLIQ is registered in the database.
               </span>
