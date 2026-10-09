@@ -86,11 +86,11 @@ export default function SettingsPage() {
         ) : (
           <>
             {/* Wallet (absorbs the former Account page) */}
-            <DashboardSection title="Wallet">
-              <div id="wallet" className="scroll-mt-8">
+            <div id="wallet" className="scroll-mt-8">
+              <DashboardSection title="Wallet">
                 <AccountView />
-              </div>
-            </DashboardSection>
+              </DashboardSection>
+            </div>
 
             {/* Security */}
             <DashboardSection title="Security">

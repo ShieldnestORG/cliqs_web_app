@@ -10,11 +10,13 @@
 import { render, screen, within } from "@testing-library/react";
 import CreateCliqPage from "@/pages/[chainName]/create";
 
+let mockRegistryName = "cosmos";
+
 // Mock the ChainsContext
 jest.mock("@/context/ChainsContext", () => ({
   useChains: () => ({
     chain: {
-      registryName: "cosmos",
+      registryName: mockRegistryName,
       chainDisplayName: "Cosmos Hub",
       chainId: "cosmoshub-4",
       addressPrefix: "cosmos",
@@ -47,6 +49,7 @@ jest.mock("@/components/forms/CreateCliqForm", () => {
 describe("Create Multisig Route (/[chainName]/create): P0", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockRegistryName = "cosmos";
   });
 
   it("should show a single H1 reading Create CLIQ", () => {
@@ -72,6 +75,14 @@ describe("Create Multisig Route (/[chainName]/create): P0", () => {
     const home = within(breadcrumb).getByText("Home");
     expect(home.closest("a")).toHaveAttribute("href", "/cosmos/dashboard");
     expect(within(breadcrumb).getByText("Create CLIQ")).toBeInTheDocument();
+  });
+
+  it("should fall back to the site root, not //dashboard, before the chain has loaded", () => {
+    mockRegistryName = "";
+    render(<CreateCliqPage />);
+
+    const home = within(screen.getByRole("navigation")).getByText("Home");
+    expect(home.closest("a")).toHaveAttribute("href", "/");
   });
 
   it("should offer the three types as cards", () => {

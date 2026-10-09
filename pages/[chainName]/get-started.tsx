@@ -341,9 +341,11 @@ function JourneyWalkthrough({
               <h3 className="font-semibold text-foreground">Journey Complete!</h3>
               <p className="mt-1 text-sm text-muted-foreground">
                 You&apos;ve reviewed all steps.{" "}
-                {navigateHref
+                {navigateHref && isLastStep
                   ? "Ready to get started for real? Use Go Do It above."
-                  : "You're all set!"}
+                  : navigateHref
+                    ? "Ready to get started for real? Go to the last step and use Go Do It."
+                    : "You're all set!"}
               </p>
             </div>
           </CardContent>
@@ -381,7 +383,9 @@ export default function GetStartedPage() {
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href={`/${chain.registryName || ""}/dashboard`}>Home</Link>
+                <Link href={chain.registryName ? `/${chain.registryName}/dashboard` : "/"}>
+                  Home
+                </Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />

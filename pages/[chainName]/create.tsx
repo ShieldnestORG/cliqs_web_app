@@ -44,7 +44,9 @@ export default function CreateCliqPage() {
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href={`/${chain.registryName || ""}/dashboard`}>Home</Link>
+                <Link href={chain.registryName ? `/${chain.registryName}/dashboard` : "/"}>
+                  Home
+                </Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
