@@ -31,7 +31,8 @@ import {
 import { getDbUserMultisigs } from "@/lib/api";
 import { ensureChainMultisigInDb } from "@/lib/multisigHelpers";
 import { getUserSettings } from "@/lib/settingsStorage";
-import { toastError } from "@/lib/utils";
+import { cn, toastError } from "@/lib/utils";
+import { truncateAddress } from "@/lib/displayHelpers";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   RefreshCw,
@@ -517,7 +518,7 @@ export default function ValidatorDashboard() {
         </Card>
 
         {/* Show CLIQ CTA even before connecting */}
-        <CliqUpgradeCTA />
+        {!isCliqMode && <CliqUpgradeCTA />}
       </div>
     );
   }
@@ -707,7 +708,7 @@ export default function ValidatorDashboard() {
               <CardLabel comment className="justify-center">
                 Info
               </CardLabel>
-              <CardTitle className="text-2xl">Not a Validator</CardTitle>
+              <CardTitle className="text-2xl">No validator found for this wallet</CardTitle>
               <CardDescription className="text-base">
                 The connected wallet is not associated with a validator on{" "}
                 {chain.chainDisplayName || "this chain"}.
@@ -761,8 +762,8 @@ export default function ValidatorDashboard() {
           </Card>
         )}
 
-        {/* Still show CLIQ CTA */}
-        <CliqUpgradeCTA />
+        {/* Still show CLIQ CTA (never in CLIQ mode: those users already run through a CLIQ) */}
+        {!isCliqMode && <CliqUpgradeCTA />}
       </div>
     );
   }
@@ -810,6 +811,36 @@ export default function ValidatorDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Acting as: states the signing mode in plain words, directly under the page H1 */}
+      <Card variant="institutional">
+        <CardContent className="space-y-2 py-4">
+          <div className="flex items-start gap-3">
+            {isCliqMode ? (
+              <Users className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+            ) : (
+              <Shield className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+            )}
+            <p className="text-sm text-foreground">
+              {isCliqMode && cliqAddress
+                ? `Acting as CLIQ ${truncateAddress(cliqAddress, 10, 6)}. Actions create a transaction for this CLIQ; its members sign it, then one member broadcasts.`
+                : walletInfo?.address
+                  ? "Acting as your wallet. Actions sign with your connected wallet."
+                  : "No wallet connected. Connect a wallet to act on this validator."}
+            </p>
+          </div>
+          {cliqReadOnly && !isVerifyingMembership && (
+            <p className="flex items-start gap-3 text-sm text-warning">
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+              <span>
+                Read-only: your connected wallet could not be verified as a member of this CLIQ.
+                Transaction actions are disabled. If you believe this is an error, reconnect with
+                the correct wallet or ensure the CLIQ is registered in the database.
+              </span>
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Address prefix mismatch warning (dashboard loaded state) */}
       {addressPrefixMismatch && effectiveAddress && (
         <Card variant="institutional" className="border-warning/30">
@@ -824,25 +855,6 @@ export default function ValidatorDashboard() {
                   but you are on <strong>{chain.chainDisplayName || "this chain"}</strong> which
                   uses <code className="font-mono">{chain.addressPrefix}</code>. It was
                   automatically converted for this lookup. Reconnect your wallet to resolve this.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* CLIQ membership warning */}
-      {isCliqMode && isCliqMember === false && !isVerifyingMembership && (
-        <Card variant="institutional" className="border-warning/30">
-          <CardContent className="py-4">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
-              <div>
-                <p className="text-sm font-medium text-warning">Read-Only Mode</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Your connected wallet could not be verified as a member of this CLIQ. Transaction
-                  actions are disabled. If you believe this is an error, reconnect with the correct
-                  wallet or ensure the CLIQ is registered in the database.
                 </p>
               </div>
             </div>
@@ -917,12 +929,9 @@ export default function ValidatorDashboard() {
         testnetAvailable={hasTestnetVariant}
       />
 
-      {/* Header with Refresh */}
+      {/* Subtitle with Refresh (the page H1 lives in pages/[chainName]/validator.tsx) */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-heading text-2xl font-bold">Validator Dashboard</h1>
-          <p className="text-muted-foreground">Manage rewards and monitor performance</p>
-        </div>
+        <p className="text-muted-foreground">Manage rewards and monitor performance</p>
         <Button
           variant="outline"
           size="sm"
@@ -937,8 +946,8 @@ export default function ValidatorDashboard() {
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        {/* Identity Card - 2 cols */}
-        <div className="lg:col-span-2">
+        {/* Identity Card - 2 cols (hosts Unjail: first in its row on every width while jailed) */}
+        <div className={cn("lg:col-span-2", dashboardData.validator.jailed && "order-first")}>
           <ValidatorIdentityCard
             validator={dashboardData.validator}
             signingInfo={dashboardData.signingInfo}
@@ -1013,8 +1022,8 @@ export default function ValidatorDashboard() {
         />
       </div>
 
-      {/* CLIQ Upgrade CTA - Full Width */}
-      <CliqUpgradeCTA />
+      {/* CLIQ Upgrade CTA - Full Width (never in CLIQ mode) */}
+      {!isCliqMode && <CliqUpgradeCTA />}
     </div>
   );
 }
