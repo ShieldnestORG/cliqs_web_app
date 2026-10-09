@@ -198,14 +198,14 @@ export default function CreateCliqForm() {
             <div>
               <CardLabel comment className="flex items-center gap-1">
                 <ShieldPlus className="h-3 w-3" />
-                New CLIQ
+                PubKey multisig
               </CardLabel>
-              <CardTitle className="text-2xl">Build Your Shared Wallet</CardTitle>
+              <CardTitle className="text-2xl">Standard CLIQ</CardTitle>
             </div>
           </div>
           <CardDescription className="mt-4 space-y-3">
             <span className="block text-base">
-              Build a shared wallet with your team on{" "}
+              Create a CLIQ with your team on{" "}
               <span className="font-semibold text-foreground">
                 {chain.chainDisplayName || "Cosmos"}
               </span>
@@ -375,6 +375,11 @@ export default function CreateCliqForm() {
                       field, separated by commas or spaces.
                     </p>
                   </div>
+
+                  <p className="text-sm text-muted-foreground">
+                    Each address must have sent at least one transaction on{" "}
+                    {chain.chainDisplayName || "Cosmos"}, or paste its public key instead.
+                  </p>
 
                   {/* Member Fields */}
                   <div className="space-y-4">

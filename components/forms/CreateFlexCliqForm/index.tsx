@@ -710,7 +710,7 @@ export default function CreateFlexCliqForm() {
               <ShieldPlus className="h-3 w-3" />
               Flex Contract Multisig
             </CardLabel>
-            <CardTitle className="text-2xl">Create Flex Smart Wallet</CardTitle>
+            <CardTitle className="text-2xl">Flex CLIQ</CardTitle>
           </div>
         </div>
         <CardDescription className="mt-4 space-y-3">

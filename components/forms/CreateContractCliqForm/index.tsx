@@ -552,7 +552,7 @@ export default function CreateContractCliqForm() {
               <ShieldPlus className="h-3 w-3" />
               Contract Multisig
             </CardLabel>
-            <CardTitle className="text-2xl">Create Smart Wallet</CardTitle>
+            <CardTitle className="text-2xl">Fixed CLIQ</CardTitle>
           </div>
         </div>
         <CardDescription className="mt-4 space-y-3">
