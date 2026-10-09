@@ -156,7 +156,7 @@ export default function CliqUpgradeCTA() {
                       <Link href={`/${chain.registryName}/create`}>
                         <Button variant="action" size="action" className="gap-2">
                           <ShieldPlus className="h-4 w-4" />
-                          Get Started
+                          Create Validator CLIQ
                         </Button>
                       </Link>
                     )}

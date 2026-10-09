@@ -23,7 +23,7 @@ export default function ValidatorPage() {
   const { chain } = useChains();
 
   return (
-    <div className="container mx-auto max-w-[1800px] px-[0.75in] py-8">
+    <div className="container mx-auto max-w-[1800px] px-4 py-8 sm:px-6 lg:px-[0.75in]">
       <Head title={`Validator Dashboard - ${chain.chainDisplayName || "Cosmos"}`} />
 
       <div className="space-y-6">
@@ -33,7 +33,7 @@ export default function ValidatorPage() {
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
                 {chain.registryName ? (
-                  <Link href={`/${chain.registryName}`}>{chain.chainDisplayName || "Home"}</Link>
+                  <Link href={`/${chain.registryName}/dashboard`}>Home</Link>
                 ) : null}
               </BreadcrumbLink>
             </BreadcrumbItem>
@@ -43,6 +43,11 @@ export default function ValidatorPage() {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
+
+        {/* Page title: first thing on the page in every dashboard state */}
+        <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">
+          Validator Dashboard
+        </h1>
 
         {/* Dashboard */}
         <ValidatorDashboard />

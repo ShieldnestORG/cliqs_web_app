@@ -21,16 +21,7 @@ import { ValidatorInfo } from "@/lib/validatorHelpers";
 import { createCliqTransaction, buildEditValidatorMsg } from "@/lib/validatorTx";
 import { useChains } from "@/context/ChainsContext";
 import { useWallet } from "@/context/WalletContext";
-import {
-  Settings,
-  Edit3,
-  Loader2,
-  CheckCircle2,
-  TrendingUp,
-  Coins,
-  Vote,
-  Users,
-} from "lucide-react";
+import { Settings, Edit3, Loader2, CheckCircle2, TrendingUp, Coins, Users } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { calculateFee, GasPrice, SigningStargateClient } from "@cosmjs/stargate";
@@ -316,17 +307,9 @@ export default function ValidatorCommandsCard({
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {/* CLIQ mode indicator */}
-        {isCliqMode && (
-          <div className="flex items-center gap-2 rounded-lg bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-            <Users className="h-4 w-4" />
-            <span>Managing via CLIQ - actions will create transactions for multisig signing</span>
-          </div>
-        )}
-
         {/* Staking & Governance Section
          *
-         * These five actions all route to the CLIQ transaction builder, which
+         * These four actions all route to the CLIQ transaction builder, which
          * requires a multisig account. In solo (non-CLIQ) mode targetAddress is
          * the operator's own single-sig account, and that page can only answer
          * with "Multisig Not Available" — so the cards are a dead end. Explain
@@ -337,7 +320,7 @@ export default function ValidatorCommandsCard({
             <h3 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">{`// Staking & Governance`}</h3>
             <div className="rounded-lg border border-border/[0.06] bg-muted/30 p-4">
               <p className="text-sm text-muted-foreground">
-                Delegate, Undelegate, Redelegate, Withdraw Rewards and Vote are proposed through a
+                Delegate, Undelegate, Redelegate and Claim delegation rewards are proposed through a
                 CLIQ so they can be signed by your multisig. Set one up below to enable them.
               </p>
               <p className="mt-2 text-sm text-muted-foreground">
@@ -350,7 +333,7 @@ export default function ValidatorCommandsCard({
           <div className="space-y-4">
             <div>
               <h3 className="mb-4 text-sm font-medium uppercase tracking-wide text-muted-foreground">{`// Staking & Governance`}</h3>
-              <BentoGrid className="grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+              <BentoGrid className="grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
                 {/* Delegate */}
                 <Link
                   href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.Delegate)}`}
@@ -411,7 +394,7 @@ export default function ValidatorCommandsCard({
                   </BentoCard>
                 </Link>
 
-                {/* Withdraw Rewards */}
+                {/* Claim delegation rewards (delegator-side MsgWithdrawDelegatorReward) */}
                 <Link
                   href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.WithdrawDelegatorReward)}`}
                   className="block"
@@ -421,29 +404,11 @@ export default function ValidatorCommandsCard({
                       <div className="mb-2 flex items-center gap-2">
                         <Coins className="h-6 w-6" />
                         <h4 className="font-heading text-sm font-semibold leading-tight">
-                          Withdraw Rewards
+                          Claim delegation rewards
                         </h4>
                       </div>
                       <p className="text-xs leading-tight text-muted-foreground">
-                        Claim staking rewards
-                      </p>
-                    </div>
-                  </BentoCard>
-                </Link>
-
-                {/* Vote */}
-                <Link
-                  href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.Vote)}`}
-                  className="block"
-                >
-                  <BentoCard variant="default" interactive className="min-h-0 p-4">
-                    <div className="flex h-full flex-col">
-                      <div className="mb-2 flex items-center gap-2">
-                        <Vote className="h-6 w-6" />
-                        <h4 className="font-heading text-sm font-semibold leading-tight">Vote</h4>
-                      </div>
-                      <p className="text-xs leading-tight text-muted-foreground">
-                        Vote on governance proposals
+                        From any validator this CLIQ delegates to
                       </p>
                     </div>
                   </BentoCard>
@@ -455,21 +420,15 @@ export default function ValidatorCommandsCard({
 
         <Separator />
 
-        {/* Edit Metadata Section */}
+        {/* Edit validator: one section heading, one button */}
         <div className="space-y-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <h3 className="flex items-center gap-2 text-sm font-medium uppercase tracking-wide text-muted-foreground">
             <Edit3 className="h-4 w-4" />
-            <span>Edit Validator Info</span>
-          </div>
+            Edit validator
+          </h3>
           <p className="text-sm text-muted-foreground">
             Update your validator's name, description, website, and commission settings.
           </p>
-        </div>
-
-        <Separator />
-
-        {/* Actions */}
-        <div className="space-y-3">
           <Dialog open={isEditing} onOpenChange={setIsEditing}>
             <DialogTrigger asChild>
               <Button
@@ -479,7 +438,7 @@ export default function ValidatorCommandsCard({
                 onClick={openEditDialog}
               >
                 <Settings className="h-4 w-4" />
-                Edit Validator Details
+                Edit validator
               </Button>
             </DialogTrigger>
 
