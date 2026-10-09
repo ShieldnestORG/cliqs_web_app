@@ -41,7 +41,12 @@ interface InboxRow {
 }
 
 const InboxSkeleton = () => (
-  <div className="space-y-3" aria-busy="true" aria-label="Loading signatures waiting for you">
+  <div
+    role="status"
+    className="space-y-3"
+    aria-busy="true"
+    aria-label="Loading signatures waiting for you"
+  >
     {[1, 2, 3].map((i) => (
       <Skeleton key={i} className="h-20 w-full" />
     ))}
@@ -129,8 +134,8 @@ const DashboardPage = () => {
   const chainReady = Boolean(chain.nodeAddress);
 
   // Every pending transaction on my CLIQs, split by whether it still needs my signature.
-  // The API returns a CLIQ's transactions oldest first and the client has no timestamp,
-  // so "newest first" is reversed API order within each CLIQ.
+  // The client has no timestamp, so "newest first" assumes the API returns a CLIQ's
+  // transactions in insertion order (UNVERIFIED: no sort is applied server side) and reverses it.
   const { needsMeRows, waitingRows } = useMemo(() => {
     const needsMe: InboxRow[] = [];
     const waiting: InboxRow[] = [];

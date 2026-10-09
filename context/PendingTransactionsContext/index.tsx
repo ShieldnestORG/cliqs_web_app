@@ -68,8 +68,9 @@ export interface PendingTransactionsData {
   /** All of the wallet's CLIQs, de-duplicated by address. */
   cliqs: PendingCliq[];
   isLoading: boolean;
-  /** True once a fetch has completed for the current wallet; false before and after a failure. */
+  /** True once the CLIQ list has loaded for the current wallet; false before and after a failure of that list. */
   hasLoaded: boolean;
+  /** Set when the CLIQ list, or any one CLIQ's pending list, failed to load. Rows that did load are kept. */
   error: string | null;
   /** Fetch again now. No-op while a fetch is in flight. */
   refresh: () => Promise<void>;
@@ -137,7 +138,9 @@ export function PendingTransactionsProvider({ children }: { children: ReactNode 
 
     try {
       fetchingRef.current = true;
-      setData((prev) => ({ ...prev, isLoading: true, error: null }));
+      // The previous error stays up while this fetch runs; it is replaced by the result, so a
+      // failing CLIQ never flashes "all caught up" between polls.
+      setData((prev) => ({ ...prev, isLoading: true }));
 
       const settings = getUserSettings();
       const requiresVerification = settings.requireWalletSignInForCliqs;
@@ -202,6 +205,7 @@ export function PendingTransactionsProvider({ children }: { children: ReactNode 
             pendingCount: transactions.length,
             needsMeCount: transactions.filter((tx) => tx.needsMe).length,
             transactions,
+            failed: false,
           };
         } catch (error) {
           console.error(`Failed to fetch pending transactions for ${multisig.address}:`, error);
@@ -210,11 +214,13 @@ export function PendingTransactionsProvider({ children }: { children: ReactNode 
             pendingCount: 0,
             needsMeCount: 0,
             transactions: [] as readonly PendingTransaction[],
+            failed: true,
           };
         }
       });
 
       const results = await Promise.all(pendingPromises);
+      const failedCount = results.filter((r) => r.failed).length;
       const multisigsWithPending = results.filter((r) => r.pendingCount > 0);
       const totalPendingCount = multisigsWithPending.reduce((sum, r) => sum + r.pendingCount, 0);
       const needsMyCount = multisigsWithPending.reduce((sum, r) => sum + r.needsMeCount, 0);
@@ -222,7 +228,12 @@ export function PendingTransactionsProvider({ children }: { children: ReactNode 
       setData({
         isLoading: false,
         hasLoaded: true,
-        error: null,
+        // A CLIQ whose pending list failed to load is not an empty one: surface it as an error
+        // so no screen reports "all caught up" while signatures may be waiting.
+        error:
+          failedCount > 0
+            ? `Could not load pending transactions for ${failedCount} CLIQ${failedCount === 1 ? "" : "s"}.`
+            : null,
         hasPendingTransactions: totalPendingCount > 0,
         totalPendingCount,
         needsMyCount,

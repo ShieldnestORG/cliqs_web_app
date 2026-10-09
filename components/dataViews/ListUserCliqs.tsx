@@ -20,6 +20,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
+import { Skeleton } from "../ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 /** One row of the list, whichever source it came from. */
@@ -303,9 +304,13 @@ export default function ListUserCliqs() {
 
         {/* Loading states */}
         {(listLoading || isVerifying) && chain.nodeAddress && (
-          <div className="flex items-center gap-2">
-            <Loader2 className="animate-spin text-green-accent" />
-            <p>{isVerifying ? "Verifying wallet..." : "Loading your CLIQs..."}</p>
+          <div role="status" aria-busy="true" className="space-y-3">
+            <span className="sr-only">
+              {isVerifying ? "Verifying wallet..." : "Loading your CLIQs..."}
+            </span>
+            {[1, 2].map((i) => (
+              <Skeleton key={i} className="h-16 w-full" />
+            ))}
           </div>
         )}
 

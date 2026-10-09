@@ -357,6 +357,29 @@ describe("PendingTransactionsContext data", () => {
     );
   });
 
+  it("a CLIQ whose pending list fails to load is an error, never all caught up", async () => {
+    mockGetPendingDbTxs.mockRejectedValue(new Error("pending down"));
+    jest.spyOn(console, "error").mockImplementation(() => {});
+    // The real provider feeds the real Home through the mocked hook.
+    const Bridge = () => {
+      mockPending = { ...usePendingTransactionsContext() };
+      return <DashboardPage />;
+    };
+    render(
+      <PendingTransactionsProvider>
+        <Bridge />
+      </PendingTransactionsProvider>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Could not load pending transactions for 2 CLIQs.",
+      ),
+    );
+    expect(screen.queryByText(/all caught up/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Retry/i })).toBeInTheDocument();
+  });
+
   it("Ledger gate is lifted when the sign-in setting is off", async () => {
     mockWallet = wallet(ledger);
     renderProvider();
