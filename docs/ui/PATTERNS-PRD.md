@@ -528,19 +528,7 @@ expand to a two-slash colour the browser drops silently.
 
 ## 14. Section Wrappers
 
-```css
-/* styles/globals.css, as shipped */
-.section-wrapper {
-  @apply relative w-full py-12;
-}
-
-.section-inner {
-  @apply relative z-10 mx-auto max-w-[1600px] px-[0.75in];
-}
-```
-
-`max-w-[1600px]` matches `DashboardLayout`'s `default` variant width, so section content
-lines up with dashboard content.
+`.section-wrapper` and `.section-inner` were removed in the 2026-10 flow cleanup, together with the chain landing page (their only user); pages use `DashboardLayout` or `Page`.
 
 ---
 

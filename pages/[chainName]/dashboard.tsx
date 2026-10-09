@@ -38,6 +38,8 @@ interface InboxRow {
   readonly cliqAddress: string;
   readonly cliqLabel: string;
   readonly threshold: number;
+  /** Enough different signers to broadcast: nothing is left to sign, only to broadcast. */
+  readonly readyToBroadcast: boolean;
 }
 
 const InboxSkeleton = () => (
@@ -133,7 +135,8 @@ const DashboardPage = () => {
   const requiresSignIn = Boolean(walletInfo) && getUserSettings().requireWalletSignInForCliqs;
   const chainReady = Boolean(chain.nodeAddress);
 
-  // Every pending transaction on my CLIQs, split by whether it still needs my signature.
+  // Every pending transaction on my CLIQs. The main list holds what needs my signature and what is
+  // ready to broadcast; the rest waits on other signers.
   // The client has no timestamp, so "newest first" assumes the API returns a CLIQ's
   // transactions in insertion order (UNVERIFIED: no sort is applied server side) and reverses it.
   const { needsMeRows, waitingRows } = useMemo(() => {
@@ -142,15 +145,20 @@ const DashboardPage = () => {
     for (const entry of multisigsWithPending) {
       const cliq = cliqs.find((c) => c.address === entry.address);
       const cliqLabel = cliq?.name || truncateAddress(entry.address, 8, 6);
+      // The amino pubkey JSON stores the threshold as a string, so compare it as a number.
+      const threshold = Number(cliq?.threshold ?? 0);
       for (const tx of [...entry.transactions].reverse()) {
-        const row = { tx, cliqAddress: entry.address, cliqLabel, threshold: cliq?.threshold ?? 0 };
-        (tx.needsMe ? needsMe : waiting).push(row);
+        // Same count as the transaction page: one vote per signer address.
+        const readyToBroadcast =
+          threshold > 0 && new Set(tx.signatures.map(({ address }) => address)).size >= threshold;
+        const row = { tx, cliqAddress: entry.address, cliqLabel, threshold, readyToBroadcast };
+        (readyToBroadcast || tx.needsMe ? needsMe : waiting).push(row);
       }
     }
     return { needsMeRows: needsMe, waitingRows: waiting };
   }, [multisigsWithPending, cliqs]);
 
-  const renderRow = ({ tx, cliqAddress, cliqLabel, threshold }: InboxRow) => (
+  const renderRow = ({ tx, cliqAddress, cliqLabel, threshold, readyToBroadcast }: InboxRow) => (
     <TransactionCard
       key={tx.id}
       tx={tx}
@@ -159,6 +167,9 @@ const DashboardPage = () => {
       chainName={chain.registryName}
       walletAddress={walletInfo?.address}
       cliqLabel={cliqLabel}
+      reviewLabel={
+        readyToBroadcast ? "Review and broadcast" : tx.needsMe ? "Review and sign" : undefined
+      }
     />
   );
 
@@ -184,22 +195,27 @@ const DashboardPage = () => {
       );
     }
 
-    if (error) {
+    const retryButton = (
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => refresh()}
+        disabled={isLoading}
+        className="shrink-0 gap-2"
+      >
+        <RefreshCw className="h-4 w-4" />
+        Retry
+      </Button>
+    );
+
+    // Nothing loaded: the error is all there is to show.
+    if (error && !hasLoaded) {
       return (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <span>Could not load signatures waiting for you. {error}</span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => refresh()}
-              disabled={isLoading}
-              className="shrink-0 gap-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Retry
-            </Button>
+            {retryButton}
           </AlertDescription>
         </Alert>
       );
@@ -209,9 +225,19 @@ const DashboardPage = () => {
 
     return (
       <div className="space-y-3">
+        {/* Some CLIQs failed, others loaded: keep the rows that did load. */}
+        {error && (
+          <Alert variant="warning">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <span>Some CLIQs could not be loaded.</span>
+              {retryButton}
+            </AlertDescription>
+          </Alert>
+        )}
         {needsMeRows.length > 0 ? (
           needsMeRows.map(renderRow)
-        ) : (
+        ) : error ? null : (
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
             <CheckCircle2 className="h-5 w-5 text-success" />
             You&apos;re all caught up.

@@ -185,6 +185,14 @@ export default function ListUserCliqs() {
     }
   }, [walletInfo]);
 
+  // Another account or chain: the CLIQs and the fetch bookkeeping belong to the previous one.
+  // Clearing them lets the auto-fetch above load the new account's CLIQs.
+  useEffect(() => {
+    setCliqs(null);
+    hasAttemptedFetch.current = null;
+    fetchError.current = null;
+  }, [walletInfo?.address, chainId]);
+
   const handleVerifyAndFetch = useCallback(async () => {
     await fetchCliqs();
   }, [fetchCliqs]);

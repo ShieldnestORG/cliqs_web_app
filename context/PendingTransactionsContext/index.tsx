@@ -11,6 +11,10 @@
  * `needsMyCount`). A non-Keplr wallet (Ledger) is served only while the
  * "require wallet sign-in for CLIQs" setting is off, because only Keplr can
  * produce the verification signature that setting demands.
+ *
+ * Everything it holds belongs to one owner: one wallet on one chain. When either
+ * changes, the data is cleared at once and a result still in flight for the old
+ * owner is dropped.
  */
 
 import {
@@ -42,7 +46,7 @@ export function dispatchTransactionStatusChanged() {
   }
 }
 
-/** A pending transaction plus whether the connected wallet has yet to sign it. */
+/** A pending transaction plus whether the connected wallet, as a member of its CLIQ, has yet to sign it. */
 export type PendingTransaction = DbTransaction & { readonly needsMe: boolean };
 
 /** One of the connected wallet's CLIQs (created and belonged, de-duplicated by address). */
@@ -57,7 +61,7 @@ export interface PendingTransactionsData {
   hasPendingTransactions: boolean;
   /** Every pending transaction on the wallet's CLIQs, signed by me or not. */
   totalPendingCount: number;
-  /** Pending transactions whose signatures do not yet include the connected wallet. */
+  /** Pending transactions on CLIQs the wallet is a member of whose signatures do not yet include it. */
   needsMyCount: number;
   multisigsWithPending: Array<{
     address: string;
@@ -72,7 +76,7 @@ export interface PendingTransactionsData {
   hasLoaded: boolean;
   /** Set when the CLIQ list, or any one CLIQ's pending list, failed to load. Rows that did load are kept. */
   error: string | null;
-  /** Fetch again now. No-op while a fetch is in flight. */
+  /** Fetch again now. No-op while a fetch for the same wallet and chain is in flight. */
   refresh: () => Promise<void>;
 }
 
@@ -102,6 +106,22 @@ function parseMultisigPubkey(pubkeyJSON: string): { threshold: number; memberCou
 }
 
 /**
+ * Whether the wallet's pubkey (base64) is one of the CLIQ's member pubkeys. This is the match the
+ * list API uses to build `belonged`; a wallet that only created the CLIQ is not a member, so it
+ * has nothing to sign there.
+ */
+function isCliqMember(pubkeyJSON: string, walletPubKey: string): boolean {
+  try {
+    const parsed = JSON.parse(pubkeyJSON);
+    const pubkeys: { value?: string; key?: string }[] =
+      parsed?.value?.pubkeys || parsed?.pubkeys || [];
+    return pubkeys.some((pk) => pk.value === walletPubKey || pk.key === walletPubKey);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Keplr always qualifies. Any other wallet qualifies only while the sign-in
  * requirement is off, since that requirement needs a Keplr verification signature.
  */
@@ -117,17 +137,34 @@ export function PendingTransactionsProvider({ children }: { children: ReactNode 
   const { walletInfo, verificationSignature, isVerified } = useWallet();
   const router = useRouter();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const fetchingRef = useRef(false);
+  // The owner whose fetch is running now, if any.
+  const inFlightOwnerRef = useRef<string | null>(null);
   const [data, setData] = useState<Omit<PendingTransactionsData, "refresh">>(defaultData);
+
+  // The owner of everything in `data`: one wallet on one chain ("" while none is connected).
+  const ownerKey = walletInfo ? `${chain?.chainId ?? ""}|${walletInfo.address}` : "";
+  const ownerKeyRef = useRef(ownerKey);
+  ownerKeyRef.current = ownerKey;
+  const [dataOwner, setDataOwner] = useState(ownerKey);
+  if (dataOwner !== ownerKey) {
+    // The wallet or chain changed. Clear while rendering (React re-renders at once) so the old
+    // owner's rows and counts never reach the screen, not even for one frame.
+    setDataOwner(ownerKey);
+    setData(defaultData);
+  }
 
   const fetchPendingTransactions = useCallback(async () => {
     if (!isClient) return;
 
-    // Prevent concurrent overlapping fetches — last one wins would produce stale state
-    if (fetchingRef.current) return;
+    // One fetch per owner at a time (a second would only repeat the first). A fetch still running
+    // for another wallet or chain must not block this one: its result is dropped below.
+    if (inFlightOwnerRef.current === ownerKey) return;
+
+    // A call made from an earlier render (a timer set before the wallet or chain changed).
+    if (ownerKeyRef.current !== ownerKey) return;
 
     if (!canUseWallet(walletInfo)) {
-      setData((prev) => ({ ...prev, isLoading: false, error: null }));
+      setData(defaultData);
       return;
     }
 
@@ -137,7 +174,7 @@ export function PendingTransactionsProvider({ children }: { children: ReactNode 
     }
 
     try {
-      fetchingRef.current = true;
+      inFlightOwnerRef.current = ownerKey;
       // The previous error stays up while this fetch runs; it is replaced by the result, so a
       // failing CLIQ never flashes "all caught up" between polls.
       setData((prev) => ({ ...prev, isLoading: true }));
@@ -164,6 +201,8 @@ export function PendingTransactionsProvider({ children }: { children: ReactNode 
         address: walletInfo.address,
         pubkey: walletInfo.pubKey,
       });
+      // The wallet or chain changed while this ran: the result belongs to the old owner.
+      if (ownerKeyRef.current !== ownerKey) return;
 
       const allMultisigsMap = new Map<string, (typeof multisigs.created)[number]>();
       for (const m of [...multisigs.created, ...multisigs.belonged]) {
@@ -184,6 +223,8 @@ export function PendingTransactionsProvider({ children }: { children: ReactNode 
           ...prev,
           isLoading: false,
           hasLoaded: true,
+          // A load that finds no CLIQs replaces an earlier failure, or the error would outlive it.
+          error: null,
           hasPendingTransactions: false,
           totalPendingCount: 0,
           needsMyCount: 0,
@@ -196,9 +237,11 @@ export function PendingTransactionsProvider({ children }: { children: ReactNode 
       const pendingPromises = allMultisigs.map(async (multisig) => {
         try {
           const pendingTxs = await getPendingDbTxs(multisig.address, chain.chainId);
+          const isMember = isCliqMember(multisig.pubkeyJSON, walletInfo.pubKey);
           const transactions: PendingTransaction[] = pendingTxs.map((tx) => ({
             ...tx,
-            needsMe: !tx.signatures.some(({ address }) => address === walletInfo.address),
+            needsMe:
+              isMember && !tx.signatures.some(({ address }) => address === walletInfo.address),
           }));
           return {
             address: multisig.address,
@@ -220,6 +263,7 @@ export function PendingTransactionsProvider({ children }: { children: ReactNode 
       });
 
       const results = await Promise.all(pendingPromises);
+      if (ownerKeyRef.current !== ownerKey) return;
       const failedCount = results.filter((r) => r.failed).length;
       const multisigsWithPending = results.filter((r) => r.pendingCount > 0);
       const totalPendingCount = multisigsWithPending.reduce((sum, r) => sum + r.pendingCount, 0);
@@ -242,6 +286,7 @@ export function PendingTransactionsProvider({ children }: { children: ReactNode 
       });
     } catch (error) {
       console.error("Failed to fetch pending transactions:", error);
+      if (ownerKeyRef.current !== ownerKey) return;
       setData((prev) => ({
         ...prev,
         isLoading: false,
@@ -254,9 +299,9 @@ export function PendingTransactionsProvider({ children }: { children: ReactNode 
         cliqs: [],
       }));
     } finally {
-      fetchingRef.current = false;
+      if (inFlightOwnerRef.current === ownerKey) inFlightOwnerRef.current = null;
     }
-  }, [chain, walletInfo, verificationSignature, isVerified]);
+  }, [chain, walletInfo, verificationSignature, isVerified, ownerKey]);
 
   // Fetch when wallet connects / verification state changes
   useEffect(() => {

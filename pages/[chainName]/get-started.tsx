@@ -169,7 +169,9 @@ function JourneyWalkthrough({
               <Icon className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">{journey.title}</h1>
+              <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">
+                {journey.title}
+              </h1>
               <p className="text-sm text-muted-foreground">{journey.subtitle}</p>
             </div>
           </div>

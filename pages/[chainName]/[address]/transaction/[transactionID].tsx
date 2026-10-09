@@ -699,6 +699,7 @@ const TransactionPage = ({
 
   return (
     <Page
+      title={`Transaction - ${chain.chainDisplayName || "Cosmos"}`}
       goBack={
         chain.registryName
           ? {
@@ -709,7 +710,7 @@ const TransactionPage = ({
       }
     >
       {/* Page Title */}
-      <h1 className="mb-6 font-heading text-3xl font-bold">
+      <h1 className="mb-6 font-heading text-3xl font-bold tracking-tight sm:text-4xl">
         {isLoadingTx
           ? "Loading Transaction..."
           : transactionStatus === "cancelled"

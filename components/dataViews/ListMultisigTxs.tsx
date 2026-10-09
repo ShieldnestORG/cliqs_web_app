@@ -39,12 +39,13 @@ interface TransactionCardProps {
   multisigThreshold: number;
   chainName: string;
   walletAddress?: string;
-  /**
-   * Set only where rows from several CLIQs share one list (Home). Shows the
-   * CLIQ's name above the row and, on a row still waiting for my signature,
-   * a trailing "Review and sign".
-   */
+  /** Set only where rows from several CLIQs share one list (Home). Shows the CLIQ's name above the row. */
   cliqLabel?: string;
+  /**
+   * Home only: the trailing call to action on a row that still needs something from me
+   * ("Review and sign", "Review and broadcast"). Leave it out when there is nothing left to do.
+   */
+  reviewLabel?: string;
 }
 
 export const TransactionCard = ({
@@ -54,13 +55,14 @@ export const TransactionCard = ({
   chainName,
   walletAddress,
   cliqLabel,
+  reviewLabel,
 }: TransactionCardProps) => {
   const msgTypeCounts = msgTypeCountsFromJson(tx.dataJSON);
   const hasSigned = Boolean(tx.signatures.find(({ address }) => address === walletAddress));
   const isCancelled = tx.status === "cancelled";
   const isBroadcast = Boolean(tx.txHash);
 
-  const showReviewAction = cliqLabel !== undefined && !hasSigned && !isBroadcast && !isCancelled;
+  const showReviewAction = reviewLabel !== undefined && !isBroadcast && !isCancelled;
 
   const statusColor = isCancelled
     ? "bg-muted-foreground"
@@ -122,7 +124,7 @@ export const TransactionCard = ({
           </div>
           {showReviewAction && (
             <span className="flex items-center gap-1 text-sm font-medium text-foreground">
-              Review and sign
+              {reviewLabel}
               <ArrowRight className="h-4 w-4" />
             </span>
           )}
@@ -176,7 +178,7 @@ export const TransactionCard = ({
 
           {showReviewAction ? (
             <span className="flex shrink-0 items-center gap-1 whitespace-nowrap text-sm font-medium text-foreground">
-              Review and sign
+              {reviewLabel}
               <ArrowRight className="h-4 w-4" />
             </span>
           ) : (
