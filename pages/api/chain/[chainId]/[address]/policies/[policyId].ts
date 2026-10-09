@@ -1,8 +1,6 @@
 /**
  * Individual Policy API
  *
- * File: pages/api/chain/[chainId]/[address]/policies/[policyId].ts
- *
  * GET: Get a specific policy
  * PUT: Update a policy
  * DELETE: Delete a policy

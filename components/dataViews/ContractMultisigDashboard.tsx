@@ -1,8 +1,6 @@
 /**
  * Contract Multisig Dashboard
  *
- * File: components/dataViews/ContractMultisigDashboard.tsx
- *
  * Dashboard view for CW3 contract-based multisigs.
  * Shows members, proposals, voting, and execution.
  */
@@ -101,7 +99,6 @@ export default function ContractMultisigDashboard({
   const [selectedProposalId, setSelectedProposalId] = useState<number | null>(null);
   const [showVoteDialog, setShowVoteDialog] = useState(false);
 
-  // Fetch contract config
   useEffect(() => {
     async function fetchConfig() {
       setIsLoading(true);

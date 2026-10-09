@@ -1,8 +1,6 @@
 /**
  * Validator Dashboard
  *
- * File: components/dataViews/ValidatorDashboard/index.tsx
- *
  * Main validator dashboard component that orchestrates all cards.
  */
 

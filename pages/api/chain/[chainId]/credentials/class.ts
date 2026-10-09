@@ -1,8 +1,6 @@
 /**
  * Credential Class API
  *
- * File: pages/api/chain/[chainId]/credentials/class.ts
- *
  * API routes for creating and querying credential classes.
  *
  * POST - Create a new credential class for a team

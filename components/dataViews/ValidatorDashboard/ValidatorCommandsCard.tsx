@@ -1,8 +1,6 @@
 /**
  * Validator Commands Card
  *
- * File: components/dataViews/ValidatorDashboard/ValidatorCommandsCard.tsx
- *
  * Allows validators to edit their metadata and commission settings.
  */
 

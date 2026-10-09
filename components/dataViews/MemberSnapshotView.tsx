@@ -1,8 +1,6 @@
 /**
  * Member Snapshot View
  *
- * File: components/dataViews/MemberSnapshotView.tsx
- *
  * Displays the member snapshot captured at proposal creation time.
  * Shows who was eligible to vote when the proposal was created.
  *

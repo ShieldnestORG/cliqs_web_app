@@ -1,8 +1,6 @@
 /**
  * Emergency Panel Component
  *
- * File: components/emergency/EmergencyPanel.tsx
- *
  * Displays emergency controls for pause/unpause and safe mode activation.
  *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards

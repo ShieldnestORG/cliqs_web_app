@@ -1,8 +1,6 @@
 /**
  * Custom Document
  *
- * File: pages/_document.tsx
- *
  * This file is used to augment the application's <html> and <body> tags.
  * Google Fonts are loaded here instead of next/head to avoid Next.js 15 warnings.
  */

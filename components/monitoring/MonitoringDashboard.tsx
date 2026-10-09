@@ -1,8 +1,6 @@
 /**
  * Monitoring Dashboard Component
  *
- * File: components/monitoring/MonitoringDashboard.tsx
- *
  * Displays metrics, alerts, and recent events for a multisig.
  *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards

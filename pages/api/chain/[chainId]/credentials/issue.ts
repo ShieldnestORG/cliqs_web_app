@@ -1,8 +1,6 @@
 /**
  * Issue Credential API
  *
- * File: pages/api/chain/[chainId]/credentials/issue.ts
- *
  * API route for issuing credentials to team members.
  *
  * POST - Issue a new credential

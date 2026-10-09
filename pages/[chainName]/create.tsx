@@ -1,8 +1,6 @@
 /**
  * Create Cliq Page
  *
- * File: pages/[chainName]/create.tsx
- *
  * Page for creating a new Cliq (multisig group).
  * Supports three multisig types:
  * - PubKey Multisig: Traditional Cosmos SDK multisig (address derived from pubkeys)

@@ -1,8 +1,6 @@
 /**
  * Validator Dashboard Helper Functions
  *
- * File: lib/validatorHelpers.ts
- *
  * Query functions for validator-specific data including commission,
  * rewards, performance metrics, and account conversions.
  */

@@ -1,8 +1,6 @@
 /**
  * Validator Dashboard Page
  *
- * File: pages/[chainName]/validator.tsx
- *
  * Free validator dashboard for single-signature transactions.
  * Allows validators to claim commission, withdraw rewards, and
  * set withdraw addresses without needing a multisig.

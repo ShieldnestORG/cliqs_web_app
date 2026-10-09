@@ -1,8 +1,6 @@
 /**
  * CLIQ Upgrade CTA Card
  *
- * File: components/dataViews/ValidatorDashboard/CliqUpgradeCTA.tsx
- *
  * Call-to-action card encouraging validators to upgrade to multisig security.
  */
 

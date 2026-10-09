@@ -1,8 +1,6 @@
 /**
  * Emergency Types
  *
- * File: lib/emergency/types.ts
- *
  * Types for the emergency control system including pause mechanism
  * and safe mode.
  *
@@ -88,7 +86,7 @@ export interface UnpauseInput {
   readonly actor: string;
   /** Reason for unpause */
   readonly reason?: string;
-  /** Verification that actor has required authority */
+  /** When true, skips the check that the actor has the required authority */
   readonly skipThresholdCheck?: boolean;
 }
 

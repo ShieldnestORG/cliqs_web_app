@@ -1,8 +1,6 @@
 /**
  * Policy Registry - Central Policy Management and Evaluation
  *
- * File: lib/policies/registry.ts
- *
  * This is the central hub for policy management and evaluation.
  * ALL policy logic flows through this registry - no policy logic in engines.
  *

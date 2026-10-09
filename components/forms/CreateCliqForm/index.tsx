@@ -1,8 +1,6 @@
 /**
  * Create Cliq Form
  *
- * File: components/forms/CreateCliqForm/index.tsx
- *
  * Main form component for creating a new Cliq (multisig group).
  * A Cliq lets multiple people manage shared funds and coordinate transactions.
  * Uses a tabbed interface for each step of the creation process.

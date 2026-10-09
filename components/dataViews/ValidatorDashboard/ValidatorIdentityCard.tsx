@@ -1,8 +1,6 @@
 /**
  * Validator Identity Card
  *
- * File: components/dataViews/ValidatorDashboard/ValidatorIdentityCard.tsx
- *
  * Displays validator moniker, status, commission rate, and operator address.
  * While the validator is jailed it also hosts the Unjail action (UnjailAction).
  */

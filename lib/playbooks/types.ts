@@ -1,8 +1,6 @@
 /**
  * Incident Playbooks - Automated Response Sequences
  *
- * File: lib/playbooks/types.ts
- *
  * Defines types and implementations for automated incident response.
  * Playbooks are sequences of actions executed in response to incidents.
  *

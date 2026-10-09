@@ -1,8 +1,6 @@
 /**
  * List User Cliqs Component
  *
- * File: components/dataViews/ListUserCliqs.tsx
- *
  * Displays a list of Cliqs (multisigs) that the user has created or is a member of.
  */
 

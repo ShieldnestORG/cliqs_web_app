@@ -1,8 +1,6 @@
 /**
  * Signer Rotation Form
  *
- * File: components/forms/SignerRotationForm/index.tsx
- *
  * Step-by-step wizard for rotating a signer's credential.
  * This performs:
  * 1. Burn the old signer's credential

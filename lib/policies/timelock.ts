@@ -1,8 +1,6 @@
 /**
  * Timelock Policy Implementation
  *
- * File: lib/policies/timelock.ts
- *
  * Priority 1 policy - Risk containment window.
  * All other policies need reaction time, so timelock must come first.
  *
@@ -106,7 +104,6 @@ export class TimelockPolicy implements Policy {
       ]);
     }
 
-    // Check if proposal was queued
     if (context.queuedAt === null) {
       return denied([
         createViolation(
@@ -120,10 +117,8 @@ export class TimelockPolicy implements Policy {
       ]);
     }
 
-    // Calculate required delay
     const requiredDelay = this.getRequiredDelay(proposal, context);
 
-    // Check minimum delay
     if (context.timeSinceQueue < requiredDelay) {
       const remainingSeconds = requiredDelay - context.timeSinceQueue;
       return denied([

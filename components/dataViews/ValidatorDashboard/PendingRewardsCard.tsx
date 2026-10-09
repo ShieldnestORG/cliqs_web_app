@@ -1,8 +1,6 @@
 /**
  * Pending Rewards Card
  *
- * File: components/dataViews/ValidatorDashboard/PendingRewardsCard.tsx
- *
  * Displays pending commission and staking rewards with claim actions.
  */
 

@@ -1,8 +1,6 @@
 /**
  * Database Settings Component (BYODB)
  *
- * File: components/DatabaseSettings.tsx
- *
  * Full-featured UI for "Bring Your Own Database" configuration:
  *   - Toggle between default and custom database
  *   - Enter MongoDB connection string

@@ -1,8 +1,6 @@
 /**
  * Policies API
  *
- * File: pages/api/chain/[chainId]/[address]/policies/index.ts
- *
  * GET: List policies for a multisig
  * POST: Create a new policy
  *

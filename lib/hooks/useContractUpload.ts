@@ -1,8 +1,6 @@
 /**
  * Contract Upload Hook
  *
- * File: lib/hooks/useContractUpload.ts
- *
  * Encapsulates the two-step deployment flow:
  *   1. Upload WASM bytecode → get Code ID
  *   2. Instantiate contract instance → get contract address

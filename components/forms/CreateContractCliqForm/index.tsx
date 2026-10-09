@@ -1,8 +1,6 @@
 /**
  * Create Contract Cliq Form — Full Wizard
  *
- * File: components/forms/CreateContractCliqForm/index.tsx
- *
  * Six-step wizard for creating a CW3-based contract multisig:
  *   1. Setup    – name, description
  *   2. Members  – addresses + weights

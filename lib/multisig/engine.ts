@@ -1,8 +1,6 @@
 /**
  * MultisigEngine Interface
  *
- * File: lib/multisig/engine.ts
- *
  * This interface defines the contract for multisig operations.
  * It abstracts the differences between PubKey multisig and Contract multisig,
  * allowing the UI to work with either implementation seamlessly.

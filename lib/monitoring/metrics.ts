@@ -1,8 +1,6 @@
 /**
  * Metrics Collector - Observability Infrastructure
  *
- * File: lib/monitoring/metrics.ts
- *
  * Collects and exports metrics for monitoring and observability.
  * Supports counters, gauges, and histograms.
  *
@@ -216,15 +214,12 @@ export class Histogram implements Metric {
   observe(value: number, labels?: Record<string, string>): void {
     const key = this.getKey(labels);
 
-    // Update sum
     const currentSum = this.sums.get(key) ?? 0;
     this.sums.set(key, currentSum + value);
 
-    // Update count
     const currentCount = this.counts.get(key) ?? 0;
     this.counts.set(key, currentCount + 1);
 
-    // Update buckets
     let bucketCounts = this.bucketValues.get(key);
     if (!bucketCounts) {
       bucketCounts = new Array(this.buckets.length).fill(0);

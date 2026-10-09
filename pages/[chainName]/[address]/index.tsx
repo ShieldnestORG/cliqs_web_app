@@ -1,8 +1,6 @@
 /**
  * Cliq Dashboard Page
  *
- * File: pages/[chainName]/[address]/index.tsx
- *
  * Main dashboard for viewing and managing a Cliq (multisig).
  * Supports both PubKey multisigs and Contract multisigs (CW3).
  */

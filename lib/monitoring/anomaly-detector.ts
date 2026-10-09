@@ -1,8 +1,6 @@
 /**
  * Anomaly Detector - Rule-Based Anomaly Detection
  *
- * File: lib/monitoring/anomaly-detector.ts
- *
  * Detects suspicious patterns and triggers alerts.
  * Supports configurable rules and thresholds.
  *

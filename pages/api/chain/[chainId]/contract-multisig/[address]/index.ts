@@ -1,8 +1,6 @@
 /**
  * Contract Multisig API - Single Contract Operations
  *
- * File: pages/api/chain/[chainId]/contract-multisig/[address]/index.ts
- *
  * GET: Get contract config, proposals, and state
  * POST: Trigger sync or verify proposal
  */

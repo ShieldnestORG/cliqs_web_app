@@ -1,8 +1,6 @@
 /**
  * Cliq Member Form Field
  *
- * File: components/forms/CreateCliqForm/MemberFormField.tsx
- *
  * Individual member input field for the Cliq creation form.
  * Supports paste of multiple addresses at once.
  */

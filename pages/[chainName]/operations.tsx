@@ -1,8 +1,6 @@
 /**
  * Unified Operations Page
  *
- * File: pages/[chainName]/operations.tsx
- *
  * A unified view showing both CLIQ transactions and validator management in one place.
  */
 

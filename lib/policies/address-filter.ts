@@ -1,8 +1,6 @@
 /**
  * Address Filter Policy (Allowlist/Denylist)
  *
- * File: lib/policies/address-filter.ts
- *
  * Priority 5 policy - Weakest protection, most opinionated.
  * Filters recipient addresses based on allowlists and denylists.
  *
@@ -63,7 +61,6 @@ export class AddressFilterPolicy implements Policy {
       denylist: config.denylist ?? DEFAULT_CONFIG.denylist,
     };
 
-    // Set type based on primary filter mode
     this.type = this.config.filterType === "allowlist" ? "allowlist" : "denylist";
   }
 

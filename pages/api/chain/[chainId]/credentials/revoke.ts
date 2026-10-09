@@ -1,8 +1,6 @@
 /**
  * Revoke Credential API
  *
- * File: pages/api/chain/[chainId]/credentials/revoke.ts
- *
  * API route for revoking (burning) credentials.
  *
  * POST - Revoke a credential

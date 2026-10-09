@@ -1,8 +1,6 @@
 /**
  * Metrics API
  *
- * File: pages/api/chain/[chainId]/[address]/monitoring/metrics.ts
- *
  * GET: Get metrics for a multisig
  *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards

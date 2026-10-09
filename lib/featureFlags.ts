@@ -1,7 +1,6 @@
 /**
  * Feature flags
  *
- * File: lib/featureFlags.ts
  */
 
 /**

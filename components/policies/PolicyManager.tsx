@@ -1,8 +1,6 @@
 /**
  * Policy Manager Component
  *
- * File: components/policies/PolicyManager.tsx
- *
  * Displays and manages policies for a multisig.
  *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards

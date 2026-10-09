@@ -1,8 +1,6 @@
 /**
  * Spend Limit Policy
  *
- * File: lib/policies/spend-limit.ts
- *
  * Priority 4 policy - Only safe after timelocks provide reaction window.
  * Enforces per-transaction and daily spending limits.
  *
@@ -81,7 +79,6 @@ export class SpendLimitPolicy implements Policy {
     // Calculate proposal value (excluding exempt message types)
     const proposalValue = this.calculateNonExemptValue(proposal, context);
 
-    // Check per-transaction limits
     for (const limit of this.config.perTxLimits) {
       const spent = proposalValue.find((c) => c.denom === limit.denom);
       if (spent) {

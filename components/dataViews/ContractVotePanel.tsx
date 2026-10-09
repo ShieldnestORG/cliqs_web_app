@@ -1,8 +1,6 @@
 /**
  * Contract Vote Panel
  *
- * File: components/dataViews/ContractVotePanel.tsx
- *
  * Panel for viewing proposal details and casting votes.
  * Shows vote breakdown, current status, and voting buttons.
  */

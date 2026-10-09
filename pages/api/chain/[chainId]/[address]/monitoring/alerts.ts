@@ -1,8 +1,6 @@
 /**
  * Alerts API
  *
- * File: pages/api/chain/[chainId]/[address]/monitoring/alerts.ts
- *
  * GET: Get recent alerts
  *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards

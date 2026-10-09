@@ -1,8 +1,6 @@
 /**
  * Chain Dashboard Page
  *
- * File: pages/[chainName]/dashboard.tsx
- *
  * Dashboard for managing Cliqs (multisigs) on a specific chain.
  */
 

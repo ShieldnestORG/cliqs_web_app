@@ -1,8 +1,6 @@
 /**
  * Dynamic MongoDB Connection Manager
  *
- * File: lib/byodb/dynamicMongo.ts
- *
  * Creates short-lived MongoDB connections from user-supplied connection strings.
  * Each connection is cached for a short TTL to amortize cost across rapid
  * sequential API calls, then closed to avoid leaking resources.

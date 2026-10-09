@@ -1,8 +1,6 @@
 /**
  * Proposal Viewer
  *
- * File: components/dataViews/ValidatorDashboard/ProposalViewer.tsx
- *
  * Displays active governance proposals and the validator's voting status.
  */
 

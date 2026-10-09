@@ -1,8 +1,6 @@
 /**
  * WASM Binary Validator
  *
- * File: lib/contract/wasmValidator.ts
- *
  * Validates WASM bytecode against chain-specific constraints before upload.
  * Key checks:
  *   - File size vs chain's max_wasm_code_size

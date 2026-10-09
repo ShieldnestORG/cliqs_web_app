@@ -1,8 +1,6 @@
 /**
  * Transaction Privacy Component
  *
- * File: components/dataViews/TransactionPrivacy.tsx
- *
  * Self-service data controls for a cliq's off-chain history in the hosted DB:
  *   - Export history as JSON
  *   - Wipe completed (broadcast) transactions

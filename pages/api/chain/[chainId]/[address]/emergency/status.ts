@@ -1,8 +1,6 @@
 /**
  * Emergency Status API
  *
- * File: pages/api/chain/[chainId]/[address]/emergency/status.ts
- *
  * GET: Get current emergency state
  *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards

@@ -1,8 +1,6 @@
 /**
  * Alert Engine - Webhook, Email, Slack, Discord Support
  *
- * File: lib/alerts/engine.ts
- *
  * Routes alerts to appropriate channels with cooldown management
  * and severity-based routing.
  *

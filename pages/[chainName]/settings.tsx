@@ -1,8 +1,6 @@
 /**
  * Settings Page
  *
- * File: pages/[chainName]/settings.tsx
- *
  * User settings page for managing security preferences, database
  * configuration (BYODB), and other options.
  */

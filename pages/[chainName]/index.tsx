@@ -1,8 +1,6 @@
 /**
  * Chain Home Page
  *
- * File: pages/[chainName]/index.tsx
- *
  * Landing page for a specific chain with Cliq creation and discovery.
  */
 

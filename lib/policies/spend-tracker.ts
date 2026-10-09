@@ -1,8 +1,6 @@
 /**
  * Spend Tracker - Historical Spending Aggregation
  *
- * File: lib/policies/spend-tracker.ts
- *
  * Tracks historical spending for spend limit enforcement.
  * Aggregates spending within rolling windows.
  *

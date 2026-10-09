@@ -1,8 +1,6 @@
 /**
  * Find Cliq Form
  *
- * File: components/forms/FindMultisigForm.tsx
- *
  * Form to search for an existing Cliq by address.
  */
 

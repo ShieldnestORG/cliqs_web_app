@@ -1,8 +1,6 @@
 /**
  * BYODB API Middleware
  *
- * File: lib/byodb/middleware.ts
- *
  * Extracts the user's MongoDB URI from the `x-byodb-uri` request header
  * and stores it in AsyncLocalStorage so that db.ts can route queries
  * to the user's database instead of the default one.

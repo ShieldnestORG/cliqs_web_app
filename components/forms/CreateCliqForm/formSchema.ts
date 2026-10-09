@@ -1,8 +1,6 @@
 /**
  * Cliq Creation Form Schema
  *
- * File: components/forms/CreateCliqForm/formSchema.ts
- *
  * A Cliq is a multisig group that lets multiple people manage shared funds.
  * This schema validates the cliq creation form with:
  * - Cliq name and description

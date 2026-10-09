@@ -1,8 +1,6 @@
 /**
  * Create Flex Cliq Form — Full Wizard
  *
- * File: components/forms/CreateFlexCliqForm/index.tsx
- *
  * Six-step wizard for creating a CW3-Flex + CW4-Group contract pair:
  *   1. Setup    – name, description
  *   2. Members  – addresses + weights
