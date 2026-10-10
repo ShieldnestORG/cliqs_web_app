@@ -10,7 +10,7 @@ The app's **Audit & tests** page renders `content/audit-report.json`. After a ch
 passed, append **one** entry at the top (newest first), set `updatedAt`, and refresh `testSuite` from a real
 `npm run test:ci` run (numbers you measured, the commit they ran on). Corrections edit the entry in place and add
 `(corrected YYYY-MM-DD)` to its summary; never delete entries. The rules (field lengths, statuses, proof links) are in
-the shared spec `~/Downloads/Claude/Tx Eco System/AUDIT-REPORT-SPEC.md` and are enforced by
+the owner's shared audit-report spec (AUDIT-REPORT-SPEC.md in the TX ecosystem hub, also used by tokns) and are enforced by
 `__tests__/lib/audit-report.test.tsx`, so a bad edit fails CI.
 
 The page is public. Never add open or unfixed security findings, remaining-advisory counts, secrets, keys, private

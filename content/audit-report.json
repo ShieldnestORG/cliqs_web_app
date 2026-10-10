@@ -2,15 +2,46 @@
   "schemaVersion": 1,
   "updatedAt": "2026-10-09",
   "testSuite": {
-    "suites": 63,
-    "tests": 460,
-    "passed": 460,
+    "suites": 68,
+    "tests": 606,
+    "passed": 606,
     "failed": 0,
     "command": "npm run test:ci",
-    "commit": "ffadc3f",
+    "commit": "f7c4352",
     "ranAt": "2026-10-09"
   },
   "entries": [
+    {
+      "id": "navigation-flow-cleanup-2026-10-09",
+      "date": "2026-10-09",
+      "area": "ux",
+      "status": "verified",
+      "title": "One menu, one Home, and each action in one place",
+      "summary": "Navigation rebuilt: one menu on every screen, a Home that shows what needs your signature, old links redirected.",
+      "details": [
+        "Home replaces the old Dashboard, Operations and landing pages and opens on the transactions that need your signature.",
+        "Desktop and phone share one menu: Home, Create CLIQ, Validator, Settings, Audit & tests and Guides. Settings now holds the old Account page.",
+        "Old links keep working: Operations, Account and the chain page redirect, checked with real requests against a production build.",
+        "Duplicate buttons were removed, such as the many Create buttons, a second Vote tile on the validator page and repeated copy and explorer buttons on the CLIQ page.",
+        "Unused code was removed: a hidden alternative transaction form and 21 files nothing used.",
+        "Wallet and transaction signing code is unchanged, proven by a hash check over 63 files and 85 signing functions.",
+        "Verified: 68 test suites and 606 tests pass, plus type, lint and format checks and a production build."
+      ],
+      "evidence": [
+        {
+          "label": "Home and inbox tests",
+          "url": "__tests__/features/signature-inbox.test.tsx"
+        },
+        {
+          "label": "Redirect tests",
+          "url": "__tests__/lib/redirects.test.ts"
+        },
+        {
+          "label": "Navigation tests",
+          "url": "__tests__/lib/navigation.test.ts"
+        }
+      ]
+    },
     {
       "id": "validator-unjail-pr-77",
       "date": "2026-10-08",
