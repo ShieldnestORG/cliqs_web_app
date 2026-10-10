@@ -4,7 +4,7 @@
 
 **UI4 Institutional Design System**  
 **Version:** 1.1  
-**Last Updated:** 2026-08-16
+**Last Updated:** 2026-10-09
 
 > **Canonical token reference: [`docs/STYLE-GUIDE.md`](../STYLE-GUIDE.md).**
 > It carries the current Coherence Daddy colour, typography, radius, elevation and
@@ -147,8 +147,8 @@ Never paint an opaque, full-bleed background on a page wrapper — one animated 
 
 | Element | Role | Example |
 |---------|------|---------|
-| `// Label` | Category/context keyword | `// How It Works`, `// New Cliq` |
-| Title | Descriptive heading | `Simple & Secure Process`, `Build Your Shared Wallet` |
+| `// Label` | Category/context keyword | `// How It Works`, `// PubKey multisig` |
+| Title | Descriptive heading | `Simple & Secure Process`, `Standard CLIQ` |
 
 ```tsx
 // ❌ BAD (redundant)
@@ -156,8 +156,8 @@ Never paint an opaque, full-bleed background on a page wrapper — one animated 
 <CardTitle>Create a Cliq</CardTitle>
 
 // ✅ GOOD (complementary)
-<CardLabel comment>New Cliq</CardLabel>
-<CardTitle>Build Your Shared Wallet</CardTitle>
+<CardLabel comment>PubKey multisig</CardLabel>
+<CardTitle>Standard CLIQ</CardTitle>
 ```
 
 ---
@@ -236,20 +236,27 @@ Never paint an opaque, full-bleed background on a page wrapper — one animated 
 
 /pages/
   ├── _app.tsx                    # Mounts GridSpotlight + Sidebar
-  └── _document.tsx               # Geist / Geist Mono webfont loading
+  ├── _document.tsx               # Geist / Geist Mono webfont loading
+  └── [chainName]/audit.tsx       # Audit & tests page (renders content/audit-report.json)
 
 /components/
   ├── GridSpotlight.tsx           # Animated dotted-grid page background
-  ├── Sidebar.tsx                 # Auto-collapsing icon rail (overlay expand)
+  ├── Sidebar.tsx                 # Auto-collapsing icon rail (overlay expand); items come from lib/navigation.ts
+  ├── Header.tsx                  # Below lg: the menu panel; same items from lib/navigation.ts
+  ├── WalletConnectPrompt.tsx     # The one in-page "connect your wallet" card (label + description props)
+  ├── audit/AuditReport.tsx       # Audit & tests report body; status badges use Badge success/info/warning
+  ├── dataViews/ListMultisigTxs.tsx  # Also exports TransactionCard, the one transaction row (Home inbox + CLIQ page)
   └── ui/
       ├── button.tsx              # Button with UI4 variants
       ├── card.tsx                # Card with gradient, accents & brackets
+      ├── badge.tsx               # Badge; status variants success / info / warning (see CARDS-PRD "Status Badge")
       ├── bento-grid.tsx          # Bento grid + stat/action cards
       ├── copy-button.tsx         # Click-only "Copied!" tooltip
       ├── input.tsx               # Input with variants
       └── slider.tsx              # Enhanced slider
 
 /lib/
+  ├── navigation.ts               # The one nav list for Sidebar + Header, active rule, needs-my-signature count
   └── settingsStorage.ts          # sidebarPinned + other user prefs
 
 /docs/

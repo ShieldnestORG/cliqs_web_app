@@ -1,8 +1,6 @@
 /**
  * Unjail Action
  *
- * File: components/dataViews/ValidatorDashboard/UnjailAction.tsx
- *
  * One-click MsgUnjail for a jailed validator, rendered inside the jailed banner of the
  * identity card. Only shown while `validator.jailed`; the button is disabled while the
  * chain would reject the unjail (tombstoned, or still inside the jail period).

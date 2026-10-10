@@ -1,8 +1,6 @@
 /**
  * Message Type Restriction Policy
  *
- * File: lib/policies/msg-type-restriction.ts
- *
  * Priority 3 policy - Controls attack surface before enabling spending.
  * Allows blocking/allowing specific message types and requiring
  * higher thresholds for certain operations.

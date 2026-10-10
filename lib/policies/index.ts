@@ -1,8 +1,6 @@
 /**
  * Policy Module Exports
  *
- * File: lib/policies/index.ts
- *
  * Central export point for Phase 4 policy system.
  * All policy logic flows through PolicyEvaluator interface.
  */

@@ -1,8 +1,6 @@
 /**
  * Incidents API
  *
- * File: pages/api/chain/[chainId]/[address]/monitoring/incidents.ts
- *
  * GET: Get incidents
  * POST: Create an incident
  * PUT: Update an incident (acknowledge/resolve)

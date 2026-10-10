@@ -1,8 +1,6 @@
 /**
  * Best-Effort Rate Limiting
  *
- * File: lib/rateLimit.ts
- *
  * In-memory fixed-window counter keyed by (route, identifier). No Redis, no new
  * dependency.
  *

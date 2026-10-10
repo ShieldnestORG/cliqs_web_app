@@ -1,8 +1,6 @@
 /**
  * Safe Mode Controller - Elevated Threshold Emergency Mode
  *
- * File: lib/emergency/safe-mode.ts
- *
  * Implements safe mode which elevates the threshold temporarily
  * without requiring contract redeployment.
  *

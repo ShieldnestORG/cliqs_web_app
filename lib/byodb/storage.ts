@@ -1,8 +1,6 @@
 /**
  * BYODB Storage Service
  *
- * File: lib/byodb/storage.ts
- *
  * Manages the lifecycle of "Bring Your Own Database" credentials:
  *   - Store encrypted credentials in localStorage
  *   - Retrieve and decrypt on demand

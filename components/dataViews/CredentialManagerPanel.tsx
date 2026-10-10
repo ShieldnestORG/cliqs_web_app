@@ -1,8 +1,6 @@
 /**
  * Credential Manager Panel
  *
- * File: components/dataViews/CredentialManagerPanel.tsx
- *
  * Panel for managing team credentials in a multisig.
  * Allows viewing, issuing, and revoking credentials.
  *

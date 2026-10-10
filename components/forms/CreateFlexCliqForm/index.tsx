@@ -1,8 +1,6 @@
 /**
  * Create Flex Cliq Form — Full Wizard
  *
- * File: components/forms/CreateFlexCliqForm/index.tsx
- *
  * Six-step wizard for creating a CW3-Flex + CW4-Group contract pair:
  *   1. Setup    – name, description
  *   2. Members  – addresses + weights
@@ -712,7 +710,7 @@ export default function CreateFlexCliqForm() {
               <ShieldPlus className="h-3 w-3" />
               Flex Contract Multisig
             </CardLabel>
-            <CardTitle className="text-2xl">Create Flex Smart Wallet</CardTitle>
+            <CardTitle className="text-2xl">Flex CLIQ</CardTitle>
           </div>
         </div>
         <CardDescription className="mt-4 space-y-3">

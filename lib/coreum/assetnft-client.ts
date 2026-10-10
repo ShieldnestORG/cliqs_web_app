@@ -1,8 +1,6 @@
 /**
  * TX AssetNFT Client
  *
- * File: lib/coreum/assetnft-client.ts
- *
  * Client for interacting with TX's assetnft module.
  * This module provides NFT functionality with advanced features like:
  * - Soulbound tokens (issuer-only transfer)

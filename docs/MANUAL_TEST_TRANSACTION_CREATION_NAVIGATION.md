@@ -15,6 +15,8 @@ http://localhost:3003/coreum/core14rmczf6t6qldyrqrv4jd0zzypkuymrhvsxazxf/transac
 
 (Or use any valid multisig address from your database)
 
+To reach the same page through the menu instead of the URL: connect your wallet, open **Home**, click the CLIQ under **Your CLIQs** (or enter its address under **Open by address** and click "Open CLIQ"), then click **New transaction** at the top right of the CLIQ page. The button is disabled with the tooltip "Fund this CLIQ first" until the CLIQ has a balance. Menu entries are Home, Create CLIQ, Validator and Settings, then Audit & tests, Guides and (when developer tools are on) Dev Tools; below 1024px they are in the header's menu button.
+
 ## Test Steps
 
 ### 1. Navigate to Create Transaction Page
@@ -190,7 +192,7 @@ cat data/local-db.json | jq '.transactions[] | select(.id=="[transaction-id]")'
 - This test focuses specifically on the navigation flow
 - Transaction signing and broadcasting are separate flows and not tested here. In particular the broadcast-time behaviours (pre-broadcast fee balance check, insufficient-funds guidance, multi-endpoint verification, DeliverTx-failure handling) are out of scope here — see the [Transaction Page Redesign PRD](ui/TRANSACTION-PAGE-REDESIGN-PRD.md).
 - Multiple transaction types can be tested (Send, Delegate, Vote, etc.)
-- This page is the **PubKey multisig** form (`OldCreateTxForm`). A contract (CW3) multisig routes to the proposal form instead and the steps above do not apply.
+- This page is the **PubKey multisig** form (`components/forms/CreateTxForm`, named `OldCreateTxForm` until 2026-10-09). A contract (CW3) multisig routes to the proposal form instead and the steps above do not apply.
 
 ---
 

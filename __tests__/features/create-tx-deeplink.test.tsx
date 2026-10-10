@@ -12,7 +12,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { MsgTypeUrls } from "@/types/txMsg";
 
-// jest.setup.js mocks next/router with only useRouter. OldCreateTxForm is wrapped
+// jest.setup.js mocks next/router with only useRouter. CreateTxForm is wrapped
 // in withRouter, so provide it here as a passthrough and inject router directly.
 jest.mock("next/router", () => ({
   withRouter: (Component: unknown) => Component,
@@ -32,7 +32,7 @@ jest.mock("@/context/ChainsContext/helpers", () => ({
 
 // The message forms pull in heavy chain machinery; stub them down to something
 // that simply reports which message type it was asked to render.
-jest.mock("@/components/forms/OldCreateTxForm/MsgForm", () => ({
+jest.mock("@/components/forms/CreateTxForm/MsgForm", () => ({
   __esModule: true,
   default: ({ msgType }: { msgType: string }) => <div data-testid="msg-form">{msgType}</div>,
 }));
@@ -40,7 +40,7 @@ jest.mock("@/components/forms/OldCreateTxForm/MsgForm", () => ({
 import type { ComponentType } from "react";
 import type { Account } from "@cosmjs/stargate";
 import type { NextRouter } from "next/router";
-import OldCreateTxForm from "@/components/forms/OldCreateTxForm";
+import CreateTxFormBase from "@/components/forms/CreateTxForm";
 
 // withRouter normally injects `router`, so the exported type omits it. The mock
 // above makes withRouter a passthrough, so the test supplies router itself —
@@ -51,7 +51,7 @@ type DeepLinkFormProps = {
   readonly accountOnChain: Account;
 };
 
-const CreateTxForm = OldCreateTxForm as unknown as ComponentType<DeepLinkFormProps>;
+const CreateTxForm = CreateTxFormBase as unknown as ComponentType<DeepLinkFormProps>;
 
 const accountOnChain: Account = {
   address: "cosmos1multisig",

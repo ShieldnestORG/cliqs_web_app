@@ -1,8 +1,6 @@
 /**
  * Contract Cliq Creation Form Schema
  *
- * File: components/forms/CreateContractCliqForm/formSchema.ts
- *
  * Schema for creating a CW3-based contract multisig.
  * Unlike PubKey multisigs, contract multisigs:
  * - Don't require public keys (only addresses)

@@ -1,8 +1,6 @@
 /**
  * Pause Controller - Emergency Pause Mechanism
  *
- * File: lib/emergency/pause-controller.ts
- *
  * Implements the emergency pause mechanism for multisigs.
  * This is a Priority 2 feature that provides a "kill switch" for operations.
  *

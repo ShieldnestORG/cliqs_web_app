@@ -3,13 +3,28 @@
  *
  * File: __tests__/pages/settings.test.tsx
  *
- * Tests for the settings page route (/[chainName]/settings)
+ * Tests for the settings page route (/[chainName]/settings), which also
+ * absorbs the former Account page (wallet section).
  * Priority: P1
  */
 
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent, within } from "@testing-library/react";
 import SettingsPage from "@/pages/[chainName]/settings";
 import { getUserSettings, updateUserSettings } from "@/lib/settingsStorage";
+
+// Wallet state the test controls (names starting with "mock" are allowed in jest.mock factories)
+let mockWalletInfo: { type: string; address: string; pubKey: string } | null = null;
+const mockConnectKeplr = jest.fn();
+
+jest.mock("@/context/WalletContext", () => ({
+  useWallet: () => ({
+    walletInfo: mockWalletInfo,
+    loading: {},
+    connectKeplr: mockConnectKeplr,
+    connectLedger: jest.fn(),
+    disconnect: jest.fn(),
+  }),
+}));
 
 // Mock the ChainsContext
 jest.mock("@/context/ChainsContext", () => ({
@@ -20,6 +35,7 @@ jest.mock("@/context/ChainsContext", () => ({
       chainId: "cosmoshub-4",
       addressPrefix: "cosmos",
       nodeAddress: "https://rpc.cosmos.network",
+      explorerLinks: { account: "https://explorer.example/account/${accountAddress}" },
     },
   }),
 }));
@@ -40,43 +56,115 @@ jest.mock("@/lib/settingsStorage", () => ({
   updateUserSettings: jest.fn(),
 }));
 
+// The shared jest.setup mock of DashboardLayout drops `subheader` (the breadcrumb)
+// and renders sections without a heading element; this page needs both.
+jest.mock("@/components/layout/DashboardLayout", () => {
+  const React = require("react");
+  return {
+    __esModule: true,
+    default: ({ children, title, subheader }: any) =>
+      React.createElement("div", { "data-testid": "dashboard-layout", "data-title": title }, [
+        React.createElement("div", { key: "sub" }, subheader),
+        React.createElement("div", { key: "body" }, children),
+      ]),
+    DashboardSection: ({ children, title }: any) =>
+      React.createElement("section", { "aria-label": title }, [
+        React.createElement("h2", { key: "h" }, title),
+        children,
+      ]),
+  };
+});
+
+// Use the real AccountView (jest.setup mocks it globally) so the not-connected branch is covered
+jest.mock("@/components/dataViews/AccountView", () =>
+  jest.requireActual("@/components/dataViews/AccountView"),
+);
+
 // Note: @/lib/utils is not mocked - cn function needs to work
 // toastError and toastSuccess use sonner which is mocked in jest.setup.js
 
 describe("Settings Page Route (/[chainName]/settings): P1", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockWalletInfo = null;
+    (getUserSettings as jest.Mock).mockReturnValue({ requireWalletSignInForCliqs: false });
   });
 
-  it("should load settings page", async () => {
+  it("should load settings page with an H1 and the three sections", async () => {
     render(<SettingsPage />);
 
-    await waitFor(() => {
-      const settingsElements = screen.getAllByText(/Settings/i);
-      expect(settingsElements.length).toBeGreaterThan(0);
-    });
+    expect(await screen.findByRole("heading", { level: 1, name: "Settings" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Wallet" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Security" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 2, name: "Your own database (BYODB)" }),
+    ).toBeInTheDocument();
   });
 
-  it("should display security settings section", async () => {
+  it("should link Home in the breadcrumb to the dashboard", async () => {
     render(<SettingsPage />);
 
-    await waitFor(() => {
-      const securityElements = screen.getAllByText(/Additional Security/i);
-      const requireSignInElements = screen.getAllByText(/Require Wallet Sign-In for Cliqs/i);
-      expect(securityElements.length).toBeGreaterThan(0);
-      expect(requireSignInElements.length).toBeGreaterThan(0);
-    });
+    const breadcrumb = await screen.findByTestId("breadcrumb");
+    const home = within(breadcrumb).getByText("Home");
+    expect(home.closest("a")).toHaveAttribute("href", "/cosmos/dashboard");
+  });
+
+  it("should show the sign-in requirement and database sections without a wallet", async () => {
+    render(<SettingsPage />);
+
+    expect(
+      await screen.findByRole("switch", { name: /Require wallet sign-in for CLIQs/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Database Configuration/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "When on, your CLIQs and waiting signatures appear only after you verify your identity.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("should ask to connect in the wallet section only, with the shared prompt", async () => {
+    render(<SettingsPage />);
+
+    const wallet = await screen.findByRole("region", { name: "Wallet" });
+    expect(within(wallet).getByText("Connect your wallet")).toBeInTheDocument();
+    expect(screen.getAllByText("Connect your wallet")).toHaveLength(1);
+
+    fireEvent.click(within(wallet).getByRole("button", { name: /Keplr/i }));
+    expect(mockConnectKeplr).toHaveBeenCalledTimes(1);
+  });
+
+  it("should show the connected wallet details instead of the prompt", async () => {
+    mockWalletInfo = { type: "Keplr", address: "cosmos1abc", pubKey: "pubkey123" };
+    render(<SettingsPage />);
+
+    expect(await screen.findByText("Connected to Keplr")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Disconnect Keplr/i })).toBeInTheDocument();
+    expect(screen.queryByText("Connect your wallet")).not.toBeInTheDocument();
+  });
+
+  it("should link the BYODB guide from the database section", async () => {
+    render(<SettingsPage />);
+
+    const guide = await screen.findByRole("link", { name: /step-by-step guide/i });
+    expect(guide).toHaveAttribute("href", "/cosmos/get-started?journey=setup-byodb");
+  });
+
+  it("should keep the database-config anchor", async () => {
+    const { container } = render(<SettingsPage />);
+
+    await screen.findByRole("heading", { level: 1, name: "Settings" });
+    expect(container.querySelector("#database-config")).not.toBeNull();
+    expect(container.querySelector("#wallet")).not.toBeNull();
   });
 
   it("should toggle require wallet sign-in setting", async () => {
     render(<SettingsPage />);
 
+    const toggle = await screen.findByRole("switch", { name: /Require wallet sign-in for CLIQs/i });
+    fireEvent.click(toggle);
+
     await waitFor(() => {
-      const toggle = screen.getByRole("switch", { name: /Require Wallet Sign-In/i });
-      expect(toggle).toBeInTheDocument();
-
-      fireEvent.click(toggle);
-
       expect(updateUserSettings).toHaveBeenCalledWith({
         requireWalletSignInForCliqs: true,
       });
@@ -91,7 +179,7 @@ describe("Settings Page Route (/[chainName]/settings): P1", () => {
     render(<SettingsPage />);
 
     await waitFor(() => {
-      const toggle = screen.getByRole("switch", { name: /Require Wallet Sign-In/i });
+      const toggle = screen.getByRole("switch", { name: /Require wallet sign-in for CLIQs/i });
       expect(toggle).toBeChecked();
     });
   });

@@ -1,8 +1,6 @@
 /**
  * Proposal Audit Trail
  *
- * File: components/dataViews/ProposalAuditTrail.tsx
- *
  * Displays the complete audit trail for a proposal, showing:
  * - Who approved with what weight at what time
  * - Member snapshot at proposal creation

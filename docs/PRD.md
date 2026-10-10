@@ -14,7 +14,7 @@ Production Next.js app for PubKey + Contract multisig on Cosmos/Coreum. Dual eng
 
 See [User Guide](App%20User%20Guide.md), [Appendix](Appendix/).
 
-Member-facing data controls (export / wipe completed / delete cliq) ship on the CLIQ's Transactions tab and are documented for users in the [User Guide](App%20User%20Guide.md#data--privacy) and for operators in [SETUP.md](../SETUP.md).
+Member-facing data controls (export / wipe completed / delete cliq) ship on the CLIQ page's Data & Privacy tab and are documented for users in the [User Guide](App%20User%20Guide.md#data--privacy) and for operators in [SETUP.md](../SETUP.md).
 
 ## Phase 0: PubKey Production Hardening
 MultisigEngine interface, CanonicalTxBuilder, ProposalHasher, MultiRpcVerifier, ProposalIntentView.
@@ -47,5 +47,5 @@ Emergency: Pause/safe-mode. Monitoring: Events/anomalies/alerts/playbooks.
 - Uniform authorization across the API surface. `/api/transaction/wipe` and `/api/transaction/export` now require an ADR-36 membership proof; most other routes remain unauthenticated. Tracked as follow-up L1 in [SOC2-GAP-ASSESSMENT.md](security/SOC2-GAP-ASSESSMENT.md).
 - Security audit log is **live but PARTIAL** (L2, PR #58): `lib/audit.ts` records transaction cancel and broadcast, history export, and history wipe / multisig delete (refused wipes included). Creating or signing a transaction, emergency and credential actions are not recorded. Rate limiting is **partial** (L3, PR #39): only transaction reads on `/api/transaction/[transactionID]`, counted per serverless instance. No Content-Security-Policy (CSP is deliberately deferred; the other security headers ship in `next.config.js`). Caveats: [security/README.md](security/README.md). *Until 2026-10-09 this line read: "No security audit log, no rate limiting, no Content-Security-Policy" — accurate until PRs #39 and #58 merged on 2026-08-17.*
 - Dependency remediation is in **PR #29, which is open and not merged**.
-- `MsgUnjail` has codec and gas support but no UI entry point.
+- `MsgUnjail`: since PR #77 (2026-10-08) the validator page has a one-click Unjail inside the jailed banner, for single-wallet and CLIQ operators. *(Until 2026-10-09 this line read: "has codec and gas support but no UI entry point.")*
 - A transaction that lands on chain but fails execution (DeliverTx code != 0) still renders the "Completed" view — there is no failed status in the data model.

@@ -279,8 +279,14 @@ jest.mock("@/components/layout/DashboardLayout", () => ({
   __esModule: true,
   default: ({ children, title }) =>
     React.createElement("div", { "data-testid": "dashboard-layout" }, title, children),
-  DashboardSection: ({ children, title }) =>
-    React.createElement("div", { "data-testid": "dashboard-section" }, title, children),
+  DashboardSection: ({ children, title, description }) =>
+    React.createElement(
+      "div",
+      { "data-testid": "dashboard-section" },
+      title && React.createElement("h2", {}, title),
+      description && React.createElement("p", {}, description),
+      children,
+    ),
   QuickStat: ({ label, value }) =>
     React.createElement("div", { "data-testid": "quick-stat" }, label, value),
   QuickStatsRow: ({ children }) =>
@@ -357,12 +363,6 @@ jest.mock("@/components/forms/CreateCliqForm", () => ({
     React.createElement("form", { "data-testid": "create-cliq-form" }, "Create CLIQ Form"),
 }));
 
-jest.mock("@/components/forms/CreateTxForm", () => ({
-  __esModule: true,
-  default: () =>
-    React.createElement("form", { "data-testid": "create-tx-form" }, "Create Transaction Form"),
-}));
-
 // Mock common data view components
 jest.mock("@/components/dataViews/ListUserCliqs", () => ({
   __esModule: true,
@@ -388,6 +388,16 @@ jest.mock("@/components/dataViews/BalancesTable", () => ({
 jest.mock("@/components/dataViews/ListMultisigTxs", () => ({
   __esModule: true,
   default: () => React.createElement("div", { "data-testid": "multisig-txs" }, "Transactions"),
+  // Home's signature inbox renders one of these per pending transaction.
+  TransactionCard: ({ tx, multisigAddress, chainName, cliqLabel }) =>
+    React.createElement(
+      "a",
+      {
+        "data-testid": "transaction-card",
+        href: `/${chainName}/${multisigAddress}/transaction/${tx.id}`,
+      },
+      cliqLabel,
+    ),
 }));
 
 // Suppress console errors/warnings in tests (comment out to debug)

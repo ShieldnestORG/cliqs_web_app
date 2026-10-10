@@ -1,8 +1,6 @@
 /**
  * Credential Service
  *
- * File: lib/credentials/service.ts
- *
  * Service for managing identity NFT credentials on TX.
  * Handles credential class creation, issuance, revocation, and verification.
  *

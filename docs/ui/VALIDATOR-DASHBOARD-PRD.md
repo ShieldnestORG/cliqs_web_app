@@ -3,8 +3,8 @@
 > **Cluster:** design-system · **Tags:** validator, dashboard, cliq-mode, gas, info-blue · **Related:** [UI index](INDEX.md), [STYLE-GUIDE.md](../STYLE-GUIDE.md), [Transaction Page Redesign PRD](TRANSACTION-PAGE-REDESIGN-PRD.md), [User Guide](../App%20User%20Guide.md)
 
 **Cosmos Multisig UI - Free Validator Dashboard Specification**  
-**Version:** 1.1  
-**Last Updated:** 2026-10-08
+**Version:** 1.2  
+**Last Updated:** 2026-10-09
 
 > **Reconciled against the shipped code.** Sections 4, 6, 7, 9 and 12 were rewritten
 > to match `components/dataViews/ValidatorDashboard/` as it exists today; the rest is
@@ -36,7 +36,7 @@ Create a **free, no-signup Validator Dashboard** that:
 ### Strategic Goals
 1. **User Acquisition**: Attract validators who don't use multisig yet
 2. **Value Demonstration**: Show the power of our UI/UX
-3. **Conversion Funnel**: Soft-sell CLIQ as a security upgrade
+3. **Conversion Funnel**: Soft-sell running a *new* validator from a CLIQ (an existing validator's operator can't change)
 4. **Brand Building**: Position as the go-to validator management tool
 
 ---
@@ -44,14 +44,16 @@ Create a **free, no-signup Validator Dashboard** that:
 ## 2. User Flow
 
 ### Entry Points (as shipped)
-1. "Validator Tools" link and Validator tab on the chain landing page (`pages/[chainName]/index.tsx`)
-2. "Validator" item in the desktop sidebar rail (`components/Sidebar.tsx`)
-3. Direct URL (`/[chainName]/validator`)
+1. "Validator" item in the Sidebar (lg and up) and in the Header menu (below lg). Both read the one list in `lib/navigation.ts`.
+2. "Validators" section on Home (`/[chainName]/dashboard`), shown when the connected wallet (or one of its CLIQs) is linked to a validator. Its "Manage Validator" button opens `/[chainName]/validator?address=<address>`.
+3. Direct URL (`/[chainName]/validator`). This URL is unchanged by the 2026-10 flow cleanup because external runbooks link it.
 4. `/[chainName]/validator?address=<cliq address>` — see CLIQ mode below
+
+> Note (2026-10-09): this list said the entry points were a "Validator Tools" link and a Validator tab on the chain landing page, plus the Validator item in the desktop sidebar only. The landing page is gone (`/[chainName]` now redirects to Home), and Validator is in both menus.
 
 ### Primary Flow
 ```
-1. User lands on Validator tab/page
+1. User lands on the Validator page
 2. Connects wallet (Keplr/Ledger)
 3. System detects if connected address is a validator
 4. If validator: Show full dashboard with analytics + actions
@@ -74,6 +76,14 @@ connected wallet address puts the page in **CLIQ mode**.
 
 CLIQ mode also verifies membership before enabling anything: a non-member sees the
 dashboard read-only (`cliqReadOnly`).
+
+**Page top.** The page title ("Validator Dashboard", an H1) comes first in every state
+(`pages/[chainName]/validator.tsx`). Directly under it an **"Acting as" band** states the
+mode in plain words: "Acting as your wallet. Actions sign with your connected wallet.",
+"Acting as CLIQ core1…. Actions create a transaction for this CLIQ; its members
+sign it, then one member broadcasts.", or "No wallet connected. Connect a wallet to act on
+this validator.". In CLIQ mode, when membership could not be verified, the band also carries the
+read-only warning (`ValidatorDashboard/index.tsx`).
 
 ---
 
@@ -111,9 +121,9 @@ dashboard read-only (`cliqReadOnly`).
 │ └──────────────────────────┘  └──────────────────────────────────────┘ │
 │                                                                         │
 │ ┌───────────────────────────────────────────────────────────────────┐  │
-│ │ UPGRADE TO CLIQ (Full width CTA)                                  │  │
-│ │ "Your validator key is a single point of failure.                 │  │
-│ │  Secure your operations with multi-signature protection."         │  │
+│ │ RUN A VALIDATOR FROM A CLIQ (Full width CTA)                      │  │
+│ │ "Create a new validator controlled by a CLIQ. This sets up        │  │
+│ │  a new validator; it does not convert an existing one."           │  │
 │ │ [Create Validator CLIQ] [Learn More]                              │  │
 │ └───────────────────────────────────────────────────────────────────┘  │
 │                                                                         │
@@ -204,11 +214,15 @@ Delegator listing derived from the dashboard data payload.
 ### 4.5 Validator Commands Card
 `ValidatorCommandsCard.tsx` · **Variant:** `institutional` with `accent="left"`
 **Content:**
-- Deep links that pre-select a message type on the new-transaction page:
-  Delegate, Undelegate, Redelegate, Withdraw Rewards, Vote
-  (`/[chainName]/<target>/transaction/new?type=<typeUrl>`)
-- An inline "Edit Validator Details" form (moniker, identity, website, security
-  contact, details, commission rate, min self-delegation) that submits `MsgEditValidator`
+- CLIQ mode only: four tiles that deep-link to the new-transaction page with a message
+  type pre-selected: Delegate, Undelegate, Redelegate and "Claim delegation rewards"
+  (`/[chainName]/<target>/transaction/new?type=<typeUrl>`). The last tile was labelled
+  "Withdraw Rewards" until the 2026-10 flow cleanup. The Vote tile is gone: vote from the
+  Governance card (§4.6).
+- Direct mode: no tiles. A short note says those actions are proposed through a CLIQ.
+- One "Edit validator" button that opens a dialog "Edit Validator Details" (moniker,
+  identity, website, security contact, details, commission rate, min self-delegation)
+  and submits `MsgEditValidator`
 
 ### 4.6 Proposal Viewer
 `ProposalViewer.tsx` · **Variant:** `institutional` with `accent="left"`
@@ -217,7 +231,11 @@ Yes uses the `success` token; the tally chips are semantic, not decorative.
 
 ### 4.7 CLIQ Upgrade CTA Card
 `CliqUpgradeCTA.tsx` · **Variant:** `institutional` with `bracket="purple"`
-CTA into `/[chainName]/create`.
+CTA into `/[chainName]/create`. Hidden in CLIQ mode (`!isCliqMode`): a CLIQ already has
+the protection it advertises. Copy (2026-10-09): the card offers a *new* validator run by a CLIQ,
+because on TX an existing validator's operator account and keys cannot change (verified at TX's
+running tags; TX ecosystem hub note CLIQS-VALIDATOR-OPS §5.1). *(Until 2026-10-09 the card said
+"Works With Existing Validator" and "Upgrade to a CLIQ".)*
 
 ### 4.8 Withdraw Address Card
 `WithdrawAddressCard.tsx` · **Variant:** `institutional`
@@ -438,12 +456,16 @@ all paint with it. Never use it to mean "healthy". Semantic status must use
 ## 9. Integration Points
 
 ### Navigation (shipped)
-- "Validator" tab and "Validator Tools" link on the chain landing page
-- "Validator" item in the desktop sidebar rail. The rail auto-collapses to icons and
-  expands on hover or keyboard focus as an **overlay**; the pin button (persisted via
-  `lib/settingsStorage.ts` `sidebarPinned`) switches it to push mode.
+- One list feeds both menus: `lib/navigation.ts`. "Validator" is in its main group, so it
+  appears in the Sidebar (lg and up) and in the Header menu (below lg).
+- The Sidebar rail auto-collapses to icons and expands on hover or keyboard focus as an
+  **overlay**; the pin button (persisted via `lib/settingsStorage.ts` `sidebarPinned`)
+  switches it to push mode.
 - Below the `lg` breakpoint there is no rail at all — `components/Header.tsx` is the
-  only navigation, and it does **not** currently list Validator.
+  only navigation, and it now lists Validator.
+- Home (`/[chainName]/dashboard`) has a "Validators" section that links here.
+- The chain landing page (the old "Validator Tools" link and Validator tab) no longer
+  exists; `/[chainName]` redirects to Home.
 
 ### URL Structure
 - Primary: `/[chainName]/validator`

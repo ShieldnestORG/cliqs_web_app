@@ -1,8 +1,6 @@
 /**
  * Validator Performance Card
  *
- * File: components/dataViews/ValidatorDashboard/ValidatorPerformanceCard.tsx
- *
  * Displays validator performance metrics including voting power, delegators, and ranking.
  */
 

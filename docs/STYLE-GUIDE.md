@@ -2,7 +2,7 @@
 
 > **Cluster:** design-system · **Tags:** coherence-daddy, tokens, tailwind, typography, geist, gridspotlight · **Related:** [UI Docs Index](ui/INDEX.md), [Typography PRD](ui/TYPOGRAPHY-PRD.md), [Buttons PRD](ui/BUTTONS-PRD.md), [Cards PRD](ui/CARDS-PRD.md), [Patterns PRD](ui/PATTERNS-PRD.md)
 
-**Updated:** 2026-08-16
+**Updated:** 2026-10-09
 **Brand:** Coherence Daddy (ShieldNest ecosystem)
 
 ## Source of truth
@@ -181,6 +181,16 @@ matters:
 
 Full rules, including the spotlight-suppression threshold, in
 [Patterns PRD §3](ui/PATTERNS-PRD.md#3-page-background-gridspotlight).
+
+### Page gutter
+
+Every page uses the same side padding: **`px-4 sm:px-6 lg:px-[0.75in]`** (1rem, then
+1.5rem from `sm`, then 0.75in from `lg`). It matches the Tailwind `container` padding in
+`tailwind.config.js` (`DEFAULT: 1rem`, `sm: 1.5rem`, `lg: 0.75in`), so a bare
+`container mx-auto` already gets it. When a page sets its own wrapper (for example with a
+`max-w-*`), repeat the three-step padding; do not invent a one-off value. Examples:
+`components/layout/DashboardLayout.tsx`, `components/Header.tsx`,
+`pages/[chainName]/validator.tsx`.
 
 ### Cards
 

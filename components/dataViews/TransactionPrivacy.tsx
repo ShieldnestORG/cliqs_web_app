@@ -1,8 +1,6 @@
 /**
  * Transaction Privacy Component
  *
- * File: components/dataViews/TransactionPrivacy.tsx
- *
  * Self-service data controls for a cliq's off-chain history in the hosted DB:
  *   - Export history as JSON
  *   - Wipe completed (broadcast) transactions
@@ -131,7 +129,7 @@ export default function TransactionPrivacy({
         return;
       }
       toastSuccess(
-        "Cliq deleted from database",
+        "CLIQ deleted from database",
         `Deleted ${result.deletedTransactions} transaction(s) and ${result.deletedSignatures} signature(s)`,
       );
       router.push(`/${chain.registryName}`);
@@ -139,7 +137,7 @@ export default function TransactionPrivacy({
       console.error("Failed to delete cliq:", e);
       toastError({
         title: "Deletion failed",
-        description: e instanceof Error ? e.message : "Could not delete the cliq",
+        description: e instanceof Error ? e.message : "Could not delete the CLIQ",
         fullError: e instanceof Error ? e : undefined,
       });
     } finally {
@@ -155,8 +153,8 @@ export default function TransactionPrivacy({
           Data & Privacy
         </CardTitle>
         <CardDescription>
-          Export or delete this cliq&apos;s off-chain history stored in the database. Deletions
-          affect all {memberCount} members. You will be asked to sign a message proving cliq
+          Export or delete this CLIQ&apos;s off-chain history stored in the database. Deletions
+          affect all {memberCount} members. You will be asked to sign a message proving CLIQ
           membership.
         </CardDescription>
       </CardHeader>
@@ -184,7 +182,7 @@ export default function TransactionPrivacy({
               <AlertDialogHeader>
                 <AlertDialogTitle>Export transaction history?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Downloads this cliq&apos;s full transaction history — including pending
+                  Downloads this CLIQ&apos;s full transaction history — including pending
                   transactions and all {memberCount} members&apos; signatures — as a JSON file. You
                   will be asked to sign a message with your wallet first.
                 </AlertDialogDescription>
@@ -234,15 +232,15 @@ export default function TransactionPrivacy({
                 ) : (
                   <Trash2 className="mr-2 h-4 w-4" />
                 )}
-                Delete Cliq Data
+                Delete CLIQ data
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Delete this cliq from the database?</AlertDialogTitle>
+                <AlertDialogTitle>Delete this CLIQ from the database?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Permanently deletes the cliq record, its entire transaction history, and all
-                  signatures for all {memberCount} members. The cliq will disappear from the app for
+                  Permanently deletes the CLIQ record, its entire transaction history, and all
+                  signatures for all {memberCount} members. The CLIQ will disappear from the app for
                   ALL members until someone re-imports it, and its name and description cannot be
                   recovered. On-chain funds are not affected. Consider exporting the history first.
                   Deletion is refused while pending transactions carry other members&apos;

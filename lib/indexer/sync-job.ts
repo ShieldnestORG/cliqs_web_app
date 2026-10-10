@@ -1,8 +1,6 @@
 /**
  * Layer 2: Height-Based Authoritative Sync Job
  *
- * File: lib/indexer/sync-job.ts
- *
  * This is the authoritative indexer that ensures data correctness.
  * It is height-based, deterministic, idempotent, and reorg-aware.
  *
@@ -109,11 +107,9 @@ export class SyncJob {
     const startTime = Date.now();
 
     try {
-      // Get current sync state
       const syncState = localDb.getSyncState(this.config.chainId, this.config.contractAddress);
       const previousHeight = syncState?.lastFinalizedHeight || 0;
 
-      // Get current chain height
       const client = await CosmWasmClient.connect(this.config.nodeAddress);
       const currentHeight = await client.getHeight();
       const finalizedHeight = currentHeight - (this.config.finalityDepth || 6);
@@ -139,19 +135,15 @@ export class SyncJob {
         "syncing",
       );
 
-      // Sync proposals and votes from contract state
       const { proposalsSynced, votesSynced } = await this.syncContractState();
 
-      // Check if we need a full revalidation
       const blocksSinceRevalidation = finalizedHeight - previousHeight;
       if (blocksSinceRevalidation >= (this.config.revalidateEveryBlocks || 100)) {
         await this.revalidateAllProposals();
       }
 
-      // Process any pending WebSocket events
       await this.processWebSocketEvents();
 
-      // Mark confirmed records
       await this.confirmRecords();
 
       // Update sync state to "synced"
@@ -202,7 +194,6 @@ export class SyncJob {
    * Force a full resync (rebuild from scratch)
    */
   async fullResync(): Promise<SyncResult> {
-    // Reset sync state
     localDb.updateSyncState(this.config.chainId, this.config.contractAddress, 0, "syncing");
 
     // Clear cached data for this contract
@@ -237,7 +228,6 @@ export class SyncJob {
       await this.syncProposal(proposal);
       proposalsSynced++;
 
-      // Sync votes for this proposal
       const votes = await this.cw3Client.queryVotes(proposal.id);
       for (const vote of votes) {
         await this.syncVote(proposal.id, vote);
@@ -270,7 +260,6 @@ export class SyncJob {
         break;
     }
 
-    // Calculate expires at
     let expiresAt: string | null = null;
     if (proposal.expires.at_time) {
       const expiresMs = parseInt(proposal.expires.at_time, 10) / 1_000_000;

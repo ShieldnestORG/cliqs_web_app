@@ -1,8 +1,6 @@
 /**
  * Membership Management Panel
  *
- * File: components/dataViews/MembershipManagementPanel.tsx
- *
  * UI component for managing CW4 group membership in flex-style multisigs.
  * Provides admin controls to add, remove, and update member weights.
  *

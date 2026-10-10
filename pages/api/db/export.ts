@@ -1,8 +1,6 @@
 /**
  * BYODB Export API
  *
- * File: pages/api/db/export.ts
- *
  * POST /api/db/export
  * Header: x-byodb-uri (optional – if absent, exports from default DB)
  * Body: { scope?: "all" | "chain", chainId?: string }

@@ -2,8 +2,6 @@
  * Local JSON file-based database replacement for DGraph
  * This stores data in a local JSON file for development purposes
  *
- * File: lib/localDb.ts
- *
  * Supports Cliq (multisig) storage with name, description, and versioning.
  */
 
@@ -624,7 +622,6 @@ const initDb = (): void => {
   }
 };
 
-// Read database
 const readDb = (): Database => {
   initDb();
   if (_useMemoryDb && _memoryDb) return _memoryDb;
@@ -632,7 +629,6 @@ const readDb = (): Database => {
   return JSON.parse(data);
 };
 
-// Write database
 const writeDb = (db: Database): void => {
   if (_useMemoryDb) {
     _memoryDb = db;
@@ -641,7 +637,6 @@ const writeDb = (db: Database): void => {
   fs.writeFileSync(getDbFilePath(), JSON.stringify(db, null, 2));
 };
 
-// Generate unique ID
 const generateId = (): string => {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 };

@@ -1,8 +1,6 @@
 /**
  * Safe Mode API
  *
- * File: pages/api/chain/[chainId]/[address]/emergency/safe-mode.ts
- *
  * POST: Activate or deactivate safe mode
  *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards

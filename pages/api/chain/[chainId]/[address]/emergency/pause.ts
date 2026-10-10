@@ -1,8 +1,6 @@
 /**
  * Pause API
  *
- * File: pages/api/chain/[chainId]/[address]/emergency/pause.ts
- *
  * POST: Pause or unpause operations
  *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards

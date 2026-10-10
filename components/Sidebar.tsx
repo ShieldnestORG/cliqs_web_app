@@ -1,26 +1,6 @@
 import { useChains } from "@/context/ChainsContext";
 import { useWallet } from "@/context/WalletContext";
-import { usePendingTransactions } from "@/lib/hooks/usePendingTransactions";
-import {
-  Users,
-  Search,
-  ShieldPlus,
-  Shield,
-  Wallet,
-  Unplug,
-  Loader2,
-  Settings,
-  AlertCircle,
-  Github,
-  ChevronRight,
-  Terminal,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Activity,
-  Heart,
-  BookOpen,
-  ChevronLeft,
-} from "lucide-react";
+import { Unplug, Loader2, ChevronRight, PanelLeftClose, PanelLeftOpen, Heart } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -29,7 +9,7 @@ import ChainConnect from "./ChainConnect";
 import DonateDialog from "./DonateDialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { showDevTools } from "@/lib/featureFlags";
+import { getNavItems, isNavItemActive, useNeedsMyCount } from "@/lib/navigation";
 import { getUserSettings, updateUserSettings } from "@/lib/settingsStorage";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AddressDisplay } from "@/components/ui/address-display";
@@ -39,7 +19,7 @@ export default function Sidebar() {
   const { chain } = useChains();
   const { walletInfo, connectKeplr, connectLedger, disconnect, isConnecting, loading } =
     useWallet();
-  const { hasPendingTransactions, totalPendingCount } = usePendingTransactions();
+  const needsMyCount = useNeedsMyCount();
   const [pinned, setPinned] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [showDonate, setShowDonate] = useState(false);
@@ -106,28 +86,9 @@ export default function Sidebar() {
 
   const logoPath = "/assets/icons/cliq LIGHT.svg";
 
-  const navItems: { href: string; label: string; icon: typeof Activity; showPending?: boolean }[] =
-    [
-      {
-        href: `/${chain.registryName}/operations`,
-        label: "Operations",
-        icon: Activity,
-        showPending: true,
-      },
-      { href: `/${chain.registryName}/dashboard?tab=cliqs`, label: "My CLIQS", icon: Users },
-      { href: `/${chain.registryName}/validator`, label: "Validator", icon: Shield },
-      { href: `/${chain.registryName}/dashboard?tab=find`, label: "Find CLIQ", icon: Search },
-      { href: `/${chain.registryName}/create`, label: "Create Multisig", icon: ShieldPlus },
-      { href: `/${chain.registryName}/account`, label: "Account", icon: Wallet },
-      { href: `/${chain.registryName}/settings`, label: "Settings", icon: Settings },
-    ].concat(
-      // Dev Tools can sign and broadcast real transactions, so it is not offered
-      // to operators in production builds with the same weight as Settings. The
-      // /dev route itself still exists for anyone who navigates to it directly.
-      showDevTools
-        ? [{ href: `/${chain.registryName}/dev`, label: "Dev Tools", icon: Terminal }]
-        : [],
-    );
+  const mainItems = getNavItems("main");
+  const moreItems = getNavItems("more");
+  const utilityItems = getNavItems("utility");
 
   const truncatedAddress = walletInfo?.address
     ? `${walletInfo.address.slice(0, 6)}...${walletInfo.address.slice(-6)}`
@@ -242,187 +203,135 @@ export default function Sidebar() {
           )}
         </div>
 
-        {/* Navigation */}
-        <nav className={cn("flex-1 space-y-1 px-4 py-2", collapsed && "px-2")}>
-          {/* Get Started - prominent CTA at top */}
+        {/* Navigation: scrolls on short screens so the footer below never gets cut off */}
+        <nav
+          aria-label="Main"
+          className={cn("min-h-0 flex-1 space-y-1 overflow-y-auto px-4 py-2", collapsed && "px-2")}
+        >
           {chain.registryName &&
-            (collapsed ? (
-              <Link href={`/${chain.registryName}/get-started`}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant={
-                        asPath === `/${chain.registryName}/get-started` ? "default" : "outline"
-                      }
-                      size="icon"
-                      className={cn(
-                        "mb-2 h-10 w-full transition-all",
-                        asPath === `/${chain.registryName}/get-started`
-                          ? "bg-primary text-primary-foreground"
-                          : "border-primary/30 text-primary hover:bg-primary/10 hover:text-primary",
-                      )}
-                    >
-                      <BookOpen className="h-5 w-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">Get Started</TooltipContent>
-                </Tooltip>
-              </Link>
-            ) : (
-              <Link href={`/${chain.registryName}/get-started`}>
-                <Button
-                  variant={asPath === `/${chain.registryName}/get-started` ? "default" : "outline"}
-                  className={cn(
-                    "mb-2 h-10 w-full gap-2 whitespace-nowrap text-sm font-semibold transition-all duration-200 animate-in fade-in",
-                    asPath === `/${chain.registryName}/get-started`
-                      ? "bg-primary text-primary-foreground"
-                      : "border-primary/30 text-primary hover:bg-primary/10 hover:text-primary",
-                  )}
-                >
-                  <BookOpen className="h-4 w-4" />
-                  Get Started
-                </Button>
-              </Link>
-            ))}
+            [mainItems, moreItems].map((items, groupIndex) =>
+              items.length === 0 ? null : (
+                <div key={groupIndex} className="space-y-1">
+                  {groupIndex > 0 && <div className="my-2 h-px bg-border/[0.06]" />}
+                  {items.map((item) => {
+                    const isActive = isNavItemActive(item, asPath);
+                    const Icon = item.icon;
+                    const href = item.href(chain.registryName);
+                    const showBadge = item.badge === "needsMe" && needsMyCount > 0;
+                    const tooltipLabel = showBadge ? `${item.label} (${needsMyCount})` : item.label;
 
-          {chain.registryName &&
-            navItems.map((item) => {
-              const isActive =
-                asPath === item.href ||
-                (item.label === "My CLIQS" && asPath === `/${chain.registryName}/dashboard`) ||
-                (item.label === "Operations" && asPath === `/${chain.registryName}/operations`);
-              const Icon = item.icon;
-              const showPendingIndicator = item.showPending && hasPendingTransactions;
+                    const content = (
+                      <Button
+                        variant="ghost"
+                        aria-label={collapsed ? tooltipLabel : undefined}
+                        className={cn(
+                          "group relative h-11 w-full justify-start overflow-hidden px-4 transition-all duration-200",
+                          collapsed ? "justify-center px-0" : "gap-3",
+                          isActive
+                            ? "bg-muted font-semibold text-foreground shadow-sm"
+                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+                        )}
+                      >
+                        <Icon
+                          className={cn(
+                            "h-5 w-5 shrink-0 transition-colors",
+                            isActive ? "text-green-accent" : "group-hover:text-foreground",
+                          )}
+                        />
+                        {!collapsed && (
+                          <span className="flex-1 truncate text-left duration-200 animate-in fade-in">
+                            {item.label}
+                          </span>
+                        )}
+                        {!collapsed && showBadge && (
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-medium text-warning">{needsMyCount}</span>
+                            <div className="relative flex h-2 w-2">
+                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-warning opacity-75"></span>
+                              <span className="relative inline-flex h-2 w-2 rounded-full bg-warning"></span>
+                            </div>
+                          </div>
+                        )}
+                        {collapsed && showBadge && (
+                          <div className="absolute right-2 top-2 flex h-2 w-2">
+                            <span className="relative inline-flex h-2 w-2 rounded-full bg-warning"></span>
+                          </div>
+                        )}
+                        {!collapsed && isActive && !showBadge && (
+                          <ChevronRight className="h-4 w-4 shrink-0 text-green-accent/50" />
+                        )}
+                      </Button>
+                    );
 
-              const content = (
-                <Button
-                  variant="ghost"
-                  aria-label={collapsed ? item.label : undefined}
-                  className={cn(
-                    "group relative h-11 w-full justify-start overflow-hidden px-4 transition-all duration-200",
-                    collapsed ? "justify-center px-0" : "gap-3",
-                    isActive
-                      ? "bg-muted font-semibold text-foreground shadow-sm"
-                      : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
-                  )}
-                >
-                  <Icon
-                    className={cn(
-                      "h-5 w-5 shrink-0 transition-colors",
-                      isActive ? "text-green-accent" : "group-hover:text-foreground",
-                    )}
-                  />
-                  {!collapsed && (
-                    <span className="flex-1 truncate text-left duration-200 animate-in fade-in">
-                      {item.label}
-                    </span>
-                  )}
-                  {!collapsed && showPendingIndicator && (
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-medium text-warning">{totalPendingCount}</span>
-                      <div className="relative flex h-2 w-2">
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-warning opacity-75"></span>
-                        <span className="relative inline-flex h-2 w-2 rounded-full bg-warning"></span>
-                      </div>
-                    </div>
-                  )}
-                  {collapsed && showPendingIndicator && (
-                    <div className="absolute right-2 top-2 flex h-2 w-2">
-                      <span className="relative inline-flex h-2 w-2 rounded-full bg-warning"></span>
-                    </div>
-                  )}
-                  {!collapsed && isActive && !showPendingIndicator && (
-                    <ChevronRight className="h-4 w-4 shrink-0 text-green-accent/50" />
-                  )}
-                </Button>
-              );
+                    if (collapsed) {
+                      return (
+                        <Link
+                          key={item.id}
+                          href={href}
+                          aria-current={isActive ? "page" : undefined}
+                        >
+                          <Tooltip>
+                            <TooltipTrigger asChild>{content}</TooltipTrigger>
+                            <TooltipContent side="right">{tooltipLabel}</TooltipContent>
+                          </Tooltip>
+                        </Link>
+                      );
+                    }
 
-              if (collapsed) {
-                return (
-                  <Link key={item.href} href={item.href}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>{content}</TooltipTrigger>
-                      <TooltipContent side="right">{item.label}</TooltipContent>
-                    </Tooltip>
-                  </Link>
-                );
-              }
-
-              return (
-                <Link key={item.href} href={item.href}>
-                  {content}
-                </Link>
-              );
-            })}
-
-          {hasPendingTransactions && (
-            <Link href={`/${chain.registryName}/operations?tab=pending`} className="block">
-              {!collapsed ? (
-                <div className="group/pending mt-4 cursor-pointer rounded-xl border border-warning/20 bg-warning/10 px-4 py-3 transition-all animate-in fade-in slide-in-from-left-4 hover:bg-warning/20">
-                  <div className="mb-1 flex items-center gap-2 text-warning">
-                    <AlertCircle className="h-4 w-4" />
-                    <span className="text-xs font-bold uppercase tracking-wider">
-                      Pending Tasks
-                    </span>
-                    <ChevronRight className="ml-auto h-3 w-3 opacity-0 transition-opacity group-hover/pending:opacity-100" />
-                  </div>
-                  <p className="text-[11px] leading-tight text-warning/80">
-                    You have {totalPendingCount} transaction{totalPendingCount !== 1 ? "s" : ""}{" "}
-                    awaiting signatures.
-                  </p>
+                    return (
+                      <Link key={item.id} href={href} aria-current={isActive ? "page" : undefined}>
+                        {content}
+                      </Link>
+                    );
+                  })}
                 </div>
-              ) : (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="mx-auto mt-4 flex h-10 w-10 items-center justify-center rounded-xl border border-warning/20 bg-warning/10 text-warning transition-all hover:bg-warning/20">
-                      <AlertCircle className="h-5 w-5" />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">{totalPendingCount} Pending Tasks</TooltipContent>
-                </Tooltip>
-              )}
-            </Link>
-          )}
+              ),
+            )}
         </nav>
 
         {/* Back to TOKNS */}
-        <div className={cn("mb-2 px-4", collapsed && "px-2")}>
-          {collapsed ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
+        {utilityItems.map((item) => {
+          const Icon = item.icon;
+          const href = item.href(chain.registryName);
+          return (
+            <div key={item.id} className={cn("mb-2 shrink-0 px-4", collapsed && "px-2")}>
+              {collapsed ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <a
+                      href={href}
+                      aria-label={item.label}
+                      className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg border border-border/[0.06] text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+                    >
+                      <Icon className="h-5 w-5" />
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">{item.label}</TooltipContent>
+                </Tooltip>
+              ) : (
                 <a
-                  href="https://app.tokns.fi"
-                  className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg border border-border/[0.06] text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+                  href={href}
+                  className="flex h-10 w-full items-center gap-2 whitespace-nowrap rounded-lg border border-border/[0.06] px-4 text-sm text-muted-foreground transition-colors duration-200 animate-in fade-in hover:bg-muted/50 hover:text-foreground"
                 >
-                  <ChevronLeft className="h-5 w-5" />
+                  <Icon className="h-4 w-4" />
+                  {item.label}
                 </a>
-              </TooltipTrigger>
-              <TooltipContent side="right">Back to TOKNS</TooltipContent>
-            </Tooltip>
-          ) : (
-            <a
-              href="https://app.tokns.fi"
-              className="flex h-10 w-full items-center gap-2 whitespace-nowrap rounded-lg border border-border/[0.06] px-4 text-sm text-muted-foreground transition-colors duration-200 animate-in fade-in hover:bg-muted/50 hover:text-foreground"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Back to TOKNS
-            </a>
-          )}
-        </div>
+              )}
+            </div>
+          );
+        })}
 
-        {/* Donate Button */}
-        <div className={cn("mb-2 px-4", collapsed && "px-2")}>
+        {/* Donate Button: outline, so it never outranks a page action */}
+        <div className={cn("mb-2 shrink-0 px-4", collapsed && "px-2")}>
           {collapsed ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   onClick={() => setShowDonate(true)}
+                  variant="outline"
                   size="icon"
-                  className="mx-auto h-10 w-10 transition-all hover:brightness-110"
-                  style={{
-                    backgroundColor: "hsl(var(--primary))",
-                    color: "hsl(var(--primary-foreground))",
-                  }}
+                  aria-label="Donate"
+                  className="mx-auto h-10 w-10"
                 >
                   <Heart className="h-5 w-5" />
                 </Button>
@@ -432,11 +341,8 @@ export default function Sidebar() {
           ) : (
             <Button
               onClick={() => setShowDonate(true)}
-              className="h-10 w-full gap-2 whitespace-nowrap text-sm font-semibold transition-all duration-200 animate-in fade-in hover:brightness-110"
-              style={{
-                backgroundColor: "hsl(var(--primary))",
-                color: "hsl(var(--primary-foreground))",
-              }}
+              variant="outline"
+              className="h-10 w-full gap-2 whitespace-nowrap text-sm duration-200 animate-in fade-in"
             >
               <Heart className="h-4 w-4" />
               Donate
@@ -447,7 +353,7 @@ export default function Sidebar() {
         <DonateDialog open={showDonate} onClose={() => setShowDonate(false)} />
 
         {/* Wallet Section */}
-        <div className={cn("mt-auto border-t border-border/50 p-4", collapsed && "px-2")}>
+        <div className={cn("shrink-0 border-t border-border/50 p-4", collapsed && "px-2")}>
           {walletInfo ? (
             <div className="space-y-3">
               {!collapsed ? (
@@ -493,6 +399,7 @@ export default function Sidebar() {
                 variant="ghost"
                 size={collapsed ? "icon" : "sm"}
                 onClick={disconnect}
+                aria-label={collapsed ? "Disconnect wallet" : undefined}
                 className={cn(
                   "h-9 justify-start text-xs text-destructive hover:bg-destructive/10 hover:text-destructive",
                   collapsed ? "mx-auto h-10 w-10 justify-center" : "w-full gap-2",
@@ -555,29 +462,6 @@ export default function Sidebar() {
               </Tooltip>
             </div>
           )}
-
-          {/* Footer Links */}
-          <div
-            className={cn(
-              "mt-4 flex items-center justify-between px-2",
-              collapsed && "flex-col gap-4 px-0",
-            )}
-          >
-            <a
-              href="https://github.com/cosmos/cosmos-multisig-ui"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground transition-colors hover:text-foreground"
-              title="GitHub"
-            >
-              <Github className="h-4 w-4" />
-            </a>
-            {!collapsed && (
-              <div className="flex items-center gap-3 duration-200 animate-in fade-in">
-                <span className="font-mono text-[10px] text-muted-foreground">v1.2.0</span>
-              </div>
-            )}
-          </div>
         </div>
       </aside>
     </>

@@ -1,8 +1,6 @@
 /**
  * Contract Multisig Dashboard
  *
- * File: components/dataViews/ContractMultisigDashboard.tsx
- *
  * Dashboard view for CW3 contract-based multisigs.
  * Shows members, proposals, voting, and execution.
  */
@@ -13,6 +11,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import {
   Table,
   TableBody,
@@ -101,7 +107,6 @@ export default function ContractMultisigDashboard({
   const [selectedProposalId, setSelectedProposalId] = useState<number | null>(null);
   const [showVoteDialog, setShowVoteDialog] = useState(false);
 
-  // Fetch contract config
   useEffect(() => {
     async function fetchConfig() {
       setIsLoading(true);
@@ -152,27 +157,49 @@ export default function ContractMultisigDashboard({
 
   // Subheader
   const subheader = (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <Badge variant="outline" className="gap-1">
-          <FileCode2 className="h-3 w-3" />
-          Contract Multisig
-        </Badge>
-        {contractInfo && (
-          <Badge variant="secondary" className="font-mono text-xs">
-            Code ID: {contractInfo.codeId}
+    <div className="space-y-2">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href={chainName ? `/${chainName}/dashboard` : "/"}>Home</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage className="font-mono text-xs">
+              {contractAddress.slice(0, 12)}...{contractAddress.slice(-6)}
+            </BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="gap-1">
+            <FileCode2 className="h-3 w-3" />
+            Contract Multisig
           </Badge>
-        )}
-      </div>
-      <div className="flex gap-2">
-        <CopyButton value={contractAddress} copyLabel="contract address" />
-        {explorerLink && (
-          <Button variant="ghost" size="sm" asChild>
-            <a href={explorerLink} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="h-4 w-4" />
-            </a>
-          </Button>
-        )}
+          {contractInfo && (
+            <Badge variant="secondary" className="font-mono text-xs">
+              Code ID: {contractInfo.codeId}
+            </Badge>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <CopyButton value={contractAddress} copyLabel="contract address" />
+          {explorerLink && (
+            <Button variant="ghost" size="sm" asChild>
+              <a
+                href={explorerLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="View on explorer"
+              >
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

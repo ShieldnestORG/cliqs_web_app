@@ -1,8 +1,6 @@
 /**
  * Credential Status Badge
  * 
- * File: components/ui/credential-badge.tsx
- * 
  * Visual indicator for credential status in the multisig UI.
  * Shows whether a user holds a valid credential for a team.
  * 

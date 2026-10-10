@@ -1,8 +1,6 @@
 /**
  * Confirm Create Cliq Dialog
  *
- * File: components/forms/CreateCliqForm/ConfirmCreateCliq.tsx
- *
  * Confirmation dialog before creating a new Cliq.
  * Shows the cliq name, members, and threshold for review.
  */

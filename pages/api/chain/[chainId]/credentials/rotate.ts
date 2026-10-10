@@ -1,8 +1,6 @@
 /**
  * Rotate Signer API
  *
- * File: pages/api/chain/[chainId]/credentials/rotate.ts
- *
  * API route for rotating a signer's credential.
  *
  * POST - Rotate a signer (revoke old credential, issue new one)

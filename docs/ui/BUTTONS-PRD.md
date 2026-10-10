@@ -85,7 +85,7 @@ letter-spacing: 0.05em;
 
 ```tsx
 <Button variant="action" size="action">
-  Create Multisig
+  Create CLIQ
 </Button>
 ```
 
@@ -208,10 +208,16 @@ The `tab` button variant carries the same pairing via utilities:
 
 **Visual:** Sidebar navigation items with active indicator
 
+> Note (2026-10-09): this section showed `<Button variant="nav" isActive={pathname === '/dashboard'}>` with the label
+> "Dashboard". The Sidebar no longer uses the `nav` variant. It renders each item from
+> `lib/navigation.ts` as a `ghost` Button (`components/Sidebar.tsx`); the active item gets
+> `bg-muted font-semibold` and a coral icon, decided by `isNavItemActive`. The destination is
+> called **Home** now. The `nav` variant still exists in `components/ui/button.tsx` but no page uses it.
+
 ```tsx
-<Button variant="nav" isActive={pathname === '/dashboard'}>
-  <Home className="w-5 h-5" />
-  Dashboard
+<Button variant="ghost" className="h-11 w-full justify-start gap-3 bg-muted font-semibold">
+  <House className="h-5 w-5 text-green-accent" />
+  Home
 </Button>
 ```
 

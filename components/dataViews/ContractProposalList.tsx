@@ -1,8 +1,6 @@
 /**
  * Contract Proposal List
  *
- * File: components/dataViews/ContractProposalList.tsx
- *
  * Displays a list of proposals for a CW3 contract multisig
  * with status badges, vote counts, and action buttons.
  */
@@ -106,7 +104,6 @@ export default function ContractProposalList({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch proposals from API
   const fetchProposals = async (showRefreshing = false) => {
     if (showRefreshing) {
       setIsRefreshing(true);

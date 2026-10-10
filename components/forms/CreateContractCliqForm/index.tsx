@@ -1,8 +1,6 @@
 /**
  * Create Contract Cliq Form — Full Wizard
  *
- * File: components/forms/CreateContractCliqForm/index.tsx
- *
  * Six-step wizard for creating a CW3-based contract multisig:
  *   1. Setup    – name, description
  *   2. Members  – addresses + weights
@@ -554,7 +552,7 @@ export default function CreateContractCliqForm() {
               <ShieldPlus className="h-3 w-3" />
               Contract Multisig
             </CardLabel>
-            <CardTitle className="text-2xl">Create Smart Wallet</CardTitle>
+            <CardTitle className="text-2xl">Fixed CLIQ</CardTitle>
           </div>
         </div>
         <CardDescription className="mt-4 space-y-3">
@@ -648,7 +646,7 @@ export default function CreateContractCliqForm() {
                     Name Your CLIQ
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Give your multisig a name and optionally a description
+                    Give your CLIQ a name and optionally a description
                   </p>
                 </div>
 
@@ -1351,7 +1349,7 @@ export default function CreateContractCliqForm() {
                   <p className="text-sm text-muted-foreground">
                     {watchedCodeId > 0 && codeIdStatus === "valid"
                       ? "Using existing Code ID — skipping upload."
-                      : "The app will upload the contract code and then create your multisig."}
+                      : "The app will upload the contract code and then create your CLIQ."}
                   </p>
                 </div>
 

@@ -1,8 +1,6 @@
 /**
  * Withdraw Address Card
  *
- * File: components/dataViews/ValidatorDashboard/WithdrawAddressCard.tsx
- *
  * Displays and allows changing the reward withdraw address.
  */
 

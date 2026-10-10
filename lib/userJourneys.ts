@@ -1,8 +1,8 @@
 /**
  * User Journey Definitions
  *
- * Structured walkthroughs for each major flow in CLIQS.
- * Each journey has steps displayed as tabs on the Get Started page.
+ * Structured walkthroughs for each major flow in CLIQs.
+ * Each journey has steps displayed as tabs on the Guides page (/[chainName]/get-started).
  */
 
 import {
@@ -43,7 +43,7 @@ export interface UserJourney {
 }
 
 export const journeyCategories = [
-  { id: "create" as const, label: "Create a Multisig", icon: Users },
+  { id: "create" as const, label: "Create a CLIQ", icon: Users },
   { id: "transact" as const, label: "Transactions", icon: Send },
   { id: "manage" as const, label: "Setup & Management", icon: Settings },
 ];
@@ -77,18 +77,18 @@ export const userJourneys: UserJourney[] = [
         description:
           "Start by connecting your wallet using Keplr browser extension or Ledger hardware wallet.",
         details: [
-          "Click the Keplr or Ledger button in the sidebar to connect.",
-          "Make sure you're on the correct chain — use the chain selector at the top of the sidebar.",
-          "Your connected address will appear at the bottom of the sidebar once connected.",
+          "Connect with Keplr or Ledger from the wallet menu (sidebar on desktop, menu button on phones).",
+          "Make sure you're on the correct chain — use the chain chip (top of the sidebar on desktop, in the header on phones).",
+          "Your connected address will appear in the wallet menu once connected.",
         ],
         tip: "Ledger provides the highest security for signing. If you're managing significant funds, consider using a hardware wallet.",
       },
       {
         title: "Start Creating",
-        description: 'Navigate to "Create Multisig" in the sidebar, then select the PubKey tab.',
+        description: 'Open "Create CLIQ" in the navigation, then select the PubKey card.',
         details: [
-          'Click "Create Multisig" in the left sidebar navigation.',
-          "You'll see three multisig type cards — select PubKey.",
+          'Click "Create CLIQ" in the navigation.',
+          "You'll see three CLIQ type cards — select PubKey.",
           "The PubKey creation form will appear with a tabbed interface.",
         ],
         tip: "PubKey multisigs are the classic Cosmos approach. The address is derived from the members' keys, meaning it changes if members change.",
@@ -99,7 +99,7 @@ export const userJourneys: UserJourney[] = [
         details: [
           "Enter a name that helps you identify this multisig (e.g., 'Treasury', 'Dev Fund').",
           "Optionally add a description explaining the purpose of this multisig.",
-          'Click "Next" to proceed to member setup.',
+          'Click "Continue to Members" to proceed to member setup.',
         ],
       },
       {
@@ -117,6 +117,7 @@ export const userJourneys: UserJourney[] = [
         title: "Set Approval Threshold",
         description: "Choose how many signatures are required to authorize a transaction.",
         details: [
+          'Click "Continue to Approval" once your members are added.',
           "Use the slider to set the threshold (e.g., 2-of-3, 3-of-5).",
           "A higher threshold means more security but requires more signers to approve.",
           "Common patterns: 2-of-3 for small teams, 3-of-5 for DAOs, 4-of-7 for treasuries.",
@@ -129,10 +130,10 @@ export const userJourneys: UserJourney[] = [
         details: [
           "Double-check all member addresses and the threshold setting.",
           "The derived multisig address will be shown — save this address!",
-          'Click "Create" to finalize. The multisig is stored in your database.',
+          'Click "Form Your CLIQ", then confirm with "Create CLIQ" to finalize. The CLIQ is stored in your database.',
           "You'll be redirected to the multisig dashboard where you can start creating transactions.",
         ],
-        tip: "Bookmark the multisig address page for quick access. You can also find it later under 'My CLIQS'.",
+        tip: "Bookmark the multisig address page for quick access. You can also find it later under Your CLIQs on Home.",
       },
     ],
     navigateTo: "/create",
@@ -164,7 +165,7 @@ export const userJourneys: UserJourney[] = [
         title: "Connect Your Wallet",
         description: "Connect Keplr and select a CosmWasm-enabled chain.",
         details: [
-          "Click the Keplr button in the sidebar to connect.",
+          "Connect Keplr from the wallet menu (sidebar on desktop, menu button on phones).",
           "Ensure you're on a chain that supports CosmWasm (e.g., Juno, Osmosis, Archway, Coreum).",
           "Keplr is needed for the upload step. You can optionally switch to a hardware wallet for instantiation later.",
         ],
@@ -174,7 +175,7 @@ export const userJourneys: UserJourney[] = [
         title: "Name Your CLIQ (Step 1 of 6)",
         description: "The wizard starts with naming your multisig.",
         details: [
-          'Navigate to "Create Multisig" and select the Fixed tab.',
+          'Open "Create CLIQ" and select the Fixed card.',
           "Enter a memorable name and optional description.",
           "The wizard auto-configures everything — no Code IDs needed by default.",
           "Advanced users can expand 'Advanced settings' to provide an existing Code ID, contract label, or admin address.",
@@ -217,7 +218,7 @@ export const userJourneys: UserJourney[] = [
         title: "Deploy (Step 5-6)",
         description: "The wizard uploads the contract code and creates your multisig in one flow.",
         details: [
-          "Click 'Upload & Create' — the wizard handles everything automatically.",
+          "Click 'Upload & Create CLIQ' — the wizard handles everything automatically.",
           "Phase 1: Uploads the WASM binary to the chain (approve in Keplr). You receive a fresh Code ID.",
           "Phase 2: If you opted for a wallet switch, disconnect and reconnect with your hardware wallet.",
           "Phase 3: Instantiates the contract with your configuration (approve in Keplr).",
@@ -256,7 +257,7 @@ export const userJourneys: UserJourney[] = [
         title: "Connect Your Wallet",
         description: "Connect Keplr and pick a CosmWasm-enabled chain.",
         details: [
-          "Connect your Keplr wallet from the sidebar.",
+          "Connect your Keplr wallet from the wallet menu (sidebar on desktop, menu button on phones).",
           "Select a chain that supports CosmWasm smart contracts.",
           "Ensure you have enough tokens for gas — Flex requires 2 contract uploads and 2-3 instantiation transactions.",
         ],
@@ -266,7 +267,7 @@ export const userJourneys: UserJourney[] = [
         title: "Name Your CLIQ (Step 1 of 6)",
         description: "Give your flex multisig an identity.",
         details: [
-          'Navigate to "Create Multisig" and select the Flex tab.',
+          'Open "Create CLIQ" and select the Flex card.',
           "Enter a descriptive name and optional description.",
           "The wizard auto-configures both Code IDs — no technical knowledge needed.",
           "Advanced users can expand 'Advanced settings' to provide existing CW4-Group and CW3-Flex Code IDs, contract labels, or a multisig admin address.",
@@ -354,10 +355,10 @@ export const userJourneys: UserJourney[] = [
     steps: [
       {
         title: "Navigate to Your Multisig",
-        description: "Open your multisig from the dashboard or by address.",
+        description: "Open your multisig from Home or by address.",
         details: [
-          "Go to 'My CLIQS' in the sidebar to find your multisigs.",
-          "Or use 'Find CLIQ' and enter the multisig address directly.",
+          "Go to Home and look under 'Your CLIQs' to find your multisigs.",
+          "Or use 'Open by address' on Home and enter the multisig address directly.",
           "Click on the multisig to open its dashboard.",
         ],
       },
@@ -365,11 +366,11 @@ export const userJourneys: UserJourney[] = [
         title: "Create New Transaction",
         description: "Start a new transaction from the multisig dashboard.",
         details: [
-          "Click 'New Transaction' on the multisig page.",
-          "If there's already a pending transaction, you'll see a warning.",
+          "Click 'New transaction' on the multisig page.",
+          "If there's already a pending transaction, you will see a warning — the form does not stop you from creating another.",
           "Select the transaction type: Send, Delegate, Undelegate, Redelegate, Vote, IBC Transfer, and more.",
         ],
-        tip: "Only one pending transaction can exist at a time per PubKey multisig. Complete or cancel existing transactions before creating new ones.",
+        tip: "Pending transactions share a sequence number, so only one of them can be broadcast. Complete or cancel existing transactions before creating new ones.",
       },
       {
         title: "Fill Transaction Details",
@@ -388,7 +389,7 @@ export const userJourneys: UserJourney[] = [
           "Verify all transaction parameters are correct.",
           "The transaction will be saved to the database with 'pending' status.",
           "An intent verification panel shows exactly what the transaction does.",
-          "Share the transaction link with other multisig members for signing.",
+          "Share the transaction link with other multisig members for signing, or they will see it under Needs your signature on Home.",
         ],
       },
       {
@@ -396,7 +397,7 @@ export const userJourneys: UserJourney[] = [
         description: "Each multisig member signs the transaction with their wallet.",
         details: [
           "Each member opens the transaction page and connects their wallet.",
-          "They review the intent verification and click 'Sign'.",
+          "They use Verify Transaction Intent, then Sign transaction.",
           "The signature is stored in the database.",
           "The UI shows a progress tracker of collected signatures vs. threshold.",
         ],
@@ -406,7 +407,7 @@ export const userJourneys: UserJourney[] = [
         title: "Broadcast",
         description: "Once enough signatures are collected, broadcast to the chain.",
         details: [
-          "When the threshold is met, a 'Broadcast' button becomes available.",
+          "When the threshold is met, a 'Broadcast Transaction' button becomes available.",
           "Any member (or even a non-member) can broadcast the transaction.",
           "The transaction is assembled with all signatures and sent to the chain.",
           "Once confirmed, the status changes to 'broadcast' with the tx hash.",
@@ -439,9 +440,9 @@ export const userJourneys: UserJourney[] = [
     steps: [
       {
         title: "Open Your Contract Multisig",
-        description: "Navigate to your contract multisig from the dashboard.",
+        description: "Navigate to your contract multisig from Home.",
         details: [
-          "Go to 'My CLIQS' or 'Find CLIQ' to locate your contract multisig.",
+          "Go to Home (Your CLIQs / Open by address) to locate your contract multisig.",
           "Contract multisigs show a different UI than PubKey ones.",
           "You'll see existing proposals and their voting status.",
         ],
@@ -450,7 +451,7 @@ export const userJourneys: UserJourney[] = [
         title: "Create a Proposal",
         description: "Start a new on-chain proposal.",
         details: [
-          "Click 'New Transaction' (or 'New Proposal').",
+          "Click 'New Proposal' on the CLIQ page.",
           "Enter a title and description for your proposal.",
           "Choose the message type: Send Tokens or Custom JSON.",
           "For Send: enter recipient, amount, and denom.",
@@ -463,7 +464,7 @@ export const userJourneys: UserJourney[] = [
         description: "Submit the proposal transaction via Keplr.",
         details: [
           "Review the proposal details.",
-          "Click Submit to create the on-chain proposal.",
+          "Click Submit Proposal to create the on-chain proposal.",
           "Approve the transaction in Keplr.",
           "The proposal is now live and visible to all members.",
         ],
@@ -501,7 +502,7 @@ export const userJourneys: UserJourney[] = [
       "Store multisigs, transactions, and signatures in your own MongoDB.",
       "Complete data sovereignty — nothing lives on the shared instance.",
       "Three credential security levels, up to wallet-signature encryption.",
-      "MongoDB Atlas free tier is plenty — test and provision from Settings.",
+      "MongoDB Atlas free tier is plenty — test and set up from Settings › Database.",
     ],
     icon: Database,
     category: "manage",
@@ -527,10 +528,10 @@ export const userJourneys: UserJourney[] = [
       },
       {
         title: "Open Database Settings",
-        description: "Navigate to the Settings page to configure your database.",
+        description: "Navigate to Settings to configure your database.",
         details: [
-          "Click 'Settings' in the sidebar navigation.",
-          "Scroll down to the 'Database Configuration' section.",
+          "Click 'Settings' in the navigation.",
+          "Scroll down to the 'Your own database (BYODB)' section.",
           "You'll see options for configuring your own MongoDB connection.",
         ],
       },
@@ -555,10 +556,10 @@ export const userJourneys: UserJourney[] = [
         ],
       },
       {
-        title: "Provision Database",
+        title: "Set Up Database",
         description: "Set up the required collections and indexes.",
         details: [
-          "Click 'Provision Database' to create the necessary structure.",
+          "Click 'Setup Database' to create the necessary structure.",
           "This creates collections for multisigs, transactions, signatures, and nonces.",
           "Indexes are created for efficient querying.",
           "This step only needs to be done once.",
@@ -571,9 +572,9 @@ export const userJourneys: UserJourney[] = [
           "All new multisigs, transactions, and signatures will be stored in your database.",
           "Existing data from the shared database won't be migrated automatically.",
           "You can export/import data using the database tools.",
-          "To switch back to the shared database, remove your BYODB configuration in Settings.",
+          "To switch back to the shared database, click 'Disconnect Custom Database' in Settings › Database.",
         ],
-        tip: "Consider exporting your data periodically as a backup. The Settings page has export/import tools.",
+        tip: "Consider exporting your data periodically as a backup. Settings › Database has export/import tools.",
       },
     ],
     navigateTo: "/settings#database-config",
@@ -583,12 +584,11 @@ export const userJourneys: UserJourney[] = [
     id: "find-join-multisig",
     title: "Find & Join a Multisig",
     subtitle: "Look up existing multisigs",
-    description:
-      "Find an existing multisig by its address, view its details, and add it to your dashboard for quick access.",
+    description: "Find an existing multisig by its address, view its details, and open its page.",
     highlights: [
       "Look up any existing multisig by its bech32 address.",
       "See members, threshold, balances, and recent activity.",
-      "Found multisigs are added to 'My CLIQS' for quick access.",
+      "Found CLIQs open on their own page with members, balances and transactions.",
     ],
     icon: Search,
     category: "manage",
@@ -597,11 +597,11 @@ export const userJourneys: UserJourney[] = [
     prerequisites: ["The multisig address you want to find", "The correct chain selected"],
     steps: [
       {
-        title: "Navigate to Find CLIQ",
-        description: "Open the Find CLIQ page from the sidebar.",
+        title: "Open by address",
+        description: "Open Home and find the 'Open by address' section.",
         details: [
-          "Click 'Find CLIQ' in the sidebar navigation.",
-          "Alternatively, go to the Dashboard and switch to the 'Find' tab.",
+          "Click 'Home' in the navigation.",
+          "Scroll to 'Open by address' — it works without a connected wallet.",
         ],
       },
       {
@@ -620,12 +620,12 @@ export const userJourneys: UserJourney[] = [
           "See the member list and threshold configuration.",
           "View balances and recent transactions.",
           "Check if you're a member of this multisig.",
-          "The multisig is automatically added to your 'My CLIQS' list for future access.",
+          "Opening the multisig takes you to its page.",
         ],
         tip: "If the multisig was created off-platform, it may need to be imported first. The system will guide you through this process.",
       },
     ],
-    navigateTo: "/dashboard?tab=find",
+    navigateTo: "/dashboard",
   },
 
   {
@@ -633,11 +633,11 @@ export const userJourneys: UserJourney[] = [
     title: "Connect Your Wallet",
     subtitle: "Keplr or Ledger setup",
     description:
-      "Get started by connecting your Cosmos wallet. CLIQS supports both Keplr browser extension and Ledger hardware wallets for maximum flexibility and security.",
+      "Get started by connecting your Cosmos wallet. CLIQs supports both Keplr browser extension and Ledger hardware wallets for maximum flexibility and security.",
     highlights: [
       "Connect with the Keplr extension or a Ledger hardware wallet.",
       "Pick your chain — Cosmos Hub, Osmosis, Juno, Coreum, and more.",
-      "Your address appears in the sidebar once connected.",
+      "Your address appears in the wallet menu once connected.",
       "Ledger gives hardware-level key security for signing.",
     ],
     icon: Wallet,
@@ -664,7 +664,7 @@ export const userJourneys: UserJourney[] = [
         title: "Select Your Chain",
         description: "Choose the blockchain network you want to work on.",
         details: [
-          "Use the chain selector in the sidebar (or header on mobile).",
+          "Use the chain chip (top of the sidebar on desktop, in the header on phones).",
           "Search for your chain by name or scroll through the list.",
           "Popular chains include Cosmos Hub, Osmosis, Juno, Coreum, and many more.",
           "Custom chains can be added if they're not in the default list.",
@@ -674,10 +674,10 @@ export const userJourneys: UserJourney[] = [
         title: "Connect",
         description: "Click connect and approve the connection in your wallet.",
         details: [
-          "Click the Keplr or Ledger button in the sidebar.",
+          "Click the Keplr or Ledger button from the wallet menu (sidebar on desktop, menu button on phones).",
           "For Keplr: approve the connection request in the popup.",
           "For Ledger: ensure the Cosmos app is open on your device, then approve.",
-          "Your address will appear at the bottom of the sidebar once connected.",
+          "Your address will appear in the wallet menu once connected.",
         ],
       },
       {
@@ -685,13 +685,13 @@ export const userJourneys: UserJourney[] = [
         description: "Start creating multisigs, signing transactions, or exploring.",
         details: [
           "Your wallet is now connected and ready to use.",
-          "Navigate to 'Create Multisig' to set up a new CLIQ.",
-          "Or go to 'My CLIQS' to see multisigs you're already part of.",
-          "Check 'Operations' for any pending transactions that need your signature.",
+          "Navigate to 'Create CLIQ' to set up a new CLIQ.",
+          "Or go to Home (Your CLIQs) to see multisigs you're already part of.",
+          "Check 'Needs your signature' on Home for any pending transactions that need you.",
         ],
       },
     ],
-    navigateTo: "/account",
+    navigateTo: "/settings",
   },
 ];
 

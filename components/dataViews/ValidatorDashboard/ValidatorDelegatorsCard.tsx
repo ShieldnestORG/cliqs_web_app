@@ -1,8 +1,6 @@
 /**
  * Validator Delegators Card
  *
- * File: components/dataViews/ValidatorDashboard/ValidatorDelegatorsCard.tsx
- *
  * Displays active delegators, their amounts, and unbonding delegations.
  */
 
@@ -41,7 +39,6 @@ export default function ValidatorDelegatorsCard({ data }: ValidatorDelegatorsCar
     return formatted.toLocaleString(undefined, { maximumFractionDigits: 2 });
   };
 
-  // Calculate total unbonding
   const totalUnbonding = unbondingDelegations.reduce((acc, curr) => {
     const amount = curr.entries.reduce((eAcc, eCurr) => eAcc + BigInt(eCurr.balance), BigInt(0));
     return acc + amount;

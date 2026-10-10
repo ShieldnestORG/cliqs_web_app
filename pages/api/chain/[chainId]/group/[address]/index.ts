@@ -1,8 +1,6 @@
 /**
  * Group API - Index
  *
- * File: pages/api/chain/[chainId]/group/[address]/index.ts
- *
  * API endpoints for CW4 group contract operations.
  *
  * GET - Get group details and members

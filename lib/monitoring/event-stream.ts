@@ -1,8 +1,6 @@
 /**
  * Event Streaming System - Guaranteed Event Emission
  *
- * File: lib/monitoring/event-stream.ts
- *
  * Implements the guaranteed event emission system for Phase 4.
  * Events are emitted to multiple sinks (webhook, WebSocket, etc.)
  *

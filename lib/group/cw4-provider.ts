@@ -1,8 +1,6 @@
 /**
  * CW4 Group Provider Implementation
  *
- * File: lib/group/cw4-provider.ts
- *
  * Implements the GroupProvider interface for CW4-group contracts.
  * This is the default implementation used in Phase 2 for CW3-Flex multisigs.
  *

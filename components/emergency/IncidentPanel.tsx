@@ -1,8 +1,6 @@
 /**
  * Incident Panel Component
  *
- * File: components/emergency/IncidentPanel.tsx
- *
  * Displays and manages incidents for a multisig.
  *
  * Phase 4: Advanced Policies + Attack-Ready Safeguards

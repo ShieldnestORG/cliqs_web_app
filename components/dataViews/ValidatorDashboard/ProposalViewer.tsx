@@ -1,8 +1,6 @@
 /**
  * Proposal Viewer
  *
- * File: components/dataViews/ValidatorDashboard/ProposalViewer.tsx
- *
  * Displays active governance proposals and the validator's voting status.
  */
 
@@ -123,12 +121,13 @@ export default function ProposalViewer({
     if (isVoting || isVotingRef.current) {
       return;
     }
-    isVotingRef.current = true;
 
+    // Check the wallet before taking the lock: a return from here must not leave it set.
     if (!walletInfo) {
       toast.error("Please connect your wallet first");
       return;
     }
+    isVotingRef.current = true;
 
     const voteOptionLabels: Record<number, string> = {
       1: "YES",
