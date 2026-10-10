@@ -18,6 +18,7 @@
 
 import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import { loadDeploymentLog, DeploymentLogEntry } from "@/lib/deploymentLog";
+import { deriveRestEndpoints } from "@/lib/restEndpoints";
 
 // ============================================================================
 // Types
@@ -429,39 +430,15 @@ async function queryNodeInfo(restEndpoint: string): Promise<{
 }
 
 /**
- * Derive an LCD/REST endpoint from an RPC endpoint.
- * Many nodes serve REST on port 1317 when RPC is on 26657,
- * but we also try the RPC endpoint itself since many providers
- * serve both on the same port.
- */
-function deriveRestEndpoints(rpcEndpoint: string): string[] {
-  const endpoints = [rpcEndpoint];
-  try {
-    const url = new URL(rpcEndpoint);
-    // If port is 26657, also try 1317 (standard LCD port)
-    if (url.port === "26657") {
-      url.port = "1317";
-      endpoints.push(url.toString().replace(/\/$/, ""));
-    }
-    // Also try without explicit port (many providers serve REST on same URL)
-    if (url.port) {
-      const noPort = new URL(rpcEndpoint);
-      noPort.port = "";
-      endpoints.push(noPort.toString().replace(/\/$/, ""));
-    }
-  } catch {
-    // Invalid URL, just use as-is
-  }
-  return endpoints;
-}
-
-/**
  * Query live chain constraints by hitting the chain's REST endpoints.
- * Tries multiple endpoint variants and caches the result.
+ * Tries multiple endpoint variants (see lib/restEndpoints.ts) and caches the
+ * result. Pass the chain registry's configured restEndpoint when the caller
+ * has it — it is the best candidate and gets tried first.
  */
 export async function queryChainConstraints(
   nodeAddress: string,
   chainId: string,
+  restEndpoint?: string,
 ): Promise<ChainDeploymentConstraints> {
   // Check in-memory cache first
   if (liveConstraintsCache[chainId]) {
@@ -477,7 +454,7 @@ export async function queryChainConstraints(
   }
 
   // Query live
-  const restEndpoints = deriveRestEndpoints(nodeAddress);
+  const restEndpoints = deriveRestEndpoints(nodeAddress, restEndpoint);
   let wasmParams: Awaited<ReturnType<typeof queryWasmParams>> = null;
   let nodeInfo: Awaited<ReturnType<typeof queryNodeInfo>> = null;
 
