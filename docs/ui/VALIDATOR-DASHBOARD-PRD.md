@@ -36,7 +36,7 @@ Create a **free, no-signup Validator Dashboard** that:
 ### Strategic Goals
 1. **User Acquisition**: Attract validators who don't use multisig yet
 2. **Value Demonstration**: Show the power of our UI/UX
-3. **Conversion Funnel**: Soft-sell CLIQ as a security upgrade
+3. **Conversion Funnel**: Soft-sell running a *new* validator from a CLIQ (an existing validator's operator can't change)
 4. **Brand Building**: Position as the go-to validator management tool
 
 ---
@@ -121,9 +121,9 @@ read-only warning (`ValidatorDashboard/index.tsx`).
 │ └──────────────────────────┘  └──────────────────────────────────────┘ │
 │                                                                         │
 │ ┌───────────────────────────────────────────────────────────────────┐  │
-│ │ UPGRADE TO CLIQ (Full width CTA)                                  │  │
-│ │ "Your validator key is a single point of failure.                 │  │
-│ │  Secure your operations with multi-signature protection."         │  │
+│ │ RUN A VALIDATOR FROM A CLIQ (Full width CTA)                      │  │
+│ │ "Create a new validator controlled by a CLIQ. This sets up        │  │
+│ │  a new validator; it does not convert an existing one."           │  │
 │ │ [Create Validator CLIQ] [Learn More]                              │  │
 │ └───────────────────────────────────────────────────────────────────┘  │
 │                                                                         │
@@ -232,7 +232,10 @@ Yes uses the `success` token; the tally chips are semantic, not decorative.
 ### 4.7 CLIQ Upgrade CTA Card
 `CliqUpgradeCTA.tsx` · **Variant:** `institutional` with `bracket="purple"`
 CTA into `/[chainName]/create`. Hidden in CLIQ mode (`!isCliqMode`): a CLIQ already has
-the protection it advertises.
+the protection it advertises. Copy (2026-10-09): the card offers a *new* validator run by a CLIQ,
+because on TX an existing validator's operator account and keys cannot change (verified at TX's
+running tags; TX ecosystem hub note CLIQS-VALIDATOR-OPS §5.1). *(Until 2026-10-09 the card said
+"Works With Existing Validator" and "Upgrade to a CLIQ".)*
 
 ### 4.8 Withdraw Address Card
 `WithdrawAddressCard.tsx` · **Variant:** `institutional`
