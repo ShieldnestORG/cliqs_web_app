@@ -48,7 +48,7 @@ export default function AccountView() {
         </CardHeader>
         <CardContent className="grid gap-4">
           <Button variant="outline" onClick={disconnect} className="w-full">
-            <Unplug className="mr-2 h-auto w-5 text-destructive" />
+            <Unplug className="h-auto w-5 text-destructive" />
             Disconnect {walletInfo.type}
           </Button>
         </CardContent>
@@ -80,7 +80,7 @@ export default function AccountView() {
             {explorerLink ? (
               <Button asChild variant="secondary">
                 <a href={explorerLink} target="_blank">
-                  View in explorer <ArrowUpRightSquare className="ml-1" />
+                  View in explorer <ArrowUpRightSquare />
                 </a>
               </Button>
             ) : null}

@@ -23,7 +23,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useChains } from "../../context/ChainsContext";
 import { exampleAddress } from "../../lib/displayHelpers";
-import { Search, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { KitIcon } from "@/components/icons/kit";
 
 const existsCliqAccount = async (chain: ChainInfo, address: string) => {
   try {
@@ -65,7 +66,7 @@ const FindCliqForm = ({ router }: FindCliqFormProps) => {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Search className="h-5 w-5 text-muted-foreground" />
+          <KitIcon name="search" size={24} className="text-foreground" />
           Open a CLIQ by address
         </CardTitle>
         <CardDescription>

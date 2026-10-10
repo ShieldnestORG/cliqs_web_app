@@ -7,7 +7,7 @@
  * Phase 3: Identity NFTs (Credential-Gated Multisig)
  */
 
-import { Badge } from "@/components/ui/badge";
+import { Badge, type BadgeMark } from "@/components/ui/badge";
 import {
   Tooltip,
   TooltipContent,
@@ -44,8 +44,6 @@ export interface CredentialBadgeProps {
   status: CredentialStatusType;
   /** Role if credential is valid */
   role?: string;
-  /** Show as compact badge */
-  compact?: boolean;
   /** Additional class names */
   className?: string;
   /** Show tooltip with details */
@@ -64,65 +62,64 @@ const statusConfig: Record<
     icon: typeof CheckCircle2;
     label: string;
     description: string;
-    variant: "default" | "secondary" | "destructive" | "outline";
-    className: string;
+    variant: "success" | "warning" | "destructive" | "secondary";
+    mark?: BadgeMark;
   }
 > = {
   valid: {
     icon: CheckCircle2,
     label: "Verified",
     description: "You hold a valid credential for this team",
-    variant: "default",
-    className: "bg-success/20 text-success border-success/30 hover:bg-success/30",
+    variant: "success",
+    mark: "signal",
   },
   missing: {
     icon: XCircle,
     label: "No Credential",
     description: "You do not have a credential for this team",
     variant: "destructive",
-    className: "bg-destructive/20 text-destructive border-destructive/30",
+    mark: "stripes",
   },
   expired: {
     icon: Clock,
     label: "Expired",
     description: "Your credential has expired",
-    variant: "secondary",
-    className: "bg-warning/20 text-warning border-warning/30",
+    variant: "warning",
+    mark: "ring",
   },
   frozen: {
     icon: Pause,
     label: "Frozen",
     description: "Your credential is frozen and cannot be used",
-    variant: "secondary",
-    className: "bg-warning/20 text-warning border-warning/30",
+    variant: "warning",
+    mark: "stripes",
   },
   revoked: {
     icon: XCircle,
     label: "Revoked",
     description: "Your credential has been revoked",
     variant: "destructive",
-    className: "bg-destructive/20 text-destructive border-destructive/30",
+    mark: "stripes",
   },
   wrong_role: {
     icon: AlertTriangle,
     label: "Wrong Role",
     description: "Your credential does not have the required role",
-    variant: "secondary",
-    className: "bg-warning/20 text-warning border-warning/30",
+    variant: "warning",
+    mark: "stripes",
   },
   loading: {
     icon: Loader2,
     label: "Checking...",
     description: "Verifying credential status",
-    variant: "outline",
-    className: "bg-muted/50 text-muted-foreground",
+    variant: "secondary",
+    mark: "half",
   },
   not_required: {
     icon: Shield,
     label: "Not Required",
     description: "This team does not require credentials",
-    variant: "outline",
-    className: "bg-muted/50 text-muted-foreground",
+    variant: "secondary",
   },
 };
 
@@ -133,37 +130,16 @@ const statusConfig: Record<
 export function CredentialBadge({
   status,
   role,
-  compact = false,
   className,
   showTooltip = true,
   tooltipMessage,
 }: CredentialBadgeProps) {
   const config = statusConfig[status];
-  const Icon = config.icon;
 
   const badge = (
-    <Badge
-      variant={config.variant}
-      className={cn(
-        "gap-1 font-medium",
-        config.className,
-        compact && "px-1.5 py-0.5",
-        className,
-      )}
-    >
-      <Icon
-        className={cn(
-          "shrink-0",
-          compact ? "h-3 w-3" : "h-3.5 w-3.5",
-          status === "loading" && "animate-spin",
-        )}
-      />
-      {!compact && (
-        <span className="text-xs">
-          {config.label}
-          {role && status === "valid" && ` (${role})`}
-        </span>
-      )}
+    <Badge variant={config.variant} mark={config.mark} className={className}>
+      {config.label}
+      {role && status === "valid" && ` (${role})`}
     </Badge>
   );
 

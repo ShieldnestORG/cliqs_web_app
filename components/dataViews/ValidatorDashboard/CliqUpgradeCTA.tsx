@@ -5,6 +5,7 @@
  */
 
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useChains } from "@/context/ChainsContext";
 import Link from "next/link";
@@ -50,10 +51,10 @@ export default function CliqUpgradeCTA() {
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center">
           {/* Content */}
           <div className="flex-1 space-y-4">
-            <div className="inline-flex items-center gap-2 rounded-full border border-purple-accent/30 bg-purple-accent/20 px-3 py-1 font-mono text-xs uppercase tracking-wider text-purple-accent">
+            <Badge>
               <ShieldPlus className="h-3 w-3" />
               Multisig Validator
-            </div>
+            </Badge>
 
             <h3 className="font-heading text-2xl font-bold md:text-3xl">
               Run a Validator From a CLIQ

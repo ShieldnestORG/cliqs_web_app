@@ -12,12 +12,24 @@ const GITHUB_BASE = "https://github.com/ShieldnestORG/cliqs_web_app/blob/main";
 
 function StatusBadge({ status }: { status: AuditStatus }) {
   if (status === "verified") {
-    return <Badge variant="success">Verified</Badge>;
+    return (
+      <Badge variant="success" mark="signal">
+        Verified
+      </Badge>
+    );
   }
   if (status === "shipped") {
-    return <Badge variant="info">Shipped</Badge>;
+    return (
+      <Badge variant="info" mark="signal">
+        Shipped
+      </Badge>
+    );
   }
-  return <Badge variant="warning">In progress</Badge>;
+  return (
+    <Badge variant="warning" mark="half">
+      In progress
+    </Badge>
+  );
 }
 
 function EvidenceLink({ label, url }: { label: string; url: string }) {

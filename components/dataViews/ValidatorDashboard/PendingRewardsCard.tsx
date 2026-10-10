@@ -1,12 +1,14 @@
 /**
- * Pending Rewards Card
+ * Pending Rewards
  *
- * Displays pending commission and staking rewards with claim actions.
+ * Two rows, each with its amount and its own Claim button: validator commission and
+ * self-delegation rewards, then one primary "Claim all" when both exist. Renders its content
+ * only; the Rewards panel (card) and its ScaleRule heading come from ValidatorDashboard/index.tsx.
+ * Until 2026-10-10 the amounts sat in one card and three stacked full-width buttons below them.
  */
 
-import { Card, CardContent, CardHeader, CardTitle, CardLabel } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { KitIcon } from "@/components/icons/kit";
 import { formatDecCoinAmount, ValidatorInfo } from "@/lib/validatorHelpers";
 import {
   createCliqTransaction,
@@ -15,7 +17,7 @@ import {
 } from "@/lib/validatorTx";
 import { useChains } from "@/context/ChainsContext";
 import { useWallet } from "@/context/WalletContext";
-import { Coins, Wallet, Loader2, CheckCircle2, Users } from "lucide-react";
+import { Loader2, CheckCircle2, Users } from "lucide-react";
 import { DecCoin } from "cosmjs-types/cosmos/base/v1beta1/coin";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -321,100 +323,41 @@ export default function PendingRewardsCard({
     }
   };
 
+  // One primary per view: "Claim all" when both amounts exist, otherwise the one row that can claim.
+  // Coral in both signing modes (gold is the testnet colour): the CLIQ path is told apart by its
+  // "Create:" labels and the note above the rows, not by a second button colour.
+  const commissionVariant = hasCommission && !hasRewards ? "default" : "outline";
+  const rewardsVariant = hasRewards && !hasCommission ? "default" : "outline";
+
   return (
-    <Card variant="institutional" accent="left" className="h-full">
-      <CardHeader>
-        <CardLabel comment>Pending</CardLabel>
-        <CardTitle className="font-heading text-xl font-bold">Rewards & Commission</CardTitle>
-      </CardHeader>
-
-      <CardContent className="space-y-6">
-        {/* Commission */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Coins className="h-4 w-4" />
-            <span>Validator Commission</span>
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="font-heading text-3xl font-bold tabular-nums">
-              {commissionFormatted.amount}
-            </span>
-            <span className="font-mono text-lg text-muted-foreground">
-              {commissionFormatted.denom}
-            </span>
-          </div>
+    <div className="space-y-4">
+      {/* CLIQ mode indicator */}
+      {isCliqMode && (
+        <div className="flex items-center gap-2 rounded-lg bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+          <Users className="h-4 w-4" />
+          <span>Actions will create a transaction for multisig signing</span>
         </div>
+      )}
 
-        <Separator />
-
-        {/* Self-Delegation Rewards */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Wallet className="h-4 w-4" />
-            <span>Self-Delegation Rewards</span>
+      <div className="divide-y divide-border/[0.06]">
+        {/* Validator commission */}
+        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 pb-3">
+          <KitIcon name="rewards" size={28} className="text-foreground" />
+          <div className="min-w-0">
+            <p className="text-sm text-muted-foreground">Validator commission</p>
+            <p className="break-words font-heading text-xl font-bold tabular-nums">
+              {commissionFormatted.amount}{" "}
+              <span className="font-mono text-sm font-normal text-muted-foreground">
+                {commissionFormatted.denom}
+              </span>
+            </p>
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className="font-heading text-3xl font-bold tabular-nums">
-              {rewardsFormatted.amount}
-            </span>
-            <span className="font-mono text-lg text-muted-foreground">
-              {rewardsFormatted.denom}
-            </span>
-          </div>
-        </div>
-
-        <Separator />
-
-        {/* Actions */}
-        <div className="space-y-3">
-          {/* CLIQ mode indicator */}
-          {isCliqMode && (
-            <div className="flex items-center gap-2 rounded-lg bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-              <Users className="h-4 w-4" />
-              <span>Actions will create a transaction for multisig signing</span>
-            </div>
-          )}
-
-          {/* Show "Claim All" only if there are both rewards and commission */}
-          {hasRewards && hasCommission && (
-            <Button
-              variant={isCliqMode ? "action-bronze" : "action"}
-              size="action"
-              className="w-full gap-2"
-              onClick={() => claimCommission(true)}
-              disabled={readOnly || isClaimingCommission || isClaimingRewards}
-            >
-              {isClaimingCommission ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  {isCliqMode ? "Redirecting..." : "Claiming..."}
-                </>
-              ) : (
-                <>
-                  {isCliqMode ? (
-                    <Users className="h-4 w-4" />
-                  ) : (
-                    <CheckCircle2 className="h-4 w-4" />
-                  )}
-                  {isCliqMode ? "Create: Claim All" : "Claim All (Commission + Rewards)"}
-                </>
-              )}
-            </Button>
-          )}
-
-          {/* Claim Commission Only - useful for jailed validators with no self-delegation */}
+          {/* Claim commission only - useful for jailed validators with no self-delegation */}
           <Button
-            variant={
-              isCliqMode
-                ? hasRewards
-                  ? "action-bronze-outline"
-                  : "action-bronze"
-                : hasRewards
-                  ? "action-outline"
-                  : "action"
-            }
-            size="action"
-            className="w-full gap-2"
+            variant={commissionVariant}
+            size="sm"
+            className="max-sm:h-11"
+            aria-label={isCliqMode ? "Create: Claim commission" : "Claim commission"}
             onClick={() => claimCommission(false)}
             disabled={readOnly || isClaimingCommission || isClaimingRewards || !hasCommission}
           >
@@ -423,19 +366,33 @@ export default function PendingRewardsCard({
                 <Loader2 className="h-4 w-4 animate-spin" />
                 {isCliqMode ? "Redirecting..." : "Claiming..."}
               </>
+            ) : isCliqMode ? (
+              "Create: Claim"
             ) : (
-              <>
-                {isCliqMode ? <Users className="h-4 w-4" /> : <Coins className="h-4 w-4" />}
-                {isCliqMode ? "Create: Claim Commission" : "Claim Commission Only"}
-              </>
+              "Claim"
             )}
           </Button>
+        </div>
 
-          {/* Claim Rewards Only */}
+        {/* Self-delegation rewards */}
+        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 pt-3">
+          <KitIcon name="stake" size={28} className="text-foreground" />
+          <div className="min-w-0">
+            <p className="text-sm text-muted-foreground">Self-delegation rewards</p>
+            <p className="break-words font-heading text-xl font-bold tabular-nums">
+              {rewardsFormatted.amount}{" "}
+              <span className="font-mono text-sm font-normal text-muted-foreground">
+                {rewardsFormatted.denom}
+              </span>
+            </p>
+          </div>
           <Button
-            variant={isCliqMode ? "action-bronze-outline" : "action-outline"}
-            size="action"
-            className="w-full gap-2"
+            variant={rewardsVariant}
+            size="sm"
+            className="max-sm:h-11"
+            aria-label={
+              isCliqMode ? "Create: Claim self-delegation rewards" : "Claim self-delegation rewards"
+            }
             onClick={claimRewards}
             disabled={readOnly || isClaimingCommission || isClaimingRewards || !hasRewards}
           >
@@ -444,24 +401,43 @@ export default function PendingRewardsCard({
                 <Loader2 className="h-4 w-4 animate-spin" />
                 {isCliqMode ? "Redirecting..." : "Claiming..."}
               </>
+            ) : isCliqMode ? (
+              "Create: Claim"
             ) : (
-              <>
-                {isCliqMode ? <Users className="h-4 w-4" /> : <Wallet className="h-4 w-4" />}
-                {isCliqMode ? "Create: Claim Rewards" : "Claim Rewards Only"}
-              </>
+              "Claim"
             )}
           </Button>
         </div>
+      </div>
 
-        {/* No rewards message */}
-        {!hasCommission && !hasRewards && (
-          <div className="py-4 text-center">
-            <p className="text-sm text-muted-foreground">
-              No pending rewards to claim at this time.
-            </p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      {/* Show "Claim all" only if there are both rewards and commission */}
+      {hasRewards && hasCommission && (
+        <Button
+          variant="default"
+          className="w-full gap-2"
+          onClick={() => claimCommission(true)}
+          disabled={readOnly || isClaimingCommission || isClaimingRewards}
+        >
+          {isClaimingCommission ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              {isCliqMode ? "Redirecting..." : "Claiming..."}
+            </>
+          ) : (
+            <>
+              {isCliqMode ? <Users className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+              {isCliqMode ? "Create: Claim all" : "Claim all"}
+            </>
+          )}
+        </Button>
+      )}
+
+      {/* No rewards message */}
+      {!hasCommission && !hasRewards && (
+        <p className="text-center text-sm text-muted-foreground">
+          No pending rewards to claim at this time.
+        </p>
+      )}
+    </div>
   );
 }

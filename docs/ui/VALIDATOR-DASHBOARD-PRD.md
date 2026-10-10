@@ -1,10 +1,66 @@
 # Validator Dashboard PRD
 
-> **Cluster:** design-system · **Tags:** validator, dashboard, cliq-mode, gas, info-blue · **Related:** [UI index](INDEX.md), [STYLE-GUIDE.md](../STYLE-GUIDE.md), [Transaction Page Redesign PRD](TRANSACTION-PAGE-REDESIGN-PRD.md), [User Guide](../App%20User%20Guide.md)
+> **Cluster:** design-system · **Tags:** validator, dashboard, cliq-mode, gas, scale-rule, kit-icons · **Related:** [UI index](INDEX.md), [STYLE-GUIDE.md](../STYLE-GUIDE.md), [Buttons PRD](BUTTONS-PRD.md), [Patterns PRD](PATTERNS-PRD.md), [Transaction Page Redesign PRD](TRANSACTION-PAGE-REDESIGN-PRD.md), [User Guide](../App%20User%20Guide.md)
 
 **Cosmos Multisig UI - Free Validator Dashboard Specification**  
-**Version:** 1.2  
-**Last Updated:** 2026-10-09
+**Version:** 1.5  
+**Last Updated:** 2026-10-10
+
+> **2026-10-10: compact layout.** After the owner's review of the PR #81 preview the page was
+> rebuilt as a short column of sections under scale rules (§3, §4). Signing did not change: every
+> claim, vote, unjail, edit and withdraw button keeps its handler and its `disabled` rule, byte for
+> byte. Two checks hold that, and they cover different things: the signing fence (a
+> check kept outside this repo that hashes the signing functions; it prints `FENCE OK`) freezes
+> the signing **functions**; it does **not** see JSX wiring (which handler a button calls, with which
+> arguments, and its `disabled` rule: measured 2026-10-10, swapping the two Claim handlers left
+> the fence green). That wiring is pinned by jest: `validator-rewards`, `validator-vote-options`,
+> `validator-edit-submit`, `validator-withdraw-address`, `jailed-alert`, `unjail-action` and the
+> "what the cards are handed" and "connect your wallet" groups in `validator-dashboard`. Wording
+> that described the earlier layout is kept below as "until 2026-10-10".
+>
+> The last gaps in that wiring are closed: `validator-edit-submit` has a table over all
+> seven editable fields (moniker, identity, website, security contact, details, commission rate,
+> min self-delegation), in direct and CLIQ mode, that switches only one field on and checks the
+> message carries its value there and `[do-not-modify]` everywhere else (six single swaps of
+> switch or input bindings had survived the single-field tests) and also reads the screen: each
+> switch shows its own field's state (only the clicked one on) and each text box shows its own
+> value before and after typing (a switch `checked` or a box `value` pointed at another field
+> left the message unchanged, so seven swaps of each had survived the message-only table);
+> `validator-dashboard` gives the
+> commission and the self-delegation rewards different amounts and checks each card prop by
+> identity (two empty lists were equal, so swapping them passed); and `validator-withdraw-address`
+> and `validator-edit-submit` each hold the signing stub pending and check that Confirm /
+> Update Validator and Cancel are off while the submit is in flight.
+
+> **2026-10-10: one row where it was two.** The first version left the network control
+> 352x74px (its caption wrapped to two lines under the boxes), the identity strip on two rows at
+> 1024px (the Explorer link wrapped), the withdraw address on two lines, and an opened "Past
+> proposals" list that grew Governance from 384px to 966px and dragged the Stakers card with it
+> (all measured on a real build). Now: the control is one row (§4.8), the strip is one row at
+> 1024px with an icon-only explorer link (§4.1; measured before round 2, to be re-measured), the
+> withdraw address is one line (§4.2), the
+> opened past list scrolls inside one box and its count is honest (§4.4), and the tile and the
+> section both say "Stakers" (§4.3, §4.5). Wording from before is kept as "until 2026-10-10".
+
+> **2026-10-10 (round 2): the owner's review of the polished page.** Six changes, each on the
+> owner's words. (1) The "Acting as ..." sentence is gone in every mode: "this message also not
+> needed" (§2, §3). (2) The mainnet caption "Real assets. Check before you sign." and its
+> screen-reader sentence are gone: "remove the mainnet message" (§4.8). (3) The status is a status
+> tag with a moving mark and no plain dot: "no dots blinking next to pill, I like the animated pill
+> icons" (§4.1; the tag itself is specified in [Cards PRD §5](CARDS-PRD.md#5-card-sub-components)).
+> (4) More space, vertically and horizontally: "on vertical and horizontal spacing add more
+> space" (§3). (5) The Manage card is restyled: "the manage button area can have better styling"
+> (§4.6). (6) Every button has sheen and depth and none is gold: "these buttons can be the nicer
+> quality ones ... with sheen and depth and not just this page but thru out app, and we should not
+> use gold; that is testnet color; can go back to the coral orange" (§2, §7; the system is in the
+> [Buttons PRD](BUTTONS-PRD.md)). The collapsed menu's Donate and Disconnect buttons are also
+> centred now.
+>
+> **Measured figures.** After round 2 the page is **1,802px** tall at **1280px** wide (it was
+> 1,771px at 1280px just before round 2), in the no-wallet state, for validator TOKNS.FI. Every
+> other measured figure in this document that round 2 touches (page height at 1024px, the
+> context row, the identity strip, the network control) was measured before round 2 and is marked
+> "measured before round 2, to be re-measured" where it appears. Those marks are open.
 
 > **Reconciled against the shipped code.** Sections 4, 6, 7, 9 and 12 were rewritten
 > to match `components/dataViews/ValidatorDashboard/` as it exists today; the rest is
@@ -71,28 +127,129 @@ connected wallet address puts the page in **CLIQ mode**.
 | Who signs | the connected wallet, immediately | the CLIQ, after the threshold is met |
 | Who pays the fee | the connected wallet | the CLIQ account itself |
 | What a button does | `signAndBroadcast` on the spot | creates a multisig transaction and redirects to its signing page |
-| Button labels | "Claim Commission Only", "Claim Rewards Only" | "Create: Claim Commission", "Create: Claim Rewards" |
-| Button variants | `action` / `action-outline` | `action-bronze` / `action-bronze-outline` |
+| Button labels | "Claim", "Claim all" (one Claim per amount) | "Create: Claim", "Create: Claim all" |
+| Button variants | `default` (the one primary) / `outline` | the same `default` / `outline` (coral, as in direct mode) |
+
+*Until 2026-10-10 the labels were "Claim Commission Only" / "Claim Rewards Only" (CLIQ: "Create: Claim Commission" / "Create: Claim Rewards") and the variants `action` / `action-outline`.*
+
+*Until 2026-10-10 (round 2) the CLIQ-mode variants were `action-bronze` / `action-bronze-outline`
+(gold). They are removed: gold is the testnet colour (owner: "we should not use gold; that is
+testnet color; can go back to the coral orange"). The CLIQ path is told apart by its "Create:"
+labels and by the note in the Rewards card, "Actions will create a transaction for multisig
+signing" (§4.2), not by a second button colour. See [Buttons PRD §4.8](BUTTONS-PRD.md#48-no-gold-on-buttons-round-2).*
 
 CLIQ mode also verifies membership before enabling anything: a non-member sees the
 dashboard read-only (`cliqReadOnly`).
 
 **Page top.** The page title ("Validator Dashboard", an H1) comes first in every state
-(`pages/[chainName]/validator.tsx`). Directly under it an **"Acting as" band** states the
-mode in plain words: "Acting as your wallet. Actions sign with your connected wallet.",
-"Acting as CLIQ core1…. Actions create a transaction for this CLIQ; its members
-sign it, then one member broadcasts.", or "No wallet connected. Connect a wallet to act on
-this validator.". In CLIQ mode, when membership could not be verified, the band also carries the
-read-only warning (`ValidatorDashboard/index.tsx`).
+(`pages/[chainName]/validator.tsx`). Below the header strip, the left side of the context row
+holds a note **only when the visitor must know something before acting**: "No wallet connected.
+Connect a wallet to act on this validator." (any mode), or, in CLIQ mode when membership could
+not be verified, the read-only warning (`ValidatorDashboard/index.tsx`, `showContextNote`). In
+every other state the left side is empty and the network control and Refresh sit at the right.
+Which path signs is told by the button labels ("Claim" or "Create: Claim") and, in CLIQ mode, by
+the note in the Rewards card (§4.2). *Until 2026-10-10 (round 2) an **"Acting as" band** always sat
+here and stated the mode in plain words: "Acting as your wallet. Actions sign with your connected
+wallet.", "Acting as CLIQ core1…. Actions create a transaction for this CLIQ; its members sign
+it, then one member broadcasts.", or the no-wallet sentence; in a read-only CLIQ it also carried
+the warning. The owner: "this message also not needed".*
 
 ---
 
 ## 3. Page Layout
 
+### Shipped layout (2026-10-10)
+
+The old layout measured 3,454px tall at 1024px for TOKNS.FI. A static render of the new one at
+the same width measured 1,865px on testnet and 1,903px on mainnet (the real-assets line added a
+row; it now shares the control's row). That render used a fallback font and no lucide icons, so
+treat the figures as approximate. Measured on a real build of the first version (1024px, 645
+stakers): 1,939px by default. The one-row changes remove the context-row wrap (74px to about 40px,
+measured by editing the live DOM of that build) and the strip wrap (about 40px). Measured on a
+real build of the head after those changes (1024px, 645 stakers): 1,843px by default, the context
+row 40px, the identity strip and the withdraw line one row each.
+**All of the figures in this paragraph from "A static render" onward were measured before round 2,
+to be re-measured:** round 2 removed the mainnet caption and the "Acting as" sentence (so the
+40px context row no longer applies) and loosened the spacing (below), so none of them describes
+the page now. The only post-round-2 figure is **1,802px at 1280px wide** (no-wallet
+state, TOKNS.FI; 1,771px at 1280px just before round 2). The 1,843px at 1024px and the 1,802px at
+1280px are different widths: do not compare them.
+Nothing important is below the first screen: the header, the context row and the Rewards panel
+all fit in the first 768px (measured before round 2, to be re-measured: the spacing grew).
+
+Top to bottom (`pages/[chainName]/validator.tsx` and `ValidatorDashboard/index.tsx`):
+
+```
+Validator Dashboard                                  (H1, under the breadcrumb)
+[JAILED ALERT, only while jailed, with Unjail]
+TOKNS.FI  ACTIVE  Commission 5.0%  Operator core1..  Account core1..  [explorer icon]   (header strip; status tag with a moving mark; one row at 1024px before round 2, to be re-measured)
+[note, only with no wallet or a read-only CLIQ]     [Mainnet] [Testnet]  [Refresh]   (context row; on testnet a gold TESTNET status tag sits beside the boxes)
+
+| REWARDS  |||||||||||||     | PERFORMANCE  |||||||||||||      (scale rules; Rewards is coral)
+[ commission .... [Claim]  ]  [ voting power | rank | stakers ]
+[ self-delegation [Claim]  ]  [ total stake, self-delegation, ... ]
+[ Claim all                ]
+[ Paid to core1.. [Change] ]            (one line)
+
+| GOVERNANCE  ||||||||||||     | STAKERS  ||||||||||||||||
+[ active proposals         ]  [ 645 stakers . 0 unbonding ]
+[ Past proposals (latest N) v ]  [ top 5 rows, Show all 645 ]   (N = rows shown, at most 10)
+
+| MANAGE  ||||||||||||||||||||||||||||||||||||||||||||||||||
+[ four action tiles, each with an icon and a corner arrow (CLIQ mode only) ]
+[ Edit validator: description and note on the left, button on the right ]
+[ CLIQ upgrade CTA: unchanged, hidden in CLIQ mode ]
+```
+
+- **Jailed alert** (`JailedAlert.tsx`): a full-width alert, the very first block of the dashboard
+  while the validator is jailed, hosting `UnjailAction` unchanged. At 375px the Unjail button is
+  on the first screen.
+- **Header strip** (`ValidatorIdentityCard.tsx`, now a strip rather than a card): moniker (h2),
+  status tag (Active `success` with a signal meter, Unbonding `warning` with a half-lit dot, Jailed
+  `destructive` with a hazard bar, anything else muted with a dashed ring; see §4.1), commission
+  rate, operator and account addresses with copy buttons, explorer link. No card chrome, no
+  "Validator" label.
+- **Context row**: left, a note only when there is something to know before acting: "No wallet
+  connected ..." or, in a read-only CLIQ, the `text-warning` line (exactly once); otherwise the
+  left side is empty and the row is right-aligned (`lg:justify-end`). Right, the network control
+  (`components/DevTools/NetworkToggle.tsx`) and Refresh. *Until 2026-10-10 (round 2) the left side
+  always held the "Acting as" sentence (§2).*
+- **Sections**: each is a `<section>` with a `ScaleRule` heading (Rewards `tone="primary"`,
+  Performance, Governance, Stakers, Manage) over one `Card` panel. The child components render
+  their content only; `index.tsx` provides the panels. At `lg` Rewards sits beside Performance and
+  Governance beside Stakers (equal-height panels); below `lg` everything is one column in the same order.
+- **Spacing** (round 2, the owner: "on vertical and horizontal spacing add more space"):
+
+  | What | Now | Until 2026-10-10 (round 2) |
+  |------|-----|----------------------------|
+  | Between the page blocks (root) | `space-y-8` | `space-y-6` |
+  | Section grid, columns / rows | `gap-x-8 gap-y-10` | `gap-x-6 gap-y-8` |
+  | Section label to its card | `gap-4` | `gap-3` |
+  | Card padding | `p-5 sm:p-6` | `p-4 sm:p-5` |
+  | Rewards panel rows | `space-y-5` | `space-y-4` |
+  | Identity strip, columns / rows | `gap-x-6 gap-y-3` | `gap-x-4 gap-y-2` |
+  | Moniker to status tag (inside the strip) | `gap-4` | `gap-3` |
+  | Context row, gap between its two sides | `gap-4` | `gap-3` |
+
+  The Manage card's inner spacing is in §4.6.
+- **Loading skeletons** (`DashboardSkeleton` in `index.tsx`) are meant to have the same silhouette,
+  so the page does not jump. **Round 2 did not update them**: read in the code at the round 2
+  commit, the skeleton still has the old spacing (`space-y-6`, `gap-x-6 gap-y-8`, `gap-3` in the
+  section placeholders, `gap-x-4 gap-y-2` in the strip) and a wide placeholder bar on the left of
+  the context row for the "Acting as" sentence that no longer exists. So it no longer matches the
+  page exactly; how far the page jumps was not measured. Open: bring the skeleton in line.
+- Phone (375px): no horizontal scroll; every action is at least 44px tall (`max-sm:h-11` on the `sm`
+  buttons, `max-sm:min-h-11` on the Stakers / Unbonding tabs) except the copy icons next to
+  addresses (24px). *Until 2026-10-10 the two tabs measured 34px at 375px, below the 44px this
+  page promises; `validator-delegators` pins the class now.*
+
+### Original intent (kept legible; superseded by the layout above)
+
 > The two diagrams below are the **original intent**, not a description of the shipped
-> page. The Quick Stats row and the Recent Transactions card were never built, and the
-> real page adds Validator Commands, Delegators and Proposal Viewer cards. See §4 for
-> what actually renders.
+> page. The Quick Stats row and the Recent Transactions card were never built. Until
+> 2026-10-10 the real page was a 5-column bento: Identity beside Performance, Pending Rewards
+> beside Withdraw Address, Delegators beside Proposals, then Commands, each card stretched to
+> the height of its row (which is why Withdraw Address, one line of content, filled a 3/5-wide box).
 
 ### Desktop Layout (5-column bento grid)
 ```
@@ -167,67 +324,219 @@ read-only warning (`ValidatorDashboard/index.tsx`).
 
 ## 4. Component Breakdown
 
-The cards below are the ones that exist. Two cards from the original spec — a
-separate Quick Stats row and a Recent Transactions card — were never built; their
-content was folded into the identity and performance cards instead.
+The pieces below are the ones that exist. Two cards from the original spec (a separate
+Quick Stats row and a Recent Transactions card) were never built; their content was folded
+into the strip and the Performance section instead. **Since 2026-10-10 the section components
+render their content only**: the panel (a `Card`) and the `ScaleRule` heading come from
+`ValidatorDashboard/index.tsx`, so no section carries its own `// label` and title.
 
-### 4.1 Validator Identity Card
-`ValidatorIdentityCard.tsx` · **Variant:** `institutional` with `bracket="green"`
-(note: the bracket colour token is `--accent-green`, which is **coral** — see §7)
-**Content:**
-- Validator moniker (or address if no moniker)
-- Status badge: Active (`success`), Unbonding (`warning`), Jailed (`destructive`), Inactive (muted)
+### 4.1 Jailed Alert and Validator Identity Strip
+`JailedAlert.tsx` · `ValidatorIdentityCard.tsx` (a strip now, not a card)
+**Strip content:**
+- Validator moniker (h2)
+- **Status tag** (the `Badge` component with a `mark`; spec in
+  [Cards PRD §5](CARDS-PRD.md#5-card-sub-components), not repeated here). The word is in the
+  state's colour and a small mark beside it moves, so colour is never the only signal:
+
+  | State | Variant | Mark (moves) |
+  |-------|---------|--------------|
+  | Active (bonded) | `success` | `signal`: a three-bar meter |
+  | Unbonding | `warning` | `half`: a half-lit dot that turns |
+  | Jailed | `destructive` | `stripes`: a sliding hazard bar |
+  | anything else, labelled "Inactive" | `secondary` (muted) | `ring`: a turning dashed ring |
+
+  There is **no plain dot** beside the tag (owner: "no dots blinking next to pill, I like the
+  animated pill icons"), and the tag is not a pill any more. The marks hold still when the visitor
+  asked for reduced motion. *Until 2026-10-10 (round 2) the status was a bordered pill badge with
+  a lucide icon (`Shield`, `CircleDashed`, `AlertTriangle`) and "Inactive" was an `outline`
+  badge.*
 - Commission rate
-- Validator operator address (truncated with copy)
-- "View in Explorer" link
-- Jailed banner. While `validator.jailed` it also hosts the **Unjail validator** action
-  (`UnjailAction.tsx`): `Button variant="action" size="action"`, a one-line warning
-  ("unjail only after your node is synced and signing again"), and a status line in
-  `text-destructive` (tombstoned) or `text-warning` (jail period not over / signing info
-  unreadable). See §6, Unjail.
+- Operator address and account address (truncated, each with a copy button)
+- Explorer link, **icon-only** (`size="icon-sm"`, `aria-label="View validator in explorer"`, `title`
+  "View in explorer", the same href; 44px on phones). With a text label it was 102px wide and
+  wrapped to a second row at 1024px (the other parts take about 707px of a 792px row; measured
+  before round 2, to be re-measured: the strip's gaps grew to `gap-x-6` and the tag replaced the
+  badge, so "one row at 1024px" is not confirmed for the page as it is now). Below 1024px
+  the strip may wrap. *Until 2026-10-10 the link read "Explorer".*
 
-### 4.2 Pending Rewards Card (Primary Action Card)
-`PendingRewardsCard.tsx` · **Variant:** `institutional` with `accent="left"`
+**Jailed alert** (only while `validator.jailed`): a full-width `role="alert"` block at the very
+top of the dashboard that says the validator is jailed and hosts the **Unjail validator** action
+(`UnjailAction.tsx`: `Button variant="action" size="action"`, `w-full sm:w-auto`, a one-line
+warning, and a status line in `text-destructive` (tombstoned) or `text-warning` (jail period
+not over / signing info unreadable). See §6, Unjail. *Until 2026-10-10 the identity card was
+a `Card` with `bracket="green"`, a "// Validator" label, tinted rows for commission and the two addresses, and a "View in
+Explorer" button, and the jailed block (with Unjail) sat at the bottom of that card, in the
+left 2/5 column; the jailed layout test pinned an `order-first` class on its grid slot.*
+
+### 4.2 Rewards (`PendingRewardsCard.tsx`, with the withdraw address folded in)
+**Section:** `ScaleRule label="Rewards" tone="primary"`: the one coral heading on the page.
 **Content:**
-- Pending commission and self-delegation rewards, in the chain's primary denom
-- **Primary Actions** — labels and behaviour depend on the mode (see §2):
-  - Claim All (Commission + Rewards) — `MsgWithdrawValidatorCommission` + `MsgWithdrawDelegatorReward`
-  - Claim Commission Only — `MsgWithdrawValidatorCommission` alone
-  - Claim Rewards Only — `MsgWithdrawDelegatorReward` alone
-- Self-delegation rewards are only included when they are actually non-zero, so a
-  jailed validator with no self-delegation sends the commission message alone.
-- In CLIQ mode an inline note reads "Actions will create a transaction for multisig signing".
+- Two rows, each = kit icon, label, the amount (tabular figures, in the chain's primary denom)
+  and its **own** Claim button on the right:
+  - Validator commission: Claim (`MsgWithdrawValidatorCommission` alone, `claimCommission(false)`)
+  - Self-delegation rewards: Claim (`MsgWithdrawDelegatorReward` alone, `claimRewards`)
+- One primary **Claim all** under them (`claimCommission(true)`: `MsgWithdrawDelegatorReward` +
+  `MsgWithdrawValidatorCommission`), shown only when both amounts exist.
+- Each button keeps its exact `disabled` rule (read-only, a claim running, or nothing to claim) and
+  its loading spinner. Labels depend on the mode (see §2): in CLIQ mode they read "Create: Claim"
+  and "Create: Claim all", with an inline note "Actions will create a transaction for multisig signing".
+  That label and that note are what tell the CLIQ path apart; the buttons are not a different colour.
+- One primary per view: when only one amount exists that row's Claim is the coral button, **in both
+  modes** (`default`; the other rows are `outline`). *Until 2026-10-10 (round 2) the CLIQ-mode
+  primary was the gold `action-bronze` and the other rows `action-bronze-outline`; gold is the
+  testnet colour (§2).*
+- Self-delegation rewards are only included when they are actually non-zero, so a jailed
+  validator with no self-delegation sends the commission message alone.
+- **The withdraw address, as one line** (`WithdrawAddressCard.tsx`, compact): "Paid to core1…asj6gw
+  [copy] [Change]". The row already fills a half-width Rewards card (342px of 342px; measured
+  before round 2, to be re-measured, because the card padding and the grid gap grew), so the fact
+  "Same as operator account" / "Custom address" is not a second line any more: it is the "Paid
+  to" label's `title` and a screen-reader-only phrase after the label (", same as operator
+  account" or ", custom address"). For a custom address that is the only place the word
+  "custom" appears: the address itself is on screen, so a sighted reader sees it directly. *Until 2026-10-10 it was a visible second line (`success` token for
+  the operator account, muted for a custom address).* Change reveals the input and the submit
+  (`MsgSetWithdrawAddress`); Cancel folds it back.
 
-### 4.3 Validator Performance Card
-`ValidatorPerformanceCard.tsx` · **Variant:** `institutional`
-**Content:** Voting Power, Ranking, Delegators, Total Stake, Self-Delegation,
-Commission, Min Self-Delegation.
-Uptime percentage and missed-block counts were specified but are **not implemented** —
+*Until 2026-10-10: a card "// Pending / Rewards & Commission" with two large amounts, then three
+stacked full-width buttons (Claim All, Claim Commission Only, Claim Rewards Only), and a separate
+full-height "// Distribution / Withdraw Address" card beside it (the owner's "distribution box huge
+and unnecessary").*
+
+### 4.3 Performance (`ValidatorPerformanceCard.tsx`)
+**Section:** `ScaleRule label="Performance"`.
+**Content:** three headline stats with kit icons (Voting Power `portfolio`, Ranking `rank`,
+Stakers `stakers`), then one quiet list of the secondary figures: Total Stake, Self-Delegation,
+Commission, and Min Self-Delegation when it is set above the chain default. No nested tiles.
+Uptime percentage and missed-block counts were specified but are **not implemented**:
 they need signing-info/slashing queries that the dashboard does not make for healthy
 validators. (Since 2026-10-08 the dashboard does read signing info, but only while the
 validator is jailed, to gate Unjail; it is not shown as uptime.)
+*Until 2026-10-10: six bordered tiles in a 2- or 3-column grid inside a card. Until 2026-10-10
+the third tile said "Delegators" while the section beside it said "Stakers"; one
+word for the same people now. Chain terms in data rows ("Self-Delegation", "Min Self-Delegation")
+stay.*
 
-### 4.4 Validator Delegators Card
-`ValidatorDelegatorsCard.tsx` · **Variant:** `institutional`
-Delegator listing derived from the dashboard data payload.
+**A figure that could not be fetched is a dash, not a zero.** `ValidatorDashboardData` types
+`delegatorsCount` as `number | null` and `votingPowerPercentage` as `string | null` (the same
+contract as `delegations`: `null` = unavailable, a real `0` is a measurement). A `null` tile shows
+an em dash (`aria-hidden`) with a screen-reader-only "unavailable" inside a `relative` span (so
+the hidden word cannot escape a scroll box, see `CLAUDE.md` §3), and the ranking tile does the
+same for a `null` ranking. **One number, one fetch:** the stakers count is the length of the
+stakers list (`delegations === null ? null : delegations.length`), so the tile and the Stakers
+section (§4.5) cannot disagree; the second full pagination that used to count them, and its
+helper `getValidatorDelegatorsCount`, are gone. The two voting-power sentences in Governance
+("Your validator represents X% of the network's voting power" and the vote dialog's "Your voting
+power: X%") are not rendered when the share is `null`. Pinned by `validator-performance`,
+`validator-proposals` and, for the real `getValidatorDashboardData` against a stubbed query
+client, `validator-dashboard-data`. *Until 2026-10-10 a failed stakers fetch read "STAKERS 0
+total" next to a Stakers section that said "unavailable right now", and a failed pool query read
+"0%".*
 
-### 4.5 Validator Commands Card
-`ValidatorCommandsCard.tsx` · **Variant:** `institutional` with `accent="left"`
-**Content:**
-- CLIQ mode only: four tiles that deep-link to the new-transaction page with a message
+### 4.4 Governance (`ProposalViewer.tsx`)
+**Section:** `ScaleRule label="Governance"`.
+Active proposals as before (a tile each, vote badge or NEEDS VOTE, **Vote Now** and **Details**).
+Governance proposals are voted Yes / No / Abstain / No-with-veto (`MsgVote`); Yes uses the
+`success` token, and the tally chips are semantic, not decorative. **Past proposals sit in a
+drop-down, "Past proposals (latest N)", closed by default** (`components/ui/collapsible.tsx`); it
+lists the latest 10 finished proposals, or says the history is unavailable. **N is honest:** the
+label reads **"latest N" whenever N is 1 or more** (N = the rows shown, at most 10), "(0)" with the
+text "No past proposals found." for none, and "(unavailable)" for `null`. The helper
+(`getPastProposals`) reads the newest 20 proposals of any status and keeps the finished ones, so a
+bare "(7)" could be less than the chain's real total while "latest 7" is always true. *(Until
+2026-10-10 the label counted the rows shown and read "(10)" even when more existed; then it said
+the real number up to 10 and "latest 10" only above that, so "(7)" could still understate.)*
+**The opened list scrolls inside one box**
+(`relative max-h-[260px] overflow-y-auto`, the same treatment as the stakers list), so Governance
+grows by one box instead of ten rows; opened, it used to grow Governance from 384px to 966px and
+drag the Stakers card to the same height, leaving about 580px of empty card (measured). Governance
+and Stakers are **equal-height panels** side by side from `lg`, so opening the history still
+leaves about 200px of empty space in the Stakers card (measured 199px on a real build, before round 2,
+to be re-measured; the 384px, 966px and 580px above are from before round 2 too); accepted,
+because a second card that does not follow its neighbour's height would break the row. The vote dialog and
+`submitVote` are unchanged, except that `submitVote` no longer blocks later votes after a
+"connect your wallet first" toast (PR #81, 2026-10-10).
+*Until 2026-10-10 the past proposals were always listed inline under the active ones.*
+
+**A proposal shows its real title, and the list stays what it was.** The LIST of active proposals
+drives the Vote Now buttons, so it is decided as on the main branch: `getActiveProposals` asks the
+v1beta1 `gov.proposals` query first and uses the gov v1 REST list only when v1beta1 throws or
+returns nothing (in that REST-list path only a proposal whose RAW status is
+`PROPOSAL_STATUS_VOTING_PERIOD` is kept). gov v1 supplies **titles only**: when a listed proposal
+has no usable title (`readProposalTitle` in `lib/validatorHelpers.ts` is the one rule, shared with
+the viewer), REST is asked once and its title is copied onto the proposal with the same id. REST
+may never add, remove or reorder a proposal when v1beta1 answered, and a proposal that already has
+a title keeps it; when no REST endpoint answers the list stays and the title falls back.
+Seen on the real page: proposal 47 on TX mainnet ("TX Chain Mainnet Upgrade v8.0.0", one
+`MsgSoftwareUpgrade`) showed "Untitled Proposal", because the node's v1beta1 view of it has
+`content` keys `@type, authority, plan` and no title (both views were read with curl against a
+TX mainnet REST node on 2026-10-10); the title is only at `/cosmos/gov/v1/proposals/47`. The
+proposal id, status and voting times are v1beta1's own either way. When no title can be had the
+card says **"Proposal #47" once**: the small "Proposal #47" kicker above the heading is hidden
+for a proposal with no title (the heading already reads it) and stays above a real title. It
+never says "Untitled Proposal" (a claim; the proposal does have a title on chain). A title is
+read from `content.title`, then from `content.value.title` (a decoded Any); a blank or non-text
+one counts as none; both branches and their order are pinned in `validator-proposals`.
+*Until 2026-10-10 the fallback text was "Untitled Proposal" and nothing fetched a title.* Why
+gov v1 is not simply made the source of the list (it carries the title): a REST node that answers
+`[]` would hide a proposal v1beta1 knows, and a REST host that ignores `proposal_status=2` could
+put a finished proposal on the page with a Vote Now button (both shown with probes); the list
+drives the vote buttons, so it must not get less reliable.
+The vote flow is untouched: `submitVote`, `gasLimit` and the vote option table are byte for byte
+what they were, the signing fence still prints `FENCE OK`, and `validator-vote-options` still pins
+what each option sends. Not done (nothing showed it was needed): reading a title out of a v1
+legacy-content message (`MsgExecLegacyContent`) when the proposal-level `title` is empty.
+
+### 4.5 Stakers (`ValidatorDelegatorsCard.tsx`)
+**Section:** `ScaleRule label="Stakers"`.
+The summary line is the tab list: "645 stakers · 0 unbonding". The Stakers tab shows the top 5
+(the data helper sorts by amount, largest first) and **Show all** opens the rest in a drop-down with
+its own scroll (`max-h-[260px]`), **Show fewer** folds it back. The Unbonding tab keeps its total
+and its table. *Until 2026-10-10: "Active Stakers (n)" and "Unbonding (n)" tabs over a 300px scroll
+box of every staker.*
+
+**A failed fetch is not "0 stakers".** `getValidatorDelegations` and
+`getValidatorUnbondingDelegations` return `null` when the query fails and `[]` only when the
+chain really answers with nothing, and `ValidatorDashboardData.delegations` /
+`.unbondingDelegations` are typed `... | null` (the same contract as `pastProposals`). When the
+stakers list is `null` the section says "Stakers unavailable right now. Use Refresh to try
+again." and the tab reads just "Stakers", with no count; when the unbonding list is `null` the
+tab reads "Unbonding" and its panel says "Unbonding unavailable right now. Use Refresh to try
+again." One failing does not hide the other (a loaded part still shows). A real empty answer still
+reads "0 stakers" and "No stakers yet". *Until 2026-10-10 both helpers caught every
+error and returned `[]`; on one real load the Performance tile said 645 while this section said
+"0 stakers · 0 unbonding / No active delegators found".* The Performance tile follows the same
+contract (§4.3): its stakers count is the length of this list, `null` when the fetch failed.
+*(This paragraph said "Not fixed here: `getValidatorDelegatorsCount`, which feeds the Performance
+tile, still returns `0` when its query fails" until 2026-10-10; that second pagination and its
+helper are gone.)*
+
+### 4.6 Manage (`ValidatorCommandsCard.tsx`)
+**Section:** `ScaleRule label="Manage"`.
+**Content** (restyled in round 2, the owner: "the manage button area can have better styling"):
+- **Sub-headings** ("// Staking & Governance", "Edit validator") are in the section-label type:
+  mono, 11px, medium, uppercase, 0.14em tracking, muted (the `SUBHEAD` constant in the file).
+  *Until 2026-10-10 (round 2) they were `text-sm font-medium uppercase tracking-wide`, and
+  "Edit validator" had a pencil icon (`Edit3`) before it.*
+- CLIQ mode only: **four action tiles** that deep-link to the new-transaction page with a message
   type pre-selected: Delegate, Undelegate, Redelegate and "Claim delegation rewards"
   (`/[chainName]/<target>/transaction/new?type=<typeUrl>`). The last tile was labelled
   "Withdraw Rewards" until the 2026-10 flow cleanup. The Vote tile is gone: vote from the
-  Governance card (§4.6).
+  Governance section (§4.4). Each tile has **its own icon** (Delegate `TrendingUp`, Undelegate
+  `TrendingDown`, Redelegate `ArrowLeftRight`, Claim delegation rewards `Coins`), a title, one
+  muted line, and a **corner arrow** (`ArrowUpRight`, muted, coral while the tile is hovered). The
+  tile sits on a **quiet raised surface**: the outline button's light and depth
+  (`bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015] shadow-btn-quiet`, see the [Buttons PRD](BUTTONS-PRD.md)), padding `p-5`,
+  the icon left of the text with a `gap-4`. *Until 2026-10-10 (round 2) a tile was `p-4`, the icon
+  sat beside the title with the description under it, three of the four tiles used the same
+  `TrendingUp` icon, and there was no arrow.*
 - Direct mode: no tiles. A short note says those actions are proposed through a CLIQ.
-- One "Edit validator" button that opens a dialog "Edit Validator Details" (moniker,
-  identity, website, security contact, details, commission rate, min self-delegation)
-  and submits `MsgEditValidator`
-
-### 4.6 Proposal Viewer
-`ProposalViewer.tsx` · **Variant:** `institutional` with `accent="left"`
-Governance proposals with Yes / No / Abstain / No-with-veto voting (`MsgVote`).
-Yes uses the `success` token; the tally chips are semantic, not decorative.
+- **Edit validator as one row** from `sm`: on the left the sub-heading, the description and, under
+  the description, the note "Changes may take a few minutes to reflect on the network."; on the
+  right one "Edit validator" button (`variant="action"`, the ink sheen; `w-full sm:w-auto`, so full
+  width on a phone, where the row stacks). It opens a dialog "Edit Validator Details"
+  (moniker, identity, website, security contact, details, commission rate, min self-delegation)
+  and submits `MsgEditValidator`. *Until 2026-10-10 (round 2) the heading, the description and the
+  button were stacked, and the note was a separate centred line at the foot of the card.*
 
 ### 4.7 CLIQ Upgrade CTA Card
 `CliqUpgradeCTA.tsx` · **Variant:** `institutional` with `bracket="purple"`
@@ -235,13 +544,41 @@ CTA into `/[chainName]/create`. Hidden in CLIQ mode (`!isCliqMode`): a CLIQ alre
 the protection it advertises. Copy (2026-10-09): the card offers a *new* validator run by a CLIQ,
 because on TX an existing validator's operator account and keys cannot change (verified at TX's
 running tags; TX ecosystem hub note CLIQS-VALIDATOR-OPS §5.1). *(Until 2026-10-09 the card said
-"Works With Existing Validator" and "Upgrade to a CLIQ".)*
+"Works With Existing Validator" and "Upgrade to a CLIQ".)* Unchanged by the 2026-10-10 layout.
 
-### 4.8 Withdraw Address Card
-`WithdrawAddressCard.tsx` · **Variant:** `institutional`
-**Content:**
-- Current withdraw address, or "Same as operator account" (rendered with the `success` token) when unset
-- Inline edit form submitting `MsgSetWithdrawAddress`
+### 4.8 Network control (`components/DevTools/NetworkToggle.tsx`)
+Two small outlined boxes, Mainnet | Testnet, 36px tall (`h-9`; 44px on phones, `max-sm:h-11` on
+both boxes, pinned by `network-toggle`), not a panel. The word
+"Testnet" is always gold (the `warning` token). While testnet is active its box gets a gold
+outline and a gold **TESTNET** status tag shows beside the control (`Badge variant="warning"
+mark="half"`: the word with a half-lit turning dot, see
+[Cards PRD §5](CARDS-PRD.md#5-card-sub-components)), so it is obvious you are not on main. **While
+mainnet is active the control is just the two boxes: there is no caption.** From 640px up the boxes
+and the tag stay on one row (`sm:flex-nowrap`); on a phone the tag may drop under the boxes. Props
+and `onNetworkChange` are unchanged (Dev Tools uses the same component), and a chain with no
+testnet variant still says so.
+
+*Until 2026-10-10 (round 2) one short muted caption sat on the same row as the boxes while
+mainnet was active, and never wrapped: "Real assets. Check before you sign.". The longer sentence,
+"Mainnet actions use real assets. Verify all addresses and messages before signing.", was its
+`title` and also screen-reader-only text beside the short caption, which was `aria-hidden` so
+nothing was read twice (a `title` alone does not reach a screen reader; the caption was `relative`
+so the `sr-only` sentence could not escape a scroll box). The owner: "remove the mainnet message".
+On testnet the gold TESTNET badge (a bordered pill) replaced the caption.* Round 2 removed the
+caption and the `sr-only` sentence together.
+
+*Until 2026-10-10 the sentence was a 22rem-wide line under the boxes that wrapped to two lines,
+so the control measured 352x74px and set the height of the whole context row.* **Measured before
+round 2, to be re-measured**, on a real build at 1024px (editing the live DOM, so INFERRED for the
+shipped classes): with the short caption the context row was 40px (the two-line "Acting as"
+sentence set it); with the longer example caption "Real assets. Check every address before you
+sign." it was 60px, because the right side then took 571px of 792px and squeezed the sentence to
+three lines. Neither the caption nor the sentence exists now, so the context row's height is
+whatever the boxes, the Refresh button and the optional note set.
+*Until 2026-10-10: a bordered panel with a "Network Mode" header, a red/outline badge, two tabs
+and, on mainnet, a red warning banner.* The gold-for-testnet choice is cliqs-specific, on the
+owner's words (round 2: "that is testnet color"); the TOKNS kit's own testnet marker is coral and
+is not changed.
 
 ---
 
@@ -254,7 +591,11 @@ running tags; TX ecosystem hub note CLIQS-VALIDATOR-OPS §5.1). *(Until 2026-10-
 | Commission | `distribution.validatorCommission(operatorAddr)` |
 | Rewards | `distribution.delegationRewards(delegatorAddr, validatorAddr)` |
 | Withdraw address | `distribution.delegatorWithdrawAddress(delegatorAddr)` |
-| Delegators count | `staking.validatorDelegations(operatorAddr)` (paginated) |
+| Stakers count | the length of the stakers list below (one fetch; `null` when it failed). *Until 2026-10-10 a second pagination of `staking.validatorDelegations` counted them.* |
+| Voting power share | `staking.pool()` bonded tokens against the validator's tokens; `null` when the query fails |
+| Stakers, unbonding stakers | `staking.validatorDelegations` / `validatorUnbondingDelegations` (paginated); `null` when the query fails, `[]` when the answer is empty (§4.5) |
+| Active proposals | the `gov.proposals` v1beta1 query decides the list; gov v1 REST `GET /cosmos/gov/v1/proposals?proposal_status=2` is the list only when v1beta1 throws or returns nothing (voting-period status only), and otherwise supplies titles for listed proposals that have none (§4.4) |
+| Past proposals | gov v1 REST, latest 20 in reverse, filtered to finished; `null` when no endpoint answers |
 | Signing info (only while jailed) | `slashing.signingInfo(consAddress)`, with `consAddress` from `consensusPubkeyToAddress` (sha256 of the consensus pubkey) |
 
 Signing info is queried **only for a jailed validator**, to gate the Unjail action
@@ -312,13 +653,13 @@ these components any more. Call sites: `PendingRewardsCard.tsx`,
 ### Supported Actions
 | Action | Message Type(s) | Gas (`gasOfTx`) |
 |--------|-----------------|----------------:|
-| Claim All (commission + self-delegation rewards) | MsgWithdrawValidatorCommission + MsgWithdrawDelegatorReward | 1,200,000 |
-| Claim Commission Only | MsgWithdrawValidatorCommission | 700,000 |
-| Claim Rewards Only | MsgWithdrawDelegatorReward | 600,000 |
+| Claim all (commission + self-delegation rewards) | MsgWithdrawValidatorCommission + MsgWithdrawDelegatorReward | 1,200,000 |
+| Claim (commission row) | MsgWithdrawValidatorCommission | 700,000 |
+| Claim (self-delegation rewards row) | MsgWithdrawDelegatorReward | 600,000 |
 | Set Withdraw Address | MsgSetWithdrawAddress | 200,000 |
 | Edit Validator | MsgEditValidator | 600,000 |
 | Vote (Proposal Viewer) | MsgVote | 200,000 |
-| Unjail Validator (jailed banner) | MsgUnjail | 300,000 |
+| Unjail Validator (jailed alert) | MsgUnjail | 300,000 |
 
 These are recomputed from `gasOfMsg` as it stands today. `WithdrawValidatorCommission`
 was raised to 600,000 in an earlier PR, which is why the claim-all figure is 1,200,000
@@ -327,7 +668,7 @@ and not the 1,100,000 this document used to state.
 **Unjail** (added 2026-10-08, after the testnet validator Tokns.fi was jailed and could
 only be unjailed through Developer Tools → Import Transaction). `MsgUnjail` has codec,
 amino and gas support (`lib/msg.ts`, `types/txMsg.ts`, `gasOfMsg` = 200,000, so
-`gasOfTx` = 300,000). The dashboard now offers it in the jailed banner:
+`gasOfTx` = 300,000). The dashboard now offers it in the jailed alert at the top of the page (until 2026-10-10: the jailed block at the bottom of the identity card):
 - Shown only while `validator.jailed`. The dashboard reads the chain's signing info for the
   validator's consensus address (derived from its consensus pubkey, **not** from the
   operator address bytes) and disables the button when the validator is tombstoned (can
@@ -378,11 +719,13 @@ all paint with it. Never use it to mean "healthy". Semantic status must use
   `ValidatorDashboard/index.tsx`, and the "Using Direct signing mode" notice in
   `TransactionSigning.tsx`. This is the same tone the message-type chips give the
   staking/distribution family in `lib/txMsgHelpers.ts` (`chipToneOfMsg` → `"info"`).
-- Status colors (`ValidatorIdentityCard`):
-  - Active / BONDED: `--success`
-  - Unbonding: `--warning`
-  - Jailed: `--destructive`
-  - Inactive: muted
+- Status colors (`ValidatorIdentityCard`, on the status tag, §4.1):
+  - Active / BONDED: `--success`, with a signal meter
+  - Unbonding: `--warning`, with a half-lit dot
+  - Jailed: `--destructive`, with a hazard bar
+  - Inactive: muted (`secondary`), with a dashed ring
+  - Testnet: `--warning` (gold), the network control's TESTNET tag, with the half-lit dot
+- Gold is the testnet colour. It is not used for buttons (Buttons PRD §4.8).
 
 ### Typography
 - Validator moniker: `font-heading`, `text-xl`, `font-bold`
@@ -391,19 +734,30 @@ all paint with it. Never use it to mean "healthy". Semantic status must use
 - Addresses: `font-mono`, `text-sm`
 
 ### Cards
-- Use `Card` component with `variant="institutional"`
-- Primary action card: `accent="left"` (coral left rule — decorative, not "healthy")
-- CLIQ CTA: `bracket="purple"` for visual distinction
+- Since 2026-10-10 each section is one `Card` (`variant="default"`, 1px border) under a
+  `ScaleRule`; the header strip and the context row have no card. Until then every section was
+  a `variant="institutional"` card with `accent="left"` or `bracket="green"`.
+- `accent="left"` is a coral left rule: decorative, not "healthy"
+- CLIQ CTA: `bracket="purple"` for visual distinction (unchanged)
 - The `from-card to-muted/30` gradient is now the **default** on `Card`'s `default` and
   `institutional` variants; it is no longer applied per call site. Surfaces that set
   their own background opt out with `bg-none`.
+- Panel padding is `p-5 sm:p-6` since round 2; the other spacing values are in §3.
 
 ### Buttons
-- Primary actions: `variant="action"`, `size="action"`
-- Secondary actions: `variant="action-outline"`
-- CLIQ-mode actions: `variant="action-bronze"` / `action-bronze-outline`, so
-  "this creates a proposal" reads differently from "this signs right now"
-- Destructive: `variant="destructive"` (if needed)
+House-style buttons since 2026-10-10 (see [Buttons PRD](BUTTONS-PRD.md)). Until then: primary actions
+`variant="action"` `size="action"` (11px mono uppercase), secondary `action-outline`. Since round 2
+(2026-10-10) every solid button has sheen and depth and the quiet ones a faint raised light
+(Buttons PRD §4.7).
+- The one primary per view is the coral `default` button ("Claim all"); strong actions that are
+  not the primary use `variant="action"`, the ink sheen (Edit validator, Unjail validator)
+- Row actions: `variant="outline"` `size="sm"` (Claim, Change, Vote Now); chips are not used here
+- CLIQ-mode actions use the same `default` / `outline` as direct mode; the "Create:" labels and the
+  Rewards note say "this creates a proposal", not a colour (gold is the testnet colour). *Until
+  2026-10-10 (round 2) this bullet read: "CLIQ-mode actions keep `variant="action-bronze"` /
+  `action-bronze-outline`, so 'this creates a proposal' reads differently from 'this signs right
+  now'". Both variants are removed.*
+- Destructive: `variant="destructive"` (if needed), the red sheen
 
 ---
 
@@ -440,7 +794,17 @@ all paint with it. Never use it to mean "healthy". Semantic status must use
 </Card>
 ```
 
+### Data that could not load (`null`) is not data that is empty (`[]`)
+The page never turns a failed fetch into a zero or an empty-list claim. `pastProposals` (null =
+"Proposal history unavailable"), `delegations` and `unbondingDelegations` (null = "unavailable
+right now. Use Refresh to try again") follow one contract: **`null` = unavailable, `[]` = none**.
+The two single figures follow it too: `delegatorsCount` and `votingPowerPercentage` are `null`
+when their fetch failed (an em dash with a screen-reader "unavailable" in the Performance tile,
+§4.3) and a real `0` still reads "0". A new list or figure on this page does the same, and a test
+pins both answers.
+
 ### Jailed Validator Warning
+Shipped as `JailedAlert.tsx` (§4.1), at the very top of the dashboard. The block below is the original intent.
 ```tsx
 <Alert variant="destructive">
   <AlertCircle className="h-4 w-4" />
@@ -486,7 +850,7 @@ all paint with it. Never use it to mean "healthy". Semantic status must use
 
 ### Phase 2: Enhanced Analytics
 1. ~~Add performance metrics (uptime, missed blocks)~~ — **not done**
-2. Add delegator count — done (`ValidatorDelegatorsCard`, plus a Delegators stat)
+2. Add delegator count — done (`ValidatorDelegatorsCard`, plus a Stakers stat; "Delegators" until 2026-10-10)
 3. ~~Integrate external API for USD prices~~ — **not done**; amounts are shown in the native denom only
 4. ~~Add transaction history~~ — **not done**; no Recent Transactions card exists
 
@@ -532,16 +896,23 @@ As shipped:
 /components/
   └── dataViews/
       └── ValidatorDashboard/
-          ├── index.tsx              # Main dashboard component + mode detection
-          ├── ValidatorIdentityCard.tsx
-          ├── PendingRewardsCard.tsx
+          ├── index.tsx              # Dashboard: mode detection, the sections and their panels, the skeleton
+          ├── JailedAlert.tsx        # Jailed alert at the very top, hosts UnjailAction
+          ├── ValidatorIdentityCard.tsx   # The header strip (not a card)
+          ├── PendingRewardsCard.tsx      # Rewards rows + Claim all
           ├── ValidatorPerformanceCard.tsx
-          ├── ValidatorDelegatorsCard.tsx
-          ├── ValidatorCommandsCard.tsx
-          ├── ProposalViewer.tsx
+          ├── ValidatorDelegatorsCard.tsx # Stakers: top 5 + Show all, Unbonding tab
+          ├── ValidatorCommandsCard.tsx   # Manage
+          ├── ProposalViewer.tsx          # Governance: active proposals + Past proposals drop-down
           ├── CliqUpgradeCTA.tsx
-          ├── UnjailAction.tsx       # Unjail validator, hosted in the identity card's jailed banner
-          └── WithdrawAddressCard.tsx
+          ├── UnjailAction.tsx       # Unjail validator, hosted in JailedAlert (was the identity card's jailed block)
+          └── WithdrawAddressCard.tsx     # The "Paid to" line, inside the Rewards panel
+
+/components/ (the shared pieces the page uses)
+  ├── DevTools/NetworkToggle.tsx     # The compact Mainnet | Testnet control
+  ├── icons/kit.tsx                  # Kit icons used by the sections
+  ├── ui/badge.tsx                   # The status tag (word in the state's colour, plus a moving mark)
+  └── ui/scale-rule.tsx              # The section dividers
 
 /lib/
   ├── validatorHelpers.ts            # Validator-specific queries and utils
@@ -561,7 +932,10 @@ not exist.
 ### Requirements
 - All interactive elements keyboard accessible
 - Screen reader announcements for status changes
-- Color-blind friendly status indicators (icons + color)
+- Color-blind friendly status indicators: each status tag has its own mark and motion as well as
+  its colour (§4.1); the mark is `aria-hidden` and the word carries the meaning, and the marks
+  hold still when the visitor asked for reduced motion. *Until 2026-10-10 (round 2) this line said
+  "(icons + color)": the marks were lucide icons.*
 - Focus management on action completion
 
 ---

@@ -1,17 +1,23 @@
 /**
- * Withdraw Address Card
+ * Withdraw Address
  *
- * Displays and allows changing the reward withdraw address.
+ * One line under the rewards: "Paid to core1...asj6gw [copy] [Change]". Change reveals the
+ * input and the submit button. Renders its content only; the Rewards panel (card) comes from
+ * ValidatorDashboard/index.tsx. Until 2026-10-10 this was its own full-height "Distribution" card.
+ *
+ * It is ONE line (since 2026-10-10): the row already fills a half-width Rewards card, so
+ * the fact "same as operator account" / "custom address" is no longer a second line of text. It
+ * is the "Paid to" label's `title` (hover) and a screen-reader-only phrase after the label.
  */
 
-import { Card, CardContent, CardHeader, CardTitle, CardLabel } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { KitIcon } from "@/components/icons/kit";
 import { Input } from "@/components/ui/input";
 import { useChains } from "@/context/ChainsContext";
 import { useWallet } from "@/context/WalletContext";
 import { ValidatorInfo } from "@/lib/validatorHelpers";
 import { createCliqTransaction, buildSetWithdrawAddressMsg } from "@/lib/validatorTx";
-import { ArrowRight, Loader2, Check, X, Users } from "lucide-react";
+import { Loader2, Check, X, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { calculateFee, GasPrice, SigningStargateClient } from "@cosmjs/stargate";
@@ -46,6 +52,7 @@ export default function WithdrawAddressCard({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isSameAsOperator = withdrawAddress === validator.delegatorAddress;
+  const addressKind = isSameAsOperator ? "Same as operator account" : "Custom address";
 
   const handleSubmit = async () => {
     // Prevent duplicate submissions
@@ -182,96 +189,85 @@ export default function WithdrawAddressCard({
   };
 
   return (
-    <Card variant="institutional" className="h-full">
-      <CardHeader>
-        <CardLabel comment>Distribution</CardLabel>
-        <CardTitle className="font-heading text-lg font-bold">Withdraw Address</CardTitle>
-      </CardHeader>
-
-      <CardContent className="space-y-4">
-        {!isEditing ? (
-          <>
-            {/* Current Address Display */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                {isSameAsOperator ? (
-                  <span className="text-success">Same as operator account</span>
-                ) : (
-                  <span>Custom withdraw address</span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <AddressDisplay
-                  address={withdrawAddress}
-                  copyLabel="withdraw address"
-                  className="rounded bg-muted/30 px-3 py-2"
-                />
-              </div>
-            </div>
-
-            {/* Change Button */}
-            <Button variant="outline" className="w-full gap-2" onClick={() => setIsEditing(true)}>
-              {isCliqMode ? <Users className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
-              Change Withdraw Address
-              {isCliqMode && <span className="text-xs opacity-70">(via CLIQ)</span>}
-            </Button>
-          </>
-        ) : (
-          <>
-            {/* Edit Form */}
-            <div className="space-y-3">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">New Withdraw Address</label>
-                <Input
-                  value={newAddress}
-                  onChange={(e) => setNewAddress(e.target.value)}
-                  placeholder={`${chain.addressPrefix}1...`}
-                  className="font-mono text-sm"
-                  disabled={readOnly || isSubmitting}
-                />
-                <p className="text-xs text-muted-foreground">
-                  All future rewards will be sent to this address.
-                </p>
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  variant="action"
-                  className="flex-1 gap-2"
-                  onClick={handleSubmit}
-                  disabled={readOnly || isSubmitting || !newAddress}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      {isCliqMode ? "Redirecting..." : "Updating..."}
-                    </>
-                  ) : isCliqMode ? (
-                    <>
-                      <Users className="h-4 w-4" />
-                      Create Transaction
-                    </>
-                  ) : (
-                    <>
-                      <Check className="h-4 w-4" />
-                      Confirm
-                    </>
-                  )}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="gap-2"
-                  onClick={cancelEdit}
-                  disabled={readOnly || isSubmitting}
-                >
-                  <X className="h-4 w-4" />
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </>
+    <div className="space-y-1.5">
+      {/* Current address, one line */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <KitIcon name="withdraw" size={24} className="shrink-0 text-foreground" />
+        {/* `relative` contains the sr-only phrase (it is absolutely positioned) */}
+        <span className="relative text-sm text-muted-foreground" title={addressKind}>
+          Paid to
+          <span className="sr-only">, {addressKind.toLowerCase()}</span>
+        </span>
+        <AddressDisplay address={withdrawAddress} copyLabel="withdraw address" />
+        {!isEditing && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="ml-auto gap-2 max-sm:h-11"
+            onClick={() => setIsEditing(true)}
+          >
+            {isCliqMode && <Users className="h-4 w-4" />}
+            Change
+            {isCliqMode && <span className="text-xs opacity-70">(via CLIQ)</span>}
+          </Button>
         )}
-      </CardContent>
-    </Card>
+      </div>
+
+      {isEditing && (
+        <div className="space-y-3 pt-1.5">
+          <div className="space-y-2">
+            <label htmlFor="withdraw-address-input" className="text-sm font-medium">
+              New Withdraw Address
+            </label>
+            <Input
+              id="withdraw-address-input"
+              value={newAddress}
+              onChange={(e) => setNewAddress(e.target.value)}
+              placeholder={`${chain.addressPrefix}1...`}
+              className="font-mono text-sm"
+              disabled={readOnly || isSubmitting}
+            />
+            <p className="text-xs text-muted-foreground">
+              All future rewards will be sent to this address.
+            </p>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              variant="action"
+              className="flex-1 gap-2"
+              onClick={handleSubmit}
+              disabled={readOnly || isSubmitting || !newAddress}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {isCliqMode ? "Redirecting..." : "Updating..."}
+                </>
+              ) : isCliqMode ? (
+                <>
+                  <Users className="h-4 w-4" />
+                  Create Transaction
+                </>
+              ) : (
+                <>
+                  <Check className="h-4 w-4" />
+                  Confirm
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={cancelEdit}
+              disabled={readOnly || isSubmitting}
+            >
+              <X className="h-4 w-4" />
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

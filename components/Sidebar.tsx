@@ -331,7 +331,7 @@ export default function Sidebar() {
                   variant="outline"
                   size="icon"
                   aria-label="Donate"
-                  className="mx-auto h-10 w-10"
+                  className="mx-auto flex h-10 w-10"
                 >
                   <Heart className="h-5 w-5" />
                 </Button>
@@ -402,7 +402,9 @@ export default function Sidebar() {
                 aria-label={collapsed ? "Disconnect wallet" : undefined}
                 className={cn(
                   "h-9 justify-start text-xs text-destructive hover:bg-destructive/10 hover:text-destructive",
-                  collapsed ? "mx-auto h-10 w-10 justify-center" : "w-full gap-2",
+                  // `flex`, not the Button's own inline-flex: auto margins do not centre an
+                  // inline box, so the collapsed icon sat left of the column (2026-10-10)
+                  collapsed ? "mx-auto flex h-10 w-10 justify-center" : "w-full gap-2",
                 )}
               >
                 <Unplug className="h-4 w-4 shrink-0" />

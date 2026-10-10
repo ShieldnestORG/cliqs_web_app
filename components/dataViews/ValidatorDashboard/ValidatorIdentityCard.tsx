@@ -1,77 +1,49 @@
 /**
- * Validator Identity Card
+ * Validator Identity Strip
  *
- * Displays validator moniker, status, commission rate, and operator address.
- * While the validator is jailed it also hosts the Unjail action (UnjailAction).
+ * One slim row under the page title: moniker, status tag, commission rate, operator and
+ * account addresses (each with a copy button) and the explorer link. It replaced the identity
+ * card on 2026-10-10 (no card chrome, no "Validator" label). The jailed warning and the Unjail
+ * action moved to JailedAlert, at the very top of the dashboard.
+ *
+ * The explorer link is icon-only (since 2026-10-10): with a text label it was 102px wide
+ * and wrapped to a second row at 1024px for a validator like TOKNS.FI (the other five parts take
+ * about 707px of a 792px row). Below 1024px the strip may still wrap.
  */
 
-import { Card, CardContent, CardHeader, CardTitle, CardLabel } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ValidatorInfo, ValidatorSigningInfo } from "@/lib/validatorHelpers";
-import { ExternalLink, Shield, AlertTriangle, CircleDashed } from "lucide-react";
+import { ValidatorInfo } from "@/lib/validatorHelpers";
+import { ExternalLink } from "lucide-react";
 import { explorerLinkAccount } from "@/lib/displayHelpers";
 import { useChains } from "@/context/ChainsContext";
 import { AddressDisplay } from "@/components/ui/address-display";
-import UnjailAction from "./UnjailAction";
 
 interface ValidatorIdentityCardProps {
   validator: ValidatorInfo;
-  /** Chain signing info, only fetched while jailed; null = unavailable */
-  signingInfo?: ValidatorSigningInfo | null;
-  onTransactionComplete?: () => void;
-  isCliqMode?: boolean;
-  cliqAddress?: string;
-  readOnly?: boolean;
 }
 
-export default function ValidatorIdentityCard({
-  validator,
-  signingInfo = null,
-  onTransactionComplete,
-  isCliqMode = false,
-  cliqAddress,
-  readOnly = false,
-}: ValidatorIdentityCardProps) {
+export default function ValidatorIdentityCard({ validator }: ValidatorIdentityCardProps) {
   const { chain } = useChains();
 
+  // A status tag: each state has its own colour AND its own mark. Active = green signal meter,
+  // Unbonding = gold half-lit dot, Jailed = red hazard bar, anything else = a quiet dashed ring.
   const getStatusConfig = (status: ValidatorInfo["status"], jailed: boolean) => {
     if (jailed) {
-      return {
-        label: "Jailed",
-        variant: "destructive" as const,
-        icon: AlertTriangle,
-        className: "bg-destructive/20 text-destructive border-destructive/30",
-      };
+      return { label: "Jailed", variant: "destructive" as const, mark: "stripes" as const };
     }
 
     switch (status) {
       case "BONDED":
-        return {
-          label: "Active",
-          variant: "default" as const,
-          icon: Shield,
-          className: "bg-success/20 text-success border-success/30",
-        };
+        return { label: "Active", variant: "success" as const, mark: "signal" as const };
       case "UNBONDING":
-        return {
-          label: "Unbonding",
-          variant: "secondary" as const,
-          icon: CircleDashed,
-          className: "bg-warning/20 text-warning border-warning/30",
-        };
+        return { label: "Unbonding", variant: "warning" as const, mark: "half" as const };
       default:
-        return {
-          label: "Inactive",
-          variant: "outline" as const,
-          icon: CircleDashed,
-          className: "bg-muted text-muted-foreground border-border/[0.06]",
-        };
+        return { label: "Inactive", variant: "secondary" as const, mark: "ring" as const };
     }
   };
 
   const statusConfig = getStatusConfig(validator.status, validator.jailed);
-  const StatusIcon = statusConfig.icon;
 
   // Format commission rate (stored as 18-decimal string)
   const formatCommissionRate = (rate: string): string => {
@@ -90,88 +62,54 @@ export default function ValidatorIdentityCard({
   const explorerLink = explorerLinkAccount(chain.explorerLinks.account, validator.operatorAddress);
 
   return (
-    <Card variant="institutional" bracket="green" className="h-full">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <CardLabel comment>Validator</CardLabel>
-            <CardTitle className="truncate font-heading text-xl font-bold">
-              {validator.moniker}
-            </CardTitle>
-          </div>
-          <Badge className={statusConfig.className}>
-            <StatusIcon className="mr-1 h-3 w-3" />
-            {statusConfig.label}
-          </Badge>
-        </div>
-      </CardHeader>
+    <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+      <div className="flex min-w-0 items-center gap-4">
+        <h2 className="min-w-0 truncate font-heading text-xl font-bold">{validator.moniker}</h2>
+        <Badge variant={statusConfig.variant} mark={statusConfig.mark} className="shrink-0">
+          {statusConfig.label}
+        </Badge>
+      </div>
 
-      <CardContent className="space-y-4">
-        {/* Commission Rate */}
-        <div className="flex items-center justify-between rounded-lg bg-muted/30 p-3">
-          <span className="text-sm text-muted-foreground">Commission Rate</span>
-          <span className="font-mono font-semibold text-foreground">
-            {formatCommissionRate(validator.commissionRate)}
-          </span>
-        </div>
+      <p className="text-sm text-muted-foreground">
+        Commission{" "}
+        <span className="font-mono font-semibold tabular-nums text-foreground">
+          {formatCommissionRate(validator.commissionRate)}
+        </span>
+      </p>
 
-        {/* Operator Address */}
-        <div className="space-y-2">
-          <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-            Operator Address
-          </span>
-          <AddressDisplay
-            address={validator.operatorAddress}
-            copyLabel="operator address"
-            className="rounded bg-muted/30 px-3 py-2"
-          />
-        </div>
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-muted-foreground">Operator</span>
+        <AddressDisplay
+          address={validator.operatorAddress}
+          copyLabel="operator address"
+          head={6}
+          tail={4}
+        />
+      </div>
 
-        {/* Account Address */}
-        <div className="space-y-2">
-          <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-            Account Address
-          </span>
-          <AddressDisplay
-            address={validator.delegatorAddress}
-            copyLabel="account address"
-            className="rounded bg-muted/30 px-3 py-2"
-          />
-        </div>
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-muted-foreground">Account</span>
+        <AddressDisplay
+          address={validator.delegatorAddress}
+          copyLabel="account address"
+          head={6}
+          tail={4}
+        />
+      </div>
 
-        {/* Explorer Link */}
-        {explorerLink && (
-          <Button variant="outline" className="w-full gap-2" asChild>
-            <a href={explorerLink} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="h-4 w-4" />
-              View in Explorer
-            </a>
-          </Button>
-        )}
-
-        {/* Jailed Warning */}
-        {validator.jailed && (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3">
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
-              <div className="text-sm">
-                <p className="font-medium text-destructive">Validator Jailed</p>
-                <p className="mt-1 text-muted-foreground">
-                  Your validator has been jailed. You can still claim pending rewards.
-                </p>
-              </div>
-            </div>
-            <UnjailAction
-              validator={validator}
-              signingInfo={signingInfo}
-              onTransactionComplete={onTransactionComplete}
-              isCliqMode={isCliqMode}
-              cliqAddress={cliqAddress}
-              readOnly={readOnly}
-            />
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      {explorerLink && (
+        <Button variant="ghost" size="icon-sm" className="shrink-0 max-sm:h-11 max-sm:w-11" asChild>
+          <a
+            href={explorerLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="View validator in explorer"
+            title="View in explorer"
+          >
+            <ExternalLink className="h-4 w-4" />
+          </a>
+        </Button>
+      )}
+    </div>
   );
 }

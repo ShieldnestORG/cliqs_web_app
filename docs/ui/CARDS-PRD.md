@@ -1,10 +1,10 @@
 # Cards PRD
 
-> **Cluster:** design-system · **Tags:** cards, bento, gradient, brackets, tokens · **Related:** [STYLE-GUIDE.md](../STYLE-GUIDE.md), [UI Index](./INDEX.md), [Patterns PRD](./PATTERNS-PRD.md), [Typography PRD](./TYPOGRAPHY-PRD.md)
+> **Cluster:** design-system · **Tags:** cards, bento, gradient, brackets, status-tag, tokens · **Related:** [STYLE-GUIDE.md](../STYLE-GUIDE.md), [UI Index](./INDEX.md), [Patterns PRD](./PATTERNS-PRD.md), [Typography PRD](./TYPOGRAPHY-PRD.md)
 
 **Cosmos Multisig UI - Card System Specification**  
-**Version:** 1.1  
-**Last Updated:** 2026-08-16
+**Version:** 1.2  
+**Last Updated:** 2026-10-10
 
 ---
 
@@ -270,18 +270,69 @@ to `green-accent`, which is coral. Keep it that way.
 
 ---
 
-### Status Badge
+### Status tag
 
-`components/ui/badge.tsx` carries three status variants, added 2026-10-09 so pages stop hand-rolling
-`border-success/40 text-success` per call site. Use them for a state, not for emphasis:
+`components/ui/badge.tsx` (`Badge`) is the status tag: the one way a state, a kind or a count is written
+as a small label. It is the status tag of the TOKNS site in cliqs tokens. It is a word, not a pill: mono,
+11px, uppercase, 0.14em tracking, in the colour token of what it says. No border, no fill, no rounding,
+no padding. Because it has no box, give tags that sit side by side room: `gap-3` between them.
 
-| Variant | Means | Example |
+*Until 2026-10-10 this was a pill: `rounded-full border px-2.5 py-0.5 text-xs font-semibold`, a solid fill for `default`, `secondary` and `destructive`, a tinted outline for the `success`, `info` and `warning` variants (added 2026-10-09), and pages hand-rolled their own chips beside it.*
+
+```tsx
+<Badge variant="success" mark="signal">Active</Badge>
+<Badge variant="warning" mark="half">Unbonding</Badge>
+<Badge variant="outline">3/5</Badge>
+```
+
+**Marks.** A state can carry a small moving mark in front of the word, so colour is never the only signal.
+There is **no plain dot**, and no mark by default (owner, 2026-10-10: no dots beside a tag). A mark is drawn
+in `currentColor`, so the variant's text token colours it too. The shapes live in `styles/globals.css`
+(`.status-mark*`).
+
+| `mark` | Shape and motion | Use it when the tag says | Examples |
+|---|---|---|---|
+| `signal` | three-bar meter, the bars rise and fall | live, passed, done | Active, Passed, Verified, Connected, Funded |
+| `half` | half-lit dot, turning | part-way, pending, waiting | Unbonding, Open, In progress, Needs funding, Needs vote |
+| `stripes` | hazard bar, sliding | stopped, failed, blocked, high risk | Jailed, Rejected, Failed, Revoked, Not encrypted at rest |
+| `ring` | dashed ring, turning slowly | not running, inactive, closed | Inactive, Expired, Closed |
+
+A plain label, a kind, a count or a name gets **no mark**: a vote choice (YES, NO), a chain ID, `3/5`,
+"Creator", "Bridged", "Mainnet".
+
+**Variants.** Pick by meaning. Tokens only, no raw colours. Never map success to `green-accent` (coral; see
+STYLE-GUIDE).
+
+| Variant | Text token | Means |
 |---|---|---|
-| `success` | done and proven | Audit & tests "Verified" |
-| `info` | done, neutral | Audit & tests "Shipped" |
-| `warning` | needs attention or still running | Audit & tests "In progress" |
+| `success` | `text-success` | done and proven, live |
+| `info` | `text-info` | done, neutral; a kind that is not a warning |
+| `warning` | `text-warning` | needs attention or still running |
+| `destructive` | `text-destructive` | failed, rejected, jailed, high risk |
+| `default` | `text-primary` (coral) | brand emphasis, or a kind with no good or bad meaning |
+| `secondary` | `text-muted-foreground` | quiet: inactive, closed, metadata |
+| `outline` | `text-foreground` | plain ink: counts, names, kinds |
 
-Destructive states keep `variant="destructive"`. Never map success to `green-accent` (coral; see STYLE-GUIDE).
+**Rules.**
+
+- **Layout classes only** through `className` (`shrink-0`, `ml-auto`, `mt-2`). No `border-*`, `bg-*`, `px-*`,
+  `py-*`, `rounded-*`, text size, `font-*`, `tracking-*`, `uppercase` or `capitalize`: they fight the base
+  (tailwind-merge lets the call site win) and bring the pill back.
+- **An icon next to a tag** only when it says something else (the shield on a `3/5` threshold). Never an
+  icon that repeats the state: the mark replaces it.
+- **No hand-rolled chips.** A span or div with a border or a tinted fill and small text, used as a label or
+  a state, is a `Badge`. Not tags: buttons, links, tabs, toggles (a chip that is a checkbox), count bubbles
+  on a menu item or an avatar, progress bars.
+- **Reduced motion.** Every mark moves only under `prefers-reduced-motion: no-preference`; otherwise it holds
+  still and the shape still reads.
+- **A mark class must be a whole literal class name** in `badge.tsx` (`"status-mark status-mark-signal"`).
+  Tailwind drops an `@layer components` rule whose class it cannot find as a literal in the source, so a
+  built-up name such as `` `status-mark-${mark}` `` ships a mark with no styles. Add a new mark by adding its
+  literal string to `markClass` and its rule to `globals.css`.
+
+`__tests__/components/badge.test.tsx` pins all of this: no mark by default, the four marks and their
+`aria-hidden`, the literal class names in the source, the variant-to-token table, a base with no border or
+fill, and the reduced-motion gate.
 
 ## 6. Design Tokens
 

@@ -3,22 +3,32 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * Badge: a status tag. A small mark, then the word in the state's colour. No pill around it.
+ * It is the status tag of the TOKNS site in cliqs tokens and the section-label type
+ * (mono, 11px, uppercase, 0.14em). Spec: docs/ui/CARDS-PRD.md section 5.
+ *
+ * A state can carry a small moving mark, so colour is never the only signal: `signal` a
+ * three-bar meter (live), `half` a half-lit dot that turns (part-way), `stripes` a sliding
+ * hazard bar (stopped), `ring` a turning dashed outline (not running). They hold still when the
+ * visitor asked for reduced motion. Without `mark` a badge is the word alone: there is no plain
+ * dot (owner, 2026-10-10). The marks are drawn in styles/globals.css (`.status-mark*`) in
+ * currentColor.
+ * Until 2026-10-10 a badge was a bordered pill with a tinted fill.
+ */
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex min-h-5 items-center gap-2 whitespace-nowrap font-mono text-[11px] font-medium uppercase leading-4 tracking-[0.14em]",
   {
     variants: {
       variant: {
-        default:
-          "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
-        secondary:
-          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        destructive:
-          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
+        default: "text-primary",
+        secondary: "text-muted-foreground",
+        destructive: "text-destructive",
         outline: "text-foreground",
-        // Status variants (docs/ui/CARDS-PRD.md §5, "Status Badge"). Semantic tokens only.
-        success: "border-success/40 bg-success/10 text-success",
-        info: "border-info/40 bg-info/10 text-info",
-        warning: "border-warning/40 bg-warning/10 text-warning",
+        // Status variants (docs/ui/CARDS-PRD.md §5, "Status tag"). Semantic tokens only.
+        success: "text-success",
+        info: "text-info",
+        warning: "text-warning",
       },
     },
     defaultVariants: {
@@ -27,13 +37,31 @@ const badgeVariants = cva(
   }
 )
 
+export type BadgeMark = "signal" | "half" | "stripes" | "ring"
+
+// Whole class names on purpose: Tailwind drops a `@layer components` rule whose class it
+// cannot find as a literal in the source, so `status-mark-${mark}` would ship no mark styles.
+const markClass: Record<BadgeMark, string> = {
+  signal: "status-mark status-mark-signal",
+  half: "status-mark status-mark-half",
+  stripes: "status-mark status-mark-stripes",
+  ring: "status-mark status-mark-ring",
+}
+
 export interface BadgeProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeVariants> {}
+    VariantProps<typeof badgeVariants> {
+  mark?: BadgeMark
+}
 
-function Badge({ className, variant, ...props }: BadgeProps) {
+function Badge({ className, variant, mark, children, ...props }: BadgeProps) {
   return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+    <div className={cn(badgeVariants({ variant }), className)} {...props}>
+      {mark && (
+        <span aria-hidden="true" data-mark={mark} className={markClass[mark]} />
+      )}
+      {children}
+    </div>
   )
 }
 

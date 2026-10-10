@@ -1,8 +1,8 @@
 # Cosmos Multisig UI Style Guide
 
-> **Cluster:** design-system · **Tags:** coherence-daddy, tokens, tailwind, typography, geist, gridspotlight · **Related:** [UI Docs Index](ui/INDEX.md), [Typography PRD](ui/TYPOGRAPHY-PRD.md), [Buttons PRD](ui/BUTTONS-PRD.md), [Cards PRD](ui/CARDS-PRD.md), [Patterns PRD](ui/PATTERNS-PRD.md)
+> **Cluster:** design-system · **Tags:** coherence-daddy, tokens, tailwind, typography, geist, gridspotlight, house-style · **Related:** [UI Docs Index](ui/INDEX.md), [Typography PRD](ui/TYPOGRAPHY-PRD.md), [Buttons PRD](ui/BUTTONS-PRD.md), [Cards PRD](ui/CARDS-PRD.md), [Patterns PRD](ui/PATTERNS-PRD.md), [Forms PRD](ui/FORMS-PRD.md)
 
-**Updated:** 2026-10-09
+**Updated:** 2026-10-10
 **Brand:** Coherence Daddy (ShieldNest ecosystem)
 
 ## Source of truth
@@ -51,6 +51,11 @@ should be checked against the portal rather than against this repo's history.
 Use these for status. Do **not** express status with raw Tailwind palette
 utilities (`text-green-500`, `bg-amber-500`, `text-red-500`).
 
+A status is shown as a **status tag**: the `Badge` component, a word in the state's colour with an
+optional small moving mark, and no pill around it (since 2026-10-10, round 2). Spec in
+[Cards PRD §5](ui/CARDS-PRD.md#5-card-sub-components). Until then a badge was a bordered pill with
+a tinted fill.
+
 ### The `green-accent` naming trap
 
 `--accent-green` is **hue 11 — the brand coral, not a green.** The name is
@@ -72,7 +77,60 @@ indistinguishable from `destructive` — which is exactly the bug that made the
 | `--toast-green` | `156.1 35.9% 45.3%` | `#4A9D7C` | The actual green; same as `--success` |
 | `--accent-purple` | `260 28% 55%` | `#7B68AE` | Secondary accent |
 | `--accent-blue` | `219.7 82.2% 64.7%` | `#5B8DEF` | Info states, links |
-| `--accent-gold` / `--accent-bronze` | `37.4 72.3% 56.1%` | `#E0A33E` | Badges, highlights |
+| `--accent-gold` / `--accent-bronze` | `37.4 72.3% 56.1%` | `#E0A33E` | Highlights. The same value as `--warning`, the **testnet colour**. No button uses it (since round 2, 2026-10-10: `action-bronze` and `action-bronze-outline` were removed). *Until then this row said "Badges, highlights".* |
+
+### House-style control tokens
+
+Added 2026-10-10 when buttons, menus and selects took the house style's geometry (pill buttons,
+44px controls, 8px gaps; see [Buttons PRD](ui/BUTTONS-PRD.md) and
+[Patterns PRD §21](ui/PATTERNS-PRD.md#21-menus-dropdown-and-select)). Converted from the house
+style's dark-theme hexes with the same hex to HSL-triplet rule as the portal values above. The
+coral itself needed no new value: `--primary` `#FF6B4A` is already the house style's accent.
+
+| Token (`:root`) | HSL triplet | Source hex | Tailwind | Used for |
+|-----------------|-------------|-----------|----------|----------|
+| `--primary-sheen` | `11.4 97.3% 71.4%` | `#FD8A6F` | `bg-primary-sheen` | gradient start of the coral button |
+| `--primary-press` | `9.5 76.7% 56.3%` | `#E5553A` | `bg-primary-press`, `border-primary-press` | gradient end, pressed fill, coral button edge |
+| `--primary-soft` | `13 46.8% 15.5%` | `#3A1D15` | `bg-primary-soft` | highlighted menu and select rows (the coral wash) |
+| `--field` | `240 5% 15.7%` | `#26262A` | `bg-field` | select trigger fill, secondary button fill, ghost and outline hover fill |
+| `--border-interactive` | `240 1.6% 49.4%` | `#7C7C80` | `border-interactive` | the visible edge of a select (4.3:1 on the card) |
+| `--shadow-pop` | `0 8px 28px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.4)` | the house style's popover shadow | `shadow-pop` | menu panels; its two layers are also the hover shadow of every solid button (inside `--shadow-btn-hover`) |
+| `--dur-ui` | `120ms` | the house style's fast motion | `duration-ui` | control transitions |
+| `--ease-ui` | `cubic-bezier(0.2, 0.6, 0.2, 1)` | the house style's ease | `ease-ui` | control transitions |
+
+*Until 2026-10-10 (round 2) the `--shadow-pop` row said "menu panels, the coral button's hover".*
+
+The coral gradient is the Tailwind background image `bg-primary-gradient` (135deg
+`--primary-sheen` 0%, `--primary` 45%, `--primary-press` 100%). Do not confuse
+`--primary-soft` with `--accent` (a neutral grey here) or with `green-accent` (coral under a
+wrong name).
+
+#### Button sheen and depth tokens (round 2, 2026-10-10)
+
+Added when every button took sheen and depth (owner: "these buttons can be the nicer quality ones
+... with sheen and depth and not just this page but thru out app, and we should not use gold;
+that is testnet color; can go back to the coral orange"). Full use in
+[Buttons PRD §3 and §4.7](ui/BUTTONS-PRD.md#sheen-and-depth-tokens-round-2). These were set as
+HSL triplets or shadow lists in `styles/globals.css` (`:root`), and the stylesheet records no
+source hex for them, so the hex shown is converted back from the triplet and is not a source value.
+
+| Token (`:root`) | Value | Tailwind | Used for |
+|-----------------|-------|----------|----------|
+| `--shadow-btn` | `inset 0 1px 0 rgba(255,255,255,.3), inset 0 -1px 0 rgba(0,0,0,.2), 0 1px 2px rgba(0,0,0,.45), 0 3px 8px rgba(0,0,0,.3)` | `shadow-btn` | rest depth of a solid button: lit top edge, shaded bottom edge, short neutral drop |
+| `--shadow-btn-hover` | `inset 0 1px 0 rgba(255,255,255,.36), inset 0 -1px 0 rgba(0,0,0,.2), 0 8px 28px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.4)` | `shadow-btn-hover` | a solid button on hover: the lit edges plus `--shadow-pop` |
+| `--shadow-btn-pressed` | `inset 0 2px 4px rgba(0,0,0,.35)` | `shadow-btn-pressed` | a pressed solid or quiet button |
+| `--shadow-btn-quiet` | `inset 0 1px 0 rgba(255,255,255,.07), 0 1px 2px rgba(0,0,0,.35)` | `shadow-btn-quiet` | `outline`, `secondary`, `action-outline`; the validator Manage tiles |
+| `--ink-sheen` | `0 0% 100%` (`#FFFFFF`) | none | start of `bg-ink-gradient` |
+| `--ink-press` | `48 7% 78%` (`#CBC9C3`) | `bg-ink-press`, `border-ink-press` | end of the ink gradient, pressed fill and edge of the `action` button |
+| `--destructive-sheen` | `3 72% 47%` (`#CE2A22`) | none | start of `bg-destructive-gradient` |
+| `--destructive-fill` | `0 66% 45%` (`#BE2727`) | none (used inside the gradient only) | middle of `bg-destructive-gradient` |
+| `--destructive-press` | `358 62% 37%` (`#992428`) | `bg-destructive-press`, `border-destructive-press` | end of the red gradient, pressed fill and edge of the `destructive` button |
+
+The gradients are Tailwind background images: `bg-ink-gradient` (135deg `--ink-sheen` 0%,
+`--foreground` 45%, `--ink-press` 100%), `bg-destructive-gradient` (135deg `--destructive-sheen`
+0%, `--destructive-fill` 45%, `--destructive-press` 100%) and `bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015]` (180deg, `--foreground`
+at 7% opacity at the top to 1.5% at the bottom: a faint light, not a fill). Shadows are always
+neutral: black and white only, never a coloured glow.
 
 ### Named Tailwind extensions
 
@@ -147,13 +205,19 @@ weight 500, widest tracking, uppercase.
 
 ### Elevation
 
-`--shadow-sm`, `--shadow-md`, `--shadow-lg`, and the button treatments
-`--shadow-lift` / `--shadow-lift-hover`.
+`--shadow-sm`, `--shadow-md`, `--shadow-lg`, and the treatments
+`--shadow-lift` / `--shadow-lift-hover` (referenced nowhere; they are not the house-style hover).
+Menus use `--shadow-pop` (see the house-style control tokens above). Buttons have their own set,
+`--shadow-btn`, `--shadow-btn-hover`, `--shadow-btn-pressed` and `--shadow-btn-quiet` (round 2,
+2026-10-10); the hover one repeats the two layers of `--shadow-pop`. *Until then this paragraph said
+"Menus and the coral button's hover use `--shadow-pop`".*
 
 ### Motion
 
 `--ease-out: cubic-bezier(0.22, 0.61, 0.36, 1)`, with `--dur-fast` 180ms,
-`--dur-base` 260ms, `--dur-slow` 480ms.
+`--dur-base` 260ms, `--dur-slow` 480ms. **Controls (buttons, menu rows, selects)** use the house-style
+pair instead: `duration-ui` (`--dur-ui`, 120ms) with `ease-ui` (`--ease-ui`,
+`cubic-bezier(.2,.6,.2,1)`). Press is a 0.5px nudge, not a scale.
 
 A `prefers-reduced-motion: reduce` guard collapses animation and transition
 durations globally.
@@ -206,11 +270,30 @@ Every page uses the same side padding: **`px-4 sm:px-6 lg:px-[0.75in]`** (1rem, 
 
 ### Buttons
 
-- Primary: `bg-primary text-primary-foreground` — this is now **coral on
-  near-black**, not light-on-dark
-- Destructive: `bg-destructive text-destructive-foreground`
-- Ghost/outline: standard Shadcn patterns using `--secondary`
-- Do not hardcode `bg-[#ff876d]`; use `bg-primary`
+Pill (`rounded-full`), 44px by default, 14px / 600, sentence case, 120ms ease, 0.5px press.
+Full spec in [Buttons PRD](ui/BUTTONS-PRD.md) (the house-style adoption, 2026-10-10).
+This section said "Primary: `bg-primary text-primary-foreground`" and "Ghost/outline: standard
+Shadcn patterns using `--secondary`" until that date.
+
+**Sheen and depth, app-wide (round 2, 2026-10-10).** The solid buttons (`default`, `destructive`,
+`action`) share one recipe: a 135deg three-stop gradient, a short neutral rest shadow
+(`shadow-btn`), a deeper one on hover (`shadow-btn-hover`), and on press a flat `-press` fill with
+`shadow-btn-pressed`. The quiet buttons (`outline`, `secondary`, `action-outline`) carry a faint top
+light (`bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015]`) and `shadow-btn-quiet`. `ghost`, `link` and `icon` stay flat. Tokens:
+see "Button sheen and depth tokens" above.
+
+- Primary (`default`): the coral sheen, `bg-primary-gradient text-primary-foreground`
+  (**coral on near-black**), one per view
+- `action`: the ink sheen, `bg-ink-gradient text-background`; no longer mono uppercase. *Until round 2
+  it was a flat `bg-foreground text-background`.*
+- Destructive: the red sheen, `bg-destructive-gradient text-destructive-foreground`. *Until round 2
+  it was a flat `bg-destructive text-destructive-foreground`.*
+- `outline` / `secondary`: a quiet raised pill: a visible 1px `border-border/15` (`/10` for
+  `secondary`) edge, `bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015]`, `shadow-btn-quiet`, `bg-field` on hover. `ghost`: flat, a
+  `bg-field` hover only. *Until round 2 `outline` was transparent with no light and no shadow.*
+- **No gold on buttons.** Gold is the testnet colour (`--warning`); `action-bronze` and
+  `action-bronze-outline` were removed in round 2 and the CLIQ-mode Claim buttons are coral.
+- Do not hardcode `bg-[#ff876d]`; use the tokens
 
 ### Text on coral
 
@@ -219,7 +302,8 @@ The canonical pairing on any coral surface is near-black
 fails WCAG AA; `#0E0E10` lands at roughly 6.9:1 and passes. There are currently
 **zero** `text-white` occurrences under `components/` and `pages/` — keep it that
 way. When you need light text, use `text-foreground` (`#F2F1ED`) on a dark
-surface.
+surface. The label on the ink and red button gradients is measured at every stop (ink 11.66:1 or better, red 4.66:1 or better)
+([Buttons PRD §3.2](ui/BUTTONS-PRD.md#32-text-on-the-ink-and-red-buttons-round-2)).
 
 ### Focus states
 
@@ -261,7 +345,9 @@ intended pattern — do not copy them, and prefer the semantic classes in new co
 ## Component framework
 
 - **UI components**: Shadcn/Radix — inherit CSS variables automatically
-- **Icons**: `lucide-react`
+- **Icons**: `lucide-react` for small UI glyphs and status alerts; the TOKNS brand icon kit set
+  (`components/icons/kit.tsx`) for section and feature icons. Ink is `currentColor`, with exactly
+  one coral part (`--primary`) per icon. See [Patterns PRD §9](ui/PATTERNS-PRD.md#9-icons)
 - **Animations**: `tailwindcss-animate`
 
 ## Theme metadata
@@ -276,6 +362,7 @@ intended pattern — do not copy them, and prefer the semantic classes in new co
 - Tailwind config: `tailwind.config.js`
 - Font loading: `pages/_document.tsx`
 - Page background canvas: `components/GridSpotlight.tsx`, mounted in `pages/_app.tsx`
-- Shadcn components: `components/ui/*`
+- Shadcn components: `components/ui/*` (including `scale-rule.tsx`, the ruler-edge section divider)
+- Kit icons: `components/icons/kit.tsx`
 - Sidebar rail + pin persistence: `components/Sidebar.tsx`, `lib/settingsStorage.ts`
 - Feature flags: `lib/featureFlags.ts`

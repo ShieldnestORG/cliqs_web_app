@@ -9,6 +9,7 @@ import {
   TransactionCategory,
 } from "@/lib/txMsgHelpers";
 import { cn, toastError } from "@/lib/utils";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { CardLabel } from "@/components/ui/card";
 import { ArrowRight, Loader2, MoveRightIcon, RefreshCw, Code2, Shield, Wallet } from "lucide-react";
 import Link from "next/link";
@@ -22,15 +23,13 @@ interface ListMultisigTxsProps {
   readonly multisigThreshold: number;
 }
 
-/* Categorical tints for the msg-type chips. Must live here rather than in
-   lib/txMsgHelpers.ts: the Tailwind content globs only scan pages/ and
-   components/, so class strings in lib/ would be purged. */
-const chipToneClasses: Record<MsgChipTone, string> = {
-  success: "border-success/30 bg-success/10 text-success",
-  info: "border-info/30 bg-info/10 text-info",
-  purple: "border-purple-accent/30 bg-purple-accent/10 text-purple-accent",
-  destructive: "border-destructive/30 bg-destructive/10 text-destructive",
-  neutral: "border-border/50 bg-muted/50",
+/* The colour of each msg-type tag: the tone from lib/txMsgHelpers.ts, drawn by a Badge variant. */
+const chipToneVariants: Record<MsgChipTone, BadgeProps["variant"]> = {
+  success: "success",
+  info: "info",
+  purple: "default",
+  destructive: "destructive",
+  neutral: "outline",
 };
 
 interface TransactionCardProps {
@@ -101,19 +100,16 @@ export const TransactionCard = ({
               {hasSigned && !isBroadcast && !isCancelled && " (you signed)"}
             </span>
           </div>
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
             {msgTypeCounts.map(({ msgType, count, tone }) => (
-              <span
+              <Badge
                 key={msgType}
-                className={cn(
-                  "rounded border px-2 py-1 font-mono text-xs font-medium",
-                  chipToneClasses[tone],
-                  isCancelled && "line-through opacity-60",
-                )}
+                variant={chipToneVariants[tone]}
+                className={cn(isCancelled && "line-through opacity-60")}
               >
                 {msgType}
                 {count > 1 && ` ×${count}`}
-              </span>
+              </Badge>
             ))}
           </div>
           <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -143,19 +139,16 @@ export const TransactionCard = ({
             {cliqLabel !== undefined && (
               <p className="mb-1 truncate text-sm font-medium text-foreground">{cliqLabel}</p>
             )}
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-3">
               {msgTypeCounts.map(({ msgType, count, tone }) => (
-                <span
+                <Badge
                   key={msgType}
-                  className={cn(
-                    "whitespace-nowrap rounded border px-2 py-1 font-mono text-xs font-medium",
-                    chipToneClasses[tone],
-                    isCancelled && "line-through opacity-60",
-                  )}
+                  variant={chipToneVariants[tone]}
+                  className={cn(isCancelled && "line-through opacity-60")}
                 >
                   {msgType}
                   {count > 1 && ` ×${count}`}
-                </span>
+                </Badge>
               ))}
             </div>
           </div>
