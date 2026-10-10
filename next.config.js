@@ -17,7 +17,8 @@ const securityHeaders = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  eslint: { ignoreDuringBuilds: true },
+  // Next 16: `next dev` writes its agent-rules block into this repo's CLAUDE.md when it detects an AI agent.
+  agentRules: false,
   // escape-string-regexp v5 is ESM-only. next/jest builds jest's
   // transformIgnorePatterns exceptions from this list, so without it every
   // suite that reaches the real mongodb helpers (@/lib/audit, @/lib/db) dies
