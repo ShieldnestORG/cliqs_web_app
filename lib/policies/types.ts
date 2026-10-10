@@ -1,8 +1,6 @@
 /**
  * Policy Types for Phase 4 Advanced Policies
  *
- * File: lib/policies/types.ts
- *
  * This module defines the core policy abstractions for the multisig system.
  * All policy logic flows through ONE explicit abstraction (PolicyEvaluator)
  * to prevent policy spaghetti in business logic.

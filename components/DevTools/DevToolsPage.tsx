@@ -44,8 +44,8 @@ import Image from "next/image";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import MsgForm from "../forms/OldCreateTxForm/MsgForm";
-import { MsgGetter } from "../forms/OldCreateTxForm";
+import MsgForm from "../forms/CreateTxForm/MsgForm";
+import { MsgGetter } from "../forms/CreateTxForm";
 import { ContractExecute } from "@/components/ContractExecute";
 import ConfirmIrreversibleDialog from "./ConfirmIrreversibleDialog";
 import DevToolsArrivalGate from "./DevToolsArrivalGate";
@@ -672,7 +672,7 @@ export default function DevTools() {
                     >
                       {manualLookupLoading ? (
                         <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          <Loader2 className="h-4 w-4 animate-spin" />
                           Looking up multisig...
                         </>
                       ) : (
@@ -697,7 +697,7 @@ export default function DevTools() {
                 className="text-muted-foreground"
               />
               <Badge
-                className="mt-2 capitalize"
+                className="mt-2"
                 variant={selectedAccount.type === "wallet" ? "default" : "outline"}
               >
                 {selectedAccount.type}

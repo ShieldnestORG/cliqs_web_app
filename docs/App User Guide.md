@@ -1,6 +1,6 @@
 # How to Use this App
 
-> **Cluster:** user-docs · **Tags:** user-guide, multisig, cliq, fees, data-privacy · **Related:** [PRD.md](PRD.md), [SETUP.md](../SETUP.md), [Manual test: transaction navigation](MANUAL_TEST_TRANSACTION_CREATION_NAVIGATION.md)
+> **Cluster:** user-docs · **Tags:** user-guide, multisig, cliq, fees, data-privacy, navigation · **Related:** [PRD.md](PRD.md), [SETUP.md](../SETUP.md), [Manual test: transaction navigation](MANUAL_TEST_TRANSACTION_CREATION_NAVIGATION.md)
 
 This app requires the [Keplr wallet extension](https://wallet.keplr.app/) to be enabled and setup on your browser. A Ledger device can be connected for signing, but the Data & Privacy controls described below need Keplr.
 
@@ -18,17 +18,27 @@ This app requires the [Keplr wallet extension](https://wallet.keplr.app/) to be 
 
 ## Getting Around the App
 
+Everything starts at **Home**. Home has five sections: **Needs your signature** (transactions waiting for your wallet, plus fully signed ones marked "Review and broadcast" so someone can send them), **Waiting on other signers**, **Your CLIQs**, **Open by address** and, if your wallet is linked to a validator, **Validators**. The Home entry in the menu shows a count of the transactions that need your signature. If one CLIQ fails to load, the others still show, under a warning with a Retry button.
+
+The menu has the same entries on every screen size:
+
+- **Home**, **Create CLIQ**, **Validator** and **Settings** at the top.
+- **Audit & tests**, **Guides** and, only when developer tools are switched on, **Dev Tools** in a second group.
+- **Back to TOKNS**, **Donate** and your wallet at the bottom.
+
+(Settings holds three things: your wallet, the sign-in requirement for CLIQs, and your own database. Home replaces what used to be called Dashboard, Operations and My CLIQS, and Account is now part of Settings. Old Operations and Account links are redirected to Home and Settings.)
+
 On a desktop screen the app's navigation is a narrow icon rail down the left edge. It stays collapsed to icons until you move the pointer over it (or tab into it with the keyboard), then it slides open over the page — the page content underneath does not shift while it is open.
 
 If you would rather keep it open all the time, click the panel icon at the top of the rail. That **pins** the sidebar: it stays expanded, and the page content sits beside it instead of underneath it. Click the same icon again to unpin. The choice is remembered in your browser, so the sidebar comes back the way you left it. Pressing `Escape` while the rail is open collapses it again.
 
-On phones and tablets there is no side rail at all — navigation lives in the header bar at the top of the screen.
+On phones and tablets (anything narrower than the desktop layout) there is no side rail at all — navigation lives in the menu button in the header bar at the top of the screen. It lists the same entries. A bell appears next to it when a transaction needs your signature; it opens Home.
 
 ## Accounts
 
 ### Using an existing multisig account
 
-To use this app with an existing multisig account, simply enter the address in the field provided, and click "Open CLIQ" (the app calls a multisig a "CLIQ"). Note that this address must have sent transactions in the past for this app to be able to use it. If you have an existing multisig that has not sent any transactions, you can recreate it using this tool (be sure to enter the same public keys and threshold). 
+To use this app with an existing multisig account, go to **Home**, find the **Open by address** section, enter the address in the field provided, and click "Open CLIQ" (the app calls a multisig a "CLIQ"). If your wallet is already a member, the CLIQ is also listed under **Your CLIQs**; click it to open it. Note that this address must have sent transactions in the past for this app to be able to use it. If you have an existing multisig that has not sent any transactions, you can recreate it using this tool (be sure to enter the same public keys and threshold). 
 
 ![Screen Shot 2021-09-05 at 1 08 28 PM](https://user-images.githubusercontent.com/6718506/132136687-856a71bd-cd3b-465c-a2e8-8f4283161a11.png)
 
@@ -36,7 +46,7 @@ You may want to [Create a Transaction](#creating-a-transaction) next.
 
 ### Creating a new multisig account
 
-To create a new multisig account, click "Create new CLIQ" (or "Create Multisig" in the sidebar). Then enter in the addresses of the accounts you would like to use, as well as the number of signatures required to sign a transaction. Click "Create CLIQ" and confirm. These addresses must have sent transactions in the past to be used, the app will show an error if there is no on chain account information for any of the addresses.
+To create a new multisig account, click "Create CLIQ" in the menu. Pick the type of CLIQ you want, then enter in the addresses of the accounts you would like to use, as well as the number of signatures required to sign a transaction. Click "Create CLIQ" and confirm. These addresses must have sent transactions in the past to be used, the app will show an error if there is no on chain account information for any of the addresses.
 
 ![Screen Shot 2021-10-04 at 10 10 21 PM](https://user-images.githubusercontent.com/6718506/135949511-b0d51820-7359-4707-a873-966e31b187c0.png)
 ![Screen Shot 2021-10-04 at 10 10 24 PM](https://user-images.githubusercontent.com/6718506/135949518-08e9e994-9695-4847-b152-5f28610dd221.png)
@@ -46,7 +56,7 @@ You may want to [Create a Transaction](#creating-a-transaction) next.
 
 ## Creating a Transaction
 
-On the multisig account page, click "New Transaction". 
+On the CLIQ's page, click "New transaction" at the top right. (If the CLIQ has not been funded yet the button is disabled; send some tokens to its address first.) 
 
 ![Screen Shot 2021-09-05 at 1 16 56 PM](https://user-images.githubusercontent.com/6718506/132136739-c43eeaeb-15fd-48d3-afa2-8e630740cf82.png)
 First pick what the transaction should do. The picker has two tabs — "Standard User Commands" (Send and IBC Transfer live under the "// Transfers" heading; Delegate, Redelegate, Undelegate, Withdraw Rewards and Vote under "// Staking & Governance") and "Validator Commands". Then enter in the to address, the amount and optionally a memo. The gas limit is adjustable, but you probably do not want to change it, as the gas fees are set automatically by the app; the gas price beside it is fixed by the network and cannot be edited. Once all the necessary fields are filled in, click "Create Transaction". 
@@ -56,7 +66,7 @@ You may want to [Sign a Transaction](#signing-a-transaction) next.
 
 ## Signing a Transaction
 
-To sign a transaction, make sure you have the Keplr wallet app installed and setup on your browser. Then navigate to the transaction page for the transaction you are trying to sign.  
+To sign a transaction, make sure you have the Keplr wallet app installed and setup on your browser. Then open the transaction you are trying to sign: it is listed under **Needs your signature** on Home, and also on the **Transactions** tab of its CLIQ.  
 
 ![Screen Shot 2021-09-05 at 1 19 49 PM](https://user-images.githubusercontent.com/6718506/132136776-da6c0853-c55b-4bfb-9228-7615a2811cde.png)
 
@@ -129,7 +139,7 @@ Adding more messages to one transaction adds their gas together over the single 
 
 ## Data & Privacy
 
-Everything the CLIQ has ever done on chain is public and permanent. What the app stores off chain — the CLIQ's name and description, its transaction drafts, memos, and every member's signatures — lives in the app's database, and the **Data & Privacy** panel on the CLIQ's Transactions tab lets members manage it.
+Everything the CLIQ has ever done on chain is public and permanent. What the app stores off chain — the CLIQ's name and description, its transaction drafts, memos, and every member's signatures — lives in the app's database, and the **Data & Privacy** tab on the CLIQ's page lets members manage it.
 
 Two things to understand before using it:
 
@@ -140,11 +150,11 @@ Two things to understand before using it:
 |---|---|
 | **Export History** | Downloads the CLIQ's full history — pending transactions included, with every member's signatures — as a JSON file. Nothing is deleted. |
 | **Wipe Completed** | Permanently deletes broadcast (completed) transactions and their signatures from the database. On-chain records are untouched, but memos stored here are gone. |
-| **Delete Cliq Data** | Permanently deletes the CLIQ record itself along with its entire history and all signatures. |
+| **Delete CLIQ data** | Permanently deletes the CLIQ record itself along with its entire history and all signatures. |
 
-**Delete Cliq Data** is refused with an error if any pending transaction still carries a signature from another member — those are other people's work, so cancel the pending transactions through the normal Cancel flow first, then retry. **Wipe Completed** is not subject to that guard, because it only ever touches transactions that already went out on chain.
+**Delete CLIQ data** is refused with an error if any pending transaction still carries a signature from another member — those are other people's work, so cancel the pending transactions through the normal Cancel flow first, then retry. **Wipe Completed** is not subject to that guard, because it only ever touches transactions that already went out on chain.
 
-Deleting the CLIQ makes it vanish from the app **for every member**, not just for you. It can be brought back by re-importing the multisig address (paste it into the find field and click "Open CLIQ"), and the on-chain funds are never affected — but the CLIQ's **name and description cannot be recovered**, and neither can its history. Export first if any of it matters.
+Deleting the CLIQ makes it vanish from the app **for every member**, not just for you. It can be brought back by re-importing the multisig address (paste it into **Open by address** on Home and click "Open CLIQ"), and the on-chain funds are never affected — but the CLIQ's **name and description cannot be recovered**, and neither can its history. Export first if any of it matters.
 
 If the app is running against a local JSON database rather than a hosted one, these buttons report that deletion is not supported and tell you to edit the local file directly. For self-hosting and retention details, see the "Data retention & deletion" section of [SETUP.md](../SETUP.md).
 

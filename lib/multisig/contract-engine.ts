@@ -1,8 +1,6 @@
 /**
  * ContractMultisigEngine Implementation
  *
- * File: lib/multisig/contract-engine.ts
- *
  * This implementation wraps CW3-style contract multisig operations.
  * It provides a unified interface for creating proposals, voting,
  * and executing through on-chain contract state.

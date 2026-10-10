@@ -1,124 +1,220 @@
 /**
- * Dashboard Route Test
+ * Home Route Test
  *
  * File: __tests__/pages/dashboard.test.tsx
  *
- * Tests for the dashboard route (/[chainName]/dashboard)
+ * Tests for Home (/[chainName]/dashboard): section order, the not-connected and
+ * not-ready states, old `?tab=` links, and the Validators section.
+ * The signature inbox itself is covered in __tests__/features/signature-inbox.test.tsx.
  * Priority: P0
  */
 
 import { render, screen, waitFor } from "@testing-library/react";
 import DashboardPage from "@/pages/[chainName]/dashboard";
 
-// Mock the ChainsContext
+const mockChain: Record<string, unknown> = {
+  registryName: "cosmos",
+  chainDisplayName: "Cosmos Hub",
+  chainId: "cosmoshub-4",
+  addressPrefix: "cosmos",
+  nodeAddress: "https://rpc.cosmos.network",
+};
+
 jest.mock("@/context/ChainsContext", () => ({
-  useChains: () => ({
-    chain: {
-      registryName: "cosmos",
-      chainDisplayName: "Cosmos Hub",
-      chainId: "cosmoshub-4",
-      addressPrefix: "cosmos",
-      nodeAddress: "https://rpc.cosmos.network",
-    },
-  }),
+  useChains: () => ({ chain: mockChain }),
 }));
 
-// Mock next/router
-jest.mock("next/router", () => ({
-  useRouter: () => ({
-    query: { chainName: "cosmos", tab: "overview" },
-    pathname: "/cosmos/dashboard",
-    push: jest.fn(),
-  }),
+const mockWalletInfo = { type: "Keplr", address: "cosmos1me", pubKey: "pk" };
+let mockWallet: Record<string, unknown> = {};
+
+jest.mock("@/context/WalletContext", () => ({
+  useWallet: () => mockWallet,
 }));
 
-// Mock ListUserCliqs component
-jest.mock("@/components/dataViews/ListUserCliqs", () => {
-  return function MockListUserCliqs() {
-    return <div data-testid="list-user-cliqs">My CLIQS</div>;
-  };
+const mockPending = {
+  hasPendingTransactions: false,
+  totalPendingCount: 0,
+  needsMyCount: 0,
+  multisigsWithPending: [],
+  cliqs: [],
+  isLoading: false,
+  hasLoaded: true,
+  error: null,
+  refresh: jest.fn(),
+};
+
+jest.mock("@/lib/hooks/usePendingTransactions", () => ({
+  usePendingTransactions: () => mockPending,
+}));
+
+const mockGetAssociatedValidators = jest.fn();
+jest.mock("@/lib/validatorHelpers", () => ({
+  getAssociatedValidators: (...args: unknown[]) => mockGetAssociatedValidators(...args),
+}));
+
+const mockGetDbUserMultisigs = jest.fn();
+jest.mock("@/lib/api", () => ({
+  getDbUserMultisigs: (...args: unknown[]) => mockGetDbUserMultisigs(...args),
+}));
+
+const connectedWallet = () => ({
+  walletInfo: mockWalletInfo,
+  verificationSignature: null,
+  isVerified: false,
+  verify: jest.fn().mockResolvedValue(null),
+  loading: {},
+  connectKeplr: jest.fn(),
+  connectLedger: jest.fn(),
 });
 
-// Mock FindMultisigForm component
-jest.mock("@/components/forms/FindMultisigForm", () => {
-  return function MockFindMultisigForm() {
-    return <div data-testid="find-multisig-form">Find Multisig Form</div>;
-  };
-});
+// Document order of two elements; avoids bitwise flags (lint: no-bitwise).
+const isBefore = (a: HTMLElement, b: HTMLElement) =>
+  a.compareDocumentPosition(b) === Node.DOCUMENT_POSITION_FOLLOWING;
 
-describe("Dashboard Route (/[chainName]/dashboard): P0", () => {
+describe("Home Route (/[chainName]/dashboard): P0", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockChain.nodeAddress = "https://rpc.cosmos.network";
+    mockWallet = connectedWallet();
+    Object.assign(mockPending, { isLoading: false, hasLoaded: true, error: null });
+    mockGetAssociatedValidators.mockResolvedValue([]);
+    mockGetDbUserMultisigs.mockResolvedValue({ created: [], belonged: [] });
   });
 
-  it("should load dashboard successfully", async () => {
+  it("renders the Home heading, the chain-aware subtitle and the page title", () => {
     render(<DashboardPage />);
 
-    await waitFor(() => {
-      // Dashboard text appears multiple times, use getAllByText
-      const dashboardElements = screen.getAllByText(/Dashboard/i);
-      expect(dashboardElements.length).toBeGreaterThan(0);
+    expect(screen.getByRole("heading", { level: 1, name: "Home" })).toBeInTheDocument();
+    expect(
+      screen.getByText("Signatures waiting for you and your CLIQs on Cosmos Hub."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Home - Cosmos Hub")).toBeInTheDocument();
+  });
+
+  it("connected: sections read Needs your signature, Your CLIQs, Open by address in that order", () => {
+    render(<DashboardPage />);
+
+    const needs = screen.getByText("Needs your signature");
+    const cliqs = screen.getByText("Your CLIQs");
+    const open = screen.getByText("Open by address");
+
+    expect(isBefore(needs, cliqs)).toBe(true);
+    expect(isBefore(cliqs, open)).toBe(true);
+    expect(screen.getByTestId("list-user-cliqs")).toBeInTheDocument();
+    expect(screen.getByTestId("find-multisig-form")).toBeInTheDocument();
+    expect(open.closest("#open-by-address")).not.toBeNull();
+  });
+
+  it("has no tabs, stat tiles, quick actions or New CLIQ button (they moved or were removed)", () => {
+    render(<DashboardPage />);
+
+    expect(screen.queryByRole("tab")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("quick-stat")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Quick Actions/i)).not.toBeInTheDocument();
+    expect(screen.queryByText("Online")).not.toBeInTheDocument();
+    expect(screen.queryByText(/New CLIQ/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No Validator Detected/i)).not.toBeInTheDocument();
+  });
+
+  it.each(["overview", "cliqs", "find"])(
+    "an old ?tab=%s link still renders the merged Home (the page does not read the query)",
+    (tab) => {
+      // next/router is mocked globally; the page must not depend on the query at all.
+      const router = jest.requireMock("next/router");
+      router.useRouter = () => ({ query: { chainName: "cosmos", tab }, push: jest.fn() });
+
+      render(<DashboardPage />);
+
+      expect(screen.getByText("Needs your signature")).toBeInTheDocument();
+      expect(screen.getByTestId("list-user-cliqs")).toBeInTheDocument();
+      expect(screen.getByTestId("find-multisig-form")).toBeInTheDocument();
+    },
+  );
+
+  describe("not connected", () => {
+    beforeEach(() => {
+      mockWallet = { ...connectedWallet(), walletInfo: null };
+    });
+
+    it("shows the shared connect prompt, Open by address and a Guides link", () => {
+      render(<DashboardPage />);
+
+      expect(screen.getByText("Connect your wallet")).toBeInTheDocument();
+      expect(
+        screen.getByText("Connect your wallet to see signatures waiting for you."),
+      ).toBeInTheDocument();
+      expect(screen.getByText("Open by address")).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Read the Guides" })).toHaveAttribute(
+        "href",
+        "/cosmos/get-started",
+      );
+    });
+
+    it("does not mount the inbox, Your CLIQs or Validators", () => {
+      render(<DashboardPage />);
+
+      expect(screen.queryByText("Needs your signature")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("list-user-cliqs")).not.toBeInTheDocument();
+      expect(screen.queryByText("Validators")).not.toBeInTheDocument();
+      expect(mockGetAssociatedValidators).not.toHaveBeenCalled();
     });
   });
 
-  it("should display chain name in dashboard title", async () => {
-    render(<DashboardPage />);
+  describe("states", () => {
+    it("chain not ready: header renders and the inbox slot shows 3 skeleton rows", () => {
+      mockChain.nodeAddress = "";
 
-    await waitFor(() => {
-      expect(screen.getByText(/Cosmos Hub.*Dashboard/i)).toBeInTheDocument();
+      render(<DashboardPage />);
+
+      expect(screen.getByRole("heading", { level: 1, name: "Home" })).toBeInTheDocument();
+      const loading = screen.getByLabelText("Loading signatures waiting for you");
+      expect(loading.children).toHaveLength(3);
+      expect(screen.queryByText(/all caught up/i)).not.toBeInTheDocument();
+    });
+
+    it("loading: shows the skeleton, not the caught-up line", () => {
+      Object.assign(mockPending, { isLoading: true, hasLoaded: false });
+
+      render(<DashboardPage />);
+
+      expect(screen.getByLabelText("Loading signatures waiting for you")).toBeInTheDocument();
+      expect(screen.queryByText(/all caught up/i)).not.toBeInTheDocument();
     });
   });
 
-  it("should display quick stats", async () => {
-    render(<DashboardPage />);
+  describe("Validators section", () => {
+    it("is not rendered when no validator is detected", async () => {
+      render(<DashboardPage />);
 
-    await waitFor(() => {
-      // These texts might appear multiple times, use getAllByText
-      const networkElements = screen.getAllByText(/Network/i);
-      const chainIdElements = screen.getAllByText(/Chain ID/i);
-      const statusElements = screen.getAllByText(/Status/i);
-      expect(networkElements.length).toBeGreaterThan(0);
-      expect(chainIdElements.length).toBeGreaterThan(0);
-      expect(statusElements.length).toBeGreaterThan(0);
+      await waitFor(() => expect(mockGetAssociatedValidators).toHaveBeenCalled());
+      expect(screen.queryByText("Validators")).not.toBeInTheDocument();
     });
-  });
 
-  it("should display overview tab by default", async () => {
-    render(<DashboardPage />);
+    it("lists a detected validator with its Manage Validator link", async () => {
+      mockGetAssociatedValidators.mockResolvedValue([
+        { address: "cosmos1me", validator: { moniker: "Alpha" } },
+      ]);
 
-    await waitFor(() => {
-      expect(screen.getByText(/Quick Actions/i)).toBeInTheDocument();
+      render(<DashboardPage />);
+
+      expect(await screen.findByText("Validators")).toBeInTheDocument();
+      expect(screen.getByText("Alpha")).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /Manage Validator/i })).toHaveAttribute(
+        "href",
+        "/cosmos/validator?address=cosmos1me",
+      );
     });
-  });
 
-  it("should display tabs for navigation", async () => {
-    render(<DashboardPage />);
+    it("failed CLIQ lookup shows the corrected copy, which no longer sends users to Settings", async () => {
+      mockGetDbUserMultisigs.mockRejectedValue(new Error("db down"));
 
-    await waitFor(
-      () => {
-        // Check for tab buttons - they might be rendered as buttons or in tab list
-        const overviewTab =
-          screen.queryByRole("tab", { name: /overview/i }) || screen.queryByText(/Overview/i);
-        const cliqsTab =
-          screen.queryByRole("tab", { name: /cliqs/i }) ||
-          screen.queryByText(/My CLIQS/i) ||
-          screen.queryByText(/CLIQS/i);
-        const findTab = screen.queryByRole("tab", { name: /find/i }) || screen.queryByText(/Find/i);
-        const activityTab =
-          screen.queryByRole("tab", { name: /activity/i }) || screen.queryByText(/Activity/i);
+      render(<DashboardPage />);
 
-        expect(overviewTab || cliqsTab || findTab || activityTab).toBeTruthy();
-      },
-      { timeout: 3000 },
-    );
-  });
-
-  it("should display create CLIQ button", async () => {
-    render(<DashboardPage />);
-
-    await waitFor(() => {
-      const createButton = screen.getByText(/New CLIQ/i);
-      expect(createButton).toBeInTheDocument();
+      expect(
+        await screen.findByText("Could not load CLIQ-based validators. Retry."),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/Verify your wallet in Settings/i)).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Retry/i })).toBeInTheDocument();
     });
   });
 });

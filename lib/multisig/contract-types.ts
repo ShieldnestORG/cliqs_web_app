@@ -1,8 +1,6 @@
 /**
  * Contract Multisig Types
  *
- * File: lib/multisig/contract-types.ts
- *
  * Types for CW3-Fixed style contract multisig operations.
  * These are placeholder types that will be customized when building
  * the custom contract in later phases.

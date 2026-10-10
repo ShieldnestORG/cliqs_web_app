@@ -1,8 +1,6 @@
 /**
  * BYODB Host Validation (SSRF guard)
  *
- * File: lib/byodb/hostValidation.ts
- *
  * Client-supplied MongoDB connection URIs make the server open outbound
  * connections. Before connecting, every host in the URI is resolved via DNS
  * and rejected if any resolved address is private, loopback, link-local, or

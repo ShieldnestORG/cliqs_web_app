@@ -1,8 +1,6 @@
 /**
  * Group Provider Types
  *
- * File: lib/group/types.ts
- *
  * Types for group membership management, supporting both CW4-group contracts
  * and future custom group modules. These types power the GroupProvider abstraction
  * that enables dynamic membership in CW3-Flex multisigs.

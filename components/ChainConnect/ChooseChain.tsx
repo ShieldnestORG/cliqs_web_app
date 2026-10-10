@@ -3,6 +3,7 @@ import { getRecentChainsFromStorage } from "@/context/ChainsContext/storage";
 import { ChainInfo } from "@/context/ChainsContext/types";
 import { isTestnetsEnabled } from "@/lib/chainRegistry";
 import { Search } from "lucide-react";
+import { KitIcon } from "@/components/icons/kit";
 import { useEffect, useState } from "react";
 import { Command, CommandEmpty, CommandInput, CommandList, CommandSeparator } from "../ui/command";
 import ChainsGroup from "./ChainsGroup";
@@ -37,9 +38,7 @@ export default function ChooseChain() {
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
         <CommandList className="max-h-none [&>[cmdk-list-sizer]]:space-y-4">
           <CommandEmpty className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="icon-container mb-4 h-12 w-12 rounded-lg opacity-50">
-              <Search className="h-6 w-6" />
-            </div>
+            <KitIcon name="search" size={48} className="mb-4 text-muted-foreground opacity-50" />
             <p className="font-heading text-lg font-semibold text-foreground">No chains found</p>
             <p className="mt-1 text-sm text-muted-foreground">
               Try a different search term or add a custom chain

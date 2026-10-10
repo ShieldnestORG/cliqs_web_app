@@ -1,5 +1,7 @@
 # Public Key Encoding Fix for MsgCreateValidator
 
+> Note (2026-10-09): components/forms/OldCreateTxForm is now components/forms/CreateTxForm (same live form).
+
 ## Problem Summary
 The application was throwing a **"RangeError: index out of range: 2 + 84 > 32"** error when attempting to sign `MsgCreateValidator` transactions loaded from the database.
 

@@ -1,8 +1,6 @@
 /**
  * Create Cliq Form
  *
- * File: components/forms/CreateCliqForm/index.tsx
- *
  * Main form component for creating a new Cliq (multisig group).
  * A Cliq lets multiple people manage shared funds and coordinate transactions.
  * Uses a tabbed interface for each step of the creation process.
@@ -25,6 +23,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -39,7 +38,6 @@ import { useRouter } from "next/router";
 import { useEffect, useCallback, useState } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import {
-  Users,
   Shield,
   ShieldPlus,
   UserPlus,
@@ -51,6 +49,7 @@ import {
   Key,
   AlertCircle,
 } from "lucide-react";
+import { KitIcon } from "@/components/icons/kit";
 import { useChains } from "../../../context/ChainsContext";
 import { createMultisigFromCompressedSecp256k1Pubkeys } from "../../../lib/multisigHelpers";
 import ConfirmCreateCliq from "./ConfirmCreateCliq";
@@ -194,20 +193,18 @@ export default function CreateCliqForm() {
       <Card variant="institutional" bracket="green" className="overflow-visible">
         <CardHeader>
           <div className="mb-2 flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border/[0.06] bg-muted">
-              <Users className="h-7 w-7 text-foreground" />
-            </div>
+            <KitIcon name="multisig" size={48} className="text-foreground" />
             <div>
               <CardLabel comment className="flex items-center gap-1">
                 <ShieldPlus className="h-3 w-3" />
-                New CLIQ
+                PubKey multisig
               </CardLabel>
-              <CardTitle className="text-2xl">Build Your Shared Wallet</CardTitle>
+              <CardTitle className="text-2xl">Standard CLIQ</CardTitle>
             </div>
           </div>
           <CardDescription className="mt-4 space-y-3">
             <span className="block text-base">
-              Build a shared wallet with your team on{" "}
+              Create a CLIQ with your team on{" "}
               <span className="font-semibold text-foreground">
                 {chain.chainDisplayName || "Cosmos"}
               </span>
@@ -366,9 +363,9 @@ export default function CreateCliqForm() {
                         Add the wallet addresses or public keys of CLIQ members
                       </p>
                     </div>
-                    <div className="rounded-full border border-border/[0.06] bg-muted px-3 py-1.5 text-sm font-medium text-foreground">
+                    <Badge variant="outline">
                       {filledMembersCount} member{filledMembersCount !== 1 ? "s" : ""} added
-                    </div>
+                    </Badge>
                   </div>
 
                   <div className="rounded-lg border border-border/[0.06] bg-muted/30 p-3">
@@ -377,6 +374,11 @@ export default function CreateCliqForm() {
                       field, separated by commas or spaces.
                     </p>
                   </div>
+
+                  <p className="text-sm text-muted-foreground">
+                    Each address must have sent at least one transaction on{" "}
+                    {chain.chainDisplayName || "Cosmos"}, or paste its public key instead.
+                  </p>
 
                   {/* Member Fields */}
                   <div className="space-y-4">

@@ -1,8 +1,6 @@
 /**
  * BYODB Import Data Validator
  *
- * File: lib/byodb/importValidator.ts
- *
  * Validates and sanitizes imported data before it is written to a user's
  * database. Prevents:
  *   - Injection of oversized documents

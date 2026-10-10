@@ -1,7 +1,7 @@
 /**
- * Get Started Page
+ * Guides Page
  *
- * Interactive guided walkthroughs for every major flow in CLIQS.
+ * Interactive guided walkthroughs for every major flow in CLIQs.
  * Users select a journey, then walk through tab-based steps.
  */
 
@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { KitIcon } from "@/components/icons/kit";
 import { useChains } from "@/context/ChainsContext";
 import { userJourneys, journeyCategories, type UserJourney } from "@/lib/userJourneys";
 import {
@@ -27,7 +28,6 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock,
-  Lightbulb,
   Rocket,
   Signal,
   Sparkles,
@@ -56,7 +56,6 @@ function JourneyCard({
   journey: UserJourney;
   onSelect: (j: UserJourney) => void;
 }) {
-  const Icon = journey.icon;
   const diff = difficultyConfig[journey.difficulty];
 
   return (
@@ -71,9 +70,7 @@ function JourneyCard({
         >
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
-              <div className="rounded-xl bg-primary/10 p-2.5 text-primary transition-colors group-hover:bg-primary/20">
-                <Icon className="h-5 w-5" />
-              </div>
+              <KitIcon name={journey.icon} size={32} className="text-foreground" />
               <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
             </div>
             <CardTitle className="mt-3 text-base">{journey.title}</CardTitle>
@@ -131,7 +128,6 @@ function JourneyWalkthrough({
 }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
-  const Icon = journey.icon;
   const diff = difficultyConfig[journey.difficulty];
   const _step = journey.steps[currentStep];
 
@@ -165,11 +161,11 @@ function JourneyWalkthrough({
         </Button>
         <div className="min-w-0 flex-1">
           <div className="mb-2 flex items-center gap-3">
-            <div className="rounded-xl bg-primary/10 p-2 text-primary">
-              <Icon className="h-5 w-5" />
-            </div>
+            <KitIcon name={journey.icon} size={40} className="text-foreground" />
             <div>
-              <h1 className="text-2xl font-bold text-foreground">{journey.title}</h1>
+              <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">
+                {journey.title}
+              </h1>
               <p className="text-sm text-muted-foreground">{journey.subtitle}</p>
             </div>
           </div>
@@ -272,7 +268,7 @@ function JourneyWalkthrough({
                 {/* Tip */}
                 {s.tip && (
                   <div className="flex items-start gap-3 rounded-xl border border-warning/20 bg-warning/5 p-4">
-                    <Lightbulb className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
+                    <KitIcon name="tip" size={24} className="mt-0.5 text-foreground" />
                     <div>
                       <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-warning">
                         Pro Tip
@@ -334,24 +330,18 @@ function JourneyWalkthrough({
       {allCompleted && (
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="flex items-center gap-4 p-6">
-            <div className="rounded-full bg-primary/10 p-3">
-              <Sparkles className="h-6 w-6 text-primary" />
-            </div>
+            <KitIcon name="journey" size={40} className="text-foreground" />
             <div className="flex-1">
               <h3 className="font-semibold text-foreground">Journey Complete!</h3>
               <p className="mt-1 text-sm text-muted-foreground">
                 You&apos;ve reviewed all steps.{" "}
-                {navigateHref ? "Ready to get started for real?" : "You're all set!"}
+                {navigateHref && isLastStep
+                  ? "Ready to get started for real? Use Go Do It above."
+                  : navigateHref
+                    ? "Ready to get started for real? Go to the last step and use Go Do It."
+                    : "You're all set!"}
               </p>
             </div>
-            {navigateHref && (
-              <Link href={navigateHref}>
-                <Button size="lg" className="gap-2">
-                  <Rocket className="h-5 w-5" />
-                  Let&apos;s Go
-                </Button>
-              </Link>
-            )}
           </CardContent>
         </Card>
       )}
@@ -379,27 +369,29 @@ export default function GetStartedPage() {
       : userJourneys.filter((j) => j.category === categoryFilter);
 
   return (
-    <div className="container mx-auto max-w-[1600px] px-[0.75in] py-8">
-      <Head title={`Get Started - ${chain.chainDisplayName || "CLIQS"}`} />
+    <div className="container mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-[0.75in]">
+      <Head title={`Guides - ${chain.chainDisplayName || "CLIQs"}`} />
 
       <div className="space-y-6">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href={`/${chain.registryName || ""}`}>Home</Link>
+                <Link href={chain.registryName ? `/${chain.registryName}/dashboard` : "/"}>
+                  Home
+                </Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               {selectedJourney ? (
                 <BreadcrumbLink className="cursor-pointer" onClick={() => setSelectedJourney(null)}>
-                  Get Started
+                  Guides
                 </BreadcrumbLink>
               ) : (
                 <BreadcrumbPage className="flex items-center gap-1.5">
                   <BookOpen className="h-3.5 w-3.5" />
-                  Get Started
+                  Guides
                 </BreadcrumbPage>
               )}
             </BreadcrumbItem>
@@ -424,19 +416,19 @@ export default function GetStartedPage() {
           <>
             {/* Page Header */}
             <div className="space-y-2">
-              <h1 className="flex items-center gap-3 font-heading text-3xl font-bold">
-                <BookOpen className="h-8 w-8 text-primary" />
-                Get Started
+              <h1 className="flex items-center gap-3 font-heading text-3xl font-bold tracking-tight sm:text-4xl">
+                <KitIcon name="guide" size={36} className="text-foreground" />
+                Guides
               </h1>
               <p className="max-w-2xl text-muted-foreground">
-                Choose a guided walkthrough to learn how CLIQS works. Each journey takes you
-                step-by-step through a specific flow — from creating your first multisig to managing
+                Choose a guided walkthrough to learn how CLIQs works. Each journey takes you
+                step-by-step through a specific flow — from creating your first CLIQ to managing
                 your own database.
               </p>
             </div>
 
             {/* Category Filter */}
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-row flex-wrap items-center gap-2">
               <Button
                 variant={categoryFilter === "all" ? "default" : "outline"}
                 size="sm"
@@ -472,7 +464,7 @@ export default function GetStartedPage() {
 
             {filteredJourneys.length === 0 && (
               <div className="py-12 text-center text-muted-foreground">
-                <BookOpen className="mx-auto mb-4 h-12 w-12 opacity-50" />
+                <KitIcon name="guide" size={48} className="mx-auto mb-4 opacity-50" />
                 <p>No journeys found for this category.</p>
               </div>
             )}

@@ -1,8 +1,6 @@
 /**
  * Layer 1: WebSocket Event Listener
  *
- * File: lib/indexer/websocket-listener.ts
- *
  * Real-time event listener for contract multisig events.
  * This layer provides fast UX updates and notifications.
  *

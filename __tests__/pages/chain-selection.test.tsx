@@ -1,85 +1,40 @@
 /**
- * Chain Selection Route Test
+ * Chain Root Route Test
  *
  * File: __tests__/pages/chain-selection.test.tsx
  *
- * Tests for the chain selection route (/[chainName])
+ * /[chainName] has no page of its own any more: it redirects to Home
+ * (/[chainName]/dashboard) from getServerSideProps. A config redirect would
+ * also catch /robots.txt, so the stub is the mechanism under test.
+ *
  * Priority: P0
  */
 
-import { render, screen, waitFor } from "@testing-library/react";
-import ChainHomePage from "@/pages/[chainName]/index";
+import type { GetServerSidePropsContext } from "next";
+import ChainRoot, { getServerSideProps } from "@/pages/[chainName]/index";
 
-// Mock the ChainsContext
-const mockSetChain = jest.fn();
-jest.mock("@/context/ChainsContext", () => ({
-  useChains: () => ({
-    chain: {
-      registryName: "cosmos",
-      chainDisplayName: "Cosmos Hub",
-      chainId: "cosmoshub-4",
-      addressPrefix: "cosmos",
-      nodeAddress: "https://rpc.cosmos.network",
-    },
-    setChain: mockSetChain,
-  }),
-}));
+const run = (chainName: string) =>
+  getServerSideProps({ params: { chainName } } as unknown as GetServerSidePropsContext);
 
-// Mock next/router
-jest.mock("next/router", () => ({
-  useRouter: () => ({
-    query: { chainName: "cosmos" },
-    pathname: "/cosmos",
-    push: jest.fn(),
-  }),
-}));
-
-describe("Chain Selection Route (/[chainName]): P0", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+describe("Chain root route (/[chainName]): P0", () => {
+  it("redirects to Home for the chain in the URL", async () => {
+    await expect(run("tx")).resolves.toEqual({
+      redirect: { destination: "/tx/dashboard", permanent: false },
+    });
   });
 
-  it("should load chain selection page", async () => {
-    render(<ChainHomePage />);
-
-    // Check for chain-specific content - the page shows chain name in multiple places
-    await waitFor(
-      () => {
-        const chainNameElements = screen.getAllByText(/Cosmos/i);
-        expect(chainNameElements.length).toBeGreaterThan(0);
-      },
-      { timeout: 3000 },
-    );
+  it("keeps the alias the visitor used", async () => {
+    await expect(run("coreum-mainnet")).resolves.toEqual({
+      redirect: { destination: "/coreum-mainnet/dashboard", permanent: false },
+    });
   });
 
-  it("should display chain information", async () => {
-    render(<ChainHomePage />);
-
-    // Verify chain details are displayed - check for network label or chain name
-    await waitFor(
-      () => {
-        const networkElements = screen.queryAllByText(/Network/i);
-        const cosmosElements = screen.getAllByText(/Cosmos/i);
-        expect(networkElements.length > 0 || cosmosElements.length > 0).toBe(true);
-      },
-      { timeout: 3000 },
-    );
+  it("is temporary (307) until a preview check", async () => {
+    const result = await run("cosmos");
+    expect(result).toHaveProperty("redirect.permanent", false);
   });
 
-  it("should allow navigation to create CLIQ", async () => {
-    render(<ChainHomePage />);
-
-    // Check for create CLIQ button/link - look for button text or link
-    await waitFor(
-      () => {
-        const createLinks = screen.queryAllByRole("link", { name: /create/i });
-        const createButtons = screen.queryAllByRole("button", { name: /create/i });
-        const createTexts = screen.getAllByText(/Create/i);
-        expect(createLinks.length > 0 || createButtons.length > 0 || createTexts.length > 0).toBe(
-          true,
-        );
-      },
-      { timeout: 3000 },
-    );
+  it("renders nothing if it is ever reached on the client", () => {
+    expect(ChainRoot()).toBeNull();
   });
 });

@@ -1,8 +1,12 @@
 # Phase 2B: End-to-End Chaos Testing Framework
 
+> **Cluster:** tests · **Tags:** chaos, fault-injection, websocket, simulator, phase4-removed · **Related:** [Phase 3 tests](../phase3/README.md), [Formal model](../../formal/README.md), [PRD](../../docs/PRD.md)
+
 **File**: `tests/chaos/README.md`
 
-This directory contains the **Phase 2 Chaos / Failure Test Suite** for attack-ready invariant testing.
+> **What a pass means (2026-10-10):** the one scenario left here (`websocket.partialFailure.reconcile.spec.ts`) drives fake functions defined inside the spec, not app code. A pass is not evidence that the app enforces anything. The five policy scenarios (credential revoked mid-vote, safe mode during timelock, batch spend limit, policy version mismatch, emergency pause during broadcast) ran a stand-in policy engine from the test folder, not `lib/policies`. They were deleted on 2026-10-10 together with Phase 4, which the app never used; the code is archived at git tag `archive/phase4-policies-2026-10-10`.
+
+This directory contains the fault-injection harness and the chaos scenarios that remain.
 
 ## Structure
 
@@ -10,30 +14,16 @@ This directory contains the **Phase 2 Chaos / Failure Test Suite** for attack-re
 tests/chaos/
 ├── faults.ts                    # Fault injection controller + hooks
 ├── chaosHarness.ts              # Deterministic test scheduler
-├── installPatches.ts            # Runtime patches for PolicyRegistry + MultiRpcVerifier
+├── installPatches.ts            # Runtime patch for MultiRpcVerifier.broadcastAndVerify
 ├── multisigChaosHarness.ts      # End-to-end multisig lifecycle harness
 ├── scenarios/                   # Chaos test scenarios
-│   ├── credential.revoked.midVote.spec.ts
-│   ├── safeMode.duringTimelock.spec.ts
-│   ├── spendLimit.batch.spec.ts
-│   ├── policyVersion.mismatch.runtime.spec.ts
-│   ├── emergencyPause.duringBroadcast.spec.ts
 │   └── websocket.partialFailure.reconcile.spec.ts
 └── README.md                    # This file
 ```
 
-## Phase 2A: Policy-Level Chaos (✅ Complete)
+## Phase 2A: Policy-Level Chaos (removed 2026-10-10)
 
-The first 6 scenarios test **policy evaluation** in isolation, proving fail-closed behavior under:
-
-- Mid-vote credential revocation
-- Safe-mode activation during timelock
-- Batch spend limit violations
-- Policy version drift
-- Emergency pause during broadcast
-- WebSocket partial failures
-
-These tests use `evaluatePoliciesMinimal()` from `__tests__/adapters/policyEngine.adapter.ts`.
+The six policy-level scenarios (mid-vote credential revocation, safe mode during a timelock, batch spend limit, policy version drift, emergency pause during broadcast, WebSocket partial failures) tested a stand-in policy engine, not app code. Five were deleted with Phase 4; the WebSocket one stays and uses fakes defined in the spec.
 
 ## Phase 2B: End-to-End Chaos (Framework Ready)
 
@@ -63,10 +53,9 @@ await ms.executeProposal(...); // beforeExecute/duringBroadcast hooks fire
 The harness fires these hooks at critical moments:
 
 - **`beforeVote`**: Before proposal approval/voting
-- **`afterVote`**: After vote recorded (credential revocation point)
+- **`afterVote`**: After vote recorded
 - **`beforeExecute`**: Before proposal execution starts
-- **`beforePolicyEval`**: During policy evaluation (via installPatches)
-- **`duringBroadcast`**: During transaction broadcast (emergency pause point)
+- **`duringBroadcast`**: During transaction broadcast (via installPatches)
 - **`afterBroadcast`**: After broadcast completes
 - **`onReconcile`**: During state reconciliation
 
@@ -74,43 +63,22 @@ The harness fires these hooks at critical moments:
 
 ```typescript
 import { ChaosHarness } from "./chaosHarness";
-import { MultisigChaosHarness } from "./multisigChaosHarness";
 import { faultController } from "./faults";
 
-test("real execution fails after credential revocation", async () => {
+test("a fault fires during broadcast", async () => {
   const h = new ChaosHarness();
-  const ms = new MultisigChaosHarness("contract");
 
   await h.runScenario({
-    name: "credential revoked mid-vote",
+    name: "broadcast fails once",
     faults: [{
-      name: "revoke",
-      hook: "afterVote",
+      name: "broadcast-fails",
+      hook: "duringBroadcast",   // fired by the MultiRpcVerifier patch in installPatches.ts
       once: true,
-      run: () => { faultController.state.credentialValid = false; }
+      run: () => { throw new Error("RPC_DOWN"); }
     }],
     scenario: async () => {
-      // Setup: Create engine with real/mocked dependencies
-      ms.createContractEngine({ /* full config */ });
-      
-      // Setup: Create and store proposal in engine
-      const engine = ms.contractEngine!;
-      const proposal = await engine.createProposal({
-        msgs: [...],
-        fee: { amount: [], gas: "200000" },
-        memo: "Test proposal"
-      });
-      
-      // Action: Vote (credential valid)
-      await ms.vote(async () => {
-        await engine.approveProposal(proposal.id, "cosmos1voter");
-      });
-      
-      // Action: Execute (credential now invalid)
-      // The credential verifier inside the engine will check
-      // faultController.state.credentialValid and deny
-      await expect(ms.executeProposal(proposal.id))
-        .rejects.toThrow(/credential/i);
+      // Drive the code under test here; the hook fires inside
+      // MultiRpcVerifier.broadcastAndVerify once installChaosPatches() has run.
     }
   });
 });
@@ -147,58 +115,38 @@ await engine.approveProposal(proposal.id, voter2);
 // Now ready for executeProposal()
 ```
 
-### 3. Credential/Policy Setup
-
-For credential-gated tests:
-
-```typescript
-const credentialVerifier = {
-  verifyCredential: async (team, signer, role) => ({
-    isValid: faultController.state.credentialValid,
-    reason: faultController.state.credentialValid ? undefined : "revoked",
-    verifiedAtHeight: 1000,
-    verifiedAt: new Date().toISOString(),
-  }),
-  hasValidCredential: async () => faultController.state.credentialValid,
-};
-```
-
 ## Current Test Status
 
 | Test Type | Status | Location |
 |-----------|--------|----------|
-| Policy-level chaos | ✅ **6/6 passing** | `scenarios/*.spec.ts` |
+| WebSocket drop + reconcile (fakes inside the spec) | passing | `scenarios/websocket.partialFailure.reconcile.spec.ts` |
 | E2E chaos (framework) | ✅ **Ready** | `multisigChaosHarness.ts` |
 | E2E chaos (full tests) | ⏭️ **Requires setup** | Future |
 
 ## Running Tests
 
 ```bash
-# Run all chaos tests (policy-level)
+# Run all chaos tests
 npm test -- tests/chaos
 
 # Run specific scenario
-npm test -- tests/chaos/scenarios/credential.revoked.midVote.spec.ts
+npm test -- tests/chaos/scenarios/websocket.partialFailure.reconcile.spec.ts
 
 # Watch mode
 npm test -- --watch tests/chaos
 ```
 
-## What This Proves
+## What This Does And Does Not Show
 
-Phase 2 demonstrates **attack-ready invariants**:
-
-✅ **Fail-closed under mid-flight changes** (credential revocation, emergency pause)  
-✅ **No execution after policy violations** (spend limits, version drift)  
-✅ **Deterministic chaos scheduling** (timelock + safe-mode interactions)  
-✅ **Network unreliability handled** (WebSocket drops + reconciliation)  
-✅ **Real execution path tested** (with MultisigChaosHarness)
+- A fault controller and a scheduler can inject failures at named hooks, and `MultiRpcVerifier.broadcastAndVerify` fires `duringBroadcast` / `afterBroadcast` once patched.
+- The WebSocket scenario shows a drop-then-reconcile flow on fakes defined in the spec.
+- It does **not** show that the app stops a transaction because of a credential, a pause, a spend limit or a policy version. The app has none of those features (removed 2026-10-10).
 
 ## Next Steps (Phase 3+)
 
 - **Integration tests**: Wire E2E harness to local testnet
 - **Adversarial fuzzing**: Random fault injection sequences
-- **Mutation testing**: Verify test suite catches policy bugs
+- **Mutation testing**: Verify the test suite catches real bugs
 - **Formal verification**: Property-based testing with invariants
 
 ## Architecture
@@ -206,12 +154,12 @@ Phase 2 demonstrates **attack-ready invariants**:
 The chaos framework uses **runtime patching** to inject faults without modifying production code:
 
 ```typescript
-// installPatches.ts patches PolicyRegistry.evaluateProposal
-proto[evalName] = async function patchedEvaluate(ctx: any) {
-  // Inject chaos state
-  const injected = { ...ctx, isPaused: faultController.state.emergencyPaused };
-  await faultController.fire("beforePolicyEval", { ctx: injected });
-  return originalEval.call(this, injected);
+// installPatches.ts wraps MultiRpcVerifier.broadcastAndVerify
+MultiRpcVerifier.broadcastAndVerify = async (...args: any[]) => {
+  await faultController.fire("duringBroadcast", { args });
+  const res = await original(...args);
+  await faultController.fire("afterBroadcast", { res });
+  return res;
 };
 ```
 
@@ -219,7 +167,6 @@ This means:
 - **Zero production code changes** required
 - **Hot-swappable** test strategies
 - **Deterministic** replay from fault logs
-- **Audit-friendly** (tests prove behavior, not implementation)
 
 ---
 

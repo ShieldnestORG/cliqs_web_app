@@ -1,8 +1,6 @@
 /**
  * Create Contract Cliq Form — Full Wizard
  *
- * File: components/forms/CreateContractCliqForm/index.tsx
- *
  * Six-step wizard for creating a CW3-based contract multisig:
  *   1. Setup    – name, description
  *   2. Members  – addresses + weights
@@ -29,6 +27,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -62,6 +61,7 @@ import {
   Copy,
   ExternalLink,
 } from "lucide-react";
+import { KitIcon } from "@/components/icons/kit";
 import { useChains } from "@/context/ChainsContext";
 import { useWallet } from "@/context/WalletContext";
 import { CW3Client } from "@/lib/contract/cw3-client";
@@ -546,15 +546,13 @@ export default function CreateContractCliqForm() {
     <Card variant="institutional" bracket="purple" className="overflow-visible">
       <CardHeader>
         <div className="mb-2 flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border/[0.06] bg-muted">
-            <FileCode2 className="h-7 w-7 text-foreground" />
-          </div>
+          <KitIcon name="contract" size={48} className="text-foreground" />
           <div>
             <CardLabel comment className="flex items-center gap-1">
               <ShieldPlus className="h-3 w-3" />
               Contract Multisig
             </CardLabel>
-            <CardTitle className="text-2xl">Create Smart Wallet</CardTitle>
+            <CardTitle className="text-2xl">Fixed CLIQ</CardTitle>
           </div>
         </div>
         <CardDescription className="mt-4 space-y-3">
@@ -648,7 +646,7 @@ export default function CreateContractCliqForm() {
                     Name Your CLIQ
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Give your multisig a name and optionally a description
+                    Give your CLIQ a name and optionally a description
                   </p>
                 </div>
 
@@ -845,9 +843,7 @@ export default function CreateContractCliqForm() {
                       Add wallet addresses with voting weights
                     </p>
                   </div>
-                  <div className="rounded-full border border-border/[0.06] bg-muted px-3 py-1.5 text-sm font-medium text-foreground">
-                    Total Weight: {totalWeight}
-                  </div>
+                  <Badge variant="outline">Total Weight: {totalWeight}</Badge>
                 </div>
 
                 <div className="rounded-lg border border-border/[0.06] bg-muted/30 p-3">
@@ -961,7 +957,7 @@ export default function CreateContractCliqForm() {
               <div className="space-y-6">
                 <div className="mb-6 space-y-1">
                   <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
-                    <Shield className="h-5 w-5 text-muted-foreground" />
+                    <KitIcon name="governance" size={24} className="text-foreground" />
                     Governance Settings
                   </h3>
                   <p className="text-sm text-muted-foreground">
@@ -1351,7 +1347,7 @@ export default function CreateContractCliqForm() {
                   <p className="text-sm text-muted-foreground">
                     {watchedCodeId > 0 && codeIdStatus === "valid"
                       ? "Using existing Code ID — skipping upload."
-                      : "The app will upload the contract code and then create your multisig."}
+                      : "The app will upload the contract code and then create your CLIQ."}
                   </p>
                 </div>
 

@@ -1,8 +1,6 @@
 /**
  * Layer 3: On-Demand Chain Verification
  *
- * File: lib/indexer/chain-verifier.ts
- *
  * This layer provides on-demand verification against chain state
  * before security-critical operations. The DB is advisory;
  * chain state is authoritative.

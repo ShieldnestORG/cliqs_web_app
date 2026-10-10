@@ -95,9 +95,12 @@ async function apiTransactionActions(req: NextApiRequest, res: NextApiResponse) 
       // (messages, amounts, recipients, memo) plus every collected signature.
       // With no limit, an attacker holding or guessing transaction ids can sweep
       // them for free. A limit does not make the read private; it makes bulk
-      // harvesting cost something. The same budget is charged in the transaction
-      // page's getServerSideProps, which returns the identical payload — without
-      // that, this limit was bypassable by requesting the page instead.
+      // harvesting cost something. This GET is the only thing that charges the
+      // budget. The transaction page's getServerSideProps used to return the
+      // identical payload and was charged here too, so the page could not
+      // bypass the limit; since PR #59 it returns only the id, reads nothing and
+      // charges nothing, and the page loads the transaction through this GET
+      // (loadTx).
       //
       // Still NOT a fix for the disclosure itself: anyone with a transaction id
       // can read it. Closing that changes who can open a transaction link, which

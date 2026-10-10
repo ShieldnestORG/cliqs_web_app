@@ -1,8 +1,6 @@
 /**
  * Credential Types
  *
- * File: lib/credentials/types.ts
- *
  * Type definitions for TX assetnft-based credentials.
  * These credentials are soulbound NFTs that gate access to multisig operations.
  *

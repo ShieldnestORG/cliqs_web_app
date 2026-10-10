@@ -161,7 +161,7 @@ MongoDB collections:
 ### Member deletion rights
 
 All actions below require an ADR-36 wallet signature proving cliq membership and
-are exposed in the app on the cliq dashboard's Transactions tab ("Data & Privacy"):
+are exposed in the app on the CLIQ page's "Data & Privacy" tab:
 
 - **Export history** — download the full transaction history, including
   signatures, as JSON.

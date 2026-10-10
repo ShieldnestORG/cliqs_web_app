@@ -1,8 +1,6 @@
 /**
  * Chain Registry Proxy
  *
- * File: pages/api/chain-registry/[...path].ts
- *
  * The browser cannot call api.github.com directly for the chain registry:
  * the unauthenticated limit is 60 requests/hour per visitor IP, and once it
  * trips GitHub answers without CORS headers, so the fetch fails outright and

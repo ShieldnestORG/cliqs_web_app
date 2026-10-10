@@ -1,8 +1,6 @@
 /**
  * Data Retention Utilities
  *
- * File: lib/dataRetention.ts
- *
  * Provides helpers for computing data retention deadlines, warnings,
  * and storage quotas.  Configuration comes from environment variables
  * with sensible defaults.

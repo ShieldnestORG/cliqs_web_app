@@ -98,7 +98,7 @@ export default function DevToolsArrivalGate({
             <li>
               Give another account permission to move, stake and spend your funds on your behalf.
             </li>
-            <li>Build a transaction for your multisig group to sign.</li>
+            <li>Build a transaction for your CLIQ to sign.</li>
           </ul>
           <p className="font-semibold text-foreground">
             Nobody legitimate will ever send you a link to this page.

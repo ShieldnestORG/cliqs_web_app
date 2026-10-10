@@ -1,8 +1,6 @@
 /**
  * BYODB Test Connection API
  *
- * File: pages/api/db/test-connection.ts
- *
  * POST /api/db/test-connection
  * Body: { connectionUri: string }
  *

@@ -1,8 +1,6 @@
 /**
  * BYODB Import API
  *
- * File: pages/api/db/import.ts
- *
  * POST /api/db/import
  * Header: x-byodb-uri (required – imports only into user's BYODB)
  * Body: ImportPayload JSON

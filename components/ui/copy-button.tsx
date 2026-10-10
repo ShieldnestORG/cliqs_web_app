@@ -54,7 +54,9 @@ export function CopyButton({
           <Button
             variant={variant}
             size={children ? "default" : size}
-            className={cn(children ? "" : "h-8 w-8 shrink-0", className)}
+            // relative: the sr-only label is absolute, so the button must contain it or a
+            // long scrolling list of copy buttons stretches the page (29,805px, measured)
+            className={cn("relative", children ? "" : "h-8 w-8 shrink-0", className)}
             onClick={onCopy}
             {...props}
           >

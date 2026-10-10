@@ -1,8 +1,6 @@
 /**
  * GroupProvider Interface
  *
- * File: lib/group/provider.ts
- *
  * Defines the abstract interface for group membership providers.
  * This abstraction allows the system to work with:
  * - CW4-group contracts (Phase 2)

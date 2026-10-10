@@ -1,7 +1,6 @@
 import GridSpotlight from "@/components/GridSpotlight";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
-import GeneralNews from "@/components/GeneralNews";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { WalletProvider } from "@/context/WalletContext";
@@ -67,7 +66,6 @@ export default function MultisigApp({ Component, pageProps }: AppProps) {
                       <Header />
                     </div>
                   )}
-                  {!isLandingPage && <GeneralNews active={false} />}
 
                   <main className="relative flex flex-1 flex-col">
                     <Component {...pageProps} />

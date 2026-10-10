@@ -1,5 +1,7 @@
 # MsgWithdrawValidatorCommission Debugging Summary
 
+> Note (2026-10-09): components/forms/OldCreateTxForm is now components/forms/CreateTxForm (same live form).
+
 > **Historical snapshot — do not copy the gas and fee numbers.** This file is a verbatim
 > debugging transcript from the investigation, kept for its reasoning and its `cored`
 > invocations, not as current reference. It is linked from the README under

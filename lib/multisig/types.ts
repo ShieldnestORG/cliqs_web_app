@@ -1,8 +1,6 @@
 /**
  * Shared types for MultisigEngine abstraction
  *
- * File: lib/multisig/types.ts
- *
  * These types are used by both PubKeyMultisigEngine and ContractMultisigEngine
  * to provide a unified interface for multisig operations.
  */

@@ -1,12 +1,11 @@
 /**
  * CLIQ Upgrade CTA Card
  *
- * File: components/dataViews/ValidatorDashboard/CliqUpgradeCTA.tsx
- *
  * Call-to-action card encouraging validators to upgrade to multisig security.
  */
 
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useChains } from "@/context/ChainsContext";
 import Link from "next/link";
@@ -26,8 +25,8 @@ export default function CliqUpgradeCTA() {
   const benefits = [
     {
       icon: Shield,
-      title: "No Single Point of Failure",
-      description: "Protect your validator operations with multiple keys",
+      title: "No Single Operator Key",
+      description: "Commission claims, validator edits and votes need several approvals",
     },
     {
       icon: Users,
@@ -36,8 +35,9 @@ export default function CliqUpgradeCTA() {
     },
     {
       icon: Lock,
-      title: "Works With Existing Validator",
-      description: "Set up a CLIQ without changing your validator setup",
+      title: "Starts a New Validator",
+      description:
+        "A CLIQ runs a validator it creates. An existing validator can't be moved into one.",
     },
   ];
 
@@ -51,18 +51,19 @@ export default function CliqUpgradeCTA() {
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center">
           {/* Content */}
           <div className="flex-1 space-y-4">
-            <div className="inline-flex items-center gap-2 rounded-full border border-purple-accent/30 bg-purple-accent/20 px-3 py-1 font-mono text-xs uppercase tracking-wider text-purple-accent">
+            <Badge>
               <ShieldPlus className="h-3 w-3" />
-              Security Upgrade
-            </div>
+              Multisig Validator
+            </Badge>
 
             <h3 className="font-heading text-2xl font-bold md:text-3xl">
-              Secure Your Validator Operations
+              Run a Validator From a CLIQ
             </h3>
 
             <p className="max-w-2xl text-lg text-muted-foreground">
-              Your validator key is a single point of failure. Upgrade to a CLIQ (multi-signature
-              wallet) to protect your operations with team-based security.
+              Create a new validator controlled by a CLIQ (multi-signature wallet), so every
+              operator action needs approval from several team members. This sets up a new
+              validator. It does not convert an existing one.
             </p>
 
             {/* Benefits - Desktop */}
@@ -136,19 +137,35 @@ export default function CliqUpgradeCTA() {
                     <ol className="space-y-2 text-sm text-muted-foreground">
                       <li className="flex gap-2">
                         <span className="font-mono text-purple-accent">1.</span>
-                        <span>Create a CLIQ with your team members' addresses</span>
+                        <span>
+                          Create a CLIQ with your team members' addresses and a signing threshold
+                          (e.g., 2-of-3)
+                        </span>
                       </li>
                       <li className="flex gap-2">
                         <span className="font-mono text-purple-accent">2.</span>
-                        <span>Set the signing threshold (e.g., 2-of-3)</span>
+                        <span>Fund the CLIQ with your self-delegation plus fees</span>
                       </li>
                       <li className="flex gap-2">
                         <span className="font-mono text-purple-accent">3.</span>
-                        <span>Propose transactions that require multiple signatures</span>
+                        <span>
+                          From the CLIQ, propose a Create Validator transaction with your node's
+                          consensus key. It must be a key no other validator uses.
+                        </span>
                       </li>
                       <li className="flex gap-2">
                         <span className="font-mono text-purple-accent">4.</span>
-                        <span>Team members sign and broadcast securely</span>
+                        <span>
+                          Once enough members sign, broadcast it. The CLIQ is now the validator's
+                          operator.
+                        </span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="font-mono text-purple-accent">5.</span>
+                        <span>
+                          Moving from an old validator? Your delegators move their own stake by
+                          redelegating to the new one.
+                        </span>
                       </li>
                     </ol>
                   </div>
@@ -158,7 +175,7 @@ export default function CliqUpgradeCTA() {
                       <Link href={`/${chain.registryName}/create`}>
                         <Button variant="action" size="action" className="gap-2">
                           <ShieldPlus className="h-4 w-4" />
-                          Get Started
+                          Create Validator CLIQ
                         </Button>
                       </Link>
                     )}

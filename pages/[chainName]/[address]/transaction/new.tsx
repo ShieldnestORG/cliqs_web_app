@@ -1,4 +1,3 @@
-import CreateTxForm from "@/components/forms/CreateTxForm";
 import Head from "@/components/head";
 import {
   Breadcrumb,
@@ -21,8 +20,8 @@ import { Account } from "@cosmjs/stargate";
 import { assert } from "@cosmjs/utils";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useCallback, useEffect, useState } from "react";
-import OldCreateTxForm from "../../../../components/forms/OldCreateTxForm";
+import { useEffect, useState } from "react";
+import CreateTxForm from "@/components/forms/CreateTxForm";
 import { useChains } from "../../../../context/ChainsContext";
 import { useWallet } from "@/context/WalletContext";
 import {
@@ -34,7 +33,7 @@ import { useMultisigType } from "@/lib/hooks/useMultisigType";
 import { createSigningCW3ClientFromSigner } from "@/lib/contract/cw3-client";
 import { getGasAdjustment } from "@/lib/contract/codeRegistry";
 import { ensureProtocol } from "@/lib/utils";
-import { ArrowLeft, AlertTriangle, Clock, Loader2, FileCode2, Send, Coins } from "lucide-react";
+import { AlertTriangle, Clock, Loader2, FileCode2, Send, Coins } from "lucide-react";
 import { toast } from "sonner";
 
 // ============================================================================
@@ -325,7 +324,6 @@ function ContractProposalForm({
 
 export default function CreateTxPage() {
   const { chain } = useChains();
-  const [showOldForm, setShowOldForm] = useState(true);
   const [accountOnChain, setAccountOnChain] = useState<Account | null>(null);
   const [hasAccountError, setHasAccountError] = useState(false);
   const [accountErrorMessage, setAccountErrorMessage] = useState<string | null>(null);
@@ -354,13 +352,13 @@ export default function CreateTxPage() {
 
         const resolved = await ensureChainMultisigInDb(multisigAddress, chain);
         if (!resolved.multisig) {
-          throw new Error(resolved.reason ?? "Multisig address could not be resolved");
+          throw new Error(resolved.reason ?? "CLIQ address could not be resolved");
         }
         const hostedMultisig = await getHostedMultisig(multisigAddress, chain);
 
         assert(
           hostedMultisig.hosted === "db+chain" && isAccount(hostedMultisig.accountOnChain),
-          "Multisig address could not be found",
+          "CLIQ address could not be found",
         );
 
         setAccountOnChain(hostedMultisig.accountOnChain);
@@ -377,62 +375,54 @@ export default function CreateTxPage() {
       } catch (error: unknown) {
         setHasAccountError(true);
         setAccountErrorMessage(
-          error instanceof Error ? error.message : "Multisig address could not be found",
+          error instanceof Error ? error.message : "CLIQ address could not be found",
         );
-        console.error(
-          error instanceof Error ? error.message : "Multisig address could not be found",
-        );
+        console.error(error instanceof Error ? error.message : "CLIQ address could not be found");
       }
     })();
   }, [chain, multisigAddress, isContractMultisig, multisigTypeResult.isLoading]);
 
-  const toggleOldNewForm = useCallback((event: KeyboardEvent) => {
-    if (event.ctrlKey && event.key === ".") {
-      setShowOldForm((prev) => !prev);
-      event.preventDefault();
-    }
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener("keyup", toggleOldNewForm);
-    return () => {
-      window.removeEventListener("keyup", toggleOldNewForm);
-    };
-  }, [toggleOldNewForm]);
+  const pageTitle = isContractMultisig ? "New proposal" : "New transaction";
 
   const breadcrumb = (
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
-            {chain.registryName ? <Link href={`/${chain.registryName}`}>Home</Link> : null}
+            {chain.registryName ? (
+              <Link href={`/${chain.registryName}/dashboard`}>Home</Link>
+            ) : null}
           </BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
             {chain.registryName ? (
-              <Link href={`/${chain.registryName}/${multisigAddress}`}>Multisig</Link>
+              <Link href={`/${chain.registryName}/${multisigAddress}`}>CLIQ</Link>
             ) : null}
           </BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
-          <BreadcrumbPage>{isContractMultisig ? "New Proposal" : "New Transaction"}</BreadcrumbPage>
+          <BreadcrumbPage>{pageTitle}</BreadcrumbPage>
         </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>
   );
 
+  const heading = (
+    <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">{pageTitle}</h1>
+  );
+
   // Loading — detecting multisig type
   if (multisigTypeResult.isLoading) {
     return (
-      <div className="container mx-auto max-w-[1800px] px-[0.75in] py-8">
+      <div className="container mx-auto max-w-[1800px] px-4 py-8 sm:px-6 lg:px-[0.75in]">
         <Head title={`New Transaction - ${chain.chainDisplayName || "Cosmos Hub"}`} />
         <div className="flex items-center justify-center py-24">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">Detecting multisig type...</p>
+            <p className="text-sm text-muted-foreground">Detecting CLIQ type...</p>
           </div>
         </div>
       </div>
@@ -442,22 +432,11 @@ export default function CreateTxPage() {
   // Contract Multisig — show CW3 proposal form
   if (isContractMultisig && multisigAddress) {
     return (
-      <div className="container mx-auto max-w-3xl px-[0.75in] py-8">
+      <div className="container mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-[0.75in]">
         <Head title={`New Proposal - ${chain.chainDisplayName || "Cosmos Hub"}`} />
         <div className="space-y-6">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => router.push(`/${chain.registryName}/${multisigAddress}`)}
-              className="gap-2 text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to multisig
-            </Button>
-          </div>
-
           {breadcrumb}
+          {heading}
 
           <ContractProposalForm
             contractAddress={multisigAddress}
@@ -469,41 +448,36 @@ export default function CreateTxPage() {
   }
 
   // PubKey Multisig — existing form
-  return showOldForm ? (
-    <div className="container mx-auto max-w-[1800px] px-[0.75in] py-8">
+  return (
+    <div className="container mx-auto max-w-[1800px] px-4 py-8 sm:px-6 lg:px-[0.75in]">
       <Head title={`New Transaction - ${chain.chainDisplayName || "Cosmos Hub"}`} />
 
       <div className="space-y-6">
-        {/* Back Button */}
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.push(`/${chain.registryName}/${multisigAddress}`)}
-            className="gap-2 text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to multisig
-          </Button>
-        </div>
-
         {breadcrumb}
+        {heading}
 
         {/* Error States */}
         {hasAccountError && (
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Multisig Not Available</AlertTitle>
+            <AlertTitle>CLIQ not available</AlertTitle>
             <AlertDescription className="mt-2 space-y-2">
               {accountErrorMessage ? <p>{accountErrorMessage}</p> : null}
               <p>
-                This multisig address&apos;s pubkeys are not available, and so it cannot be used
-                with this tool.
+                This CLIQ address&apos;s pubkeys are not available, and so it cannot be used with
+                this tool.
               </p>
               <p>
-                You can recreate it with this tool here, or sign and broadcast a transaction with
-                the tool you used to create it. Either option will make the pubkeys accessible and
-                will allow this tool to use this multisig fully.
+                You can{" "}
+                <Link
+                  href={chain.registryName ? `/${chain.registryName}/create` : "/"}
+                  className="underline underline-offset-4"
+                >
+                  recreate it with this tool
+                </Link>
+                , or sign and broadcast a transaction with the tool you used to create it. Either
+                option will make the pubkeys accessible and will allow this tool to use this CLIQ
+                fully.
               </p>
             </AlertDescription>
           </Alert>
@@ -562,17 +536,8 @@ export default function CreateTxPage() {
 
         {/* Transaction Form */}
         {accountOnChain && multisigAddress && (
-          <OldCreateTxForm senderAddress={multisigAddress} accountOnChain={accountOnChain} />
+          <CreateTxForm senderAddress={multisigAddress} accountOnChain={accountOnChain} />
         )}
-      </div>
-    </div>
-  ) : (
-    <div className="container mx-auto max-w-2xl px-[0.75in] py-8">
-      <Head title={`New Transaction - ${chain.chainDisplayName || "Cosmos Hub"}`} />
-
-      <div className="space-y-6">
-        {breadcrumb}
-        <CreateTxForm />
       </div>
     </div>
   );

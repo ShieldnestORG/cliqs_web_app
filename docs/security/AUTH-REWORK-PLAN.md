@@ -12,7 +12,7 @@ This exists so the design decision is not lost and nobody re-derives it from scr
 
 ## 1. What problem this solves
 
-36 of 38 API routes let an anonymous caller read or mutate multisig data, including destructive operations (wipe history, cancel transactions, pause a multisig, mint role credentials). Only `transaction/list`, `transaction/wipe` and `transaction/export` enforce ADR-36 today; `chain/[chainId]/multisig/list` verified a signature but ignored the result, and that decorative check was removed in PR #38 rather than left to imply protection.
+36 of 38 API routes let an anonymous caller read or mutate multisig data, including destructive operations (wipe history, cancel transactions, pause a multisig, mint role credentials). *(Counts as of 2026-08-16. On 2026-10-10 the 8 policy, emergency and monitoring routes were deleted, so "pause a multisig" no longer exists and 30 route files remain; the other counts were not re-taken.)* Only `transaction/list`, `transaction/wipe` and `transaction/export` enforce ADR-36 today; `chain/[chainId]/multisig/list` verified a signature but ignored the result, and that decorative check was removed in PR #38 rather than left to imply protection.
 
 This is the single largest open security gap in the repo (SOC 2 CC6.1).
 
@@ -68,16 +68,16 @@ The nonce is **one counter per `(chainId, address)`**, consumed on every call, s
 
 ## 5. The audit log is separable — do it first
 
-`lib/audit.ts` (335 lines) exists only on the held branch; `main` has **no audit trail at all**, which is the most important single SOC 2 control for a multisig (CC7.2 / CC4).
+**Update 2026-10-09 — this slice has shipped, but only PARTIALLY.** `lib/audit.ts` (335 lines) has been on `main` since PR #58 (2026-08-17). It records transaction cancel and broadcast, history export, and history wipe / multisig delete (refused wipes included). Transaction create, signing, credential issue and emergency pause are **not** recorded yet. The audit trail is the most important single SOC 2 control for a multisig (CC7.2 / CC4), so treat L2 as live but open; caveats in [README.md](README.md). *Until 2026-10-09 this paragraph read: "`lib/audit.ts` (335 lines) exists only on the held branch; `main` has **no audit trail at all**, which is the most important single SOC 2 control for a multisig (CC7.2 / CC4)."*
 
 **It does not depend on this rework.** `recordAuditEvent` takes an action, a target multisig, an outcome and an `authMethod` that already defaults to `"none"`. It records *what happened*; it does not need authorization to exist. It can therefore ship on its own, ahead of everything above.
 
 Two honest caveats to carry with it:
 
-- **`recordAuditEvent` has never completed a successful write.** It is deliberately fail-safe: it returns `null` after logging `[Audit] CONTROL GAP` rather than throwing into a live transaction path. The diary measured that as a test-environment artifact, but **the write path is unproven end to end** and no test asserts audit behaviour, so it can regress silently. Proving that write path is the first task, not an afterthought.
+- **Update 2026-10-09: the write path is now proven by a test, against a fake.** Since PR #58, `__tests__/lib/audit.test.ts` asserts a successful write. It drives an in-memory stand-in for the collection, so behaviour against Atlas is still unobserved. Until then this bullet read: **`recordAuditEvent` has never completed a successful write.** It is deliberately fail-safe: it returns `null` after logging `[Audit] CONTROL GAP` rather than throwing into a live transaction path. The diary measured that as a test-environment artifact, but **the write path is unproven end to end** and no test asserts audit behaviour, so it can regress silently. Proving that write path is the first task, not an afterthought.
 - **Until the rework lands, the "who" is self-asserted.** Action, target, timestamp and outcome are all trustworthy; the actor is not, because callers are unauthenticated. That still beats no trail — but write it down that way rather than claiming attribution the system cannot support.
 
-Suggested sequencing: prove the write path → wire the destructive routes first (wipe, cancel, delete multisig, credential issue, emergency pause) → assert behaviour in tests → widen. Do not describe it as shipped until a test asserts a successful write.
+Suggested sequencing: prove the write path → wire the destructive routes first (wipe, cancel, delete multisig, credential issue; *"emergency pause" was on this list until 2026-10-10, when its route was deleted with the unused Phase 4 code*) → assert behaviour in tests → widen. Do not describe it as shipped until a test asserts a successful write.
 
 ## 6. Effort
 

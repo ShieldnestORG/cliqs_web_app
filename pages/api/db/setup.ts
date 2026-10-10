@@ -1,8 +1,6 @@
 /**
  * BYODB Setup (Provision) API
  *
- * File: pages/api/db/setup.ts
- *
  * POST /api/db/setup
  * Body: { connectionUri: string }
  *

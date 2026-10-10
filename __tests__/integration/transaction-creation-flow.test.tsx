@@ -152,12 +152,14 @@ describe("Transaction Creation Flow: Complete Navigation Test", () => {
     // Wait for page to load
     await waitFor(
       () => {
-        expect(screen.getByText(/New Transaction/i)).toBeInTheDocument();
+        expect(
+          screen.getByRole("heading", { level: 1, name: "New transaction" }),
+        ).toBeInTheDocument();
       },
       { timeout: 5000 },
     );
 
-    // Note: Since OldCreateTxForm is a complex component with many nested forms,
+    // Note: Since CreateTxForm is a complex component with many nested forms,
     // and we need to test the navigation flow specifically, we verify:
     // 1. The page loads correctly
     // 2. When createDbTx succeeds, router.push is called with the right path
@@ -176,7 +178,7 @@ describe("Transaction Creation Flow: Complete Navigation Test", () => {
     expect(txId).toBeTruthy();
     expect(mockCreatedTxId).toBeTruthy();
 
-    // Simulate the router.push call that happens in OldCreateTxForm after success
+    // Simulate the router.push call that happens in CreateTxForm after success
     act(() => {
       const chainName = mockRouterQuery.chainName || mockChain.registryName;
       mockRouterPush(`/${chainName}/${mockAccountOnChain.address}/transaction/${txId}`);
@@ -199,7 +201,9 @@ describe("Transaction Creation Flow: Complete Navigation Test", () => {
     const { unmount } = render(<CreateTransactionPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/New Transaction/i)).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { level: 1, name: "New transaction" }),
+      ).toBeInTheDocument();
     });
 
     // Step 2: Simulate transaction creation
@@ -238,7 +242,9 @@ describe("Transaction Creation Flow: Complete Navigation Test", () => {
     render(<CreateTransactionPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/New Transaction/i)).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { level: 1, name: "New transaction" }),
+      ).toBeInTheDocument();
     });
 
     // Create transaction
@@ -266,7 +272,9 @@ describe("Transaction Creation Flow: Complete Navigation Test", () => {
     render(<CreateTransactionPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/New Transaction/i)).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { level: 1, name: "New transaction" }),
+      ).toBeInTheDocument();
     });
 
     // Create transaction (ID will contain timestamp and random string)

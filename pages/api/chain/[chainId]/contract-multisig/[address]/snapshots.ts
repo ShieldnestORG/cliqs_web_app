@@ -1,8 +1,6 @@
 /**
  * Snapshots API
  *
- * File: pages/api/chain/[chainId]/contract-multisig/[address]/snapshots.ts
- *
  * API endpoints for member and vote snapshots.
  *
  * GET - Get snapshots for a proposal

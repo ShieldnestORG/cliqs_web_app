@@ -1,8 +1,6 @@
 /**
  * Tamper-Evident Audit Log
  *
- * File: lib/audit.ts
- *
  * Append-only record of every security-relevant action taken against a cliq,
  * chained per multisig so that deleting or editing an entry breaks the chain on
  * replay (SOC 2 TSC CC7.2 / CC4 — monitoring and evaluation of controls).

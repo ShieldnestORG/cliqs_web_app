@@ -1,115 +1,398 @@
+import { loadValidators } from "@/context/ChainsContext/helpers";
+import { DbTransactionParsedDataJson } from "@/graphql";
+import { createDbTx } from "@/lib/api";
+import { toastError, toastSuccess } from "@/lib/utils";
+import { MsgTypeUrl, MsgTypeUrls } from "@/types/txMsg";
+import { EncodeObject } from "@cosmjs/proto-signing";
+import { Account, calculateFee } from "@cosmjs/stargate";
+import { assert, sleep } from "@cosmjs/utils";
+import { NextRouter, withRouter } from "next/router";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import { useChains } from "../../../context/ChainsContext";
+import { exportMsgToJson, gasOfTx } from "../../../lib/txMsgHelpers";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form } from "@/components/ui/form";
-import { useChains } from "@/context/ChainsContext";
-import { getField, getMsgSchema } from "@/lib/form";
-import { getMsgRegistry } from "@/lib/msg";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/router";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
+import { Input } from "@/components/ui/input";
+import OldButton from "../../inputs/Button";
+import MsgForm from "./MsgForm";
+import TransactionTypeSelector from "./TransactionTypeSelector";
 
-type MsgType = Readonly<{
-  url: string;
-  key: string;
-}>;
+export interface MsgGetter {
+  readonly isMsgValid: () => boolean;
+  readonly msg: EncodeObject | EncodeObject[]; // Support single or multiple messages
+}
 
-export default function CreateTxForm() {
-  const _router = useRouter();
-  const { chain } = useChains();
-  const [msgTypes, setMsgTypes] = useState<readonly MsgType[]>([]);
+interface CreateTxFormProps {
+  readonly router: NextRouter;
+  readonly senderAddress: string;
+  readonly accountOnChain: Account;
+}
 
-  const msgRegistry = getMsgRegistry();
-  const categories = [...new Set(Object.values(msgRegistry).map((msg) => msg.category))];
+const CreateTxForm = ({ router, senderAddress, accountOnChain }: CreateTxFormProps) => {
+  const {
+    chain,
+    validatorState: { validators },
+    chainsDispatch,
+  } = useChains();
 
-  const basicCreateTxSchema = z.object({
-    memo: z.string().trim().min(1, "Required"),
-    msgs: z.object({}),
-  });
+  const [processing, setProcessing] = useState(false);
+  const [msgTypes, setMsgTypes] = useState<readonly MsgTypeUrl[]>([]);
+  const [msgKeys, setMsgKeys] = useState<readonly string[]>([]);
+  const msgGetters = useRef<MsgGetter[]>([]);
+  const [memo, setMemo] = useState("");
+  const [gasLimit, setGasLimit] = useState(gasOfTx([]));
+  const [gasLimitError, setGasLimitError] = useState("");
+  const [isFormValid, setIsFormValid] = useState(false);
+  // Use a ref for validation trigger to avoid re-renders when msgGetter is updated
+  const validationTriggerRef = useRef(0);
+  const [validationTrigger, setValidationTrigger] = useState(0);
+  // Ref to track debounce timeout to prevent infinite update loops
+  const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Ref to prevent duplicate submissions (works synchronously, unlike state)
+  const isSubmittingRef = useRef(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const msgsSchema: Record<string, z.ZodObject<any>> = {};
+  // Stable callback for updating msgGetters - uses ref to avoid re-render loops
+  // The callback is stable (same reference) across renders to prevent infinite loops
+  // in child components that have setMsgGetter in their useEffect dependencies
+  const updateMsgGetter = useCallback((index: number, msgGetter: MsgGetter) => {
+    msgGetters.current = [
+      ...msgGetters.current.slice(0, index),
+      msgGetter,
+      ...msgGetters.current.slice(index + 1),
+    ];
+    // Use ref to batch validation triggers and avoid excessive re-renders
+    validationTriggerRef.current += 1;
 
-  for (const msgType of msgTypes) {
-    msgsSchema[msgType.key] = getMsgSchema(msgRegistry[msgType.url].fields, { chain });
-  }
+    // Debounce the state update using setTimeout to prevent infinite loops
+    // Cancel any pending update before scheduling a new one
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    debounceTimeoutRef.current = setTimeout(() => {
+      setValidationTrigger(validationTriggerRef.current);
+      debounceTimeoutRef.current = null;
+    }, 0);
+  }, []);
 
-  const createTxSchema = basicCreateTxSchema.extend({ msgs: z.object(msgsSchema) });
-
-  const createTxForm = useForm<z.infer<typeof createTxSchema>>({
-    resolver: zodResolver(createTxSchema),
-  });
-
-  const addMsg = (typeUrl: string) => {
+  const addMsgType = (newMsgType: MsgTypeUrl) => {
+    setMsgKeys((oldMsgKeys) => [...oldMsgKeys, crypto.randomUUID()]);
     setMsgTypes((oldMsgTypes) => {
-      const newMsgTypeUrls: readonly MsgType[] = [
-        ...oldMsgTypes,
-        { url: typeUrl, key: crypto.randomUUID() },
-      ];
-      // setGasLimit(gasOfTx(newMsgTypes));
-      return newMsgTypeUrls;
+      const newMsgTypes = [...oldMsgTypes, newMsgType];
+      setGasLimit(gasOfTx(newMsgTypes));
+      return newMsgTypes;
     });
-    createTxForm.trigger();
   };
 
-  const submitCreateTx = (values: z.infer<typeof createTxSchema>) =>
-    console.log("created tx with values:", values);
+  const addMsgWithValidator = (newMsgType: MsgTypeUrl) => {
+    const validatorsLoaded = !!validators.bonded.length;
+    if (!validatorsLoaded) {
+      loadValidators(chainsDispatch);
+    }
+
+    addMsgType(newMsgType);
+  };
+
+  const handleSelectTransactionType = (typeUrl: MsgTypeUrl) => {
+    // Check if this message type requires validators
+    const requiresValidator = (
+      [
+        MsgTypeUrls.Delegate,
+        MsgTypeUrls.Undelegate,
+        MsgTypeUrls.BeginRedelegate,
+        MsgTypeUrls.EditValidator,
+        MsgTypeUrls.WithdrawDelegatorReward,
+        MsgTypeUrls.WithdrawValidatorCommission,
+      ] as readonly MsgTypeUrl[]
+    ).includes(typeUrl);
+
+    if (requiresValidator) {
+      addMsgWithValidator(typeUrl);
+    } else {
+      addMsgType(typeUrl);
+    }
+  };
+
+  // Deep link support: the validator dashboard links here with ?type=<MsgTypeUrl>
+  // so that picking "Undelegate" there does not make the operator pick it again
+  // from the command grid. Applied once, and only for a recognised type url.
+  const appliedDeepLinkRef = useRef(false);
+
+  useEffect(() => {
+    if (appliedDeepLinkRef.current || !router.isReady) {
+      return;
+    }
+
+    const requestedType = router.query.type;
+
+    if (typeof requestedType !== "string") {
+      return;
+    }
+
+    const isKnownMsgType = (Object.values(MsgTypeUrls) as readonly string[]).includes(
+      requestedType,
+    );
+
+    if (!isKnownMsgType) {
+      return;
+    }
+
+    appliedDeepLinkRef.current = true;
+    handleSelectTransactionType(requestedType as MsgTypeUrl);
+    // handleSelectTransactionType is recreated every render; the ref guard above
+    // is what keeps this to a single application.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router.isReady, router.query.type]);
+
+  // Cleanup debounce timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Update validation state whenever relevant state changes
+  useEffect(() => {
+    // Check if all fields are properly filled
+    let isValid = true;
+
+    // Check if at least one message is added
+    if (!msgTypes.length) {
+      isValid = false;
+    }
+
+    // Check if all message forms are loaded
+    if (msgGetters.current.length !== msgTypes.length) {
+      isValid = false;
+    }
+
+    // Check if all message forms are valid
+    const allMessagesValid = msgGetters.current.every(({ isMsgValid }) => isMsgValid());
+    if (!allMessagesValid) {
+      isValid = false;
+    }
+
+    // Check if gas limit is valid
+    if (!Number.isSafeInteger(gasLimit) || gasLimit <= 0) {
+      isValid = false;
+    }
+
+    setIsFormValid(isValid);
+
+    // Also update gas limit error state
+    if (gasLimit > 0 && Number.isSafeInteger(gasLimit)) {
+      setGasLimitError("");
+    } else if (msgTypes.length > 0) {
+      // Only show error if there are messages (form is being used)
+      setGasLimitError(
+        gasLimit <= 0 ? "Gas limit must be positive" : "Gas limit must be an integer",
+      );
+    } else {
+      setGasLimitError("");
+    }
+  }, [msgTypes.length, gasLimit, validationTrigger]);
+
+  const createTx = async () => {
+    // Guard against duplicate submissions (ref check is synchronous, unlike state)
+    if (isSubmittingRef.current || processing) {
+      return;
+    }
+
+    // Basic validation before proceeding (before showing loading state)
+    if (!msgTypes.length) {
+      toast.error("Please add at least one message to the transaction");
+      return;
+    }
+
+    if (!msgGetters.current.length) {
+      toast.error("Message forms are not loaded yet. Please wait a moment.");
+      return;
+    }
+
+    // Set ref immediately (synchronous) to prevent race conditions
+    isSubmittingRef.current = true;
+    const loadingToastId = toast.loading("Creating transaction");
+    setProcessing(true);
+    // If it fails too fast, toast.dismiss does not work
+    await sleep(500);
+
+    try {
+      assert(typeof accountOnChain.accountNumber === "number", "accountNumber missing");
+      assert(msgGetters.current.length, "form filled incorrectly");
+
+      // Collect and flatten messages (some forms may return multiple messages)
+      const validGetters = msgGetters.current.filter(({ isMsgValid }) => isMsgValid());
+      const msgs = validGetters.flatMap(({ msg }) => {
+        // Handle both single message and array of messages
+        const msgsArray = Array.isArray(msg) ? msg : [msg];
+        return msgsArray.map((m) => exportMsgToJson(m));
+      });
+
+      if (!validGetters.length || validGetters.length !== msgTypes.length) {
+        toastError({
+          description:
+            "Please complete all message forms before creating the transaction. Check for validation errors in red.",
+        });
+        return;
+      }
+
+      if (!Number.isSafeInteger(gasLimit) || gasLimit <= 0) {
+        setGasLimitError("gas limit must be a positive integer");
+        return;
+      }
+
+      const fee = calculateFee(gasLimit, chain.gasPrice);
+
+      const txData: DbTransactionParsedDataJson = {
+        accountNumber: accountOnChain.accountNumber,
+        sequence: accountOnChain.sequence,
+        chainId: chain.chainId,
+        msgs,
+        fee,
+        memo,
+      };
+
+      const txId = await createDbTx(accountOnChain.address, chain.chainId, txData);
+
+      toastSuccess("Transaction created with ID", txId);
+      const chainName = chain.registryName || router.query.chainName?.toString();
+
+      if (chainName && senderAddress && txId) {
+        router.push(`/${chainName}/${senderAddress}/transaction/${txId}`);
+      } else {
+        toast.error(
+          "Transaction created, but could not redirect. Please find it in your dashboard.",
+        );
+      }
+    } catch (e) {
+      console.error("Failed to create transaction:", e);
+      toastError({
+        description: "Failed to create transaction",
+        fullError: e instanceof Error ? e : undefined,
+      });
+    } finally {
+      // Always clean up in finally block
+      toast.dismiss(loadingToastId);
+      isSubmittingRef.current = false;
+      setProcessing(false);
+    }
+  };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Create a new transaction</CardTitle>
-        <CardDescription>You can add several different messages.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {categories.map((category) => (
-          <div key={category}>
-            <h3>{category}</h3>
-            <div className="flex flex-wrap gap-2">
-              {Object.values(msgRegistry)
-                .filter((msg) => msg.category === category)
-                .map((msg) => (
-                  <Button
-                    key={msg.typeUrl}
-                    onClick={() => addMsg(msg.typeUrl)}
-                    disabled={
-                      msg.fields.map((f: string) => getField(f)).some((v: string) => v === null) ||
-                      Object.values(getMsgSchema(msg.fields, { chain }).shape).some(
-                        (v) => v === null,
-                      )
-                    }
-                  >
-                    Add {msg.name.startsWith("Msg") ? msg.name.slice(3) : msg.name}
-                  </Button>
-                ))}
+    <div className="w-full space-y-6">
+      {/* Header */}
+      <div>
+        <h2 className="mb-2 font-heading text-2xl font-semibold tracking-tight">
+          Create New Transaction
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Select a command type and fill in the transaction details below
+        </p>
+      </div>
+
+      {/* Command Selector - Always visible */}
+      <div className="w-full">
+        <TransactionTypeSelector
+          onSelect={(typeUrl) => {
+            handleSelectTransactionType(typeUrl);
+          }}
+        />
+      </div>
+
+      {/* Transaction Forms - Show below selector when commands are selected */}
+      {msgTypes.length > 0 && (
+        <div className="mt-8 space-y-6">
+          {msgTypes.map((msgType, index) => (
+            <div key={msgKeys[index]} className="space-y-4">
+              <MsgForm
+                msgType={msgType}
+                senderAddress={senderAddress}
+                gasLimit={gasLimit}
+                msgIndex={index}
+                setMsgGetter={updateMsgGetter}
+                deleteMsg={() => {
+                  msgGetters.current.splice(index, 1);
+                  setMsgKeys((oldMsgKeys) => [
+                    ...oldMsgKeys.slice(0, index),
+                    ...oldMsgKeys.slice(index + 1),
+                  ]);
+                  setMsgTypes((oldMsgTypes) => {
+                    const newMsgTypes: MsgTypeUrl[] = oldMsgTypes.slice();
+                    newMsgTypes.splice(index, 1);
+                    setGasLimit(gasOfTx(newMsgTypes));
+                    return newMsgTypes;
+                  });
+                  // Validation will be triggered by useEffect when msgTypes.length changes
+                }}
+              />
+            </div>
+          ))}
+
+          {/* Transaction Settings */}
+          <div className="space-y-4 border-t border-border/[0.06] pt-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div>
+                <Input
+                  variant="institutional"
+                  type="number"
+                  label="Gas Limit"
+                  name="gas-limit"
+                  value={gasLimit}
+                  onChange={({ target }) => {
+                    const newGasLimit = Number(target.value);
+                    setGasLimit(newGasLimit);
+                    // Validation will be triggered by useEffect when gasLimit changes
+                  }}
+                  error={gasLimitError}
+                />
+              </div>
+              <div>
+                <Input
+                  variant="institutional"
+                  label="Gas Price"
+                  name="gas-price"
+                  value={chain.gasPrice}
+                  disabled={true}
+                  error={gasLimitError}
+                />
+              </div>
+              <div>
+                <Input
+                  variant="institutional"
+                  label="Memo"
+                  name="memo"
+                  value={memo}
+                  onChange={({ target }) => setMemo(target.value)}
+                />
+              </div>
             </div>
           </div>
-        ))}
-        <Form {...createTxForm}>
-          <form onSubmit={createTxForm.handleSubmit(submitCreateTx)} className="space-y-8">
-            {msgTypes.map((type) => {
-              const msg = msgRegistry[type.url];
-              return (
-                <div key={type.key}>
-                  <h3>{msg.name}</h3>
-                  {msg.fields.map((fieldName: string) => {
-                    const Field = getField(fieldName) || (() => null);
-                    return (
-                      <Field
-                        key={fieldName}
-                        form={createTxForm}
-                        fieldFormName={`msgs.${type.key}.${fieldName}`}
-                      />
-                    );
-                  })}
-                </div>
-              );
-            })}
-            <Button type="submit">Create TX</Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row">
+            <Button
+              variant="action-outline"
+              size="action"
+              onClick={() => {
+                // Scroll to top to show selector
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className="w-full sm:flex-1"
+            >
+              Add Another Transaction
+            </Button>
+            <OldButton
+              label="Create Transaction"
+              onClick={createTx}
+              disabled={!isFormValid || processing}
+              loading={processing}
+            />
+          </div>
+        </div>
+      )}
+    </div>
   );
-}
+};
+
+export default withRouter(CreateTxForm);

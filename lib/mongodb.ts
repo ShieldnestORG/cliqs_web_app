@@ -1,8 +1,6 @@
 /**
  * MongoDB Database Adapter
  *
- * File: lib/mongoDb.ts
- *
  * Drop-in replacement for localDb operations using MongoDB Atlas.
  * Every function mirrors the localDb signature so the graphql/ adapter
  * layer can swap transparently.

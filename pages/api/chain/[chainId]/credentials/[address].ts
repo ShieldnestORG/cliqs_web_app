@@ -1,8 +1,6 @@
 /**
  * Credentials by Address API
  *
- * File: pages/api/chain/[chainId]/credentials/[address].ts
- *
  * API route for listing credentials for an address.
  *
  * GET - List credentials for an address or team

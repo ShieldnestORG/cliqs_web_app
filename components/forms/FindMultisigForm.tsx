@@ -1,8 +1,6 @@
 /**
  * Find Cliq Form
  *
- * File: components/forms/FindMultisigForm.tsx
- *
  * Form to search for an existing Cliq by address.
  */
 
@@ -20,13 +18,13 @@ import { Input } from "@/components/ui/input";
 import { ChainInfo } from "@/context/ChainsContext/types";
 import { StargateClient } from "@cosmjs/stargate";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
 import { NextRouter, withRouter } from "next/router";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useChains } from "../../context/ChainsContext";
 import { exampleAddress } from "../../lib/displayHelpers";
-import { Search, Users, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { KitIcon } from "@/components/icons/kit";
 
 const existsCliqAccount = async (chain: ChainInfo, address: string) => {
   try {
@@ -68,8 +66,8 @@ const FindCliqForm = ({ router }: FindCliqFormProps) => {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Search className="h-5 w-5 text-muted-foreground" />
-          Already have a CLIQ?
+          <KitIcon name="search" size={24} className="text-foreground" />
+          Open a CLIQ by address
         </CardTitle>
         <CardDescription>
           Enter the address of your existing CLIQ on {chain.chainDisplayName || "Cosmos"} to view
@@ -101,14 +99,6 @@ const FindCliqForm = ({ router }: FindCliqFormProps) => {
                 <ArrowRight className="h-4 w-4" />
                 Open CLIQ
               </Button>
-              {chain.registryName && (
-                <Button asChild variant="link" className="gap-1 p-0 text-muted-foreground">
-                  <Link href={`/${chain.registryName}/create`}>
-                    <Users className="h-4 w-4" />
-                    Create new CLIQ
-                  </Link>
-                </Button>
-              )}
             </div>
           </form>
         </Form>

@@ -1,8 +1,6 @@
 /**
  * Flex Cliq Creation Form Schema
  *
- * File: components/forms/CreateFlexCliqForm/formSchema.ts
- *
  * Schema for creating a CW3-Flex + CW4-group contract pair.
  *
  * Flex multisigs differ from fixed multisigs:

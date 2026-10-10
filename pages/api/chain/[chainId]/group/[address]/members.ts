@@ -1,8 +1,6 @@
 /**
  * Group Members API
  *
- * File: pages/api/chain/[chainId]/group/[address]/members.ts
- *
  * API endpoints for group member operations.
  *
  * GET - Get group members

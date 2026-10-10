@@ -1,8 +1,6 @@
 /**
  * Bundled WASM Loader
  *
- * File: lib/contract/bundledWasm.ts
- *
  * Loads pre-compiled CW3/CW4 WASM binaries bundled in /public/wasm/.
  * These are the optimized builds from the CosmWasm/cw-plus releases,
  * compiled with cosmwasm/optimizer so they're small enough for any chain.

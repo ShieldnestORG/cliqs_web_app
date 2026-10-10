@@ -1,8 +1,6 @@
 /**
  * Contract Code Registry
  *
- * File: lib/contract/codeRegistry.ts
- *
  * Maps chain IDs to known CW3-Fixed, CW3-Flex, and CW4-Group contract
  * code IDs.  Also provides on-chain validation so we can verify a
  * user-provided code ID actually exists and is the expected contract type

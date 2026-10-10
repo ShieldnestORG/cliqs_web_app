@@ -1,6 +1,10 @@
 # 🧬 Phase 3: Adversarial Fuzzing, Invariants & Replay Attacks
 
+> **Cluster:** tests · **Tags:** fuzz, invariants, replay, simulator, phase4-removed · **Related:** [Chaos tests](../chaos/README.md), [Formal model](../../formal/README.md), [PRD](../../docs/PRD.md)
+
 **File**: `tests/phase3/README.md`
+
+> **What a pass means (2026-10-10):** these suites run a proposal state machine and a wallet-flow mock that live inside the test folders (`generators/genProposal.ts`, `__tests__/adapters/walletFlow.adapter.ts`). A pass is not evidence that the app enforces anything. The policy, emergency-pause and spend-limit suites (`policy.fuzz`, `policy.invariants`, `execution.invariants`, `genPolicyCtx`) were deleted on 2026-10-10 together with Phase 4, which the app never used; the code is archived at git tag `archive/phase4-policies-2026-10-10`.
 
 This directory contains **Phase 3 testing** - the systematic adversarial exploration that pushes the system from *"attack-resilient"* to *"audit-grade adversarially hardened."*
 
@@ -30,19 +34,15 @@ tests/phase3/
 │   ├── rng.ts                          # Deterministic RNG for reproducible fuzzing
 │   ├── chainPrimitives.ts              # Cosmos-SDK primitives (addresses, amounts, denoms)
 │   ├── genMsg.ts                       # Valid/invalid Cosmos message generators
-│   ├── genPolicyCtx.ts                 # Policy context fuzz generator
 │   ├── genProposal.ts                  # Proposal lifecycle generator
 │   └── genTx.ts                        # Transaction fuzz generator
 ├── gas/
 │   ├── gasEstimator.ts                 # Gas estimation (real + heuristic)
 │   └── gasOracle.ts                    # Gas budget classification
 ├── invariants/
-│   ├── proposal.invariants.spec.ts     # Proposal state machine invariants
-│   ├── execution.invariants.spec.ts    # Execution safety invariants
-│   └── policy.invariants.spec.ts       # Policy evaluation invariants
+│   └── proposal.invariants.spec.ts     # Proposal state machine invariants
 ├── fuzz/
 │   ├── gas.fuzz.spec.ts                # Gas pressure + out-of-gas safety
-│   ├── policy.fuzz.spec.ts             # Policy engine adversarial fuzzing
 │   ├── proposal.fuzz.spec.ts           # Proposal lifecycle fuzzing
 │   └── tx.fuzz.spec.ts                 # Transaction processing fuzzing
 ├── replay/
@@ -61,9 +61,6 @@ tests/phase3/
 
 ### Global Invariants
 - ❌ **Proposal can never execute twice**
-- ❌ **Execution cannot occur if any policy denies**
-- ❌ **Emergency pause must dominate all paths**
-- ❌ **Spend limits must hold across any ordering**
 - ❌ **State transitions must be monotonic**
 - ❌ **Replayed tx bytes must not re-execute**
 
@@ -101,17 +98,6 @@ Prove that **under normal operation**, no invariants are violated.
 - ✅ **No Double Execution**: `EXECUTED` can only appear once
 - ✅ **Monotonic State Transitions**: No regressions after terminal states
 - ✅ **Valid State Transitions Only**: Strict state machine enforcement
-
-### `execution.invariants.spec.ts`
-- ✅ **Emergency Pause Dominance**: Emergency pause blocks all paths
-- ✅ **Safe Mode Dominance**: Safe mode blocks all paths
-- ✅ **All Policies Must Allow**: No execution with denied policies
-- ✅ **Spend Limits Hold**: No overspending allowed
-
-### `policy.invariants.spec.ts`
-- ✅ **Version Mismatch Always Denies**: Version drift blocks execution
-- ✅ **Unexpired Timelock Always Denies**: Timelocks are respected
-- ✅ **Invalid Credentials Always Deny**: Credential revocation works
 
 ## Running Invariants Tests
 
@@ -154,25 +140,10 @@ test("big valid batches fail safely and remain idempotent under out-of-gas injec
 });
 ```
 
-### `policy.fuzz.spec.ts` - Policy Engine Fuzzing
-```typescript
-test("5000 randomized hostile contexts never allow forbidden execution", async () => {
-  for (let i = 0; i < 5000; i++) {
-    const ctx = genPolicyCtx(); // Random adversarial context
-    const result = await evaluatePoliciesMinimal(ctx, 'execution');
-
-    // If any forbidden condition exists, must deny
-    if (ctx.emergencyPaused || ctx.safeMode || !ctx.credential.valid) {
-      expect(result.allowed).toBe(false);
-    }
-  }
-});
-```
-
 ### `proposal.fuzz.spec.ts` - Proposal Lifecycle Fuzzing
 - ✅ **Randomized Vote/Execute Orderings**: Any sequence preserves invariants
 - ✅ **Hostile Action Sequences**: Double execute, race conditions, etc.
-- ✅ **Chaos Injection**: Emergency pauses, credential revocation mid-flow
+- ⚠️ **Chaos Injection**: faults are registered on a fault controller around a simulated lifecycle, but the simulator never fires them or reads their state
 
 ### `tx.fuzz.spec.ts` - Transaction Processing Fuzzing
 - ✅ **Malformed Transaction Handling**: Invalid addresses, corrupted bytes
@@ -213,13 +184,6 @@ const badMsg = genDisallowedMsg(rng);
 // { type: "custom/unknown", value: { ... } }
 ```
 
-### `genPolicyCtx.ts`
-Generates randomized policy contexts:
-- Emergency states (3% chance)
-- Version mismatches (weighted toward valid)
-- Invalid credentials (5% chance)
-- Boundary conditions
-
 ### `genProposal.ts`
 Generates proposal lifecycles:
 - Valid sequences
@@ -256,7 +220,7 @@ const band = classify(estimate);
 npm test -- tests/phase3/fuzz
 
 # Run specific fuzz category
-npm test -- tests/phase3/fuzz/policy.fuzz.spec.ts
+npm test -- tests/phase3/fuzz/proposal.fuzz.spec.ts
 npm test -- tests/phase3/fuzz/gas.fuzz.spec.ts
 
 # Run with seed for reproducibility
@@ -280,9 +244,7 @@ Prove that **replay attacks are ineffective**.
 
 ### `stale.signature.spec.ts` - Stale Signature Attacks
 - ✅ **Sequence Number Protection**: Increasing nonces prevent replay
-- ✅ **Credential Revocation**: Revoked credentials invalidate signatures
 - ✅ **Cross-Signer Protection**: Signer A's sig can't replay as signer B
-- ✅ **State Change Protection**: Policy changes invalidate old signatures
 
 ## Running Replay Tests
 
@@ -310,13 +272,12 @@ All tests use the same invariant definitions. If a test fails, it's a **true inv
 Every fuzzing iteration checks invariants:
 ```typescript
 // Every test iteration
-const result = await evaluatePoliciesMinimal(hostileCtx);
-const policyCtx = { /* invariant context */ };
-assertPolicyInvariants(policyCtx); // Throws on violation
+const result = simulateActionSequence(proposal, hostileActions);
+assertProposalInvariants(result.history); // Throws on violation
 ```
 
 ## 4. Systematic Coverage
-- **10,000+ iterations** per fuzz test
+- **50 to 10,000 iterations** per loop in the fuzz specs (see each spec for its loop count)
 - **Multiple randomization strategies**
 - **Chaos injection** during critical operations
 
@@ -326,27 +287,26 @@ assertPolicyInvariants(policyCtx); // Throws on violation
 
 After Phase 3, you can credibly claim:
 
-## Security Claims
-- ✅ **No sequence of events leads to double execution**
-- ✅ **No ordering bypasses policy enforcement**
-- ✅ **Replay attacks are ineffective**
-- ✅ **Emergency controls dominate all states**
-- ✅ **Malformed or adversarial inputs fail closed**
-- ✅ **Execution is monotonic and idempotent**
+## What the suites check
+- Proposal state-machine invariants (no double execution, monotonic transitions) over generated action sequences
+- Replay and malformed-transaction checks over the wallet-flow mock (`tx.fuzz.spec.ts`, `stale.signature.spec.ts`)
+- Gas pressure and out-of-gas handling over the same mock (`gas.fuzz.spec.ts`)
 
-## Audit-Grade Assurance
-> **"Adversarially robust under arbitrary input and ordering."**
+## What they do not show
+These are checks on simulators inside the test folders. They do not show that the app, a policy or an emergency control stops anything. The app has no policy or pause feature (removed 2026-10-10).
 
 ---
 
 # 📊 Test Statistics
 
-| Test Category | Files | Tests | Iterations | Coverage |
-|---------------|-------|-------|------------|----------|
-| Invariants | 3 | 50+ | N/A | Core logic |
-| Fuzzing | 4 | 25+ | 15,000+ | Input space + gas |
-| Replay | 2 | 15+ | 1,000+ | Attack vectors |
-| **Total** | **9** | **90+** | **16,000+** | **Complete** |
+| Test Category | Files | Tests |
+|---------------|-------|-------|
+| Invariants | 1 | 23 |
+| Fuzzing | 3 | 41 |
+| Replay | 2 | 25 |
+| **Total** | **6** | **89** |
+
+Counted with `npx jest tests/phase3` on 2026-10-10 (after the Phase 4 removal). *(Until then this table read: 9 files, "90+" tests, "16,000+" iterations, coverage "Complete". Those numbers were estimates, and the policy suites they counted were deleted.)*
 
 ---
 

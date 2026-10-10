@@ -1,8 +1,6 @@
 /**
  * Contract Multisig API - Create/List
  *
- * File: pages/api/chain/[chainId]/contract-multisig/index.ts
- *
  * POST: Instantiate a new CW3 contract multisig
  * GET: List contract multisigs for a user
  */

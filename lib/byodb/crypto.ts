@@ -1,8 +1,6 @@
 /**
  * BYODB Cryptographic Utilities
  *
- * File: lib/byodb/crypto.ts
- *
  * Provides AES-GCM encryption/decryption for storing database credentials
  * in the browser. Supports three security tiers:
  *
