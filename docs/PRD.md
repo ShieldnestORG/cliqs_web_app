@@ -43,7 +43,7 @@ PolicyEvaluator (P1 timelock, P2 emergency, P3 msg-type, P4 spend, P5 address fi
 
 Emergency: Pause/safe-mode. Monitoring: Events/anomalies/alerts/playbooks.
 
-**Status**: Phases 0-3 have shipping code (engines, canonical builder/hasher, multi-RPC verifier, indexer, CW3/CW4 clients, credential service). Phase 4 was removed on 2026-10-10. *(Until 2026-10-10 this line read: "All five phases have shipping code (engines, canonical builder/hasher, multi-RPC verifier, indexer, CW3/CW4 clients, credential service, policy registry, emergency + monitoring modules all exist under `lib/`).")*
+**Status**: Phases 0-3 have code under `lib/` (engines, canonical builder/hasher, multi-RPC verifier, indexer, CW3/CW4 clients, credential service). Checked by import graph on 2026-10-10: the app uses the hasher, the multi-RPC verifier, the indexer sync job and the CW3/CW4 clients; the engine classes and the canonical builder are reached only by tests; nothing imports the credential service. Phase 4 was removed on 2026-10-10. *(Until 2026-10-10 this line read: "All five phases have shipping code (engines, canonical builder/hasher, multi-RPC verifier, indexer, CW3/CW4 clients, credential service, policy registry, emergency + monitoring modules all exist under `lib/`).")*
 
 **Not in scope of that status — open, not shipped:**
 - Uniform authorization across the API surface. `/api/transaction/wipe` and `/api/transaction/export` now require an ADR-36 membership proof; most other routes remain unauthenticated. Tracked as follow-up L1 in [SOC2-GAP-ASSESSMENT.md](security/SOC2-GAP-ASSESSMENT.md).

@@ -145,6 +145,8 @@ Effort: **S** = <1hr, **M** = a few hrs, **L** = design + multi-file.
 
 ## Appendix A — Full API route inventory
 
+*30 route files remain after the 2026-10-10 removal of the 8 policy, emergency and monitoring routes. The counts in this document are as of 2026-08-16 and were not re-taken.*
+
 All 38 route handlers under `pages/api/`. Methods VERIFIED by sweeping every handler's `req.method` dispatch. Auth column reflects merged `main` **after** PR #31.
 
 **Re-verified 2026-08-16 on merged `main`:** the handler count is still exactly 38 (`find pages/api -name "*.ts" | wc -l`), the file list below matches the tree one-for-one, every Methods cell was re-checked against the handler's `req.method` dispatch (including the `switch`-style ones), and the Auth column was re-checked by grepping `verifyKeplrSignature` across `pages/api/`. Note what that command returns: `grep -rn verifyKeplrSignature pages/api/` prints **10 line hits** (imports, call sites, and two explanatory comments) spread across **4 files** — it is the file count, not the line count, that matches the four rows marked below. `grep -rl verifyKeplrSignature pages/api/` is the command that prints 4. No route gained or lost authorization since the assessment was written.
