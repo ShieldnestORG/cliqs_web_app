@@ -377,33 +377,6 @@ export async function getValidatorSigningInfo(
 }
 
 /**
- * Get total delegators count for a validator (paginated)
- */
-export async function getValidatorDelegatorsCount(
-  queryClient: ValidatorQueryClient,
-  validatorAddress: string,
-): Promise<number> {
-  try {
-    let count = 0;
-    let paginationKey: Uint8Array | undefined;
-
-    do {
-      const response = await queryClient.staking.validatorDelegations(
-        validatorAddress,
-        paginationKey,
-      );
-      count += response.delegationResponses.length;
-      paginationKey = response.pagination?.nextKey;
-    } while (paginationKey?.length);
-
-    return count;
-  } catch (e) {
-    console.error("Failed to get delegators count:", e);
-    return 0;
-  }
-}
-
-/**
  * Get self-delegation amount
  */
 export async function getSelfDelegation(
@@ -529,19 +502,25 @@ export async function getValidatorRanking(
 }
 
 /**
- * Calculate voting power percentage
+ * Calculate voting power percentage.
+ *
+ * Returns null when the pool query failed, so the page can say "unavailable" instead of showing
+ * a share of "0%" that was never measured. Until 2026-10-10 a failure returned "0".
  */
 export async function getVotingPowerPercentage(
   rpcUrl: string,
   validatorTokens: string,
-): Promise<string> {
+): Promise<string | null> {
   try {
     const cometClient = await connectComet(rpcUrl);
     const queryClient = QueryClient.withExtensions(cometClient, setupStakingExtension);
 
     // Get total bonded tokens from staking pool
     const pool = await queryClient.staking.pool();
-    const bondedTokens = BigInt(pool.pool?.bondedTokens || "0");
+    // An answer without a bonded total measured nothing: unavailable, not a 0% share
+    const bonded = pool.pool?.bondedTokens;
+    if (!bonded) return null;
+    const bondedTokens = BigInt(bonded);
     const validatorTokensBigInt = BigInt(validatorTokens);
 
     if (bondedTokens === BigInt(0)) return "0";
@@ -552,17 +531,21 @@ export async function getVotingPowerPercentage(
     return percentageNum.toFixed(2);
   } catch (e) {
     console.error("Failed to calculate voting power:", e);
-    return "0";
+    return null;
   }
 }
 
 /**
- * Get all delegations for a validator
+ * Get all delegations for a validator.
+ *
+ * Returns null when the fetch failed, [] when the validator really has no delegations, so the UI
+ * can say "unavailable" instead of the false claim "0 stakers" (null = unavailable, [] = none,
+ * the same contract as getPastProposals). Until 2026-10-10 a failure returned [].
  */
 export async function getValidatorDelegations(
   queryClient: ValidatorQueryClient,
   validatorAddress: string,
-): Promise<DelegationResponse[]> {
+): Promise<DelegationResponse[] | null> {
   try {
     const delegations: DelegationResponse[] = [];
     let paginationKey: Uint8Array | undefined;
@@ -586,17 +569,19 @@ export async function getValidatorDelegations(
     });
   } catch (e) {
     console.error("Failed to get validator delegations:", e);
-    return [];
+    return null;
   }
 }
 
 /**
- * Get all unbonding delegations for a validator
+ * Get all unbonding delegations for a validator.
+ *
+ * Returns null when the fetch failed, [] when nothing is unbonding (see getValidatorDelegations).
  */
 export async function getValidatorUnbondingDelegations(
   queryClient: ValidatorQueryClient,
   validatorAddress: string,
-): Promise<UnbondingDelegation[]> {
+): Promise<UnbondingDelegation[] | null> {
   try {
     const unbondings: UnbondingDelegation[] = [];
     let paginationKey: Uint8Array | undefined;
@@ -613,7 +598,7 @@ export async function getValidatorUnbondingDelegations(
     return unbondings;
   } catch (e) {
     console.error("Failed to get validator unbonding delegations:", e);
-    return [];
+    return null;
   }
 }
 
@@ -791,21 +776,95 @@ async function fetchGovV1Proposals(
   return null;
 }
 
+// The one raw gov v1 status that counts as an active proposal. Filtered on the RAW status string,
+// like PAST_PROPOSAL_STATUSES below: convertV1ToV1Beta1Proposal maps unknown statuses to 2.
+const ACTIVE_PROPOSAL_STATUS = "PROPOSAL_STATUS_VOTING_PERIOD";
+
+/**
+ * The title a proposal carries, or null when it has none the page can show.
+ *
+ * Read from `content.title`, then from `content.value.title` (a decoded Any); a blank or non-text
+ * one counts as none. ProposalViewer shows "Proposal #<id>" for null, and getActiveProposals asks
+ * gov v1 for the title of every listed proposal this returns null for: one rule for both.
+ */
+export function readProposalTitle(proposal: Proposal): string | null {
+  // Content is an Any type, we need to handle the value field
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const content = proposal.content as any;
+  if (!content) return null;
+  if (typeof content.title === "string" && content.title.trim()) return content.title;
+  if (typeof content.value?.title === "string" && content.value.title.trim()) {
+    return content.value.title;
+  }
+  return null;
+}
+
+/**
+ * Copy gov v1 titles onto listed proposals that have none, matched by proposal id.
+ *
+ * The list is the caller's: gov v1 never adds, removes or reorders a proposal here, and a proposal
+ * that already has a title keeps it. It asks REST once (not once per proposal), and only when some
+ * listed proposal lacks a title. When no REST endpoint answers the list comes back as it was and
+ * the page falls back to "Proposal #<id>".
+ */
+async function addGovV1Titles(
+  listed: Proposal[],
+  rpcUrl: string,
+  restEndpoint: string | undefined,
+): Promise<Proposal[]> {
+  if (listed.every((p) => readProposalTitle(p) !== null)) {
+    return listed;
+  }
+
+  const titles = new Map<string, string>();
+  try {
+    const raw = await fetchGovV1Proposals(rpcUrl, restEndpoint, "proposal_status=2");
+    for (const v1 of raw ?? []) {
+      if (typeof v1.title === "string" && v1.title.trim()) {
+        titles.set(String(v1.id), v1.title);
+      }
+    }
+  } catch (e) {
+    console.error("Failed to read proposal titles from gov v1:", e);
+  }
+
+  return listed.map((proposal) => {
+    const title =
+      readProposalTitle(proposal) === null ? titles.get(String(proposal.proposalId)) : null;
+    return title
+      ? { ...proposal, content: { ...proposal.content, title } as unknown as Proposal["content"] }
+      : proposal;
+  });
+}
+
 /**
  * Get active proposals that need voting.
- * Tries v1beta1 first (fast on older chains), falls back to gov v1 REST.
+ * Tries v1beta1 first (fast on older chains), falls back to gov v1 REST. The LIST is decided by
+ * those two alone; gov v1 supplies titles only (below).
  *
  * The fallback is load-bearing on TX/Coreum: its node rejects the entire
  * v1beta1 query with "can't convert a gov/v1 Proposal to gov/v1beta1 Proposal
  * when amount of proposal messages not exactly one" whenever any live proposal
  * is a v1 text proposal (empty messages array) — measured against
  * coreum-rpc.polkachu.com with proposal #46 in voting period.
+ *
+ * Titles: the node builds its v1beta1 view of a proposal from the proposal's message, and for a
+ * message that is not a legacy-content wrapper it has no title to give. Proposal #47 on TX mainnet
+ * ("TX Chain Mainnet Upgrade v8.0.0", one MsgSoftwareUpgrade) has `content` keys
+ * `@type, authority, plan` in v1beta1 and the title only at /cosmos/gov/v1/proposals/47. So when a
+ * v1beta1-listed proposal has no title, gov v1 is asked once and its title is copied onto the
+ * proposal with the same id (addGovV1Titles). The list drives the Vote Now buttons, so REST may
+ * not add, remove or reorder a proposal when v1beta1 answered with a non-empty list: a REST node
+ * that answers [] cannot hide a proposal, and a REST host that ignores `proposal_status=2` cannot
+ * put a finished one on the page. In the REST-list path only a proposal whose RAW status is the
+ * voting period is kept, for the same reason.
  */
 export async function getActiveProposals(
   queryClient: ValidatorQueryClient,
   rpcUrl: string,
   restEndpoint?: string,
 ): Promise<Proposal[]> {
+  let listed: Proposal[] | null = null;
   try {
     // Try v1beta1 first (older chains)
     const response = await queryClient.gov.proposals(
@@ -814,16 +873,21 @@ export async function getActiveProposals(
       "",
     );
     if (response.proposals.length > 0) {
-      return response.proposals;
+      listed = response.proposals;
     }
   } catch {
     // v1beta1 failed, will try v1 REST fallback
+  }
+  if (listed !== null) {
+    return addGovV1Titles(listed, rpcUrl, restEndpoint);
   }
 
   // Fallback to gov v1 REST API for chains that migrated
   try {
     const raw = await fetchGovV1Proposals(rpcUrl, restEndpoint, "proposal_status=2");
-    return raw ? raw.map(convertV1ToV1Beta1Proposal) : [];
+    return raw
+      ? raw.filter((p) => p.status === ACTIVE_PROPOSAL_STATUS).map(convertV1ToV1Beta1Proposal)
+      : [];
   } catch (e) {
     console.error("Failed to get active proposals:", e);
     return [];
@@ -899,16 +963,20 @@ export interface ValidatorDashboardData {
   commission: readonly DecCoin[];
   selfDelegationRewards: readonly DecCoin[];
   withdrawAddress: string;
-  delegatorsCount: number;
-  delegations: DelegationResponse[];
-  unbondingDelegations: UnbondingDelegation[];
+  /** The length of `delegations`; null when that fetch failed (one fetch, one number) */
+  delegatorsCount: number | null;
+  /** null = the stakers fetch failed (unavailable), [] = nobody stakes here */
+  delegations: DelegationResponse[] | null;
+  /** null = the unbonding fetch failed (unavailable), [] = nothing is unbonding */
+  unbondingDelegations: UnbondingDelegation[] | null;
   activeProposals: Proposal[];
   /** null = no REST endpoint answered (history unavailable), [] = none exist */
   pastProposals: Proposal[] | null;
   validatorVotes: Record<number, Vote | null>;
   selfDelegation: Coin | null;
   ranking: number | null;
-  votingPowerPercentage: string;
+  /** null = the pool query failed (unavailable); "0" is a real, measured zero */
+  votingPowerPercentage: string | null;
   /** Only fetched for a jailed validator (it gates the Unjail action); null otherwise or when unreadable */
   signingInfo: ValidatorSigningInfo | null;
 }
@@ -969,11 +1037,15 @@ export async function getValidatorDashboardData(
     }
 
     // These can be slow, fetch separately
-    const [delegatorsCount, ranking, votingPowerPercentage] = await Promise.all([
-      getValidatorDelegatorsCount(queryClient, validatorAddress),
+    const [ranking, votingPowerPercentage] = await Promise.all([
       getValidatorRanking(rpcUrl, validatorAddress),
       getVotingPowerPercentage(rpcUrl, validator.tokens),
     ]);
+
+    // One number, one fetch: the stakers count is the length of the stakers list the page shows,
+    // so the Performance tile and the Stakers section cannot disagree. null when that fetch failed.
+    // Until 2026-10-10 a second full pagination counted them and returned 0 when it failed.
+    const delegatorsCount = delegationsResult === null ? null : delegationsResult.length;
 
     return {
       validator,

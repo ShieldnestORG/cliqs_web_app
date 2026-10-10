@@ -1,8 +1,8 @@
 # Cosmos Multisig UI Style Guide
 
-> **Cluster:** design-system · **Tags:** coherence-daddy, tokens, tailwind, typography, geist, gridspotlight · **Related:** [UI Docs Index](ui/INDEX.md), [Typography PRD](ui/TYPOGRAPHY-PRD.md), [Buttons PRD](ui/BUTTONS-PRD.md), [Cards PRD](ui/CARDS-PRD.md), [Patterns PRD](ui/PATTERNS-PRD.md)
+> **Cluster:** design-system · **Tags:** coherence-daddy, tokens, tailwind, typography, geist, gridspotlight, house-style · **Related:** [UI Docs Index](ui/INDEX.md), [Typography PRD](ui/TYPOGRAPHY-PRD.md), [Buttons PRD](ui/BUTTONS-PRD.md), [Cards PRD](ui/CARDS-PRD.md), [Patterns PRD](ui/PATTERNS-PRD.md), [Forms PRD](ui/FORMS-PRD.md)
 
-**Updated:** 2026-10-09
+**Updated:** 2026-10-10
 **Brand:** Coherence Daddy (ShieldNest ecosystem)
 
 ## Source of truth
@@ -73,6 +73,30 @@ indistinguishable from `destructive` — which is exactly the bug that made the
 | `--accent-purple` | `260 28% 55%` | `#7B68AE` | Secondary accent |
 | `--accent-blue` | `219.7 82.2% 64.7%` | `#5B8DEF` | Info states, links |
 | `--accent-gold` / `--accent-bronze` | `37.4 72.3% 56.1%` | `#E0A33E` | Badges, highlights |
+
+### House-style control tokens
+
+Added 2026-10-10 when buttons, menus and selects took the house style's geometry (pill buttons,
+44px controls, 8px gaps; see [Buttons PRD](ui/BUTTONS-PRD.md) and
+[Patterns PRD §21](ui/PATTERNS-PRD.md#21-menus-dropdown-and-select)). Converted from the house
+style's dark-theme hexes with the same hex to HSL-triplet rule as the portal values above. The
+coral itself needed no new value: `--primary` `#FF6B4A` is already the house style's accent.
+
+| Token (`:root`) | HSL triplet | Source hex | Tailwind | Used for |
+|-----------------|-------------|-----------|----------|----------|
+| `--primary-sheen` | `11.4 97.3% 71.4%` | `#FD8A6F` | `bg-primary-sheen` | gradient start of the coral button |
+| `--primary-press` | `9.5 76.7% 56.3%` | `#E5553A` | `bg-primary-press`, `border-primary-press` | gradient end, pressed fill, coral button edge |
+| `--primary-soft` | `13 46.8% 15.5%` | `#3A1D15` | `bg-primary-soft` | highlighted menu and select rows (the coral wash) |
+| `--field` | `240 5% 15.7%` | `#26262A` | `bg-field` | select trigger fill, secondary button fill, ghost and outline hover fill |
+| `--border-interactive` | `240 1.6% 49.4%` | `#7C7C80` | `border-interactive` | the visible edge of a select (4.3:1 on the card) |
+| `--shadow-pop` | `0 8px 28px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.4)` | the house style's popover shadow | `shadow-pop` | menu panels, the coral button's hover |
+| `--dur-ui` | `120ms` | the house style's fast motion | `duration-ui` | control transitions |
+| `--ease-ui` | `cubic-bezier(0.2, 0.6, 0.2, 1)` | the house style's ease | `ease-ui` | control transitions |
+
+The coral gradient is the Tailwind background image `bg-primary-gradient` (135deg
+`--primary-sheen` 0%, `--primary` 45%, `--primary-press` 100%). Do not confuse
+`--primary-soft` with `--accent` (a neutral grey here) or with `green-accent` (coral under a
+wrong name).
 
 ### Named Tailwind extensions
 
@@ -147,13 +171,16 @@ weight 500, widest tracking, uppercase.
 
 ### Elevation
 
-`--shadow-sm`, `--shadow-md`, `--shadow-lg`, and the button treatments
-`--shadow-lift` / `--shadow-lift-hover`.
+`--shadow-sm`, `--shadow-md`, `--shadow-lg`, and the treatments
+`--shadow-lift` / `--shadow-lift-hover` (referenced nowhere; they are not the house-style hover).
+Menus and the coral button's hover use `--shadow-pop` (see the house-style control tokens above).
 
 ### Motion
 
 `--ease-out: cubic-bezier(0.22, 0.61, 0.36, 1)`, with `--dur-fast` 180ms,
-`--dur-base` 260ms, `--dur-slow` 480ms.
+`--dur-base` 260ms, `--dur-slow` 480ms. **Controls (buttons, menu rows, selects)** use the house-style
+pair instead: `duration-ui` (`--dur-ui`, 120ms) with `ease-ui` (`--ease-ui`,
+`cubic-bezier(.2,.6,.2,1)`). Press is a 0.5px nudge, not a scale.
 
 A `prefers-reduced-motion: reduce` guard collapses animation and transition
 durations globally.
@@ -206,11 +233,17 @@ Every page uses the same side padding: **`px-4 sm:px-6 lg:px-[0.75in]`** (1rem, 
 
 ### Buttons
 
-- Primary: `bg-primary text-primary-foreground` — this is now **coral on
-  near-black**, not light-on-dark
+Pill (`rounded-full`), 44px by default, 14px / 600, sentence case, 120ms ease, 0.5px press.
+Full spec in [Buttons PRD](ui/BUTTONS-PRD.md) (the house-style adoption, 2026-10-10).
+This section said "Primary: `bg-primary text-primary-foreground`" and "Ghost/outline: standard
+Shadcn patterns using `--secondary`" until that date.
+
+- Primary (`default`): the coral sheen, `bg-primary-gradient text-primary-foreground`
+  (**coral on near-black**), one per view
+- `action`: solid ink, `bg-foreground text-background`; no longer mono uppercase
+- `outline` / `ghost`: transparent, a visible 1px `border-border/15` edge, `bg-field` on hover
 - Destructive: `bg-destructive text-destructive-foreground`
-- Ghost/outline: standard Shadcn patterns using `--secondary`
-- Do not hardcode `bg-[#ff876d]`; use `bg-primary`
+- Do not hardcode `bg-[#ff876d]`; use the tokens
 
 ### Text on coral
 
@@ -261,7 +294,9 @@ intended pattern — do not copy them, and prefer the semantic classes in new co
 ## Component framework
 
 - **UI components**: Shadcn/Radix — inherit CSS variables automatically
-- **Icons**: `lucide-react`
+- **Icons**: `lucide-react` for small UI glyphs and status alerts; the TOKNS brand icon kit set
+  (`components/icons/kit.tsx`) for section and feature icons. Ink is `currentColor`, with exactly
+  one coral part (`--primary`) per icon. See [Patterns PRD §9](ui/PATTERNS-PRD.md#9-icons)
 - **Animations**: `tailwindcss-animate`
 
 ## Theme metadata
@@ -276,6 +311,7 @@ intended pattern — do not copy them, and prefer the semantic classes in new co
 - Tailwind config: `tailwind.config.js`
 - Font loading: `pages/_document.tsx`
 - Page background canvas: `components/GridSpotlight.tsx`, mounted in `pages/_app.tsx`
-- Shadcn components: `components/ui/*`
+- Shadcn components: `components/ui/*` (including `scale-rule.tsx`, the ruler-edge section divider)
+- Kit icons: `components/icons/kit.tsx`
 - Sidebar rail + pin persistence: `components/Sidebar.tsx`, `lib/settingsStorage.ts`
 - Feature flags: `lib/featureFlags.ts`

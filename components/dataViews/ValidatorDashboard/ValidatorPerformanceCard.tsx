@@ -1,13 +1,19 @@
 /**
- * Validator Performance Card
+ * Validator Performance
  *
- * Displays validator performance metrics including voting power, delegators, and ranking.
+ * Three headline stats (voting power, ranking, stakers) with kit icons, then the secondary
+ * figures (total stake, self-delegation, commission, minimum self-delegation) on one quiet line.
+ * Renders its content only; the Performance panel (card) comes from ValidatorDashboard/index.tsx.
+ * Until 2026-10-10 this was six bordered tiles in a card of its own.
+ *
+ * A figure that could not be fetched is `null` and reads as an em dash with a screen-reader
+ * "unavailable", never as "0" (a real, measured zero still reads "0"). Until 2026-10-10 a failed
+ * stakers fetch read "0 total" and a failed pool query read "0%".
  */
 
-import { Card, CardContent, CardHeader, CardTitle, CardLabel } from "@/components/ui/card";
 import { ValidatorDashboardData } from "@/lib/validatorHelpers";
 import { useChains } from "@/context/ChainsContext";
-import { TrendingUp, Users, Award, Percent, Coins, BarChart3 } from "lucide-react";
+import { KitIcon, KitIconName } from "@/components/icons/kit";
 
 interface ValidatorPerformanceCardProps {
   data: ValidatorDashboardData;
@@ -46,86 +52,80 @@ export default function ValidatorPerformanceCard({ data }: ValidatorPerformanceC
     return `${(numRate * 100).toFixed(1)}%`;
   };
 
-  const stats = [
+  const headline: { icon: KitIconName; label: string; value: string | null; subtext: string }[] = [
     {
-      icon: TrendingUp,
+      icon: "portfolio",
       label: "Voting Power",
-      value: `${votingPowerPercentage}%`,
+      value: votingPowerPercentage === null ? null : `${votingPowerPercentage}%`,
       subtext: "of network",
     },
     {
-      icon: Award,
+      icon: "rank",
       label: "Ranking",
-      value: ranking ? `#${ranking}` : "—",
+      value: ranking ? `#${ranking}` : null,
       subtext: "in active set",
     },
     {
-      icon: Users,
-      label: "Delegators",
-      value: delegatorsCount.toLocaleString(),
+      icon: "stakers",
+      label: "Stakers",
+      value: delegatorsCount === null ? null : delegatorsCount.toLocaleString(),
       subtext: "total",
-    },
-    {
-      icon: Coins,
-      label: "Total Stake",
-      value: formatTokens(validator.tokens),
-      subtext: displayDenom,
-    },
-    {
-      icon: BarChart3,
-      label: "Self-Delegation",
-      value: selfDelegation ? formatTokens(selfDelegation.amount) : "0",
-      subtext: displayDenom,
-    },
-    {
-      icon: Percent,
-      label: "Commission",
-      value: formatCommissionRate(validator.commissionRate),
-      subtext: "rate",
     },
   ];
 
+  const secondary = [
+    { label: "Total Stake", value: `${formatTokens(validator.tokens)} ${displayDenom}` },
+    {
+      label: "Self-Delegation",
+      value: `${selfDelegation ? formatTokens(selfDelegation.amount) : "0"} ${displayDenom}`,
+    },
+    { label: "Commission", value: formatCommissionRate(validator.commissionRate) },
+    // Min self-delegation is only worth a line when the validator set one above the chain default
+    ...(validator.minSelfDelegation && validator.minSelfDelegation !== "1"
+      ? [
+          {
+            label: "Min Self-Delegation",
+            value: `${formatTokens(validator.minSelfDelegation)} ${displayDenom}`,
+          },
+        ]
+      : []),
+  ];
+
   return (
-    <Card variant="institutional" className="h-full">
-      <CardHeader>
-        <CardLabel comment>Metrics</CardLabel>
-        <CardTitle className="font-heading text-xl font-bold">Validator Performance</CardTitle>
-      </CardHeader>
-
-      <CardContent>
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-          {stats.map((stat, index) => {
-            const Icon = stat.icon;
-            return (
-              <div
-                key={index}
-                className="space-y-2 rounded-lg border border-border/50 bg-muted/30 p-4"
-              >
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Icon className="h-4 w-4" />
-                  <span className="font-mono text-xs uppercase tracking-wider">{stat.label}</span>
-                </div>
-                <div>
-                  <span className="font-heading text-2xl font-bold tabular-nums">{stat.value}</span>
-                  <span className="ml-1 text-sm text-muted-foreground">{stat.subtext}</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Min Self-Delegation Info */}
-        {validator.minSelfDelegation && validator.minSelfDelegation !== "1" && (
-          <div className="mt-4 rounded-lg border border-border/30 bg-muted/20 p-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Min Self-Delegation</span>
-              <span className="font-mono text-foreground">
-                {formatTokens(validator.minSelfDelegation)} {displayDenom}
+    <div className="space-y-4">
+      <dl className="grid grid-cols-3 gap-3 sm:gap-4">
+        {headline.map((stat) => (
+          <div key={stat.label} className="min-w-0 space-y-1.5">
+            <KitIcon name={stat.icon} size={28} className="text-foreground" />
+            <dt className="truncate font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+              {stat.label}
+            </dt>
+            <dd>
+              {/* `relative` contains the sr-only word (it is absolutely positioned) */}
+              <span className="relative font-heading text-xl font-bold tabular-nums sm:text-2xl">
+                {stat.value === null ? (
+                  <>
+                    <span aria-hidden="true">—</span>
+                    <span className="sr-only">unavailable</span>
+                  </>
+                ) : (
+                  stat.value
+                )}
               </span>
-            </div>
+              <span className="block text-xs text-muted-foreground">{stat.subtext}</span>
+            </dd>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        ))}
+      </dl>
+
+      <dl className="grid grid-cols-[repeat(auto-fit,minmax(15rem,1fr))] gap-x-8 gap-y-1.5 border-t border-border/[0.06] pt-3 text-sm">
+        {secondary.map((item) => (
+          <div key={item.label} className="flex items-baseline justify-between gap-3">
+            <dt className="text-muted-foreground">{item.label}</dt>
+            <dd className="font-mono tabular-nums text-foreground">{item.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
   );
 }

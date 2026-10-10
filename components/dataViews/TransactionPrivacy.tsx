@@ -171,9 +171,9 @@ export default function TransactionPrivacy({
             <AlertDialogTrigger asChild>
               <Button variant="outline" size="sm" disabled={!isKeplr || busy !== null}>
                 {busy === "export" ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Download className="mr-2 h-4 w-4" />
+                  <Download className="h-4 w-4" />
                 )}
                 Export History
               </Button>
@@ -199,9 +199,9 @@ export default function TransactionPrivacy({
             <AlertDialogTrigger asChild>
               <Button variant="destructive" size="sm" disabled={!isKeplr || busy !== null}>
                 {busy === "wipe" ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Eraser className="mr-2 h-4 w-4" />
+                  <Eraser className="h-4 w-4" />
                 )}
                 Wipe Completed
               </Button>
@@ -228,9 +228,9 @@ export default function TransactionPrivacy({
             <AlertDialogTrigger asChild>
               <Button variant="destructive" size="sm" disabled={!isKeplr || busy !== null}>
                 {busy === "delete" ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Trash2 className="mr-2 h-4 w-4" />
+                  <Trash2 className="h-4 w-4" />
                 )}
                 Delete CLIQ data
               </Button>

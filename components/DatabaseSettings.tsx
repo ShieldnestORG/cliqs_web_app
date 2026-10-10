@@ -638,9 +638,9 @@ export default function DatabaseSettings() {
                 </p>
                 <Button onClick={handleUnlock} disabled={unlocking}>
                   {unlocking ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Wallet className="mr-2 h-4 w-4" />
+                    <Wallet className="h-4 w-4" />
                   )}
                   Sign to Unlock
                 </Button>
@@ -665,7 +665,7 @@ export default function DatabaseSettings() {
                 entering the connection string again.
               </p>
               <Button variant="outline" size="sm" onClick={handleDisconnect}>
-                <Trash2 className="mr-2 h-4 w-4" />
+                <Trash2 className="h-4 w-4" />
                 Disconnect Custom Database
               </Button>
             </div>
@@ -702,9 +702,9 @@ export default function DatabaseSettings() {
                 />
                 <Button size="sm" onClick={handleUpgradeToPassphrase} disabled={saving}>
                   {saving ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <KeyRound className="mr-2 h-4 w-4" />
+                    <KeyRound className="h-4 w-4" />
                   )}
                   Encrypt with a passphrase
                 </Button>
@@ -715,9 +715,9 @@ export default function DatabaseSettings() {
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" onClick={handleTestConnection} disabled={testing}>
                 {testing ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <TestTube className="mr-2 h-4 w-4" />
+                  <TestTube className="h-4 w-4" />
                 )}
                 Test Connection
               </Button>
@@ -730,16 +730,16 @@ export default function DatabaseSettings() {
                   disabled={provisioning}
                 >
                   {provisioning ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Wrench className="mr-2 h-4 w-4" />
+                    <Wrench className="h-4 w-4" />
                   )}
                   Setup Database
                 </Button>
               )}
 
               <Button variant="outline" size="sm" onClick={handleLock}>
-                <Lock className="mr-2 h-4 w-4" />
+                <Lock className="h-4 w-4" />
                 Lock
               </Button>
             </div>
@@ -798,9 +798,9 @@ export default function DatabaseSettings() {
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" size="sm" onClick={handleExport} disabled={exporting}>
                   {exporting ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Download className="mr-2 h-4 w-4" />
+                    <Download className="h-4 w-4" />
                   )}
                   Export Data
                 </Button>
@@ -812,9 +812,9 @@ export default function DatabaseSettings() {
                   disabled={importing}
                 >
                   {importing ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Upload className="mr-2 h-4 w-4" />
+                    <Upload className="h-4 w-4" />
                   )}
                   Import Data
                 </Button>
@@ -894,7 +894,7 @@ export default function DatabaseSettings() {
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" size="sm">
-                  <Trash2 className="mr-2 h-4 w-4" />
+                  <Trash2 className="h-4 w-4" />
                   Disconnect Custom Database
                 </Button>
               </AlertDialogTrigger>
@@ -957,9 +957,9 @@ export default function DatabaseSettings() {
             {connectionUri && (
               <Button variant="outline" size="sm" onClick={handleTestConnection} disabled={testing}>
                 {testing ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <TestTube className="mr-2 h-4 w-4" />
+                  <TestTube className="h-4 w-4" />
                 )}
                 Test Connection
               </Button>
@@ -1147,9 +1147,9 @@ export default function DatabaseSettings() {
             {/* Save Button */}
             <Button onClick={handleSave} disabled={saving || !connectionUri} className="w-full">
               {saving ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Database className="mr-2 h-4 w-4" />
+                <Database className="h-4 w-4" />
               )}
               Save & Activate Custom Database
             </Button>

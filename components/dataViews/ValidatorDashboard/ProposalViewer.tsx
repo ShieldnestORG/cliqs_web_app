@@ -1,24 +1,20 @@
 /**
  * Proposal Viewer
  *
- * Displays active governance proposals and the validator's voting status.
+ * Displays active governance proposals and the validator's voting status. Past proposals sit in
+ * a drop-down that is closed by default. Renders its content only; the Governance panel (card)
+ * comes from ValidatorDashboard/index.tsx. Until 2026-10-10 the past proposals were always listed
+ * inline under the active ones.
  */
 
-import { Card, CardContent, CardHeader, CardTitle, CardLabel } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ValidatorDashboardData } from "@/lib/validatorHelpers";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { KitIcon } from "@/components/icons/kit";
+import { readProposalTitle, ValidatorDashboardData } from "@/lib/validatorHelpers";
 import { createCliqTransaction, buildVoteMsg } from "@/lib/validatorTx";
 import { useChains } from "@/context/ChainsContext";
-import {
-  Vote as VoteIcon,
-  CheckCircle2,
-  AlertCircle,
-  ExternalLink,
-  ArrowRight,
-  Loader2,
-  Users,
-} from "lucide-react";
+import { CheckCircle2, AlertCircle, ChevronDown, ExternalLink, Loader2, Users } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -36,17 +32,15 @@ import { useRouter } from "next/router";
 import { Proposal } from "cosmjs-types/cosmos/gov/v1beta1/gov";
 import { explorerLinkTx } from "@/lib/displayHelpers";
 
-// Helper to extract title from proposal content
+/** How many finished proposals the "Past proposals" drop-down lists. */
+const PAST_PROPOSALS_SHOWN = 10;
+
+// The title to show. With no title to show it says "Proposal #47" (a fact) and never "Untitled
+// Proposal" (a claim: the proposal has a title on chain, this view just did not carry it; until
+// 2026-10-10 it said "Untitled Proposal"). What counts as a title is readProposalTitle's rule in
+// lib/validatorHelpers.ts, the same one getActiveProposals uses to decide whom to fetch a title for.
 function getProposalTitle(proposal: Proposal): string {
-  if (!proposal.content) return "Untitled Proposal";
-
-  // Content is an Any type, we need to handle the value field
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const content = proposal.content as any;
-  if (content.title) return content.title;
-  if (content.value?.title) return content.value.title;
-
-  return "Untitled Proposal";
+  return readProposalTitle(proposal) ?? `Proposal #${proposal.proposalId}`;
 }
 
 interface ProposalViewerProps {
@@ -244,161 +238,186 @@ export default function ProposalViewer({
   };
 
   const voteOptions = [
-    { label: "Yes", value: 1, color: "bg-success hover:bg-success/80 text-success-foreground" },
-    { label: "Abstain", value: 2, color: "bg-muted hover:bg-muted/80 text-foreground" },
+    {
+      label: "Yes",
+      value: 1,
+      color:
+        "border-transparent bg-success text-success-foreground hover:bg-success/80 active:bg-success/70",
+    },
+    {
+      label: "Abstain",
+      value: 2,
+      color: "border-transparent bg-muted text-foreground hover:bg-muted/80 active:bg-muted/70",
+    },
     {
       label: "No",
       value: 3,
-      color: "bg-destructive hover:bg-destructive/80 text-destructive-foreground",
+      color:
+        "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80 active:bg-destructive/70",
     },
     {
       label: "No with Veto",
       value: 4,
-      color: "bg-warning hover:bg-warning/80 text-warning-foreground",
+      color:
+        "border-transparent bg-warning text-warning-foreground hover:bg-warning/80 active:bg-warning/70",
     },
   ];
 
+  // The drop-down lists the same rows the inline list used to: the latest 10 finished proposals
+  const pastShown = pastProposals === null ? null : pastProposals.slice(0, PAST_PROPOSALS_SHOWN);
+  // "latest N" whenever there is at least one row: the count comes from the newest 20 proposals of
+  // any status (getPastProposals), so a bare "(7)" could be less than the real total while "latest
+  // 7" is always true. Until 2026-10-10 the label said the real number up to 10 and "latest 10"
+  // only above that.
+  const pastLabel =
+    pastShown === null
+      ? "unavailable"
+      : pastShown.length === 0
+        ? "0"
+        : `latest ${pastShown.length}`;
+
   return (
-    <Card variant="institutional" accent="left" className="h-full">
-      <CardHeader>
-        <CardLabel comment>Governance</CardLabel>
-        <CardTitle className="font-heading text-xl font-bold">Active Proposals</CardTitle>
-      </CardHeader>
+    <div className="space-y-4">
+      {activeProposals.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-border/50 bg-muted/20 py-8 text-center">
+          <CheckCircle2 className="mx-auto mb-2 h-8 w-8 text-green-accent opacity-50" />
+          <p className="text-sm text-muted-foreground">No active proposals in voting period.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {activeProposals.map((proposal) => {
+            const proposalId = proposal.proposalId as unknown as number;
+            const voteInfo = getVoteLabel(proposalId);
+            const explorerLink = chain.explorerLinks.proposal?.replace(
+              "${proposalId}",
+              proposalId.toString(),
+            );
 
-      <CardContent className="space-y-4">
-        {activeProposals.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border/50 bg-muted/20 py-8 text-center">
-            <CheckCircle2 className="mx-auto mb-2 h-8 w-8 text-green-accent opacity-50" />
-            <p className="text-sm text-muted-foreground">No active proposals in voting period.</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {activeProposals.map((proposal) => {
-              const proposalId = proposal.proposalId as unknown as number;
-              const voteInfo = getVoteLabel(proposalId);
-              const explorerLink = chain.explorerLinks.proposal?.replace(
-                "${proposalId}",
-                proposalId.toString(),
-              );
-
-              return (
-                <div
-                  key={proposalId}
-                  className="flex flex-col gap-3 rounded-lg border border-border/50 bg-muted/30 p-4"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-1">
+            return (
+              <div
+                key={proposalId}
+                className="flex flex-col gap-3 rounded-lg border border-border/50 bg-muted/30 p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    {/* The small "Proposal #47" kicker only when the title is a real one: with no
+                        title the heading itself reads "Proposal #47", so it would say it twice. */}
+                    {readProposalTitle(proposal) !== null && (
                       <span className="font-mono text-[10px] uppercase tracking-tighter text-muted-foreground">
                         Proposal #{proposalId}
                       </span>
-                      <h4 className="line-clamp-2 font-heading text-sm font-semibold leading-tight">
-                        {getProposalTitle(proposal)}
-                      </h4>
-                    </div>
-                    {voteInfo ? (
-                      <Badge className={voteInfo.className}>{voteInfo.label}</Badge>
-                    ) : (
-                      <Badge
-                        variant="outline"
-                        className="gap-1 border-warning/30 bg-warning/10 text-warning"
-                      >
-                        <AlertCircle className="h-3 w-3" />
-                        NEEDS VOTE
-                      </Badge>
                     )}
+                    <h4 className="line-clamp-2 font-heading text-sm font-semibold leading-tight">
+                      {getProposalTitle(proposal)}
+                    </h4>
                   </div>
-
-                  <div className="mt-auto flex items-center justify-between pt-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="flex h-7 items-center gap-1 p-0 text-xs font-medium text-primary hover:underline"
-                      onClick={() => {
-                        setSelectedProposal(proposal);
-                        setIsVoteDialogOpen(true);
-                      }}
+                  {voteInfo ? (
+                    <Badge className={voteInfo.className}>{voteInfo.label}</Badge>
+                  ) : (
+                    <Badge
+                      variant="outline"
+                      className="gap-1 border-warning/30 bg-warning/10 text-warning"
                     >
-                      <VoteIcon className="h-3 w-3" />
-                      Vote Now
-                      <ArrowRight className="h-3 w-3" />
-                    </Button>
-
-                    {explorerLink && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 gap-1 px-2 text-[10px]"
-                        asChild
-                      >
-                        <a href={explorerLink} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="h-3 w-3" />
-                          Details
-                        </a>
-                      </Button>
-                    )}
-                  </div>
+                      <AlertCircle className="h-3 w-3" />
+                      NEEDS VOTE
+                    </Badge>
+                  )}
                 </div>
-              );
-            })}
-          </div>
-        )}
 
-        <Dialog open={isVoteDialogOpen} onOpenChange={setIsVoteDialogOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle className="font-heading text-xl font-bold">
-                {isCliqMode ? "Propose Vote" : "Cast Your Vote"}
-              </DialogTitle>
-              <DialogDescription>
-                {isCliqMode
-                  ? `Create a transaction to vote on Proposal #${selectedProposal?.proposalId as unknown as number}`
-                  : `Select an option for Proposal #${selectedProposal?.proposalId as unknown as number}`}
-              </DialogDescription>
-            </DialogHeader>
+                <div className="mt-auto flex items-center justify-between gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 max-sm:h-11"
+                    onClick={() => {
+                      setSelectedProposal(proposal);
+                      setIsVoteDialogOpen(true);
+                    }}
+                  >
+                    <KitIcon name="governance" size={20} />
+                    Vote Now
+                  </Button>
 
-            {isCliqMode && (
-              <div className="flex items-center gap-2 rounded-lg bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-                <Users className="h-4 w-4" />
-                <span>This will create a transaction for multisig signing</span>
+                  {explorerLink && (
+                    <Button variant="ghost" size="sm" className="gap-1.5 max-sm:h-11" asChild>
+                      <a href={explorerLink} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="h-3 w-3" />
+                        Details
+                      </a>
+                    </Button>
+                  )}
+                </div>
               </div>
-            )}
+            );
+          })}
+        </div>
+      )}
 
-            <div className="grid grid-cols-2 gap-3 py-4">
-              {voteOptions.map((option) => (
-                <Button
-                  key={option.value}
-                  disabled={readOnly || isVoting}
-                  className={`${option.color} h-12 font-bold`}
-                  onClick={() =>
-                    submitVote(selectedProposal?.proposalId as unknown as number, option.value)
-                  }
-                >
-                  {isVoting ? <Loader2 className="h-4 w-4 animate-spin" /> : option.label}
-                </Button>
-              ))}
+      <Dialog open={isVoteDialogOpen} onOpenChange={setIsVoteDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-xl font-bold">
+              {isCliqMode ? "Propose Vote" : "Cast Your Vote"}
+            </DialogTitle>
+            <DialogDescription>
+              {isCliqMode
+                ? `Create a transaction to vote on Proposal #${selectedProposal?.proposalId as unknown as number}`
+                : `Select an option for Proposal #${selectedProposal?.proposalId as unknown as number}`}
+            </DialogDescription>
+          </DialogHeader>
+
+          {isCliqMode && (
+            <div className="flex items-center gap-2 rounded-lg bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+              <Users className="h-4 w-4" />
+              <span>This will create a transaction for multisig signing</span>
             </div>
+          )}
 
+          <div className="grid grid-cols-2 gap-3 py-4">
+            {voteOptions.map((option) => (
+              <Button
+                key={option.value}
+                disabled={readOnly || isVoting}
+                className={`${option.color} h-12 font-bold`}
+                onClick={() =>
+                  submitVote(selectedProposal?.proposalId as unknown as number, option.value)
+                }
+              >
+                {isVoting ? <Loader2 className="h-4 w-4 animate-spin" /> : option.label}
+              </Button>
+            ))}
+          </div>
+
+          {data.votingPowerPercentage !== null && (
             <p className="text-center text-xs text-muted-foreground">
               Your voting power:{" "}
               <span className="font-semibold text-foreground">{data.votingPowerPercentage}%</span>
             </p>
-          </DialogContent>
-        </Dialog>
+          )}
+        </DialogContent>
+      </Dialog>
 
-        {/* Past Proposals */}
-        <div className="border-t border-border/50 pt-4">
-          <span className="font-mono text-[10px] uppercase tracking-tighter text-muted-foreground">
-            Past Proposals
-          </span>
-          {pastProposals === null ? (
+      {/* Past proposals: a drop-down, closed by default */}
+      <Collapsible className="border-t border-border/[0.06] pt-3">
+        <CollapsibleTrigger asChild>
+          <Button variant="ghost" size="sm" className="group w-full justify-between max-sm:h-11">
+            <span>Past proposals ({pastLabel})</span>
+            <ChevronDown className="h-4 w-4 transition-transform duration-ui group-data-[state=open]:rotate-180" />
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          {pastShown === null ? (
             <p className="mt-2 text-xs text-muted-foreground">
               Proposal history unavailable — no REST endpoint answered for this chain.
             </p>
-          ) : pastProposals.length === 0 ? (
+          ) : pastShown.length === 0 ? (
             <p className="mt-2 text-xs text-muted-foreground">No past proposals found.</p>
           ) : (
-            <div className="mt-2 space-y-1.5">
-              {pastProposals.slice(0, 10).map((proposal) => {
+            // The opened list has its own scroll, like the stakers list, so the Governance panel
+            // grows by one box instead of by ten rows (it went from 384px to 966px and dragged
+            // the Stakers card with it, measured 2026-10-10). `relative` keeps the box positioned.
+            <div className="relative mt-2 max-h-[260px] space-y-1.5 overflow-y-auto">
+              {pastShown.map((proposal) => {
                 const proposalId = proposal.proposalId as unknown as number;
                 const badge = pastStatusBadges[proposal.status] ?? {
                   label: "CLOSED",
@@ -441,17 +460,17 @@ export default function ProposalViewer({
               })}
             </div>
           )}
-        </div>
+        </CollapsibleContent>
+      </Collapsible>
 
-        {/* Info/Help */}
-        <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
-          <p className="text-[11px] leading-relaxed text-muted-foreground">
-            <strong className="text-foreground">Voting Power:</strong> Your validator represents{" "}
-            <span className="font-semibold text-foreground">{data.votingPowerPercentage}%</span> of
-            the network's voting power.
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+      {/* Info/Help: said only when the share was measured (null = the pool query failed) */}
+      {data.votingPowerPercentage !== null && (
+        <p className="text-[11px] leading-relaxed text-muted-foreground">
+          <strong className="text-foreground">Voting Power:</strong> Your validator represents{" "}
+          <span className="font-semibold text-foreground">{data.votingPowerPercentage}%</span> of
+          the network's voting power.
+        </p>
+      )}
+    </div>
   );
 }

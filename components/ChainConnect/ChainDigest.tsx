@@ -82,7 +82,7 @@ export default function ChainDigest({ chain, simplify }: ChainItemProps) {
                   size="sm"
                   className="ml-auto h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
                 >
-                  <span className="mr-1">{chain.nodeAddresses.length}</span>
+                  <span>{chain.nodeAddresses.length}</span>
                   <ChevronDown className="h-3 w-3 transition-transform duration-200 [[data-state=open]_&]:rotate-180" />
                 </Button>
               </CollapsibleTrigger>

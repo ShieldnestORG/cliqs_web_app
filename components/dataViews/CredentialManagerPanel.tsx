@@ -320,7 +320,7 @@ export function CredentialManagerPanel({
             </Button>
             {isAdmin && (
               <Button size="sm" onClick={() => setIsIssueDialogOpen(true)}>
-                <Plus className="mr-1 h-4 w-4" />
+                <Plus className="h-4 w-4" />
                 Issue
               </Button>
             )}

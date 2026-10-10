@@ -45,7 +45,7 @@ export default function WalletConnectPrompt({ label, description }: WalletConnec
             onClick={connectKeplr}
             disabled={loading.keplr || loading.ledger}
             variant="outline"
-            className="h-auto flex-col gap-2 py-4"
+            className="h-auto flex-col gap-2 rounded-2xl py-4"
           >
             {loading.keplr ? (
               <Loader2 className="h-6 w-6 animate-spin" />
@@ -58,7 +58,7 @@ export default function WalletConnectPrompt({ label, description }: WalletConnec
             onClick={connectLedger}
             disabled={loading.keplr || loading.ledger}
             variant="outline"
-            className="h-auto flex-col gap-2 py-4"
+            className="h-auto flex-col gap-2 rounded-2xl py-4"
           >
             {loading.ledger ? (
               <Loader2 className="h-6 w-6 animate-spin" />

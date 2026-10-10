@@ -1,10 +1,10 @@
 /**
  * Validator Commands Card
  *
- * Allows validators to edit their metadata and commission settings.
+ * Allows validators to edit their metadata and commission settings. Renders its content only;
+ * the Manage panel (card) and its ScaleRule heading come from ValidatorDashboard/index.tsx.
  */
 
-import { Card, CardContent, CardHeader, CardTitle, CardLabel } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -300,370 +300,361 @@ export default function ValidatorCommandsCard({
   };
 
   return (
-    <Card variant="institutional" accent="left" className="h-full">
-      <CardHeader>
-        <CardLabel comment>Management</CardLabel>
-        <CardTitle className="font-heading text-xl font-bold">Validator Commands</CardTitle>
-      </CardHeader>
-
-      <CardContent className="space-y-6">
-        {/* Staking & Governance Section
-         *
-         * These four actions all route to the CLIQ transaction builder, which
-         * requires a multisig account. In solo (non-CLIQ) mode targetAddress is
-         * the operator's own single-sig account, and that page can only answer
-         * with "Multisig Not Available" — so the cards are a dead end. Explain
-         * that instead of linking into the error; the CliqUpgradeCTA rendered
-         * directly below this card is the way forward. */}
-        {!isCliqMode ? (
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">{`// Staking & Governance`}</h3>
-            <div className="rounded-lg border border-border/[0.06] bg-muted/30 p-4">
-              <p className="text-sm text-muted-foreground">
-                Delegate, Undelegate, Redelegate and Claim delegation rewards are proposed through a
-                CLIQ so they can be signed by your CLIQ's members. Set one up below to enable them.
-              </p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Editing your validator&apos;s details is available now — it signs directly with your
-                connected wallet.
-              </p>
-            </div>
+    <div className="space-y-6">
+      {/* Staking & Governance Section
+       *
+       * These four actions all route to the CLIQ transaction builder, which
+       * requires a multisig account. In solo (non-CLIQ) mode targetAddress is
+       * the operator's own single-sig account, and that page can only answer
+       * with "Multisig Not Available" — so the cards are a dead end. Explain
+       * that instead of linking into the error; the CliqUpgradeCTA rendered
+       * directly below this card is the way forward. */}
+      {!isCliqMode ? (
+        <div className="space-y-4">
+          <h3 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">{`// Staking & Governance`}</h3>
+          <div className="rounded-lg border border-border/[0.06] bg-muted/30 p-4">
+            <p className="text-sm text-muted-foreground">
+              Delegate, Undelegate, Redelegate and Claim delegation rewards are proposed through a
+              CLIQ so they can be signed by your CLIQ's members. Set one up below to enable them.
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Editing your validator&apos;s details is available now — it signs directly with your
+              connected wallet.
+            </p>
           </div>
-        ) : (
-          <div className="space-y-4">
-            <div>
-              <h3 className="mb-4 text-sm font-medium uppercase tracking-wide text-muted-foreground">{`// Staking & Governance`}</h3>
-              <BentoGrid className="grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-                {/* Delegate */}
-                <Link
-                  href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.Delegate)}`}
-                  className="block"
-                >
-                  <BentoCard variant="default" interactive className="min-h-0 p-4">
-                    <div className="flex h-full flex-col">
-                      <div className="mb-2 flex items-center gap-2">
-                        <TrendingUp className="h-6 w-6" />
-                        <h4 className="font-heading text-sm font-semibold leading-tight">
-                          Delegate
-                        </h4>
-                      </div>
-                      <p className="text-xs leading-tight text-muted-foreground">
-                        Stake tokens to validator
-                      </p>
-                    </div>
-                  </BentoCard>
-                </Link>
-
-                {/* Undelegate */}
-                <Link
-                  href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.Undelegate)}`}
-                  className="block"
-                >
-                  <BentoCard variant="default" interactive className="min-h-0 p-4">
-                    <div className="flex h-full flex-col">
-                      <div className="mb-2 flex items-center gap-2">
-                        <TrendingUp className="h-6 w-6" />
-                        <h4 className="font-heading text-sm font-semibold leading-tight">
-                          Undelegate
-                        </h4>
-                      </div>
-                      <p className="text-xs leading-tight text-muted-foreground">
-                        Unstake tokens from validator
-                      </p>
-                    </div>
-                  </BentoCard>
-                </Link>
-
-                {/* Redelegate */}
-                <Link
-                  href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.BeginRedelegate)}`}
-                  className="block"
-                >
-                  <BentoCard variant="default" interactive className="min-h-0 p-4">
-                    <div className="flex h-full flex-col">
-                      <div className="mb-2 flex items-center gap-2">
-                        <TrendingUp className="h-6 w-6" />
-                        <h4 className="font-heading text-sm font-semibold leading-tight">
-                          Redelegate
-                        </h4>
-                      </div>
-                      <p className="text-xs leading-tight text-muted-foreground">
-                        Move stake between validators
-                      </p>
-                    </div>
-                  </BentoCard>
-                </Link>
-
-                {/* Claim delegation rewards (delegator-side MsgWithdrawDelegatorReward) */}
-                <Link
-                  href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.WithdrawDelegatorReward)}`}
-                  className="block"
-                >
-                  <BentoCard variant="default" interactive className="min-h-0 p-4">
-                    <div className="flex h-full flex-col">
-                      <div className="mb-2 flex items-center gap-2">
-                        <Coins className="h-6 w-6" />
-                        <h4 className="font-heading text-sm font-semibold leading-tight">
-                          Claim delegation rewards
-                        </h4>
-                      </div>
-                      <p className="text-xs leading-tight text-muted-foreground">
-                        From any validator this CLIQ delegates to
-                      </p>
-                    </div>
-                  </BentoCard>
-                </Link>
-              </BentoGrid>
-            </div>
-          </div>
-        )}
-
-        <Separator />
-
-        {/* Edit validator: one section heading, one button */}
-        <div className="space-y-3">
-          <h3 className="flex items-center gap-2 text-sm font-medium uppercase tracking-wide text-muted-foreground">
-            <Edit3 className="h-4 w-4" />
-            Edit validator
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Update your validator's name, description, website, and commission settings.
-          </p>
-          <Dialog open={isEditing} onOpenChange={setIsEditing}>
-            <DialogTrigger asChild>
-              <Button
-                variant="action"
-                size="action"
-                className="w-full gap-2"
-                onClick={openEditDialog}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div>
+            <h3 className="mb-4 text-sm font-medium uppercase tracking-wide text-muted-foreground">{`// Staking & Governance`}</h3>
+            <BentoGrid className="grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+              {/* Delegate */}
+              <Link
+                href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.Delegate)}`}
+                className="block"
               >
-                <Settings className="h-4 w-4" />
-                Edit validator
-              </Button>
-            </DialogTrigger>
+                <BentoCard variant="default" interactive className="min-h-0 p-4">
+                  <div className="flex h-full flex-col">
+                    <div className="mb-2 flex items-center gap-2">
+                      <TrendingUp className="h-6 w-6" />
+                      <h4 className="font-heading text-sm font-semibold leading-tight">Delegate</h4>
+                    </div>
+                    <p className="text-xs leading-tight text-muted-foreground">
+                      Stake tokens to validator
+                    </p>
+                  </div>
+                </BentoCard>
+              </Link>
 
-            <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="font-heading text-xl font-bold">
-                  Edit Validator Details
-                </DialogTitle>
-              </DialogHeader>
+              {/* Undelegate */}
+              <Link
+                href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.Undelegate)}`}
+                className="block"
+              >
+                <BentoCard variant="default" interactive className="min-h-0 p-4">
+                  <div className="flex h-full flex-col">
+                    <div className="mb-2 flex items-center gap-2">
+                      <TrendingUp className="h-6 w-6" />
+                      <h4 className="font-heading text-sm font-semibold leading-tight">
+                        Undelegate
+                      </h4>
+                    </div>
+                    <p className="text-xs leading-tight text-muted-foreground">
+                      Unstake tokens from validator
+                    </p>
+                  </div>
+                </BentoCard>
+              </Link>
 
-              <div className="space-y-6 py-4">
-                <div className="space-y-4">
-                  <h3 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-                    Select fields to update
-                  </h3>
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
-                      <Label htmlFor="toggle-moniker" className="flex-1">
-                        Moniker (Name)
-                      </Label>
-                      <Switch
-                        id="toggle-moniker"
-                        checked={enabledFields.moniker}
-                        onCheckedChange={() => toggleField("moniker")}
-                      />
+              {/* Redelegate */}
+              <Link
+                href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.BeginRedelegate)}`}
+                className="block"
+              >
+                <BentoCard variant="default" interactive className="min-h-0 p-4">
+                  <div className="flex h-full flex-col">
+                    <div className="mb-2 flex items-center gap-2">
+                      <TrendingUp className="h-6 w-6" />
+                      <h4 className="font-heading text-sm font-semibold leading-tight">
+                        Redelegate
+                      </h4>
                     </div>
-                    <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
-                      <Label htmlFor="toggle-identity" className="flex-1">
-                        Identity (Keybase)
-                      </Label>
-                      <Switch
-                        id="toggle-identity"
-                        checked={enabledFields.identity}
-                        onCheckedChange={() => toggleField("identity")}
-                      />
+                    <p className="text-xs leading-tight text-muted-foreground">
+                      Move stake between validators
+                    </p>
+                  </div>
+                </BentoCard>
+              </Link>
+
+              {/* Claim delegation rewards (delegator-side MsgWithdrawDelegatorReward) */}
+              <Link
+                href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.WithdrawDelegatorReward)}`}
+                className="block"
+              >
+                <BentoCard variant="default" interactive className="min-h-0 p-4">
+                  <div className="flex h-full flex-col">
+                    <div className="mb-2 flex items-center gap-2">
+                      <Coins className="h-6 w-6" />
+                      <h4 className="font-heading text-sm font-semibold leading-tight">
+                        Claim delegation rewards
+                      </h4>
                     </div>
-                    <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
-                      <Label htmlFor="toggle-website" className="flex-1">
-                        Website
-                      </Label>
-                      <Switch
-                        id="toggle-website"
-                        checked={enabledFields.website}
-                        onCheckedChange={() => toggleField("website")}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
-                      <Label htmlFor="toggle-security" className="flex-1">
-                        Security Contact
-                      </Label>
-                      <Switch
-                        id="toggle-security"
-                        checked={enabledFields.securityContact}
-                        onCheckedChange={() => toggleField("securityContact")}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
-                      <Label htmlFor="toggle-details" className="flex-1">
-                        Details
-                      </Label>
-                      <Switch
-                        id="toggle-details"
-                        checked={enabledFields.details}
-                        onCheckedChange={() => toggleField("details")}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
-                      <Label htmlFor="toggle-commission" className="flex-1">
-                        Commission Rate
-                      </Label>
-                      <Switch
-                        id="toggle-commission"
-                        checked={enabledFields.commissionRate}
-                        onCheckedChange={() => toggleField("commissionRate")}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
-                      <Label htmlFor="toggle-min-delegation" className="flex-1">
-                        Min Self Delegation
-                      </Label>
-                      <Switch
-                        id="toggle-min-delegation"
-                        checked={enabledFields.minSelfDelegation}
-                        onCheckedChange={() => toggleField("minSelfDelegation")}
-                      />
-                    </div>
+                    <p className="text-xs leading-tight text-muted-foreground">
+                      From any validator this CLIQ delegates to
+                    </p>
+                  </div>
+                </BentoCard>
+              </Link>
+            </BentoGrid>
+          </div>
+        </div>
+      )}
+
+      <Separator />
+
+      {/* Edit validator: one section heading, one button */}
+      <div className="space-y-3">
+        <h3 className="flex items-center gap-2 text-sm font-medium uppercase tracking-wide text-muted-foreground">
+          <Edit3 className="h-4 w-4" />
+          Edit validator
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          Update your validator's name, description, website, and commission settings.
+        </p>
+        <Dialog open={isEditing} onOpenChange={setIsEditing}>
+          <DialogTrigger asChild>
+            <Button
+              variant="action"
+              size="action"
+              className="w-full gap-2 sm:w-auto"
+              onClick={openEditDialog}
+            >
+              <Settings className="h-4 w-4" />
+              Edit validator
+            </Button>
+          </DialogTrigger>
+
+          <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="font-heading text-xl font-bold">
+                Edit Validator Details
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-6 py-4">
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
+                  Select fields to update
+                </h3>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
+                    <Label htmlFor="toggle-moniker" className="flex-1">
+                      Moniker (Name)
+                    </Label>
+                    <Switch
+                      id="toggle-moniker"
+                      checked={enabledFields.moniker}
+                      onCheckedChange={() => toggleField("moniker")}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
+                    <Label htmlFor="toggle-identity" className="flex-1">
+                      Identity (Keybase)
+                    </Label>
+                    <Switch
+                      id="toggle-identity"
+                      checked={enabledFields.identity}
+                      onCheckedChange={() => toggleField("identity")}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
+                    <Label htmlFor="toggle-website" className="flex-1">
+                      Website
+                    </Label>
+                    <Switch
+                      id="toggle-website"
+                      checked={enabledFields.website}
+                      onCheckedChange={() => toggleField("website")}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
+                    <Label htmlFor="toggle-security" className="flex-1">
+                      Security Contact
+                    </Label>
+                    <Switch
+                      id="toggle-security"
+                      checked={enabledFields.securityContact}
+                      onCheckedChange={() => toggleField("securityContact")}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
+                    <Label htmlFor="toggle-details" className="flex-1">
+                      Details
+                    </Label>
+                    <Switch
+                      id="toggle-details"
+                      checked={enabledFields.details}
+                      onCheckedChange={() => toggleField("details")}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
+                    <Label htmlFor="toggle-commission" className="flex-1">
+                      Commission Rate
+                    </Label>
+                    <Switch
+                      id="toggle-commission"
+                      checked={enabledFields.commissionRate}
+                      onCheckedChange={() => toggleField("commissionRate")}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
+                    <Label htmlFor="toggle-min-delegation" className="flex-1">
+                      Min Self Delegation
+                    </Label>
+                    <Switch
+                      id="toggle-min-delegation"
+                      checked={enabledFields.minSelfDelegation}
+                      onCheckedChange={() => toggleField("minSelfDelegation")}
+                    />
                   </div>
                 </div>
-
-                {hasEnabledFields() && <Separator />}
-
-                {/* Form Inputs for Enabled Fields */}
-                <div className="space-y-4">
-                  {enabledFields.moniker && (
-                    <Input
-                      label="Moniker (Name)"
-                      value={description.moniker}
-                      onChange={(e) =>
-                        setDescription((prev) => ({ ...prev, moniker: e.target.value }))
-                      }
-                      placeholder="Enter validator name"
-                    />
-                  )}
-                  {enabledFields.identity && (
-                    <Input
-                      label="Identity"
-                      value={description.identity}
-                      onChange={(e) =>
-                        setDescription((prev) => ({ ...prev, identity: e.target.value }))
-                      }
-                      placeholder="Keybase identity"
-                    />
-                  )}
-                  {enabledFields.website && (
-                    <Input
-                      label="Website"
-                      value={description.website}
-                      onChange={(e) =>
-                        setDescription((prev) => ({ ...prev, website: e.target.value }))
-                      }
-                      placeholder="https://validator.com"
-                    />
-                  )}
-                  {enabledFields.securityContact && (
-                    <Input
-                      label="Security Contact"
-                      value={description.securityContact}
-                      onChange={(e) =>
-                        setDescription((prev) => ({ ...prev, securityContact: e.target.value }))
-                      }
-                      placeholder="security@validator.com"
-                    />
-                  )}
-                  {enabledFields.details && (
-                    <Input
-                      label="Details"
-                      value={description.details}
-                      onChange={(e) =>
-                        setDescription((prev) => ({ ...prev, details: e.target.value }))
-                      }
-                      placeholder="Validator description"
-                    />
-                  )}
-
-                  {enabledFields.commissionRate && (
-                    <div>
-                      <Input
-                        label="Commission Rate (0.0 - 1.0)"
-                        value={commissionRate}
-                        onChange={(e) => setCommissionRate(e.target.value)}
-                        placeholder="Leave empty to keep current"
-                        error={errors.commissionRate}
-                      />
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Current:{" "}
-                        {validator.commissionRate
-                          ? (parseFloat(validator.commissionRate) / 1000000000000000000).toFixed(4)
-                          : "N/A"}
-                      </p>
-                    </div>
-                  )}
-
-                  {enabledFields.minSelfDelegation && (
-                    <div>
-                      <Input
-                        label="Min Self Delegation"
-                        value={minSelfDelegation}
-                        onChange={(e) => setMinSelfDelegation(e.target.value)}
-                        placeholder="Leave empty to keep current"
-                        error={errors.minSelfDelegation}
-                      />
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Current: {validator.minSelfDelegation || "N/A"}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                <Separator />
-
-                {/* Actions */}
-                <div className="flex justify-end gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsEditing(false)}
-                    disabled={readOnly || isSubmitting}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="action"
-                    onClick={submitEdit}
-                    disabled={readOnly || isSubmitting || !hasEnabledFields()}
-                    className="gap-2"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        {isCliqMode ? "Creating..." : "Updating..."}
-                      </>
-                    ) : isCliqMode ? (
-                      <>
-                        <Users className="h-4 w-4" />
-                        Create Transaction
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle2 className="h-4 w-4" />
-                        Update Validator
-                      </>
-                    )}
-                  </Button>
-                </div>
               </div>
-            </DialogContent>
-          </Dialog>
-        </div>
 
-        {/* Info */}
-        <div className="py-2 text-center">
-          <p className="text-xs text-muted-foreground">
-            Changes may take a few minutes to reflect on the network.
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+              {hasEnabledFields() && <Separator />}
+
+              {/* Form Inputs for Enabled Fields */}
+              <div className="space-y-4">
+                {enabledFields.moniker && (
+                  <Input
+                    label="Moniker (Name)"
+                    value={description.moniker}
+                    onChange={(e) =>
+                      setDescription((prev) => ({ ...prev, moniker: e.target.value }))
+                    }
+                    placeholder="Enter validator name"
+                  />
+                )}
+                {enabledFields.identity && (
+                  <Input
+                    label="Identity"
+                    value={description.identity}
+                    onChange={(e) =>
+                      setDescription((prev) => ({ ...prev, identity: e.target.value }))
+                    }
+                    placeholder="Keybase identity"
+                  />
+                )}
+                {enabledFields.website && (
+                  <Input
+                    label="Website"
+                    value={description.website}
+                    onChange={(e) =>
+                      setDescription((prev) => ({ ...prev, website: e.target.value }))
+                    }
+                    placeholder="https://validator.com"
+                  />
+                )}
+                {enabledFields.securityContact && (
+                  <Input
+                    label="Security Contact"
+                    value={description.securityContact}
+                    onChange={(e) =>
+                      setDescription((prev) => ({ ...prev, securityContact: e.target.value }))
+                    }
+                    placeholder="security@validator.com"
+                  />
+                )}
+                {enabledFields.details && (
+                  <Input
+                    label="Details"
+                    value={description.details}
+                    onChange={(e) =>
+                      setDescription((prev) => ({ ...prev, details: e.target.value }))
+                    }
+                    placeholder="Validator description"
+                  />
+                )}
+
+                {enabledFields.commissionRate && (
+                  <div>
+                    <Input
+                      label="Commission Rate (0.0 - 1.0)"
+                      value={commissionRate}
+                      onChange={(e) => setCommissionRate(e.target.value)}
+                      placeholder="Leave empty to keep current"
+                      error={errors.commissionRate}
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Current:{" "}
+                      {validator.commissionRate
+                        ? (parseFloat(validator.commissionRate) / 1000000000000000000).toFixed(4)
+                        : "N/A"}
+                    </p>
+                  </div>
+                )}
+
+                {enabledFields.minSelfDelegation && (
+                  <div>
+                    <Input
+                      label="Min Self Delegation"
+                      value={minSelfDelegation}
+                      onChange={(e) => setMinSelfDelegation(e.target.value)}
+                      placeholder="Leave empty to keep current"
+                      error={errors.minSelfDelegation}
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Current: {validator.minSelfDelegation || "N/A"}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Actions */}
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsEditing(false)}
+                  disabled={readOnly || isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="action"
+                  onClick={submitEdit}
+                  disabled={readOnly || isSubmitting || !hasEnabledFields()}
+                  className="gap-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      {isCliqMode ? "Creating..." : "Updating..."}
+                    </>
+                  ) : isCliqMode ? (
+                    <>
+                      <Users className="h-4 w-4" />
+                      Create Transaction
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-4 w-4" />
+                      Update Validator
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Info */}
+      <div className="text-center">
+        <p className="text-xs text-muted-foreground">
+          Changes may take a few minutes to reflect on the network.
+        </p>
+      </div>
+    </div>
   );
 }

@@ -330,7 +330,7 @@ export default function ListUserCliqs() {
                 onClick={handleRefresh}
                 disabled={listLoading || isVerifying}
               >
-                <RefreshCw className={`mr-1 h-4 w-4 ${listLoading ? "animate-spin" : ""}`} />
+                <RefreshCw className={`h-4 w-4 ${listLoading ? "animate-spin" : ""}`} />
                 Refresh
               </Button>
             </div>

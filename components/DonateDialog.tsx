@@ -585,13 +585,13 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
                   >
                     <a href={explorerUrl} target="_blank" rel="noopener noreferrer">
                       View on Explorer
-                      <ExternalLink className="ml-2 h-5 w-5" />
+                      <ExternalLink className="h-5 w-5" />
                     </a>
                   </Button>
                 )}
                 <Button
                   onClick={handleClose}
-                  className="h-16 flex-1 rounded-2xl border-none bg-secondary text-base font-bold text-foreground shadow-xl transition-all hover:bg-secondary/80 active:scale-95"
+                  className="h-16 flex-1 rounded-2xl border-none bg-secondary text-base font-bold text-foreground shadow-xl transition-all hover:bg-secondary/80 active:scale-95 active:bg-secondary/70"
                 >
                   Return to Dashboard
                 </Button>
@@ -940,7 +940,7 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
               <Button
                 onClick={handleContinue}
                 disabled={!canContinue}
-                className="mt-4 h-20 w-full rounded-3xl border-none bg-secondary text-xl font-black text-foreground shadow-2xl transition-all hover:bg-secondary/80 active:scale-[0.98] disabled:opacity-50"
+                className="mt-4 h-20 w-full rounded-3xl border-none bg-secondary text-xl font-black text-foreground shadow-2xl transition-all hover:bg-secondary/80 active:scale-[0.98] active:bg-secondary/70 disabled:opacity-50"
               >
                 Continue to Review
               </Button>
@@ -1037,7 +1037,7 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
               <Button
                 onClick={handleConfirm}
                 disabled={sending}
-                className="flex h-20 w-full items-center justify-center gap-4 rounded-3xl border-none bg-secondary text-xl font-black text-foreground shadow-2xl transition-all hover:bg-secondary/80 active:scale-[0.98]"
+                className="flex h-20 w-full items-center justify-center gap-4 rounded-3xl border-none bg-secondary text-xl font-black text-foreground shadow-2xl transition-all hover:bg-secondary/80 active:scale-[0.98] active:bg-secondary/70"
               >
                 {sending ? (
                   <>

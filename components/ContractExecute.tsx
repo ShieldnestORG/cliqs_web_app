@@ -380,7 +380,7 @@ export function ContractExecute({ client: externalClient, selectedAccount }: Con
               onClick={formatJson}
               className="text-xs"
             >
-              <Settings className="mr-1 h-3 w-3" />
+              <Settings className="h-3 w-3" />
               Format
             </Button>
           </div>

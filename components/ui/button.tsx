@@ -4,31 +4,43 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * Button: the house style's geometry and motion (pill buttons, 44px controls,
+ * 8px gaps), cliqs colours and Geist type.
+ * Spec: docs/ui/BUTTONS-PRD.md. Pill, sentence case, 600 weight, a 120ms
+ * ease on background / border / shadow / press, and a 0.5px press nudge.
+ * The focus ring stays a ring on the pill (the focus rule of the stylesheet
+ * this style was taken from squares the corners; that is a measured bug and
+ * is not copied).
+ */
 const buttonVariants = cva(
-  "inline-flex items-center justify-center font-medium ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-95",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full border border-transparent font-semibold leading-[1.2] ring-offset-background transition-[background-color,border-color,color,box-shadow,transform,filter] duration-ui ease-ui focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:translate-y-[0.5px]",
   {
     variants: {
       variant: {
         // Standard variants
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 rounded-md",
+        // default = the coral sheen. One per view.
+        default:
+          "border-primary-press bg-primary-gradient text-primary-foreground hover:shadow-pop active:bg-primary-press active:bg-none active:shadow-none",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-md",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:shadow-pop active:shadow-none",
+        // outline = a ghost: transparent, a visible 1px edge, a fill on hover
         outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md",
+          "border-border/15 bg-transparent hover:bg-field hover:text-accent-foreground",
+        // secondary = a quiet fill that stays visible on the dark card
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-md",
-        ghost: "hover:bg-accent hover:text-accent-foreground rounded-md",
+          "border-border/10 bg-field text-secondary-foreground hover:bg-[color-mix(in_srgb,hsl(var(--field)),hsl(var(--foreground))_9%)]",
+        ghost: "hover:bg-field hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        
-        // UI4 Institutional variants
-        action: 
-          "bg-foreground text-background hover:opacity-90 rounded-full uppercase tracking-wide font-mono text-[11px]",
-        "action-outline": 
-          "bg-transparent border-2 border-foreground text-foreground hover:bg-muted rounded-full uppercase tracking-wide font-mono text-[11px]",
-        "action-bronze": 
-          "bg-bronze text-background hover:opacity-90 rounded-full uppercase tracking-wide font-mono text-[11px]",
-        "action-bronze-outline": 
-          "bg-transparent border-2 border-bronze text-foreground hover:bg-bronze/10 rounded-full uppercase tracking-wide font-mono text-[11px]",
+
+        // UI4 Institutional variants (kept by name; sentence case since 2026-10-10)
+        // action = solid ink
+        action: "bg-foreground text-background hover:brightness-110",
+        "action-outline":
+          "border-border/15 bg-transparent text-foreground hover:bg-field",
+        "action-bronze": "bg-bronze text-background hover:brightness-110",
+        "action-bronze-outline":
+          "border-bronze bg-transparent text-foreground hover:bg-bronze/10",
         "card-cta":
           "bg-foreground text-background hover:opacity-90 rounded-xl font-heading",
         "card-cta-outline":
@@ -38,19 +50,24 @@ const buttonVariants = cva(
         nav:
           "w-full justify-start gap-3 rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground data-[active=true]:bg-green-accent/20 data-[active=true]:border-l-4 data-[active=true]:border-l-green-accent data-[active=true]:text-foreground data-[active=true]:font-semibold",
         icon:
-          "rounded-lg hover:bg-muted [&_svg]:transition-colors [&_svg]:text-muted-foreground hover:[&_svg]:text-foreground",
+          "hover:bg-field [&_svg]:transition-colors [&_svg]:text-muted-foreground hover:[&_svg]:text-foreground",
       },
       size: {
-        default: "h-10 px-4 py-2 text-sm",
-        sm: "h-9 px-3 text-sm",
-        lg: "h-11 px-8 text-base",
-        xl: "h-12 px-10 text-base",
-        icon: "h-10 w-10",
+        // leading-[1.2] sits AFTER the text-* class on purpose: tailwind-merge drops
+        // an earlier leading-* whenever a later text-* size is present, so a leading
+        // in the base string never reaches the page (measured 2026-10-10: 20px).
+        default: "h-11 px-5 text-sm leading-[1.2]",
+        sm: "h-9 px-4 text-[13px] leading-[1.2]",
+        lg: "h-12 px-6 text-sm leading-[1.2]",
+        xl: "h-12 px-10 text-base leading-[1.2]",
+        // xs = a dense-row chip (24px, not a pill)
+        xs: "h-6 px-3 text-[11px] leading-[1.2] font-medium rounded-md",
+        icon: "h-11 w-11",
         "icon-sm": "h-8 w-8",
-        // UI4 sizes
-        action: "h-10 px-6 py-2.5",
-        "action-sm": "h-8 px-4 py-2",
-        "action-lg": "h-12 px-8 py-3",
+        // UI4 sizes (same geometry as default / sm / lg since 2026-10-10)
+        action: "h-11 px-5 text-sm leading-[1.2]",
+        "action-sm": "h-9 px-4 text-[13px] leading-[1.2]",
+        "action-lg": "h-12 px-6 text-sm leading-[1.2]",
         tab: "h-9 px-5 py-2",
         nav: "h-12 px-4 py-3",
       },
@@ -83,7 +100,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {isLoading ? (
           <>
-            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
             {children}
           </>
         ) : (

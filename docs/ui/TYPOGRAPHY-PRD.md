@@ -3,8 +3,8 @@
 > **Cluster:** design-system · **Tags:** typography, geist, fonts, tracking, tokens · **Related:** [STYLE-GUIDE.md](../STYLE-GUIDE.md), [UI Index](./INDEX.md), [Cards PRD](./CARDS-PRD.md), [Buttons PRD](./BUTTONS-PRD.md)
 
 **Cosmos Multisig UI - Font System Specification**  
-**Version:** 1.1  
-**Last Updated:** 2026-08-16
+**Version:** 1.2  
+**Last Updated:** 2026-10-10
 
 ---
 
@@ -15,7 +15,9 @@ A **two-family system** — one sans and one mono — optimized for crypto data 
 | Font | Role | Personality |
 |------|------|-------------|
 | **Geist** | Headlines, KPIs, body text, navigation | The Coherence Daddy typeface; hierarchy via weight + tight tracking |
-| **Geist Mono** | Code, addresses, labels, action buttons | Technical, monospaced, precise |
+| **Geist Mono** | Code, addresses, labels | Technical, monospaced, precise |
+
+> *Until 2026-10-10 the Geist Mono role above also listed "action buttons". Buttons are Geist sans, sentence case, 600 weight since the house-style adoption; see [Buttons PRD](./BUTTONS-PRD.md#typography).*
 
 > **There is no third family.** `pages/_document.tsx` loads exactly two Google Fonts
 > families — `Geist` and `Geist+Mono` — and `styles/globals.css` names only those two
@@ -64,10 +66,15 @@ from a second display face.
 | **Body Text** | Geist | 14-16px | Normal | Sentence |
 | **KPI Value** | Geist | 24-48px | Bold | — |
 | **Data Label** | Geist Mono | 10-12px | Normal | UPPERCASE |
-| **Button Text** | Geist Mono | 11-14px | Semibold | UPPERCASE |
+| **Button Text** | Geist | 13-14px (`xs` chip 11px) | Semibold | Sentence |
 | **Code/Address** | Geist Mono | 12-14px | Normal | As-is |
 | **Table Header** | Geist Mono | 10-12px | Medium | UPPERCASE |
 | **Navigation** | Geist | 14px | Medium | Title |
+
+*Until 2026-10-10 the Button Text row said Geist Mono, 11-14px, Semibold, UPPERCASE. Buttons are
+Geist sans in sentence case now (see the note under the font table and the
+[Buttons PRD](./BUTTONS-PRD.md#typography)); the default and `lg` buttons are 14px, `sm` is
+13px, and only the `xs` dense-row chip is 11px.*
 
 ---
 
@@ -213,11 +220,13 @@ The `// label` and title serve **different purposes** and should NOT repeat the 
   core1mgvlgvh2hfw5pgdqc79up3du69v2z3t8qz4kwg
 </span>
 
-// Button Text
-<button className="font-mono text-[11px] font-semibold uppercase tracking-wide">
-  Create CLIQ
-</button>
+// Button text is Geist sans, sentence case, 600 (components/ui/button.tsx).
+// Use <Button>, not a hand-styled <button>.
+<Button variant="action">Create CLIQ</Button>
 ```
+
+*Until 2026-10-10 this sample was a hand-styled `<button className="font-mono text-[11px]
+font-semibold uppercase tracking-wide">Create CLIQ</button>`; that mono uppercase style is retired.*
 
 ---
 
@@ -338,8 +347,12 @@ hero heading opts in explicitly:
 |---------|---------|-------------|
 | Body text | 14px | 16px |
 | Labels | 10px | 12px |
-| Buttons | 12px | 14px |
+| Buttons | 13px (`sm`; the `xs` dense-row chip is 11px, see Buttons PRD) | 14px (default) |
 | KPIs | 18px | 24px+ |
+
+*Until 2026-10-10 the Buttons row said 12px (minimum) and 14px (recommended). The real sizes are
+13px for `sm`, 14px for the default and `lg` buttons, and 11px for the `xs` chip (a dense-row
+exception to the 12px floor).*
 
 ### Contrast Ratios
 

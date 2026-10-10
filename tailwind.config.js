@@ -42,7 +42,14 @@ module.exports = {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          // House-style button/menu tokens: gradient start, pressed fill, menu-row wash
+          sheen: "hsl(var(--primary-sheen))",
+          press: "hsl(var(--primary-press))",
+          soft: "hsl(var(--primary-soft))",
         },
+        // Control fill and the visible control edge (select, secondary button)
+        field: "hsl(var(--field))",
+        interactive: "hsl(var(--border-interactive))",
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
@@ -116,7 +123,21 @@ module.exports = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      backgroundImage: {
+        // The coral button: a 135deg sheen -> coral -> press
+        "primary-gradient":
+          "linear-gradient(135deg, hsl(var(--primary-sheen)) 0%, hsl(var(--primary)) 45%, hsl(var(--primary-press)) 100%)",
+      },
+      // House-style control motion: duration-ui / ease-ui (120ms, cubic-bezier(.2,.6,.2,1))
+      transitionDuration: {
+        ui: "var(--dur-ui)",
+      },
+      transitionTimingFunction: {
+        ui: "var(--ease-ui)",
+      },
       boxShadow: {
+        // House-style popover shadow: menus and the coral button's hover
+        pop: "var(--shadow-pop)",
         // UI4 Shadow System
         card: "0 1px 3px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
         "card-hover": "0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08)",

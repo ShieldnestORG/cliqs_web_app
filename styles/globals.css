@@ -88,6 +88,24 @@
     --dur-base: 260ms;
     --dur-slow: 480ms;
 
+    /* House-style control tokens (2026-10-10): button, menu, select and scale-rule tokens.
+       Converted from the house style's dark-theme hexes with the same
+       hex -> HSL-triplet rule as the portal values above:
+         #FD8A6F primary-sheen   #E5553A primary-press   #3A1D15 primary-soft
+         #26262A field           #7C7C80 border-interactive
+       The coral stays cliqs' own (--primary is already the house style's accent). */
+    --primary-sheen: 11.4 97.3% 71.4%;
+    --primary-press: 9.5 76.7% 56.3%;
+    --primary-soft: 13 46.8% 15.5%;
+    --field: 240 5% 15.7%;
+    --border-interactive: 240 1.6% 49.4%;
+    /* The house style's popover shadow (dark): menus and the coral button's hover */
+    --shadow-pop:
+      0 8px 28px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.4);
+    /* The house style's motion: 120ms on cubic-bezier(.2,.6,.2,1) for controls */
+    --dur-ui: 120ms;
+    --ease-ui: cubic-bezier(0.2, 0.6, 0.2, 1);
+
     /* Letter-spacing scale */
     --tracking-tighter: -0.035em;
     --tracking-tight: -0.02em;
@@ -599,6 +617,40 @@
   @keyframes spin {
     to {
       transform: rotate(360deg);
+    }
+  }
+
+  /* ----------------------------------------
+     Scale rule (components/ui/scale-rule.tsx)
+
+     The edge of a ruler after a section label: a hairline with a fine tick
+     every 8px (4px tall) and a taller tick every 40px (8px tall). It paints no
+     opaque fill, so the GridSpotlight canvas shows through. The ticks fade out
+     towards the right edge, and below sm only the hairline stays.
+     ---------------------------------------- */
+  .scale-rule-line {
+    height: 8px;
+    background-image:
+      linear-gradient(hsl(var(--border) / 0.14), hsl(var(--border) / 0.14)),
+      repeating-linear-gradient(90deg, hsl(var(--border) / 0.3) 0 1px, transparent 1px 40px),
+      repeating-linear-gradient(90deg, hsl(var(--border) / 0.18) 0 1px, transparent 1px 8px);
+    background-repeat: no-repeat;
+    background-position: left bottom;
+    background-size:
+      100% 1px,
+      100% 8px,
+      100% 4px;
+    -webkit-mask-image: linear-gradient(to right, black 0%, black 35%, transparent 100%);
+    mask-image: linear-gradient(to right, black 0%, black 35%, transparent 100%);
+  }
+
+  @media (max-width: 639px) {
+    .scale-rule-line {
+      height: 1px;
+      background-image: linear-gradient(hsl(var(--border) / 0.14), hsl(var(--border) / 0.14));
+      background-size: 100% 1px;
+      -webkit-mask-image: none;
+      mask-image: none;
     }
   }
 }

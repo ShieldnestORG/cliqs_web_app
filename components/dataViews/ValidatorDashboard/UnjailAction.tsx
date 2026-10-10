@@ -1,8 +1,8 @@
 /**
  * Unjail Action
  *
- * One-click MsgUnjail for a jailed validator, rendered inside the jailed banner of the
- * identity card. Only shown while `validator.jailed`; the button is disabled while the
+ * One-click MsgUnjail for a jailed validator, rendered inside the jailed alert at the top of the
+ * dashboard (JailedAlert). Only shown while `validator.jailed`; the button is disabled while the
  * chain would reject the unjail (tombstoned, or still inside the jail period).
  *
  * Multisig operator ("CLIQ"): creates the CLIQ transaction and opens the signing page.
@@ -186,7 +186,7 @@ export default function UnjailAction({
       <Button
         variant="action"
         size="action"
-        className="w-full gap-2"
+        className="w-full gap-2 sm:w-auto"
         onClick={submitUnjail}
         disabled={readOnly || isSubmitting || !canUnjail}
       >
