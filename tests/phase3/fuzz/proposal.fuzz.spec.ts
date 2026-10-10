@@ -13,12 +13,7 @@
 import { ChaosHarness } from "../../chaos/chaosHarness";
 import { MultisigChaosHarness } from "../../chaos/multisigChaosHarness";
 import { faultController } from "../../chaos/faults";
-import {
-  assertProposalInvariants,
-  assertExecutionInvariants,
-  ProposalState,
-  ExecutionContext,
-} from "../oracle/invariantOracle";
+import { assertProposalInvariants, ProposalState } from "../oracle/invariantOracle";
 import {
   genProposal,
   genExecutableProposal,
@@ -28,7 +23,6 @@ import {
   ProposalAction,
   setSeed,
 } from "../generators/genProposal";
-import { evaluatePoliciesMinimal } from "../../../__tests__/adapters/policyEngine.adapter";
 
 describe("PHASE 3 FUZZ: Proposal Lifecycle", () => {
   beforeEach(() => {
@@ -233,85 +227,6 @@ describe("PHASE 3 FUZZ: Proposal Lifecycle", () => {
   });
 
   // ==========================================================================
-  // FUZZ: Policy + Proposal Integration
-  // ==========================================================================
-
-  describe("Fuzz: Policy + Proposal Integration", () => {
-    test("emergency pause blocks execution at any proposal state", async () => {
-      const states: ProposalState[] = ["OPEN", "APPROVED", "EXECUTABLE"];
-
-      for (const state of states) {
-        for (let i = 0; i < 50; i++) {
-          const proposal = genProposal(i);
-          proposal.currentState = state;
-
-          faultController.state.emergencyPaused = true;
-
-          const result = await evaluatePoliciesMinimal(
-            {
-              isPaused: true,
-              policyVersion: 1,
-              expectedPolicyVersion: 1,
-            },
-            "execution",
-          );
-
-          expect(result.allowed).toBe(false);
-
-          // Verify invariant
-          const execCtx: ExecutionContext = {
-            proposalId: proposal.id,
-            policies: [{ policyName: "emergency", allowed: false, reason: "paused" }],
-            emergencyPaused: true,
-            safeMode: false,
-            executionAttempted: true,
-            executionSucceeded: false,
-          };
-
-          expect(() => assertExecutionInvariants(execCtx)).not.toThrow();
-
-          faultController.reset();
-        }
-      }
-    });
-
-    test("credential revocation mid-flow blocks execution", async () => {
-      for (let i = 0; i < 100; i++) {
-        const proposal = genExecutableProposal(i);
-
-        // Start with valid credential
-        faultController.state.credentialValid = true;
-
-        const voteResult = await evaluatePoliciesMinimal(
-          {
-            policyVersion: 1,
-            expectedPolicyVersion: 1,
-            credential: { holder: "cosmos1test", valid: true, role: "member" },
-          },
-          "proposal",
-        );
-
-        expect(voteResult.allowed).toBe(true);
-
-        // Revoke credential
-        faultController.state.credentialValid = false;
-
-        const execResult = await evaluatePoliciesMinimal(
-          {
-            policyVersion: 1,
-            expectedPolicyVersion: 1,
-          },
-          "execution",
-        );
-
-        expect(execResult.allowed).toBe(false);
-
-        faultController.reset();
-      }
-    });
-  });
-
-  // ==========================================================================
   // STRESS: High Volume Lifecycle Testing
   // ==========================================================================
 
@@ -371,16 +286,6 @@ describe("PHASE 3 FUZZ: Proposal Lifecycle", () => {
         await chaos.runScenario({
           name: `multisig-chaos-${i}`,
           faults: [
-            {
-              name: "random-version-drift",
-              hook: "beforePolicyEval",
-              once: false,
-              run: () => {
-                if (Math.random() < 0.1) {
-                  faultController.state.policyVersion = 2;
-                }
-              },
-            },
             {
               name: "random-credential-revoke",
               hook: "afterVote",

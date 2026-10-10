@@ -162,14 +162,6 @@ function readDb() {
       credentialClasses: [],
       credentials: [],
       credentialEvents: [],
-      policies: [],
-      policyViolations: [],
-      emergencyEvents: [],
-      emergencyStates: [],
-      incidents: [],
-      alertRules: [],
-      alerts: [],
-      spendRecords: [],
     };
     writeFileSync(DB_PATH, JSON.stringify(initial, null, 2));
     return initial;

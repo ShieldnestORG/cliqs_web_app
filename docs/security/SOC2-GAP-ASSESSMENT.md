@@ -40,7 +40,7 @@ Grep-VERIFIED on merged `main`: `verifyKeplrSignature` is referenced by exactly 
 | `transaction/wipe` gained a `multisig` mode that cascades signatures → transactions → the `multisigs` row (`db.deleteMultisig`). Blast radius is now larger than before, which is why the auth above is load-bearing. Modes `all` and `multisig` return `409` if a pending tx carries a signature from a non-caller address — note that guard is keyed on `callerAddress`, so it does not run on the BYODB path | `pages/api/transaction/wipe/index.ts:32,120-146` | Shipped with #31 — accepted (member-scoped, own data) |
 | Reference auth pattern to extract into middleware | `pages/api/transaction/list/index.ts:32-56` | Reusable for L1 |
 | `multisig/list` accepts an unverified `{address, pubkey}` path and its signature path falls through on verification failure and proceeds anyway | `pages/api/chain/[chainId]/multisig/list/index.ts:76-88` | **Open — L1** |
-| `credentials/issue` mints role credentials with field validation only — no issuer authorization; `actor` on emergency/credential routes is a self-asserted body field | `credentials/issue.ts`, `emergency/pause.ts:28-31` | **Open — L1** |
+| `credentials/issue` mints role credentials with field validation only — no issuer authorization; `actor` on credential routes is a self-asserted body field *(until 2026-10-10 this read "emergency/credential routes"; the emergency routes were deleted)* | `credentials/issue.ts` *(`emergency/pause.ts:28-31` removed 2026-10-10)* | **Open — L1** |
 | Anyone can cancel any transaction or overwrite its `txHash` | `pages/api/transaction/[transactionID]/index.ts:30-41` | **Open — L1** |
 
 ### 2. Transport & security headers — CC6.7
@@ -78,7 +78,7 @@ All VERIFIED during the assessment sweep:
 | Finding | Evidence | Status |
 |---|---|---|
 | Security audit trail is **live but PARTIAL** (PR #58, merged 2026-08-17): `recordAuditEvent` appends to a per-multisig tamper-evident hash chain for transaction cancel and broadcast, history export, and history wipe / multisig delete, including refused (409) wipes. Not recorded: transaction create and signing (`TX_CREATED` and `SIGNATURE_ADDED` are declared in the action type, but no route emits them), emergency and credential operations, and every other route. Cancel and broadcast record `authMethod: "none"`: the action is evidenced, the actor is not. *Until 2026-10-09 this row read: "No security audit trail exists: no record of who created, signed, broadcast, cancelled, or wiped anything" / evidence "absence VERIFIED across `pages/api/` and `lib/`" / status "Open — L2" — accurate when written, before PR #58.* | `lib/audit.ts:48-55` (action type), `:188` (`recordAuditEvent`). Callers grep-VERIFIED 2026-10-09 at `ffadc3f`: `pages/api/transaction/[transactionID]/index.ts:48` (via `auditTxAction`: `:132` cancel, `:141` broadcast), `pages/api/transaction/export/index.ts:116`, `pages/api/transaction/wipe/index.ts:133` (deny), `:166` (allow). Successful write asserted by `__tests__/lib/audit.test.ts` against an in-memory fake, not Atlas. No route calls `verifyAuditChain` | **Partial — L2** (core SOC2 gap; caveats in [README.md](README.md)) |
-| Existing "event" records are feature state, not audit: emergency events, credential events, the Phase-4 event-stream design — none records an authenticated principal, none is tamper-evident | `lib/emergency/pause-controller.ts:93,183,245`, `lib/localDb.ts:255` | **Open — L2** |
+| Existing "event" records are feature state, not audit: credential events *(until 2026-10-10 this also named emergency events and the Phase-4 event-stream design; both were deleted)* — none records an authenticated principal, none is tamper-evident | `lib/localDb.ts:255` *(`lib/emergency/pause-controller.ts:93,183,245` removed 2026-10-10)* | **Open — L2** |
 | Verbose payload logging (~20 `console.log` DEBUG lines writing full tx bodies, amounts, and memos to Vercel logs) | pre-#31 `pages/api/transaction/index.ts:41-107` | **Remediated (#31, merged)** — exactly one `console.log` remains in the file (`:78`, a tx id), no payloads/amounts/memos (re-VERIFIED by grep count) |
 | Debug endpoint live in production | `pages/api/debug/compare-signdoc.ts:70-71` | **Remediated (#31, merged)** — returns 404 when `NODE_ENV === "production"`; kept for dev (used via curl per `docs/DEBUG-WITHDRAW-COMMISSION.md`; no UI caller exists — grep-VERIFIED) |
 
@@ -87,7 +87,7 @@ All VERIFIED during the assessment sweep:
 | Finding | Evidence | Status |
 |---|---|---|
 | DB routes sanitize connection strings out of error messages before returning them | `test-connection.ts`, `setup.ts`, `db/export.ts:93-96`, `db/import.ts:190-193` | Good |
-| Other routes return raw `err.message` to the client — app-level messages, not stack traces (no `.stack` is serialized anywhere — VERIFIED), but they leak internal detail | e.g. `transaction/list/index.ts:64-66`, `emergency/pause.ts:64-68` | **Open — L5** (low-moderate) |
+| Other routes return raw `err.message` to the client — app-level messages, not stack traces (no `.stack` is serialized anywhere — VERIFIED), but they leak internal detail | e.g. `transaction/list/index.ts:64-66` *(`emergency/pause.ts:64-68` removed 2026-10-10)* | **Open — L5** (low-moderate) |
 
 ### 7. Rate limiting & abuse prevention — CC6.6
 
@@ -136,7 +136,7 @@ Effort: **S** = <1hr, **M** = a few hrs, **L** = design + multi-file.
 | # | Control | Current state | Risk | Effort |
 |---|---|---|---|---|
 | L1 | **Uniform authn/authz on mutating routes** — extract the `transaction/list` ADR-36 pattern into middleware and apply everywhere | 3/38 routes enforce ADR-36 after #31 (`transaction/list`, `wipe`, `export`); a 4th, `multisig/list`, accepts a signature but falls through on verification failure | **Critical** | L |
-| L2 | **Security audit log** (actor, action, timestamp, tamper-evident) for tx create/sign/broadcast/cancel/wipe + emergency + credential ops | **Live but PARTIAL** (PR #58): broadcast, cancel, export, wipe and multisig delete are recorded; create, sign, emergency and credential ops are not. Actor is proven only on ADR-36 calls; append-only by convention, not by database role (see [README.md](README.md)). *Until 2026-10-09 this cell read "None".* | High | L |
+| L2 | **Security audit log** (actor, action, timestamp, tamper-evident) for tx create/sign/broadcast/cancel/wipe + emergency + credential ops | **Live but PARTIAL** (PR #58): broadcast, cancel, export, wipe and multisig delete are recorded; create, sign and credential ops are not *(this list also named emergency ops until 2026-10-10, when their routes were deleted)*. Actor is proven only on ADR-36 calls; append-only by convention, not by database role (see [README.md](README.md)). *Until 2026-10-09 this cell read "None".* | High | L |
 | L3 | **Rate limiting / abuse controls** | None in the app | High | M |
 | L4 | **SSRF validation for client-supplied RPC endpoints** (`multisig/list`, `ensure`) — reuse `lib/byodb/hostValidation.ts`; also close the two residuals on the Mongo path — DNS rebinding (the driver re-resolves after validation) and replica-set discovery (a validated public mongod can advertise private member addresses in its hello response, which the driver connects to unvalidated; `directConnection=true` for non-SRV URIs would close it) | Mongo URIs covered at connect time by #31; RPC URLs still open | High | M |
 | L5 | **Error-message minimization** on non-DB routes | Raw `err.message` returned | Low-Med | S-M |
@@ -145,6 +145,8 @@ Effort: **S** = <1hr, **M** = a few hrs, **L** = design + multi-file.
 
 ## Appendix A — Full API route inventory
 
+*30 route files remain after the 2026-10-10 removal of the 8 policy, emergency and monitoring routes. The counts in this document are as of 2026-08-16 and were not re-taken.*
+
 All 38 route handlers under `pages/api/`. Methods VERIFIED by sweeping every handler's `req.method` dispatch. Auth column reflects merged `main` **after** PR #31.
 
 **Re-verified 2026-08-16 on merged `main`:** the handler count is still exactly 38 (`find pages/api -name "*.ts" | wc -l`), the file list below matches the tree one-for-one, every Methods cell was re-checked against the handler's `req.method` dispatch (including the `switch`-style ones), and the Auth column was re-checked by grepping `verifyKeplrSignature` across `pages/api/`. Note what that command returns: `grep -rn verifyKeplrSignature pages/api/` prints **10 line hits** (imports, call sites, and two explanatory comments) spread across **4 files** — it is the file count, not the line count, that matches the four rows marked below. `grep -rl verifyKeplrSignature pages/api/` is the command that prints 4. No route gained or lost authorization since the assessment was written.
@@ -152,14 +154,14 @@ All 38 route handlers under `pages/api/`. Methods VERIFIED by sweeping every han
 | # | Route | Methods | Auth | Notes |
 |---|---|---|---|---|
 | 1 | `/api/chain-registry/[...path]` | GET | None (by design) | Well-scoped proxy: path allowlist, repo pinned to `cosmos/chain-registry`, server-side token with anonymous fallback |
-| 2 | `/api/chain/[chainId]/[address]/emergency/pause` | POST | **None** | Anyone can pause/unpause any multisig; `actor` self-asserted |
-| 3 | `/api/chain/[chainId]/[address]/emergency/safe-mode` | POST | **None** | Anyone can toggle safe mode |
-| 4 | `/api/chain/[chainId]/[address]/emergency/status` | GET | **None** | Reads emergency state |
-| 5 | `/api/chain/[chainId]/[address]/monitoring/alerts` | GET | **None** | Reads alerts |
-| 6 | `/api/chain/[chainId]/[address]/monitoring/incidents` | GET, POST, PUT | **None** | Anyone can create/acknowledge incidents |
-| 7 | `/api/chain/[chainId]/[address]/monitoring/metrics` | GET | **None** | Reads metrics |
-| 8 | `/api/chain/[chainId]/[address]/policies/[policyId]` | GET, PUT, DELETE | **None** | Full CRUD on spend-limit/timelock policies for any address |
-| 9 | `/api/chain/[chainId]/[address]/policies` | GET, POST | **None** | List/create policies |
+| 2 | `/api/chain/[chainId]/[address]/emergency/pause` | POST | **Removed (route deleted 2026-10-10)** | Was: anyone can pause/unpause any multisig; `actor` self-asserted |
+| 3 | `/api/chain/[chainId]/[address]/emergency/safe-mode` | POST | **Removed (route deleted 2026-10-10)** | Was: anyone can toggle safe mode |
+| 4 | `/api/chain/[chainId]/[address]/emergency/status` | GET | **Removed (route deleted 2026-10-10)** | Was: reads emergency state |
+| 5 | `/api/chain/[chainId]/[address]/monitoring/alerts` | GET | **Removed (route deleted 2026-10-10)** | Was: reads alerts |
+| 6 | `/api/chain/[chainId]/[address]/monitoring/incidents` | GET, POST, PUT | **Removed (route deleted 2026-10-10)** | Was: anyone can create/acknowledge incidents |
+| 7 | `/api/chain/[chainId]/[address]/monitoring/metrics` | GET | **Removed (route deleted 2026-10-10)** | Was: reads metrics |
+| 8 | `/api/chain/[chainId]/[address]/policies/[policyId]` | GET, PUT, DELETE | **Removed (route deleted 2026-10-10)** | Was: full CRUD on spend-limit/timelock policies for any address |
+| 9 | `/api/chain/[chainId]/[address]/policies` | GET, POST | **Removed (route deleted 2026-10-10)** | Was: list/create policies |
 | 10 | `/api/chain/[chainId]/contract-multisig/[address]` | GET, POST | **None** | Read/sync/verify-vote/verify-execute/reconcile actions |
 | 11 | `/api/chain/[chainId]/contract-multisig/[address]/snapshots` | GET | **None** | Reads snapshots |
 | 12 | `/api/chain/[chainId]/contract-multisig` | GET, POST | **None** | Create/list contract multisigs |
@@ -199,7 +201,7 @@ File:line references grouped by control for auditor traceability. Lines cited fr
 - Fall-through on failed verification: `pages/api/chain/[chainId]/multisig/list/index.ts:76-88`
 - #31's wipe/export auth: `pages/api/transaction/wipe/index.ts:80-113`, `pages/api/transaction/export/index.ts:70-102` (`verifyKeplrSignature` + `pubkeyJSON` membership + nonce)
 - Shared-data guard on destructive wipe modes: `pages/api/transaction/wipe/index.ts:120-137`
-- Self-asserted actor: `pages/api/chain/[chainId]/[address]/emergency/pause.ts:28-31`
+- Self-asserted actor: `pages/api/chain/[chainId]/[address]/emergency/pause.ts:28-31` *(route deleted 2026-10-10)*
 
 **Headers (CC6.7)**
 - `next.config.js` — `securityHeaders` + `headers()` (#31); CSP-exclusion rationale in the adjacent comment
@@ -216,12 +218,12 @@ File:line references grouped by control for auditor traceability. Lines cited fr
 
 **Audit logging (CC7.2 / CC7.3)**
 - Live but PARTIAL (PR #58): `lib/audit.ts:188` (`recordAuditEvent`, per-multisig hash chain), `:48-55` (action type); callers `pages/api/transaction/[transactionID]/index.ts:48,132,141`, `pages/api/transaction/export/index.ts:116`, `pages/api/transaction/wipe/index.ts:133,166`; write test `__tests__/lib/audit.test.ts`. *Until 2026-10-09 this line read: "Absence: no principal-recording, tamper-evident log anywhere under `pages/api/` or `lib/`".*
-- Feature-state events (not audit): `lib/emergency/pause-controller.ts:93,183,245`, `lib/localDb.ts:255`
+- Feature-state events (not audit): `lib/localDb.ts:255` *(`lib/emergency/pause-controller.ts:93,183,245` removed 2026-10-10)*
 - Removed payload logging: pre-#31 `pages/api/transaction/index.ts:41-107`; the file now holds one `console.log` at `:78`
 
 **Error handling (CC6.7)**
 - URI sanitizers: `pages/api/db/setup.ts`, `test-connection.ts`, `db/export.ts:93-96`, `db/import.ts:190-193`
-- Raw `err.message` returns: `pages/api/transaction/list/index.ts:64-66`, `emergency/pause.ts:64-68`
+- Raw `err.message` returns: `pages/api/transaction/list/index.ts:64-66` *(`emergency/pause.ts:64-68` removed 2026-10-10)*
 
 **Rate limiting (CC6.6)**
 - Absence: no limiter anywhere in the repo. Grep `ratelimit|rate-limit|rateLimit` hits only a GitHub response header read in `pages/api/chain-registry/[...path].ts:69`, a comment in `lib/chainRegistry.ts:11`, and prose in these docs
