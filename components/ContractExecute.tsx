@@ -280,10 +280,7 @@ export function ContractExecute({ client: externalClient, selectedAccount }: Con
         {senderAddress && (
           <div className="flex items-center gap-2 rounded-lg border border-border/[0.06] bg-muted/20 px-3 py-2">
             <span className="text-xs font-medium text-muted-foreground">Sender</span>
-            <Badge
-              variant={selectedAccount?.type === "multisig" ? "outline" : "default"}
-              className="text-xs capitalize"
-            >
+            <Badge variant={selectedAccount?.type === "multisig" ? "outline" : "default"}>
               {selectedAccount?.type || "wallet"}
             </Badge>
             <code className="ml-auto truncate font-mono text-xs text-muted-foreground">
@@ -380,7 +377,7 @@ export function ContractExecute({ client: externalClient, selectedAccount }: Con
               onClick={formatJson}
               className="text-xs"
             >
-              <Settings className="mr-1 h-3 w-3" />
+              <Settings className="h-3 w-3" />
               Format
             </Button>
           </div>

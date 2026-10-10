@@ -1,10 +1,10 @@
 # Forms PRD
 
-> **Cluster:** design-system · **Tags:** forms, inputs, slider, validation, tokens · **Related:** [STYLE-GUIDE.md](../STYLE-GUIDE.md), [UI Index](./INDEX.md), [Buttons PRD](./BUTTONS-PRD.md), [Cards PRD](./CARDS-PRD.md)
+> **Cluster:** design-system · **Tags:** forms, inputs, select, slider, validation, tokens · **Related:** [STYLE-GUIDE.md](../STYLE-GUIDE.md), [UI Index](./INDEX.md), [Buttons PRD](./BUTTONS-PRD.md), [Cards PRD](./CARDS-PRD.md), [Patterns PRD](./PATTERNS-PRD.md)
 
 **Cosmos Multisig UI - Form System Specification**  
-**Version:** 1.1  
-**Last Updated:** 2026-08-16
+**Version:** 1.3  
+**Last Updated:** 2026-10-10
 
 ---
 
@@ -13,6 +13,7 @@
 Form components optimized for crypto use cases:
 
 - **Input variants** for different contexts
+- **Select** (`components/ui/select.tsx`) in the house-style menu metrics (§2a)
 - **Address validation** with visual feedback
 - **Enhanced slider** for threshold selection
 - **Accessible** with proper labels and error states
@@ -30,14 +31,52 @@ Source of truth: `components/ui/input.tsx`, `variantClasses`.
 | `institutional` | `rounded-xl border-2 border-border/[0.06] bg-card font-mono focus:border-green-accent focus:ring-0 focus:ring-offset-0` | UI4 styled forms, addresses |
 | `filled` | `rounded-lg border-none bg-muted focus:bg-muted/80 focus-visible:ring-2 focus-visible:ring-ring` | Search, filters |
 
-All three share `flex h-10 w-full px-3 py-2 text-sm` plus
+All three share `flex h-11 w-full px-3 py-2 text-sm` plus
 `disabled:cursor-not-allowed disabled:opacity-50`, and the `error` prop layers on
 `border-destructive focus:border-destructive bg-destructive/5`.
+
+**Every text input is 44px (`h-11`), the height of the Buttons and Selects beside it** (the house
+style gives every text input a 44px minimum height). Pinned by
+`__tests__/components/input.test.tsx`. A call site that really needs a denser field passes its
+own `h-*`; it never needs `h-11` to line up with a Button. *(Until 2026-10-10 this
+row said `h-10` (40px) and two call sites, the DatabaseSettings unlock field and the
+validator page's not-a-validator search field, carried a one-off `className="h-11"` patch; both
+patches are gone.)* `Textarea` (`components/ui/textarea.tsx`) has only `min-h-[80px]`, no fixed
+height, so it needed no change.
 
 > `focus:border-green-accent` on the institutional variant is the **coral** `#FF6B4A`
 > (`--accent-green` is hue 11, not a green). That is correct here — it is the brand focus
 > colour, matching `--ring`. It must never be read as a "valid/success" signal; success
 > is `--success` (`#4A9D7C`).
+
+---
+
+## 2a. Select
+
+Source of truth: `components/ui/select.tsx` (Radix Select). Restyled 2026-10-10 to the house-style
+select and menu metrics; the dropdown menu and the menu panel metrics are in
+[Patterns PRD §21](./PATTERNS-PRD.md#21-menus-dropdown-and-select). Until this date the trigger
+was `h-10 rounded-lg border-input bg-background px-3 py-2 text-sm`, a 1.08:1 edge on the card
+that read as disabled, and the items were 32px rows with a left check.
+
+| Part | Spec |
+|------|------|
+| Trigger | `min-h-11` (44px, the same height as a button), `rounded-md` (8px), `px-3.5 py-2.5`, 14px / 400, `leading-[1.35]`, fill `bg-field`, edge `border-interactive` (4.3:1 on the card) |
+| Trigger states | hover `border-muted-foreground`; open `border-primary`; focus the coral ring; disabled `opacity-50` |
+| Chevron | kept (muted). The reference style drops it by owner decision, but a Radix select without one is not discoverable |
+| Panel | `rounded-2xl`, `p-1.5`, `shadow-pop`, `min-w-[8rem]`, `max-w-[min(480px,calc(100vw-2rem))]`, `collisionPadding={8}` |
+| Item | `min-h-11` (44px), `rounded-lg` (10px), `px-3 py-2`, `gap-2`; highlight `bg-primary-soft`; the selected item is `font-semibold` with a **trailing** check |
+| Label / separator | mono 10px caps label; 1px separator inset 6px |
+
+`--field` and `--border-interactive` are new tokens (see the house-style control tokens in
+[STYLE-GUIDE.md](../STYLE-GUIDE.md#house-style-control-tokens)). Behaviour is Radix's: click or
+keyboard to open, arrow keys, type-ahead, Escape.
+
+**Known mismatch (the edge only):** `Input` keeps the faint `border-input` edge, while the select
+has the visible `border-interactive` edge, so a select next to an input in one row differs by
+edge. The reference style's inputs use the interactive edge; aligning the edge is a separate
+change. *(Until 2026-10-10 this paragraph also said `Input` was 40px and called the height a
+follow-up for the owner; the height is fixed in the shared `Input` now, see §2.)*
 
 ---
 

@@ -31,6 +31,7 @@ import {
   Wallet,
   FileText,
 } from "lucide-react";
+import { KitIcon } from "@/components/icons/kit";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
@@ -310,7 +311,7 @@ export default function CliqDashboardPage() {
               <Badge variant="outline" title="Signatures required / members">
                 {threshold}/{memberCount}
               </Badge>
-              <Badge variant={isFunded ? "success" : "warning"}>
+              <Badge variant={isFunded ? "success" : "warning"} mark={isFunded ? "signal" : "half"}>
                 {isFunded ? "Funded" : "Needs funding"}
               </Badge>
             </div>
@@ -455,11 +456,7 @@ export default function CliqDashboardPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <p className="truncate font-mono text-sm">{memberAddress}</p>
-                        {index === 0 && (
-                          <span className="rounded bg-green-accent/20 px-1.5 py-0.5 text-[10px] font-medium text-green-accent">
-                            Creator
-                          </span>
-                        )}
+                        {index === 0 && <Badge>Creator</Badge>}
                       </div>
                       <p className="mt-0.5 truncate font-mono text-xs text-muted-foreground">
                         {simplePubkey}
@@ -487,7 +484,7 @@ export default function CliqDashboardPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Wallet className="h-5 w-5 text-green-accent" />
+                  <KitIcon name="wallet" size={24} className="text-foreground" />
                   Balances
                 </CardTitle>
               </CardHeader>

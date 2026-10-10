@@ -37,6 +37,18 @@ card that hosts it, byte for byte, but never change it. Keep the provider order 
 - jest ignores every path containing `/.claude/` (`testPathIgnorePatterns`), so a git worktree under `.claude/` runs
   **0 tests**. Put worktrees outside the repo.
 - The chain registry slug for TX is `tx`; any first path segment containing `coreum` is mapped to it.
+- `sr-only` is `position: absolute`. A label inside an unpositioned control (the copy button has
+  one) uses `<main>` as its containing block and escapes a scroll box's clip, so hundreds of them
+  stretched the validator page from 1,939px to 29,805px (measured 2026-10-10). jsdom does no layout
+  and cannot see this: after touching a scrolling list, `CopyButton` or any button with an `sr-only`
+  child, measure `document.documentElement.scrollHeight` in a real browser. `CopyButton` is
+  `relative` now and scroll boxes stay `relative` too (`docs/ui/PATTERNS-PRD.md` section 22).
+- The signing fence (it prints `FENCE OK`) hashes the functions that sign. It does **not** see JSX
+  wiring: which handler a button calls, with which arguments, and its `disabled` rule. Swapping
+  the two Claim handlers left the fence green (measured 2026-10-10). Jest pins that wiring
+  (`validator-rewards`, `validator-vote-options`, `validator-edit-submit`,
+  `validator-withdraw-address`, `jailed-alert`, `unjail-action`, `validator-dashboard`): run those
+  as well as the fence whenever a signing button moves or is restyled.
 
 ## 4. Gates before a pull request
 

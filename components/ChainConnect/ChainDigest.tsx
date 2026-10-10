@@ -43,15 +43,10 @@ export default function ChainDigest({ chain, simplify }: ChainItemProps) {
           <span className="font-heading text-base font-semibold text-foreground">
             {chain.chainDisplayName}
           </span>
-          <div className="flex items-center gap-2">
-            <Badge
-              variant="outline"
-              className="border-border/[0.06] bg-muted/50 font-mono text-[10px] text-muted-foreground"
-            >
-              {chain.chainId}
-            </Badge>
+          <div className="flex items-center gap-3">
+            <Badge variant="secondary">{chain.chainId}</Badge>
             {isConnected && (
-              <Badge className="bg-[hsl(var(--accent-green)/0.2)] text-[10px] text-[hsl(var(--accent-green-bright))]">
+              <Badge variant="success" mark="signal">
                 Connected
               </Badge>
             )}
@@ -82,7 +77,7 @@ export default function ChainDigest({ chain, simplify }: ChainItemProps) {
                   size="sm"
                   className="ml-auto h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
                 >
-                  <span className="mr-1">{chain.nodeAddresses.length}</span>
+                  <span>{chain.nodeAddresses.length}</span>
                   <ChevronDown className="h-3 w-3 transition-transform duration-200 [[data-state=open]_&]:rotate-180" />
                 </Button>
               </CollapsibleTrigger>

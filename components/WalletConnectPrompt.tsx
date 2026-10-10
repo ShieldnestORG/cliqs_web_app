@@ -1,5 +1,6 @@
 import Image from "next/image";
-import { Loader2, Wallet } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { KitIcon } from "@/components/icons/kit";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -30,9 +31,7 @@ export default function WalletConnectPrompt({ label, description }: WalletConnec
   return (
     <Card variant="institutional" bracket="green" className="mx-auto max-w-4xl">
       <CardHeader className="text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-green-accent/20">
-          <Wallet className="h-8 w-8 text-green-accent" />
-        </div>
+        <KitIcon name="wallet" size={48} className="mx-auto mb-4 text-foreground" />
         <CardLabel comment className="justify-center">
           {label}
         </CardLabel>
@@ -45,7 +44,7 @@ export default function WalletConnectPrompt({ label, description }: WalletConnec
             onClick={connectKeplr}
             disabled={loading.keplr || loading.ledger}
             variant="outline"
-            className="h-auto flex-col gap-2 py-4"
+            className="h-auto flex-col gap-2 rounded-2xl py-4"
           >
             {loading.keplr ? (
               <Loader2 className="h-6 w-6 animate-spin" />
@@ -58,7 +57,7 @@ export default function WalletConnectPrompt({ label, description }: WalletConnec
             onClick={connectLedger}
             disabled={loading.keplr || loading.ledger}
             variant="outline"
-            className="h-auto flex-col gap-2 py-4"
+            className="h-auto flex-col gap-2 rounded-2xl py-4"
           >
             {loading.ledger ? (
               <Loader2 className="h-6 w-6 animate-spin" />

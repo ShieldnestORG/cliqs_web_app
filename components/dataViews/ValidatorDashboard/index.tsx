@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { ScaleRule } from "@/components/ui/scale-rule";
 import { useChains } from "@/context/ChainsContext";
 import { isChainInfoFilled, setChain } from "@/context/ChainsContext/helpers";
 import NetworkToggle from "@/components/DevTools/NetworkToggle";
@@ -32,7 +33,6 @@ import { getDbUserMultisigs } from "@/lib/api";
 import { ensureChainMultisigInDb } from "@/lib/multisigHelpers";
 import { getUserSettings } from "@/lib/settingsStorage";
 import { cn, toastError } from "@/lib/utils";
-import { truncateAddress } from "@/lib/displayHelpers";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   RefreshCw,
@@ -48,6 +48,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { fromBech32, toBech32 } from "@cosmjs/encoding";
+import JailedAlert from "./JailedAlert";
 import ValidatorIdentityCard from "./ValidatorIdentityCard";
 import PendingRewardsCard from "./PendingRewardsCard";
 import ValidatorPerformanceCard from "./ValidatorPerformanceCard";
@@ -64,6 +65,37 @@ interface AssociatedValidator {
   address: string;
   validator: ValidatorInfo;
   isCliq: boolean;
+}
+
+/**
+ * Loading shape of the loaded dashboard: header strip, context row, two rows of two panels.
+ * Same silhouette as the real page so nothing jumps when the data arrives.
+ */
+function DashboardSkeleton({ message }: { message: string }) {
+  return (
+    <div className="space-y-8">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+        <Skeleton className="h-7 w-44" />
+        <Skeleton className="h-5 w-20" />
+        <Skeleton className="h-5 w-72 max-w-full" />
+      </div>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-end">
+        <Skeleton className="h-9 w-56" />
+      </div>
+      <div className="grid grid-cols-1 gap-x-8 gap-y-10 lg:grid-cols-2">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="flex flex-col gap-4">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-48 w-full rounded-xl" />
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center justify-center py-4">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <span className="ml-2 text-muted-foreground">{message}</span>
+      </div>
+    </div>
+  );
 }
 
 export default function ValidatorDashboard() {
@@ -415,40 +447,7 @@ export default function ValidatorDashboard() {
   // Chain initializing (waiting for nodeAddress / RPC)
   const isChainInitializing = normalizedEffectiveAddress && chain.chainId && !chain.nodeAddress;
   if (isChainInitializing) {
-    return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-          <Card variant="institutional" className="lg:col-span-2">
-            <CardHeader>
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-8 w-48" />
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </CardContent>
-          </Card>
-          <Card variant="institutional" className="lg:col-span-3">
-            <CardHeader>
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-8 w-48" />
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-4">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <Skeleton key={i} className="h-24 w-full" />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          <span className="ml-2 text-muted-foreground">Connecting to chain...</span>
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton message="Connecting to chain..." />;
   }
 
   // Not connected state
@@ -481,7 +480,7 @@ export default function ValidatorDashboard() {
                 onClick={connectKeplr}
                 disabled={loading.keplr || loading.ledger}
                 variant="outline"
-                className="h-auto flex-col gap-2 py-4"
+                className="h-auto flex-col gap-2 rounded-2xl py-4"
               >
                 {loading.keplr ? (
                   <Loader2 className="h-6 w-6 animate-spin" />
@@ -494,7 +493,7 @@ export default function ValidatorDashboard() {
                 onClick={connectLedger}
                 disabled={loading.keplr || loading.ledger}
                 variant="outline"
-                className="h-auto flex-col gap-2 py-4"
+                className="h-auto flex-col gap-2 rounded-2xl py-4"
               >
                 {loading.ledger ? (
                   <Loader2 className="h-6 w-6 animate-spin" />
@@ -525,43 +524,7 @@ export default function ValidatorDashboard() {
 
   // Loading state
   if (loadingState === "loading") {
-    return (
-      <div className="space-y-6">
-        {/* Identity Card Skeleton */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-          <Card variant="institutional" className="lg:col-span-2">
-            <CardHeader>
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-8 w-48" />
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </CardContent>
-          </Card>
-
-          <Card variant="institutional" className="lg:col-span-3">
-            <CardHeader>
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-8 w-48" />
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-4">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <Skeleton key={i} className="h-24 w-full" />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          <span className="ml-2 text-muted-foreground">Loading validator data...</span>
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton message="Loading validator data..." />;
   }
 
   // Not a validator state
@@ -808,38 +771,79 @@ export default function ValidatorDashboard() {
   // In CLIQ mode, determine whether write actions should be enabled.
   // Read-only view is shown when membership verification failed (isCliqMember === false).
   const cliqReadOnly = isCliqMode && isCliqMember === false;
+  // The context row's left side shows only these two notes.
+  const showReadOnlyNote = cliqReadOnly && !isVerifyingMembership;
+  const showContextNote = !walletInfo?.address || showReadOnlyNote;
 
   return (
-    <div className="space-y-6">
-      {/* Acting as: states the signing mode in plain words, directly under the page H1 */}
-      <Card variant="institutional">
-        <CardContent className="space-y-2 py-4">
-          <div className="flex items-start gap-3">
-            {isCliqMode ? (
-              <Users className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
-            ) : (
-              <Shield className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+    <div className="space-y-8">
+      {/* Jailed alert: the very first block while jailed. It hosts Unjail, so it never sits below the fold. */}
+      {dashboardData.validator.jailed && (
+        <JailedAlert
+          validator={dashboardData.validator}
+          signingInfo={dashboardData.signingInfo}
+          onTransactionComplete={handleTransactionComplete}
+          isCliqMode={isCliqMode}
+          cliqAddress={cliqAddress}
+          readOnly={cliqReadOnly}
+        />
+      )}
+
+      {/* Header strip: moniker, status, commission, addresses, explorer link */}
+      <ValidatorIdentityCard validator={dashboardData.validator} />
+
+      {/* Context row: a note on the left only when there is something the visitor must know before
+          acting (no wallet, or read-only); the network control and Refresh sit on the right.
+          Until 2026-10-10 the left side always held an "Acting as ..." sentence; it was removed
+          (owner's call): the button labels and the note in the Rewards card say which path signs. */}
+      <div
+        data-testid="context-row"
+        className={cn(
+          "flex flex-col gap-4 lg:flex-row lg:items-start",
+          showContextNote ? "lg:justify-between" : "lg:justify-end",
+        )}
+      >
+        {showContextNote && (
+          <div className="min-w-0 space-y-2 lg:flex-1">
+            {!walletInfo?.address && (
+              <div className="flex items-start gap-3">
+                <Shield className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+                <p className="text-sm text-foreground">
+                  No wallet connected. Connect a wallet to act on this validator.
+                </p>
+              </div>
             )}
-            <p className="text-sm text-foreground">
-              {isCliqMode && cliqAddress
-                ? `Acting as CLIQ ${truncateAddress(cliqAddress, 10, 6)}. Actions create a transaction for this CLIQ; its members sign it, then one member broadcasts.`
-                : walletInfo?.address
-                  ? "Acting as your wallet. Actions sign with your connected wallet."
-                  : "No wallet connected. Connect a wallet to act on this validator."}
-            </p>
+            {showReadOnlyNote && (
+              <p className="flex items-start gap-3 text-sm text-warning">
+                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+                <span>
+                  Read-only: your connected wallet could not be verified as a member of this CLIQ.
+                  Transaction actions are disabled. If you believe this is an error, reconnect with
+                  the correct wallet or ensure the CLIQ is registered in the database.
+                </span>
+              </p>
+            )}
           </div>
-          {cliqReadOnly && !isVerifyingMembership && (
-            <p className="flex items-start gap-3 text-sm text-warning">
-              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
-              <span>
-                Read-only: your connected wallet could not be verified as a member of this CLIQ.
-                Transaction actions are disabled. If you believe this is an error, reconnect with
-                the correct wallet or ensure the CLIQ is registered in the database.
-              </span>
-            </p>
-          )}
-        </CardContent>
-      </Card>
+        )}
+
+        <div className="flex shrink-0 flex-wrap items-start gap-2">
+          <NetworkToggle
+            currentNetwork={currentNetwork}
+            onNetworkChange={onNetworkChange}
+            testnetAvailable={hasTestnetVariant}
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fetchData(true)}
+            disabled={isRefreshing}
+            className="gap-2 max-sm:h-11"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        </div>
+      </div>
 
       {/* Address prefix mismatch warning (dashboard loaded state) */}
       {addressPrefixMismatch && effectiveAddress && (
@@ -922,105 +926,82 @@ export default function ValidatorDashboard() {
         </Card>
       )}
 
-      {/* Network Toggle */}
-      <NetworkToggle
-        currentNetwork={currentNetwork}
-        onNetworkChange={onNetworkChange}
-        testnetAvailable={hasTestnetVariant}
-      />
+      {/* Rewards and Performance share a row from lg; Governance and Stakers the next. One column below lg. */}
+      <div className="grid grid-cols-1 gap-x-8 gap-y-10 lg:grid-cols-2">
+        <section aria-labelledby="validator-rewards" className="flex flex-col gap-4">
+          <ScaleRule headingId="validator-rewards" label="Rewards" tone="primary" />
+          <Card className="flex-1">
+            <CardContent className="space-y-5 p-5 sm:p-6">
+              <PendingRewardsCard
+                validator={dashboardData.validator}
+                commission={dashboardData.commission}
+                selfDelegationRewards={dashboardData.selfDelegationRewards}
+                onTransactionComplete={handleTransactionComplete}
+                isCliqMode={isCliqMode}
+                cliqAddress={cliqAddress}
+                readOnly={cliqReadOnly}
+              />
+              <Separator />
+              <WithdrawAddressCard
+                validator={dashboardData.validator}
+                withdrawAddress={dashboardData.withdrawAddress}
+                onTransactionComplete={handleTransactionComplete}
+                isCliqMode={isCliqMode}
+                cliqAddress={cliqAddress}
+                readOnly={cliqReadOnly}
+              />
+            </CardContent>
+          </Card>
+        </section>
 
-      {/* Subtitle with Refresh (the page H1 lives in pages/[chainName]/validator.tsx) */}
-      <div className="flex items-center justify-between">
-        <p className="text-muted-foreground">Manage rewards and monitor performance</p>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => fetchData(true)}
-          disabled={isRefreshing}
-          className="gap-2"
-        >
-          <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
+        <section aria-labelledby="validator-performance" className="flex flex-col gap-4">
+          <ScaleRule headingId="validator-performance" label="Performance" />
+          <Card className="flex-1">
+            <CardContent className="p-5 sm:p-6">
+              <ValidatorPerformanceCard data={dashboardData} />
+            </CardContent>
+          </Card>
+        </section>
+
+        <section aria-labelledby="validator-governance" className="flex flex-col gap-4">
+          <ScaleRule headingId="validator-governance" label="Governance" />
+          <Card className="flex-1">
+            <CardContent className="p-5 sm:p-6">
+              <ProposalViewer
+                data={dashboardData}
+                onTransactionComplete={handleTransactionComplete}
+                isCliqMode={isCliqMode}
+                cliqAddress={cliqAddress}
+                readOnly={cliqReadOnly}
+              />
+            </CardContent>
+          </Card>
+        </section>
+
+        <section aria-labelledby="validator-stakers" className="flex flex-col gap-4">
+          <ScaleRule headingId="validator-stakers" label="Stakers" />
+          <Card className="flex-1">
+            <CardContent className="p-5 sm:p-6">
+              <ValidatorDelegatorsCard data={dashboardData} />
+            </CardContent>
+          </Card>
+        </section>
       </div>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        {/* Identity Card - 2 cols (hosts Unjail: first in its row on every width while jailed) */}
-        <div className={cn("lg:col-span-2", dashboardData.validator.jailed && "order-first")}>
-          <ValidatorIdentityCard
-            validator={dashboardData.validator}
-            signingInfo={dashboardData.signingInfo}
-            onTransactionComplete={handleTransactionComplete}
-            isCliqMode={isCliqMode}
-            cliqAddress={cliqAddress}
-            readOnly={cliqReadOnly}
-          />
-        </div>
-
-        {/* Performance Card - 3 cols */}
-        <div className="lg:col-span-3">
-          <ValidatorPerformanceCard data={dashboardData} />
-        </div>
-      </div>
-
-      {/* Second Row */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        {/* Pending Rewards Card - 2 cols */}
-        <div className="lg:col-span-2">
-          <PendingRewardsCard
-            validator={dashboardData.validator}
-            commission={dashboardData.commission}
-            selfDelegationRewards={dashboardData.selfDelegationRewards}
-            onTransactionComplete={handleTransactionComplete}
-            isCliqMode={isCliqMode}
-            cliqAddress={cliqAddress}
-            readOnly={cliqReadOnly}
-          />
-        </div>
-
-        {/* Withdraw Address Card - 3 cols */}
-        <div className="lg:col-span-3">
-          <WithdrawAddressCard
-            validator={dashboardData.validator}
-            withdrawAddress={dashboardData.withdrawAddress}
-            onTransactionComplete={handleTransactionComplete}
-            isCliqMode={isCliqMode}
-            cliqAddress={cliqAddress}
-            readOnly={cliqReadOnly}
-          />
-        </div>
-      </div>
-
-      {/* Third Row - Stakers & Governance */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        {/* Delegators Card - 3 cols */}
-        <div className="lg:col-span-3">
-          <ValidatorDelegatorsCard data={dashboardData} />
-        </div>
-
-        {/* Proposal Viewer - 2 cols */}
-        <div className="lg:col-span-2">
-          <ProposalViewer
-            data={dashboardData}
-            onTransactionComplete={handleTransactionComplete}
-            isCliqMode={isCliqMode}
-            cliqAddress={cliqAddress}
-            readOnly={cliqReadOnly}
-          />
-        </div>
-      </div>
-
-      {/* Fourth Row - Validator Commands */}
-      <div className="grid grid-cols-1 gap-6">
-        <ValidatorCommandsCard
-          validator={dashboardData.validator}
-          onTransactionComplete={handleTransactionComplete}
-          isCliqMode={isCliqMode}
-          cliqAddress={cliqAddress}
-          readOnly={cliqReadOnly}
-        />
-      </div>
+      <section aria-labelledby="validator-manage" className="flex flex-col gap-4">
+        <ScaleRule headingId="validator-manage" label="Manage" />
+        <Card>
+          <CardContent className="p-5 sm:p-6">
+            <ValidatorCommandsCard
+              validator={dashboardData.validator}
+              onTransactionComplete={handleTransactionComplete}
+              isCliqMode={isCliqMode}
+              cliqAddress={cliqAddress}
+              readOnly={cliqReadOnly}
+            />
+          </CardContent>
+        </Card>
+      </section>
 
       {/* CLIQ Upgrade CTA - Full Width (never in CLIQ mode) */}
       {!isCliqMode && <CliqUpgradeCTA />}

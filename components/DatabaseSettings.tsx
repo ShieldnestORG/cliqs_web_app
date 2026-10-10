@@ -51,8 +51,6 @@ import { fromBase64 } from "@cosmjs/encoding";
 import {
   Database,
   Shield,
-  ShieldCheck,
-  ShieldAlert,
   Upload,
   Download,
   TestTube,
@@ -69,6 +67,7 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
+import { KitIcon } from "@/components/icons/kit";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -519,12 +518,6 @@ export default function DatabaseSettings() {
   // Render helpers
   // ---------------------------------------------------------------------------
 
-  const securityLevelIcon = (level: SecurityLevel) => {
-    if (level === 0) return <Shield className="h-4 w-4" />;
-    if (level === 1) return <ShieldCheck className="h-4 w-4" />;
-    return <ShieldAlert className="h-4 w-4" />;
-  };
-
   const securityLevelBadge = (level: SecurityLevel) => {
     // Level 0 must read as a warning here. This badge is the only indicator a
     // user who already chose a level ever sees — the picker is hidden once a
@@ -537,8 +530,7 @@ export default function DatabaseSettings() {
       "default",
     ];
     return (
-      <Badge variant={variants[level]} className="gap-1">
-        {securityLevelIcon(level)}
+      <Badge variant={variants[level]} mark={level === 0 ? "stripes" : undefined}>
         Level {level}: {labels[level]}
       </Badge>
     );
@@ -552,7 +544,7 @@ export default function DatabaseSettings() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Database className="h-5 w-5 text-info" />
+          <KitIcon name="database" size={24} className="text-foreground" />
           Database Configuration
         </CardTitle>
         <CardDescription>
@@ -582,15 +574,11 @@ export default function DatabaseSettings() {
                   contents are not affected, only the credential stored here.
                 </p>
               )}
-              <div className="mt-2 flex flex-wrap gap-2">
+              <div className="mt-2 flex flex-wrap gap-3">
                 {securityLevelBadge(status.meta.securityLevel)}
-                {status.meta.provisioned && (
-                  <Badge variant="outline" className="gap-1">
-                    <Wrench className="h-3 w-3" /> Provisioned
-                  </Badge>
-                )}
+                {status.meta.provisioned && <Badge variant="outline">Provisioned</Badge>}
                 {status.meta.lastTestedAt && (
-                  <Badge variant="outline" className="gap-1 text-xs">
+                  <Badge variant="outline">
                     Last tested: {new Date(status.meta.lastTestedAt).toLocaleDateString()}
                   </Badge>
                 )}
@@ -638,9 +626,9 @@ export default function DatabaseSettings() {
                 </p>
                 <Button onClick={handleUnlock} disabled={unlocking}>
                   {unlocking ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Wallet className="mr-2 h-4 w-4" />
+                    <Wallet className="h-4 w-4" />
                   )}
                   Sign to Unlock
                 </Button>
@@ -665,7 +653,7 @@ export default function DatabaseSettings() {
                 entering the connection string again.
               </p>
               <Button variant="outline" size="sm" onClick={handleDisconnect}>
-                <Trash2 className="mr-2 h-4 w-4" />
+                <Trash2 className="h-4 w-4" />
                 Disconnect Custom Database
               </Button>
             </div>
@@ -702,9 +690,9 @@ export default function DatabaseSettings() {
                 />
                 <Button size="sm" onClick={handleUpgradeToPassphrase} disabled={saving}>
                   {saving ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <KeyRound className="mr-2 h-4 w-4" />
+                    <KeyRound className="h-4 w-4" />
                   )}
                   Encrypt with a passphrase
                 </Button>
@@ -715,9 +703,9 @@ export default function DatabaseSettings() {
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" onClick={handleTestConnection} disabled={testing}>
                 {testing ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <TestTube className="mr-2 h-4 w-4" />
+                  <TestTube className="h-4 w-4" />
                 )}
                 Test Connection
               </Button>
@@ -730,16 +718,16 @@ export default function DatabaseSettings() {
                   disabled={provisioning}
                 >
                   {provisioning ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Wrench className="mr-2 h-4 w-4" />
+                    <Wrench className="h-4 w-4" />
                   )}
                   Setup Database
                 </Button>
               )}
 
               <Button variant="outline" size="sm" onClick={handleLock}>
-                <Lock className="mr-2 h-4 w-4" />
+                <Lock className="h-4 w-4" />
                 Lock
               </Button>
             </div>
@@ -798,9 +786,9 @@ export default function DatabaseSettings() {
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" size="sm" onClick={handleExport} disabled={exporting}>
                   {exporting ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Download className="mr-2 h-4 w-4" />
+                    <Download className="h-4 w-4" />
                   )}
                   Export Data
                 </Button>
@@ -812,9 +800,9 @@ export default function DatabaseSettings() {
                   disabled={importing}
                 >
                   {importing ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Upload className="mr-2 h-4 w-4" />
+                    <Upload className="h-4 w-4" />
                   )}
                   Import Data
                 </Button>
@@ -894,7 +882,7 @@ export default function DatabaseSettings() {
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" size="sm">
-                  <Trash2 className="mr-2 h-4 w-4" />
+                  <Trash2 className="h-4 w-4" />
                   Disconnect Custom Database
                 </Button>
               </AlertDialogTrigger>
@@ -957,9 +945,9 @@ export default function DatabaseSettings() {
             {connectionUri && (
               <Button variant="outline" size="sm" onClick={handleTestConnection} disabled={testing}>
                 {testing ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <TestTube className="mr-2 h-4 w-4" />
+                  <TestTube className="h-4 w-4" />
                 )}
                 Test Connection
               </Button>
@@ -1026,9 +1014,7 @@ export default function DatabaseSettings() {
                     <Label htmlFor="level-1" className="flex cursor-pointer items-center gap-2">
                       <KeyRound className="h-4 w-4 text-info" />
                       Level 1: Passphrase Encryption
-                      <Badge variant="secondary" className="text-[10px]">
-                        Recommended
-                      </Badge>
+                      <Badge variant="secondary">Recommended</Badge>
                     </Label>
                     <p className="text-xs text-muted-foreground">
                       AES-256-GCM encryption with PBKDF2 key derivation (600K iterations).
@@ -1147,9 +1133,9 @@ export default function DatabaseSettings() {
             {/* Save Button */}
             <Button onClick={handleSave} disabled={saving || !connectionUri} className="w-full">
               {saving ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Database className="mr-2 h-4 w-4" />
+                <Database className="h-4 w-4" />
               )}
               Save & Activate Custom Database
             </Button>

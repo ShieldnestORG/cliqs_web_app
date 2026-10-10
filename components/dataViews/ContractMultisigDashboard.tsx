@@ -174,16 +174,12 @@ export default function ContractMultisigDashboard({
         </BreadcrumbList>
       </Breadcrumb>
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="gap-1">
+        <div className="flex items-center gap-3">
+          <Badge variant="outline">
             <FileCode2 className="h-3 w-3" />
             Contract Multisig
           </Badge>
-          {contractInfo && (
-            <Badge variant="secondary" className="font-mono text-xs">
-              Code ID: {contractInfo.codeId}
-            </Badge>
-          )}
+          {contractInfo && <Badge variant="secondary">Code ID: {contractInfo.codeId}</Badge>}
         </div>
         <div className="flex gap-2">
           <CopyButton value={contractAddress} copyLabel="contract address" />
@@ -336,11 +332,7 @@ export default function ContractMultisigDashboard({
                         <TableCell className="font-mono text-sm">
                           <div className="flex items-center gap-2">
                             {member.addr}
-                            {member.addr === userAddress && (
-                              <Badge variant="outline" className="text-xs">
-                                You
-                              </Badge>
-                            )}
+                            {member.addr === userAddress && <Badge variant="outline">You</Badge>}
                           </div>
                         </TableCell>
                         <TableCell className="text-right font-medium">{member.weight}</TableCell>

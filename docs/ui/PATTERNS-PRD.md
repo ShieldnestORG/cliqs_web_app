@@ -1,10 +1,10 @@
 # Patterns PRD
 
-> **Cluster:** design-system · **Tags:** ui, patterns, gridspotlight, sidebar, hover-card, tokens · **Related:** [STYLE-GUIDE.md](../STYLE-GUIDE.md), [UI Index](./INDEX.md), [Cards PRD](./CARDS-PRD.md), [Buttons PRD](./BUTTONS-PRD.md)
+> **Cluster:** design-system · **Tags:** ui, patterns, gridspotlight, scale-rule, kit-icons, menus, sidebar, tokens · **Related:** [STYLE-GUIDE.md](../STYLE-GUIDE.md), [UI Index](./INDEX.md), [Cards PRD](./CARDS-PRD.md), [Buttons PRD](./BUTTONS-PRD.md), [Forms PRD](./FORMS-PRD.md)
 
 **Cosmos Multisig UI - Visual Patterns Specification**  
-**Version:** 1.2  
-**Last Updated:** 2026-10-09
+**Version:** 1.3  
+**Last Updated:** 2026-10-10
 
 ---
 
@@ -20,6 +20,9 @@ Visual patterns for consistent styling across the application:
 - **Status indicators** for feedback
 - **Interaction patterns** (§17–§19) — hover-card disclosure, click-only copy
   confirmation, and the auto-collapsing sidebar rail
+- **The scale rule** (§20) — the ruler-edge section divider; **menus** (§21) — the house-style
+  dropdown and select metrics; **kit icons** (§9) — the TOKNS brand icon kit glyph set;
+  **scroll boxes** (§22) — why a `max-h` scroller must be `relative`
 
 ---
 
@@ -380,6 +383,80 @@ Icons are used directly without containers for a cleaner, lighter appearance. Us
   <Search className="h-5 w-5" />
 </div> */}
 ```
+
+`lucide-react` stays the set for small UI glyphs (16px row icons: check, close, spinner,
+external link, info) and for status alerts. Section and feature icons come from the kit below.
+
+### Kit icons (`components/icons/kit.tsx`)
+
+The TOKNS brand icon kit idiom, painted with cliqs tokens. **Source of truth: the TOKNS brand
+icon kit.** The idiom changes in the kit first; cliqs copies. A new glyph is a design-system
+change first.
+
+```tsx
+import { KitIcon } from "@/components/icons/kit";
+
+<KitIcon name="rewards" size={28} className="text-foreground" />   {/* decorative */}
+<KitIcon name="stake" size={24} title="Staking" />                  {/* labelled: role="img" */}
+```
+
+**The idiom (do not break it):**
+
+- A **48 grid** (`viewBox="0 0 48 48"`), round caps and joins, **no tile or chip behind the icon**.
+- The **ink** is `currentColor`: it follows the parent's text colour (`text-foreground`,
+  `text-muted-foreground`).
+- **Exactly one coral part per icon**, in the tokens' coral (`text-primary`, `--primary`):
+  a coral stroke, a coral solid, or an 18% coral wash with its outline. One part may be two
+  shapes that read as one (an arrow's shaft and head, a clock's hand and hub, `multisig`'s two
+  signed key dots); those shapes sit together in **one `<g data-coral="">`**, so a part is
+  always one element and a test can count it. A second coral shape outside that group is a
+  second part and breaks the rule (the stake glyph once passed with two). Coral is the brand
+  colour, never a status colour: an icon does not turn
+  green or red for active or jailed; put the state in a Badge or a word beside it. Use
+  `--primary`, not `--accent-green` (that token is coral under a wrong name).
+- Colours come from classes (`stroke-current`, `stroke-primary`, `fill-primary`,
+  `fill-primary/[0.18]`), never from attributes, so tokens drive them. No hex anywhere.
+- Decorative by default (`aria-hidden`); pass `title` for a labelled use.
+
+**Size and stroke.** The kit's own stroke is 2.5 on the 48 grid: 1.25px at 24px, thinner than
+the app's 2px line icons. `kitStrokeWidth(size)` therefore thickens the grid stroke below 40px
+so the line stays about 2px on screen (24px = 4, 32px = 3, 40px and up = 2.5). Pass
+`strokeWidth` to override. Never use a kit icon under 20px; use lucide there. Static only: no
+motion is shipped (the landing's icon animations are not ported).
+
+| Name | Coral part | Where it is used | Source |
+|------|-----------|------------------|--------|
+| `governance` | the tick on the ballot | Vote Now (Governance); the Contract Proposal guide; the "Governance Settings" headings of the contract and Flex create forms | the TOKNS brand icon kit |
+| `stake` | the check in the shield | Self-delegation rewards row | the TOKNS brand icon kit |
+| `rewards` | the bow | Validator commission row | the TOKNS brand icon kit |
+| `portfolio` | one pie slice (wash + outline) | Voting power (a slice of the whole) | the TOKNS brand icon kit |
+| `pulse` | the heartbeat | network health (not placed yet) | the TOKNS brand icon kit |
+| `dashboard` | one tile (wash + outline) | overview (not placed yet) | the TOKNS brand icon kit |
+| `multisig` | two of the three key dots | a CLIQ: the PubKey create form header, the "no CLIQs yet" empty state, the PubKey guide | the TOKNS brand icon kit |
+| `clock` | the minute hand and hub | Unbonding | the TOKNS brand icon kit (the kit names it after a TOKNS product; a plain name here) |
+| `rank` | the tallest bar (wash + outline) | Ranking | new in cliqs |
+| `withdraw` | the arrow leaving the frame | the "Paid to" line | new in cliqs |
+| `stakers` | the second figure | Stakers; also a group of members (the Flex CLIQ guide and create form header) | new in cliqs |
+| `guide` | the bookmark (solid) | Guides page header and empty state | the TOKNS brand icon kit (the kit's open-book "learn" glyph under a plain name) |
+| `contract` | the heading line | the Contract Fixed guide, the contract create form header | the TOKNS brand icon kit (the kit's "article" page under a plain name) |
+| `journey` | the flag (pole and pennant) | the "Journey Complete" banner on the Guides page | the TOKNS brand icon kit (the kit's "roadmap" glyph under a plain name) |
+| `tip` | the filament | the Pro Tip box on the Guides page | new in cliqs |
+| `sign` | the signature line | the Create and Sign guide | new in cliqs |
+| `database` | the middle band | Database settings header, the Set Up Your Own Database guide | new in cliqs |
+| `search` | the handle | Open a CLIQ by address, the "No chains found" empty state, the Find and Join guide | new in cliqs |
+| `wallet` | the clasp (wash + outline) | Balances header, the wallet prompt, the Connect Your Wallet guide | new in cliqs |
+
+The paths for the first eight were generated from the kit's sources by a script, not typed by
+hand, and re-diffed against them. `guide`, `contract` and `journey` were copied from the kit's
+icon registry and re-diffed the same way. `rank`, `withdraw`, `stakers`, `tip`, `sign`,
+`database`, `search` and `wallet` are drawn in the same idiom and should be added to the kit so
+the sources do not drift. The Guides page names each journey's glyph in `lib/userJourneys.ts` as a
+`KitIconName`, so a journey cannot point at a glyph that does not exist. Not copied, on purpose:
+the TOKNS wordmark and monogram, product-named icons (the kit's clock is named after a product; it
+is `clock` here), and the marketing-only marks. `__tests__/components/kit-icons.test.tsx` enforces
+the 48 grid, **exactly one** coral part (loose coral shapes plus `g[data-coral]` groups must add
+up to 1; a coral group may hold coral shapes only), no hex, and the decorative default. Until
+2026-10-10 it only asked for "at least one".
 
 ---
 
@@ -772,6 +849,118 @@ These two are load-bearing. Both were bugs before they were rules.
 Supporting details: a 150ms leave delay kills edge flicker; a `useEffect` on `asPath`
 reconciles against `:hover` after navigation (in case the pointer left during the route
 change and no leave event arrived); `Escape` collapses an unpinned rail.
+
+---
+
+## 20. Scale Rule (section divider)
+
+**Where:** `components/ui/scale-rule.tsx`, with the tick pattern in `styles/globals.css`
+(`.scale-rule-line`). Added 2026-10-10 for the owner's "scalelines": a way to separate areas
+and mark the one that matters most, without painting a fill over the page background.
+
+```tsx
+<ScaleRule label="Rewards" tone="primary" meta="2 pending" />
+<ScaleRule label="Performance" />
+```
+
+One row that reads like the edge of a ruler:
+
+1. a short **start tick** (coral for `tone="primary"`, muted otherwise);
+2. the **label**: `font-mono`, 11px, uppercase, `tracking-[0.14em]`, rendered as an **`h2`**,
+   so a page gets real section headings (pass `headingId` to name a wrapping `<section>`);
+3. a **hairline that fills the row** with a fine tick every 8px (4px tall) and a taller tick
+   every 40px (8px tall), drawn with `repeating-linear-gradient` backgrounds from the border
+   token, fading out towards the right edge with a mask;
+4. optional right-hand `meta` text.
+
+Rules:
+
+- **Use `tone="primary"` for at most one area per page**: the one that matters most (on the
+  validator page, Rewards). Everything else stays muted.
+- It paints **no opaque fill**: the GridSpotlight canvas (§3) shows through. The ticks are
+  hidden below `sm` (label and hairline only). The start tick and the line are `aria-hidden`.
+- Put it above a section's panel, not inside it: `<section>` + `ScaleRule` + `Card`. The panel
+  keeps its own background (cards occlude the field on purpose).
+
+Used by: the validator dashboard (Rewards, Performance, Governance, Stakers, Manage).
+Test: `__tests__/components/scale-rule.test.tsx`.
+
+---
+
+## 21. Menus (dropdown and select)
+
+**Where:** `components/ui/dropdown-menu.tsx` and `components/ui/select.tsx` (Radix). Restyled
+2026-10-10 to the house-style menu metrics, in cliqs colours. Radix keeps its behaviour: open on
+click or keyboard, arrow-key roving, Escape returns focus. The reference style's hover-open is
+**not** adopted (it has no arrow-key handling; Radix does).
+
+| Part | Value |
+|------|-------|
+| Dropdown panel | `rounded-2xl` (16px), `p-1.5` (6px), `min-w-[220px]`, 1px border, `shadow-pop`, `collisionPadding={8}`, `sideOffset` 4 |
+| Select panel | `rounded-2xl`, `p-1.5` viewport, `min-w-[8rem]` and `max-w-[min(480px,calc(100vw-2rem))]`, 1px border, `shadow-pop`, `collisionPadding={8}`; the panel follows its trigger's width (the viewport's `min-w` is `--radix-select-trigger-width`), so it is never narrower than the control that opened it. *Until 2026-10-10 this row listed `min-w-[220px]` for both panels; that is the dropdown's only (`components/ui/select.tsx` has `min-w-[8rem]`).* |
+| Item | `min-h-10` (`max-sm:min-h-11`), `rounded-md` (8px), `px-2.5 py-2`, `text-[13px]`, `gap-3`, highlight `bg-primary-soft text-foreground` |
+| Label | mono, 10px, uppercase, `tracking-[0.1em]`, muted |
+| Separator | 1px, `mx-1.5 my-1`, `bg-border/[0.06]` |
+| Shortcut / meta | mono 11px, `tabular-nums`, muted |
+| Open motion | a 120ms fade (`duration-ui`); the old zoom and slide are gone |
+| Select trigger | `min-h-11` (44px), `rounded-md`, `px-3.5 py-2.5`, 14px, `bg-field`, `border-interactive`; hover `border-muted-foreground`, open `border-primary` |
+| Select item | `min-h-11`, `rounded-lg` (10px), `px-3 py-2`, selected `font-semibold` with a **trailing** check |
+
+The highlight wash is `--primary-soft` (the coral wash), not `accent` (a neutral grey in this
+repo) and not `green-accent` (coral under a wrong name). The select keeps its chevron: the
+reference style drops it by owner decision, but a Radix select without one is not discoverable. The select's
+"interactive edge" and field fill are new tokens (`--border-interactive`, `--field`), see
+[STYLE-GUIDE.md](../STYLE-GUIDE.md#house-style-control-tokens).
+
+Where they are used: `Select` in the signer-rotation form, credentials panel, Dev Tools and the
+message forms (looks only; the frozen `MsgForm/*` files are not edited). `DropdownMenu` has no
+importer in the app today: only `__tests__/components/menus-select.test.tsx` imports it. *(This
+line said "has one importer today: none in the app", which contradicted itself, and before
+2026-10-10 it named `components/policies/PolicyManager.tsx` as the only importer; PR #82 deleted
+that file on main.)* It stays in `components/ui` as the shared menu primitive. Test:
+`__tests__/components/menus-select.test.tsx`.
+
+---
+
+## 22. Scroll boxes (`max-h` + `overflow-y-auto`)
+
+**Rule: a scroll box that holds a button, an `AddressDisplay` or any `sr-only` text is `relative`.**
+
+`sr-only` is `position: absolute`. With no positioned ancestor between it and the scroll box,
+its containing block is further up (the app shell's `<main className="relative">`), so the
+scroll box's clip no longer applies to it: every label stays at its static position, which for
+a long list is far below the box, and the page's scroll height grows to match.
+
+Measured 2026-10-10 in a real browser on the PR #81 preview build (/tx/validator, 1024px, 645
+stakers): after "Show all" the document went from 1,939px to 29,805px, about 27,600px of empty
+scroll under the page. A `position: relative` on the one `<ul>` brought it back to 2,199px;
+removing it brought the 29,805px back. Each row's copy button carries one `sr-only` "Copy
+address" label, and 613 of them were outside the clip. The old list sat in a shadcn `Table`,
+whose wrapper is `relative`, so it never showed. Re-measured after the fix on a static render of
+the real component (645 stakers, headless Chrome, inside `<main class="relative">`): 23,974px
+without `relative`, 813px (the same as with the list closed) with it. jsdom does no layout, so
+only a real browser measures this: `document.documentElement.scrollHeight` before and after
+opening the list.
+
+```tsx
+{/* relative: the rows' sr-only copy labels must be clipped by this box */}
+<ul className="relative max-h-[260px] overflow-y-auto">…</ul>
+```
+
+**The root fix (2026-10-10): `CopyButton` is itself `relative`.** The label is inside
+the copy button, so the button now contains it wherever it is used, and a scroll box no longer
+needs to remember (`__tests__/components/copy-button.test.tsx` pins the class; a caller that
+positions the button another way, for example `absolute`, still replaces it). Keep the `relative`
+on the scroll box too: it is the rule for any other `sr-only` text, and the Stakers list test
+pins it. jsdom still cannot see the effect, so measure in a browser after any change here.
+
+Where it is applied: the Stakers drop-down in `ValidatorDelegatorsCard.tsx` (pinned by
+`__tests__/components/validator-delegators.test.tsx`). The Unbonding table needs nothing: the
+shadcn `Table` wrapper is already `relative`. The scroll lists around `AddressDisplay` in
+`components/DevTools/DevToolsPage.tsx` (`max-h-[280px]`) use the same `CopyButton`, so they are
+covered by the root fix. *(Until 2026-10-10 this paragraph listed them as "not yet
+applied" and proposed a `relative` root on `AddressDisplay` as the shared fix; the fix went into
+`CopyButton` instead, one level closer to the label.)*
 
 ---
 

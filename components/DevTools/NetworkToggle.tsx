@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
-import { DashboardTab, DashboardTabs } from "@/components/layout/DashboardLayout";
-import { AlertTriangle, Network } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { DevNetwork } from "./types";
 
 interface NetworkToggleProps {
@@ -9,54 +9,65 @@ interface NetworkToggleProps {
   testnetAvailable: boolean;
 }
 
+/**
+ * Network control: two small outlined boxes, Mainnet | Testnet (36px tall, not a panel).
+ *
+ * "Testnet" is always gold (the warning token). While testnet is the active network its box gets
+ * a gold outline and a gold TESTNET tag shows beside it, so it is obvious you are not on main.
+ * While mainnet is active the control is just the two boxes: the "real assets" caption that sat
+ * beside them was removed on 2026-10-10 (owner's call).
+ * Until 2026-10-10 this was a bordered panel with a header, tabs and a red warning banner.
+ * Used by the validator dashboard and by Dev Tools.
+ */
 export default function NetworkToggle({
   currentNetwork,
   onNetworkChange,
   testnetAvailable,
 }: NetworkToggleProps) {
+  const isTestnet = currentNetwork === "testnet";
+
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-border/[0.06] bg-card/40 p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Network className="h-4 w-4 text-muted-foreground" />
-          <p className="text-sm font-semibold">Network Mode</p>
+    <div className="flex flex-col items-start gap-1.5">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 sm:flex-nowrap">
+        <div role="group" aria-label="Network" className="inline-flex items-center gap-1.5">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            aria-pressed={!isTestnet}
+            onClick={() => onNetworkChange("mainnet")}
+            className={cn(
+              "rounded-md max-sm:h-11",
+              !isTestnet && "border-foreground/50 bg-secondary",
+            )}
+          >
+            Mainnet
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            aria-pressed={isTestnet}
+            onClick={() => onNetworkChange("testnet")}
+            className={cn(
+              "rounded-md text-warning hover:text-warning max-sm:h-11",
+              isTestnet && "border-warning bg-warning/10",
+            )}
+          >
+            Testnet
+          </Button>
         </div>
-        <Badge
-          variant={currentNetwork === "mainnet" ? "destructive" : "outline"}
-          className="uppercase"
-        >
-          {currentNetwork}
-        </Badge>
+        {isTestnet && (
+          <Badge variant="warning" mark="half">
+            TESTNET
+          </Badge>
+        )}
       </div>
 
-      <DashboardTabs>
-        <DashboardTab
-          active={currentNetwork === "testnet"}
-          onClick={() => onNetworkChange("testnet")}
-        >
-          Testnet
-        </DashboardTab>
-        <DashboardTab
-          active={currentNetwork === "mainnet"}
-          onClick={() => onNetworkChange("mainnet")}
-        >
-          Mainnet
-        </DashboardTab>
-      </DashboardTabs>
-
       {!testnetAvailable && (
-        <p className="text-xs text-muted-foreground">
+        <p className="max-w-[22rem] text-xs text-muted-foreground">
           No testnet variant is registered for this chain. Mainnet mode remains active.
         </p>
-      )}
-
-      {currentNetwork === "mainnet" && (
-        <div className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-xs">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
-          <span>
-            Mainnet actions use real assets. Verify all addresses and messages before signing.
-          </span>
-        </div>
       )}
     </div>
   );
