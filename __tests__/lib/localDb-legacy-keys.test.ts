@@ -5,8 +5,10 @@
  *
  * The Phase 4 collections (policies, emergency state, incidents, alerts, spend records) were
  * removed from lib/localDb.ts on 2026-10-10. A local-db.json written before that date still
- * carries those keys, so this suite pins two things: such a file keeps loading and working, and
- * a database created or migrated now no longer gets the removed collections.
+ * carries those keys, so this suite pins three things: such a file keeps loading and working,
+ * its old rows are still in the file after the app writes to it (a write by the app must not
+ * silently destroy data the owner can still want to read or export), and a database created or
+ * migrated now no longer gets the removed collections.
  *
  * `fs` is replaced by a four-function in-memory fake, so nothing is read from or written to the
  * real data folder (a developer's data/local-db.json is never touched).
@@ -99,6 +101,31 @@ function currentCollections() {
   };
 }
 
+/** The removed collections as an old file carries them: one marker row each. */
+function legacyCollections() {
+  return {
+    policies: [{ id: "p1", multisigAddress: ADDRESS, chainId: CHAIN, type: "timelock" }],
+    policyViolations: [{ id: "v1" }],
+    emergencyEvents: [{ id: "e1" }],
+    emergencyStates: [{ id: "s1", isPaused: true }],
+    incidents: [{ id: "i1" }],
+    alertRules: [{ id: "r1" }],
+    alerts: [{ id: "a1" }],
+    spendRecords: [{ id: "x1" }],
+  };
+}
+
+/** Fails, naming the collection, if the stored file lost or changed any removed collection. */
+function expectLegacyRowsKept(stored: Record<string, unknown>) {
+  const legacy = legacyCollections();
+  for (const key of REMOVED_COLLECTIONS) {
+    expect({ key, rows: stored[key] }).toEqual({
+      key,
+      rows: legacy[key as keyof typeof legacy],
+    });
+  }
+}
+
 function loadLocalDb(): typeof import("@/lib/localDb") {
   jest.resetModules();
   return require("@/lib/localDb");
@@ -124,25 +151,12 @@ describe("lib/localDb after the Phase 4 removal", () => {
   });
 
   test("a file that still carries the removed Phase 4 keys loads and keeps working", () => {
-    mockFiles.set(
-      DB_FILE,
-      JSON.stringify({
-        ...currentCollections(),
-        policies: [{ id: "p1", multisigAddress: ADDRESS, chainId: CHAIN, type: "timelock" }],
-        policyViolations: [{ id: "v1" }],
-        emergencyEvents: [{ id: "e1" }],
-        emergencyStates: [{ id: "s1", isPaused: true }],
-        incidents: [{ id: "i1" }],
-        alertRules: [{ id: "r1" }],
-        alerts: [{ id: "a1" }],
-        spendRecords: [{ id: "x1" }],
-      }),
-    );
+    mockFiles.set(DB_FILE, JSON.stringify({ ...currentCollections(), ...legacyCollections() }));
     const localDb = loadLocalDb();
 
     expect(localDb.getMultisig(CHAIN, ADDRESS)?.name).toBe("Legacy");
 
-    // writes still go through, with the old keys sitting unread in the same file
+    // writes still go through
     localDb.createMultisig({
       chainId: CHAIN,
       address: "core1second",
@@ -151,6 +165,39 @@ describe("lib/localDb after the Phase 4 removal", () => {
     });
     expect(localDb.getMultisig(CHAIN, "core1second")).not.toBeNull();
     expect(localDb.getMultisig(CHAIN, ADDRESS)?.name).toBe("Legacy");
+  });
+
+  test("a write by the app leaves the old Phase 4 rows in the file", () => {
+    // policyVersion is set, so loading needs no migration and the only write is the app's own
+    const current = currentCollections();
+    current.contractMultisigs = current.contractMultisigs.map((c) => ({ ...c, policyVersion: 1 }));
+    mockFiles.set(DB_FILE, JSON.stringify({ ...current, ...legacyCollections() }));
+    const localDb = loadLocalDb();
+
+    localDb.createMultisig({
+      chainId: CHAIN,
+      address: "core1second",
+      creator: null,
+      pubkeyJSON: "{}",
+    });
+
+    const stored = storedDb();
+    expect((stored.multisigs as unknown[]).length).toBe(2); // the write really reached the file
+    expectLegacyRowsKept(stored);
+  });
+
+  test("the migration write keeps the old Phase 4 rows too", () => {
+    // a file from before the credential collections existed: the first read migrates and rewrites it
+    const { credentialEvents, ...olderCollections } = currentCollections();
+    void credentialEvents;
+    mockFiles.set(DB_FILE, JSON.stringify({ ...olderCollections, ...legacyCollections() }));
+    const localDb = loadLocalDb();
+
+    expect(localDb.getMultisig(CHAIN, ADDRESS)?.name).toBe("Legacy");
+
+    const stored = storedDb();
+    expect(Object.keys(stored)).toContain("credentialEvents"); // the migration ran and wrote the file
+    expectLegacyRowsKept(stored);
   });
 
   test("the policyVersion migration for contract cliqs still runs", () => {
