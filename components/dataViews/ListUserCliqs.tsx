@@ -13,7 +13,8 @@ import { FetchedMultisigs, getDbUserMultisigs } from "@/lib/api";
 import { getUserSettings } from "@/lib/settingsStorage";
 import { toastError } from "@/lib/utils";
 import { MultisigThresholdPubkey } from "@cosmjs/amino";
-import { Loader2, MoveRightIcon, RefreshCw, Users, Shield, ShieldPlus, Clock } from "lucide-react";
+import { Loader2, MoveRightIcon, RefreshCw, Users, Shield } from "lucide-react";
+import { KitIcon } from "@/components/icons/kit";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -296,9 +297,7 @@ export default function ListUserCliqs() {
         {listLoaded && !rows.length && (
           <div className="py-6 text-center">
             <div className="mb-3 flex justify-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                <ShieldPlus className="h-6 w-6 text-muted-foreground" />
-              </div>
+              <KitIcon name="multisig" size={48} className="text-muted-foreground" />
             </div>
             <p className="mb-4 text-sm text-muted-foreground">
               You don&apos;t have any CLIQs on {chain.chainDisplayName} yet.
@@ -366,8 +365,7 @@ export default function ListUserCliqs() {
                           )}
                         </div>
                         {needsMeCount > 0 && (
-                          <Badge variant="warning" className="ml-auto h-5 gap-1 px-1.5 sm:ml-0">
-                            <Clock className="h-3 w-3" />
+                          <Badge variant="warning" mark="half" className="ml-auto sm:ml-0">
                             {needsMeCount} waiting for you
                           </Badge>
                         )}
@@ -375,7 +373,7 @@ export default function ListUserCliqs() {
                       <div className="mt-0.5 flex items-center gap-2">
                         <Tooltip>
                           <TooltipTrigger>
-                            <Badge variant="outline" className="gap-1 text-xs">
+                            <Badge variant="outline">
                               <Shield className="h-3 w-3" />
                               {cliq.threshold}/{cliq.memberCount}
                             </Badge>

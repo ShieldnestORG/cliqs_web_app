@@ -44,6 +44,7 @@ import { useChains } from "@/context/ChainsContext";
 import { createSigningCW3ClientFromSigner } from "@/lib/contract/cw3-client";
 import { getGasAdjustment } from "@/lib/contract/codeRegistry";
 import { ensureProtocol } from "@/lib/utils";
+import { StatusBadge } from "@/components/dataViews/ContractProposalList";
 import { AddressDisplay } from "@/components/ui/address-display";
 
 // ============================================================================
@@ -422,13 +423,9 @@ export default function ContractVotePanel({
       <CardHeader>
         <div className="flex items-start justify-between">
           <div>
-            <div className="mb-2 flex items-center gap-2">
-              <Badge variant="outline" className="font-mono">
-                #{proposal.id}
-              </Badge>
-              <Badge variant={proposal.status === "passed" ? "default" : "secondary"}>
-                {proposal.status}
-              </Badge>
+            <div className="mb-2 flex items-center gap-3">
+              <Badge variant="outline">#{proposal.id}</Badge>
+              <StatusBadge status={proposal.status} />
             </div>
             <CardTitle className="text-xl">{proposal.title}</CardTitle>
             <CardDescription className="mt-1">

@@ -51,8 +51,6 @@ import { fromBase64 } from "@cosmjs/encoding";
 import {
   Database,
   Shield,
-  ShieldCheck,
-  ShieldAlert,
   Upload,
   Download,
   TestTube,
@@ -69,6 +67,7 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
+import { KitIcon } from "@/components/icons/kit";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -519,12 +518,6 @@ export default function DatabaseSettings() {
   // Render helpers
   // ---------------------------------------------------------------------------
 
-  const securityLevelIcon = (level: SecurityLevel) => {
-    if (level === 0) return <Shield className="h-4 w-4" />;
-    if (level === 1) return <ShieldCheck className="h-4 w-4" />;
-    return <ShieldAlert className="h-4 w-4" />;
-  };
-
   const securityLevelBadge = (level: SecurityLevel) => {
     // Level 0 must read as a warning here. This badge is the only indicator a
     // user who already chose a level ever sees — the picker is hidden once a
@@ -537,8 +530,7 @@ export default function DatabaseSettings() {
       "default",
     ];
     return (
-      <Badge variant={variants[level]} className="gap-1">
-        {securityLevelIcon(level)}
+      <Badge variant={variants[level]} mark={level === 0 ? "stripes" : undefined}>
         Level {level}: {labels[level]}
       </Badge>
     );
@@ -552,7 +544,7 @@ export default function DatabaseSettings() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Database className="h-5 w-5 text-info" />
+          <KitIcon name="database" size={24} className="text-foreground" />
           Database Configuration
         </CardTitle>
         <CardDescription>
@@ -582,15 +574,11 @@ export default function DatabaseSettings() {
                   contents are not affected, only the credential stored here.
                 </p>
               )}
-              <div className="mt-2 flex flex-wrap gap-2">
+              <div className="mt-2 flex flex-wrap gap-3">
                 {securityLevelBadge(status.meta.securityLevel)}
-                {status.meta.provisioned && (
-                  <Badge variant="outline" className="gap-1">
-                    <Wrench className="h-3 w-3" /> Provisioned
-                  </Badge>
-                )}
+                {status.meta.provisioned && <Badge variant="outline">Provisioned</Badge>}
                 {status.meta.lastTestedAt && (
-                  <Badge variant="outline" className="gap-1 text-xs">
+                  <Badge variant="outline">
                     Last tested: {new Date(status.meta.lastTestedAt).toLocaleDateString()}
                   </Badge>
                 )}
@@ -1026,9 +1014,7 @@ export default function DatabaseSettings() {
                     <Label htmlFor="level-1" className="flex cursor-pointer items-center gap-2">
                       <KeyRound className="h-4 w-4 text-info" />
                       Level 1: Passphrase Encryption
-                      <Badge variant="secondary" className="text-[10px]">
-                        Recommended
-                      </Badge>
+                      <Badge variant="secondary">Recommended</Badge>
                     </Label>
                     <p className="text-xs text-muted-foreground">
                       AES-256-GCM encryption with PBKDF2 key derivation (600K iterations).

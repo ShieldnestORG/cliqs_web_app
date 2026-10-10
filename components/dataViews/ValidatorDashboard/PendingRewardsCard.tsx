@@ -324,22 +324,10 @@ export default function PendingRewardsCard({
   };
 
   // One primary per view: "Claim all" when both amounts exist, otherwise the one row that can claim.
-  const commissionVariant =
-    hasCommission && !hasRewards
-      ? isCliqMode
-        ? "action-bronze"
-        : "default"
-      : isCliqMode
-        ? "action-bronze-outline"
-        : "outline";
-  const rewardsVariant =
-    hasRewards && !hasCommission
-      ? isCliqMode
-        ? "action-bronze"
-        : "default"
-      : isCliqMode
-        ? "action-bronze-outline"
-        : "outline";
+  // Coral in both signing modes (gold is the testnet colour): the CLIQ path is told apart by its
+  // "Create:" labels and the note above the rows, not by a second button colour.
+  const commissionVariant = hasCommission && !hasRewards ? "default" : "outline";
+  const rewardsVariant = hasRewards && !hasCommission ? "default" : "outline";
 
   return (
     <div className="space-y-4">
@@ -425,7 +413,7 @@ export default function PendingRewardsCard({
       {/* Show "Claim all" only if there are both rewards and commission */}
       {hasRewards && hasCommission && (
         <Button
-          variant={isCliqMode ? "action-bronze" : "default"}
+          variant="default"
           className="w-full gap-2"
           onClick={() => claimCommission(true)}
           disabled={readOnly || isClaimingCommission || isClaimingRewards}

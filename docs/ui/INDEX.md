@@ -3,7 +3,7 @@
 > **Cluster:** design-system · **Tags:** ui, design-system, tokens, coherence-daddy, geist, index · **Related:** [STYLE-GUIDE.md](../STYLE-GUIDE.md), [Typography PRD](./TYPOGRAPHY-PRD.md), [Cards PRD](./CARDS-PRD.md), [Buttons PRD](./BUTTONS-PRD.md), [Forms PRD](./FORMS-PRD.md), [Patterns PRD](./PATTERNS-PRD.md), [Validator Dashboard PRD](./VALIDATOR-DASHBOARD-PRD.md), [Transaction Page Redesign PRD](./TRANSACTION-PAGE-REDESIGN-PRD.md)
 
 **UI4 Institutional Design System**  
-**Version:** 1.2  
+**Version:** 1.3  
 **Last Updated:** 2026-10-10
 
 > **Canonical token reference: [`docs/STYLE-GUIDE.md`](../STYLE-GUIDE.md).**
@@ -26,8 +26,8 @@ The Cosmos Multisig UI implements an institutional-grade design system inspired 
 ### Core UI System
 | Document | Description |
 |----------|-------------|
-| [CARDS-PRD.md](./CARDS-PRD.md) | Card system: variants, the default gradient and its `bg-none` opt-out, accents, brackets |
-| [BUTTONS-PRD.md](./BUTTONS-PRD.md) | Button system, house-style adoption (2026-10-10): pill, 44px, coral sheen, sizes incl. `xs`, one primary per view; the near-black-on-coral contrast rule; the 1.2 line height lives on each size (tailwind-merge drops it from the base); no `mr-*`/`ml-*` on anything inside a Button (the `gap-2` spaces it; a test enforces it) |
+| [CARDS-PRD.md](./CARDS-PRD.md) | Card system: variants, the default gradient and its `bg-none` opt-out, accents, brackets; the status tag (`Badge`: a word in its state's colour token plus an optional moving mark, no pill, no plain dot) |
+| [BUTTONS-PRD.md](./BUTTONS-PRD.md) | Button system, house-style adoption (2026-10-10): pill, 44px, sizes incl. `xs`, one primary per view; round 2 (2026-10-10): sheen and depth on every button (solid coral, ink and red with a shadow set; quiet outline and secondary with a faint top light), no gold on buttons (gold is the testnet colour; the bronze variants are gone); the near-black-on-coral contrast rule (contrast on the ink and red stops not yet measured); the 1.2 line height lives on each size (tailwind-merge drops it from the base); no `mr-*`/`ml-*` on anything inside a Button (the `gap-2` spaces it; a test enforces it) |
 | [TYPOGRAPHY-PRD.md](./TYPOGRAPHY-PRD.md) | Font system (Geist, Geist Mono — no third family); button text is Geist sans in sentence case |
 | [FORMS-PRD.md](./FORMS-PRD.md) | Input fields (every text input is 44px), the select (house-style metrics), validation states, slider components |
 | [PATTERNS-PRD.md](./PATTERNS-PRD.md) | The GridSpotlight page background, visual language, kit icons (exactly one coral part), the scale rule (section divider), menus (dropdown and select), scroll boxes (why a `max-h` scroller is `relative`, and why `CopyButton` is `relative` too), and the hover-card / copy-tooltip / sidebar-rail interaction patterns |
@@ -35,7 +35,7 @@ The Cosmos Multisig UI implements an institutional-grade design system inspired 
 ### Page & Feature Specs
 | Document | Description |
 |----------|-------------|
-| [VALIDATOR-DASHBOARD-PRD.md](./VALIDATOR-DASHBOARD-PRD.md) | Free validator dashboard — the compact layout of 2026-10-10 (jailed alert, header strip, scale-rule sections) and its one-row follow-up (network control and strip, one-line withdraw address, a scrolling past-proposals list), CLIQ mode, gas handling, validator actions (partly reconciled against shipped code) |
+| [VALIDATOR-DASHBOARD-PRD.md](./VALIDATOR-DASHBOARD-PRD.md) | Free validator dashboard: the compact layout of 2026-10-10 (jailed alert, header strip, scale-rule sections), its one-row follow-up (network control and strip, one-line withdraw address, a scrolling past-proposals list) and the round 2 owner review (no "Acting as" line or mainnet caption, a status tag with a moving mark, looser spacing, a restyled Manage card, coral Claim buttons in CLIQ mode), CLIQ mode, gas handling, validator actions (partly reconciled against shipped code; some measured figures await re-measuring) |
 | [TRANSACTION-PAGE-REDESIGN-PRD.md](./TRANSACTION-PAGE-REDESIGN-PRD.md) | In-progress transaction page redesign — verification, fees, broadcast-safety states (shipped, with documented drift) |
 
 ---
@@ -105,10 +105,14 @@ Never paint an opaque, full-bleed background on a page wrapper — one animated 
 
 ### Button Variants
 
-> **2026-10-10:** components use the `Button` variants (`default` coral sheen, `action` solid
-> ink, `outline`, `secondary`, `ghost`, `destructive`; sizes `xs` 24px, `sm` 36px, default 44px,
-> `lg` 48px), not the `.btn-*` CSS classes below, which are legacy and were not updated. See
-> [Buttons PRD](./BUTTONS-PRD.md). The 11px mono uppercase `action` style is retired.
+> **2026-10-10:** components use the `Button` variants (`default` coral sheen, `action` ink
+> sheen, `destructive` red sheen, `outline`, `secondary`, `ghost`; sizes `xs` 24px, `sm` 36px,
+> default 44px, `lg` 48px), not the `.btn-*` CSS classes below, which are legacy and were not
+> updated. See [Buttons PRD](./BUTTONS-PRD.md). The 11px mono uppercase `action` style is retired.
+> Round 2 (2026-10-10): the solid variants have sheen and depth (a gradient plus `shadow-btn`), the
+> quiet ones a faint raised light, and no variant is gold (`action-bronze` and
+> `action-bronze-outline` are removed; gold is the testnet colour). Until round 2 this note listed
+> `action` as "solid ink".
 
 ```css
 /* Legacy CSS classes in styles/globals.css (not the source of truth) */
@@ -260,17 +264,17 @@ See [Patterns PRD §20](./PATTERNS-PRD.md#20-scale-rule-section-divider) and
   ├── Sidebar.tsx                 # Auto-collapsing icon rail (overlay expand); items come from lib/navigation.ts
   ├── Header.tsx                  # Below lg: the menu panel; same items from lib/navigation.ts
   ├── WalletConnectPrompt.tsx     # The one in-page "connect your wallet" card (label + description props)
-  ├── audit/AuditReport.tsx       # Audit & tests report body; status badges use Badge success/info/warning
+  ├── audit/AuditReport.tsx       # Audit & tests report body; status tags use Badge success + signal, info + signal, warning + half
   ├── dataViews/ListMultisigTxs.tsx  # Also exports TransactionCard, the one transaction row (Home inbox + CLIQ page)
   ├── icons/kit.tsx               # Kit icons (TOKNS brand icon kit idiom, cliqs tokens)
   ├── DevTools/NetworkToggle.tsx  # Compact Mainnet | Testnet control (validator page and Dev Tools)
   └── ui/
-      ├── button.tsx              # Button, house-style geometry (pill, 44px) with UI4 variant names
+      ├── button.tsx              # Button, house-style geometry (pill, 44px) with UI4 variant names; sheen and depth since round 2
       ├── dropdown-menu.tsx       # Radix dropdown in the house-style menu metrics
       ├── select.tsx              # Radix select, 44px trigger, house-style menu metrics
       ├── scale-rule.tsx          # Section divider: label as h2 over a ruler-edge hairline
       ├── card.tsx                # Card with gradient, accents & brackets
-      ├── badge.tsx               # Badge; status variants success / info / warning (see CARDS-PRD "Status Badge")
+      ├── badge.tsx               # Badge, the status tag: mono word in a state colour token, optional mark signal / half / stripes / ring (see CARDS-PRD "Status tag")
       ├── bento-grid.tsx          # Bento grid + stat/action cards
       ├── copy-button.tsx         # Click-only "Copied!" tooltip
       ├── input.tsx               # Input with variants

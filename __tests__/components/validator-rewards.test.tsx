@@ -13,7 +13,9 @@
  *
  * One primary per view: exactly one coral button (`bg-primary-gradient`) shows in the card, or none:
  * "Claim all" when both amounts exist, only that row's Claim when one does, nothing coral when
- * there is nothing to claim (the same in CLIQ mode with the bronze primary, `bg-bronze`).
+ * there is nothing to claim. The primary is coral in BOTH signing modes (since 2026-10-10 gold is
+ * the testnet colour, so nothing here is bronze); the CLIQ path is told apart by its "Create: "
+ * labels, not by a second button colour. Every other button in the card is `outline`.
  *
  * Nothing here touches a chain: the signing client is a recording stub, and the CLIQ
  * transaction creator is mocked. The real message helpers run.
@@ -291,12 +293,17 @@ describe("PendingRewards disabled rules: P0", () => {
 });
 
 describe("PendingRewards: one coral button per view: P2", () => {
-  // the primary look is the sheen (bg-primary-gradient); in CLIQ mode it is solid bronze (bg-bronze)
-  const primaries = (cls: string) =>
-    screen
-      .getAllByRole("button")
+  // The primary look is the coral sheen (bg-primary-gradient); every other button is `outline`
+  // (the quiet raised pill: bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015] + shadow-btn-quiet). Names lose the CLIQ "Create: " prefix.
+  const buttons = () => screen.getAllByRole("button");
+  const nameOf = (button: HTMLElement) =>
+    (button.getAttribute("aria-label") ?? button.textContent ?? "").replace(/^Create: /, "");
+  const withClass = (cls: string) =>
+    buttons()
       .filter((button) => button.classList.contains(cls))
-      .map((button) => button.getAttribute("aria-label") ?? button.textContent);
+      .map(nameOf);
+  const bronzeClasses = () =>
+    buttons().flatMap((button) => Array.from(button.classList).filter((c) => /bronze/.test(c)));
 
   const states: [string, Props, string[]][] = [
     ["both amounts", {}, ["Claim all"]],
@@ -304,29 +311,64 @@ describe("PendingRewards: one coral button per view: P2", () => {
     ["rewards only", { commission: NONE }, ["Claim self-delegation rewards"]],
     ["nothing to claim", { commission: NONE, selfDelegationRewards: NONE }, []],
   ];
+  const modes: [string, Props][] = [
+    ["direct mode", {}],
+    ["CLIQ mode", { isCliqMode: true, cliqAddress: CLIQ }],
+  ];
+  const cases = modes.flatMap(([mode, modeProps]) =>
+    states.map(
+      ([state, props, expected]) => [mode, state, { ...modeProps, ...props }, expected] as const,
+    ),
+  );
 
-  it.each(states)(
-    "direct mode, %s: only the expected button is coral",
-    (_name, props, expected) => {
+  it.each(cases)("%s, %s: only the expected button is coral", (_mode, _state, props, expected) => {
+    renderCard(props);
+
+    expect(withClass("bg-primary-gradient")).toEqual(expected);
+  });
+
+  it.each(cases)(
+    "%s, %s: every other button is outline, and nothing is bronze",
+    (_mode, _state, props, expected) => {
       renderCard(props);
 
-      expect(primaries("bg-primary-gradient")).toEqual(expected);
-      expect(primaries("bg-bronze")).toEqual([]);
+      const others = buttons().filter(
+        (button) => !button.classList.contains("bg-primary-gradient"),
+      );
+      expect(others.length + expected.length).toBe(buttons().length);
+      for (const button of others) {
+        expect(button).toHaveClass(
+          "bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015]",
+          "shadow-btn-quiet",
+          "border-border/15",
+        );
+        expect(button).not.toHaveClass("shadow-btn");
+      }
+      for (const button of buttons().filter((b) => b.classList.contains("bg-primary-gradient"))) {
+        expect(button).toHaveClass("shadow-btn", "hover:shadow-btn-hover");
+      }
+      expect(bronzeClasses()).toEqual([]);
     },
   );
 
-  it.each(states)("CLIQ mode, %s: only the expected button is bronze", (_name, props, expected) => {
-    renderCard({ isCliqMode: true, cliqAddress: CLIQ, ...props });
+  it.each(states)(
+    "%s: CLIQ mode picks the same coral button as direct mode",
+    (_state, props, expected) => {
+      const direct = renderCard(props);
+      const inDirect = withClass("bg-primary-gradient");
+      direct.unmount();
 
-    // the button names carry the "Create: " prefix in CLIQ mode
-    expect(primaries("bg-bronze").map((name) => name?.replace(/^Create: /, ""))).toEqual(expected);
-    expect(primaries("bg-primary-gradient")).toEqual([]);
-  });
+      renderCard({ isCliqMode: true, cliqAddress: CLIQ, ...props });
+
+      expect(withClass("bg-primary-gradient")).toEqual(inDirect);
+      expect(inDirect).toEqual(expected);
+    },
+  );
 
   it("with nothing to claim there is no coral button and both row buttons are off", () => {
     renderCard({ commission: NONE, selfDelegationRewards: NONE });
 
-    expect(primaries("bg-primary-gradient")).toEqual([]);
+    expect(withClass("bg-primary-gradient")).toEqual([]);
     expect(screen.queryByRole("button", { name: /Claim all/ })).not.toBeInTheDocument();
     expect(claimCommissionButton()).toBeDisabled();
     expect(claimRewardsButton()).toBeDisabled();

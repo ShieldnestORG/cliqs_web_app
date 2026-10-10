@@ -19,28 +19,29 @@ const buttonVariants = cva(
     variants: {
       variant: {
         // Standard variants
+        // Solid buttons share one recipe: a 135deg sheen, a lit top edge and a short drop
+        // (shadow-btn), the popover shadow on hover, a flat pressed fill that sinks in.
         // default = the coral sheen. One per view.
         default:
-          "border-primary-press bg-primary-gradient text-primary-foreground hover:shadow-pop active:bg-primary-press active:bg-none active:shadow-none",
+          "border-primary-press bg-primary-gradient text-primary-foreground shadow-btn hover:shadow-btn-hover active:bg-primary-press active:bg-none active:shadow-btn-pressed",
+        // destructive = the same recipe in red
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:shadow-pop active:shadow-none",
-        // outline = a ghost: transparent, a visible 1px edge, a fill on hover
+          "border-destructive-press bg-destructive-gradient text-destructive-foreground shadow-btn hover:shadow-btn-hover active:bg-destructive-press active:bg-none active:shadow-btn-pressed",
+        // outline = a quiet raised pill: a faint top light, a visible 1px edge, a fill on hover
         outline:
-          "border-border/15 bg-transparent hover:bg-field hover:text-accent-foreground",
+          "border-border/15 bg-transparent bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015] shadow-btn-quiet hover:bg-field hover:text-accent-foreground active:shadow-btn-pressed",
         // secondary = a quiet fill that stays visible on the dark card
         secondary:
-          "border-border/10 bg-field text-secondary-foreground hover:bg-[color-mix(in_srgb,hsl(var(--field)),hsl(var(--foreground))_9%)]",
+          "border-border/10 bg-field bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015] text-secondary-foreground shadow-btn-quiet hover:bg-[color-mix(in_srgb,hsl(var(--field)),hsl(var(--foreground))_9%)] active:shadow-btn-pressed",
         ghost: "hover:bg-field hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
 
         // UI4 Institutional variants (kept by name; sentence case since 2026-10-10)
-        // action = solid ink
-        action: "bg-foreground text-background hover:brightness-110",
+        // action = the ink sheen (the solid recipe in ink)
+        action:
+          "border-ink-press bg-ink-gradient text-background shadow-btn hover:shadow-btn-hover active:bg-ink-press active:bg-none active:shadow-btn-pressed",
         "action-outline":
-          "border-border/15 bg-transparent text-foreground hover:bg-field",
-        "action-bronze": "bg-bronze text-background hover:brightness-110",
-        "action-bronze-outline":
-          "border-bronze bg-transparent text-foreground hover:bg-bronze/10",
+          "border-border/15 bg-transparent bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015] text-foreground shadow-btn-quiet hover:bg-field active:shadow-btn-pressed",
         "card-cta":
           "bg-foreground text-background hover:opacity-90 rounded-xl font-heading",
         "card-cta-outline":

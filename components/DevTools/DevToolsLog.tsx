@@ -118,9 +118,7 @@ export default function DevToolsLog({ entries, onClear }: DevToolsLogProps) {
                         {new Date(entry.createdAt).toLocaleString()}
                       </td>
                       <td className="px-2 py-2">
-                        <Badge variant="outline" className="uppercase">
-                          {entry.stage}
-                        </Badge>
+                        <Badge variant="outline">{entry.stage}</Badge>
                       </td>
                       <td className="px-2 py-2">
                         <Badge variant={entry.network === "mainnet" ? "destructive" : "secondary"}>

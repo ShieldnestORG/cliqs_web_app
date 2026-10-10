@@ -32,8 +32,7 @@ import {
 import { getDbUserMultisigs } from "@/lib/api";
 import { ensureChainMultisigInDb } from "@/lib/multisigHelpers";
 import { getUserSettings } from "@/lib/settingsStorage";
-import { toastError } from "@/lib/utils";
-import { truncateAddress } from "@/lib/displayHelpers";
+import { cn, toastError } from "@/lib/utils";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   RefreshCw,
@@ -74,19 +73,18 @@ interface AssociatedValidator {
  */
 function DashboardSkeleton({ message }: { message: string }) {
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+    <div className="space-y-8">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
         <Skeleton className="h-7 w-44" />
-        <Skeleton className="h-6 w-20 rounded-full" />
+        <Skeleton className="h-5 w-20" />
         <Skeleton className="h-5 w-72 max-w-full" />
       </div>
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <Skeleton className="h-10 w-full max-w-xl" />
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-end">
         <Skeleton className="h-9 w-56" />
       </div>
-      <div className="grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-x-8 gap-y-10 lg:grid-cols-2">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="flex flex-col gap-3">
+          <div key={i} className="flex flex-col gap-4">
             <Skeleton className="h-4 w-28" />
             <Skeleton className="h-48 w-full rounded-xl" />
           </div>
@@ -773,9 +771,12 @@ export default function ValidatorDashboard() {
   // In CLIQ mode, determine whether write actions should be enabled.
   // Read-only view is shown when membership verification failed (isCliqMember === false).
   const cliqReadOnly = isCliqMode && isCliqMember === false;
+  // The context row's left side shows only these two notes.
+  const showReadOnlyNote = cliqReadOnly && !isVerifyingMembership;
+  const showContextNote = !walletInfo?.address || showReadOnlyNote;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Jailed alert: the very first block while jailed. It hosts Unjail, so it never sits below the fold. */}
       {dashboardData.validator.jailed && (
         <JailedAlert
@@ -791,37 +792,39 @@ export default function ValidatorDashboard() {
       {/* Header strip: moniker, status, commission, addresses, explorer link */}
       <ValidatorIdentityCard validator={dashboardData.validator} />
 
-      {/* Context row: "Acting as" states the signing mode in plain words (left); the network control and Refresh sit on the right */}
+      {/* Context row: a note on the left only when there is something the visitor must know before
+          acting (no wallet, or read-only); the network control and Refresh sit on the right.
+          Until 2026-10-10 the left side always held an "Acting as ..." sentence; it was removed
+          (owner's call): the button labels and the note in the Rewards card say which path signs. */}
       <div
         data-testid="context-row"
-        className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between"
+        className={cn(
+          "flex flex-col gap-4 lg:flex-row lg:items-start",
+          showContextNote ? "lg:justify-between" : "lg:justify-end",
+        )}
       >
-        <div className="min-w-0 space-y-2 lg:flex-1">
-          <div className="flex items-start gap-3">
-            {isCliqMode ? (
-              <Users className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
-            ) : (
-              <Shield className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+        {showContextNote && (
+          <div className="min-w-0 space-y-2 lg:flex-1">
+            {!walletInfo?.address && (
+              <div className="flex items-start gap-3">
+                <Shield className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+                <p className="text-sm text-foreground">
+                  No wallet connected. Connect a wallet to act on this validator.
+                </p>
+              </div>
             )}
-            <p className="text-sm text-foreground">
-              {isCliqMode && cliqAddress
-                ? `Acting as CLIQ ${truncateAddress(cliqAddress, 10, 6)}. Actions create a transaction for this CLIQ; its members sign it, then one member broadcasts.`
-                : walletInfo?.address
-                  ? "Acting as your wallet. Actions sign with your connected wallet."
-                  : "No wallet connected. Connect a wallet to act on this validator."}
-            </p>
+            {showReadOnlyNote && (
+              <p className="flex items-start gap-3 text-sm text-warning">
+                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+                <span>
+                  Read-only: your connected wallet could not be verified as a member of this CLIQ.
+                  Transaction actions are disabled. If you believe this is an error, reconnect with
+                  the correct wallet or ensure the CLIQ is registered in the database.
+                </span>
+              </p>
+            )}
           </div>
-          {cliqReadOnly && !isVerifyingMembership && (
-            <p className="flex items-start gap-3 text-sm text-warning">
-              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
-              <span>
-                Read-only: your connected wallet could not be verified as a member of this CLIQ.
-                Transaction actions are disabled. If you believe this is an error, reconnect with
-                the correct wallet or ensure the CLIQ is registered in the database.
-              </span>
-            </p>
-          )}
-        </div>
+        )}
 
         <div className="flex shrink-0 flex-wrap items-start gap-2">
           <NetworkToggle
@@ -924,11 +927,11 @@ export default function ValidatorDashboard() {
       )}
 
       {/* Rewards and Performance share a row from lg; Governance and Stakers the next. One column below lg. */}
-      <div className="grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-2">
-        <section aria-labelledby="validator-rewards" className="flex flex-col gap-3">
+      <div className="grid grid-cols-1 gap-x-8 gap-y-10 lg:grid-cols-2">
+        <section aria-labelledby="validator-rewards" className="flex flex-col gap-4">
           <ScaleRule headingId="validator-rewards" label="Rewards" tone="primary" />
           <Card className="flex-1">
-            <CardContent className="space-y-4 p-4 sm:p-5">
+            <CardContent className="space-y-5 p-5 sm:p-6">
               <PendingRewardsCard
                 validator={dashboardData.validator}
                 commission={dashboardData.commission}
@@ -951,19 +954,19 @@ export default function ValidatorDashboard() {
           </Card>
         </section>
 
-        <section aria-labelledby="validator-performance" className="flex flex-col gap-3">
+        <section aria-labelledby="validator-performance" className="flex flex-col gap-4">
           <ScaleRule headingId="validator-performance" label="Performance" />
           <Card className="flex-1">
-            <CardContent className="p-4 sm:p-5">
+            <CardContent className="p-5 sm:p-6">
               <ValidatorPerformanceCard data={dashboardData} />
             </CardContent>
           </Card>
         </section>
 
-        <section aria-labelledby="validator-governance" className="flex flex-col gap-3">
+        <section aria-labelledby="validator-governance" className="flex flex-col gap-4">
           <ScaleRule headingId="validator-governance" label="Governance" />
           <Card className="flex-1">
-            <CardContent className="p-4 sm:p-5">
+            <CardContent className="p-5 sm:p-6">
               <ProposalViewer
                 data={dashboardData}
                 onTransactionComplete={handleTransactionComplete}
@@ -975,20 +978,20 @@ export default function ValidatorDashboard() {
           </Card>
         </section>
 
-        <section aria-labelledby="validator-stakers" className="flex flex-col gap-3">
+        <section aria-labelledby="validator-stakers" className="flex flex-col gap-4">
           <ScaleRule headingId="validator-stakers" label="Stakers" />
           <Card className="flex-1">
-            <CardContent className="p-4 sm:p-5">
+            <CardContent className="p-5 sm:p-6">
               <ValidatorDelegatorsCard data={dashboardData} />
             </CardContent>
           </Card>
         </section>
       </div>
 
-      <section aria-labelledby="validator-manage" className="flex flex-col gap-3">
+      <section aria-labelledby="validator-manage" className="flex flex-col gap-4">
         <ScaleRule headingId="validator-manage" label="Manage" />
         <Card>
-          <CardContent className="p-4 sm:p-5">
+          <CardContent className="p-5 sm:p-6">
             <ValidatorCommandsCard
               validator={dashboardData.validator}
               onTransactionComplete={handleTransactionComplete}

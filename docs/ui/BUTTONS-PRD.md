@@ -3,8 +3,19 @@
 > **Cluster:** design-system · **Tags:** buttons, variants, house-style, coral, sizes, tokens · **Related:** [STYLE-GUIDE.md](../STYLE-GUIDE.md), [UI Index](./INDEX.md), [Patterns PRD](./PATTERNS-PRD.md), [Forms PRD](./FORMS-PRD.md), [Cards PRD](./CARDS-PRD.md)
 
 **Cosmos Multisig UI - Button System Specification**  
-**Version:** 2.0  
+**Version:** 2.1  
 **Last Updated:** 2026-10-10
+
+> **2026-10-10 (round 2): sheen and depth on every button, and no gold.** The owner: "these
+> buttons can be the nicer quality ones ... with sheen and depth and not just this page but thru
+> out app, and we should not use gold; that is testnet color; can go back to the coral orange".
+> Three changes, all app-wide. (1) The solid buttons (`default`, `destructive`, `action`) share
+> one recipe: a 135deg three-stop gradient, a short neutral rest shadow, a deeper shadow on hover
+> and a flat sunk fill when pressed (§3, §4.7). (2) The quiet buttons (`outline`, `secondary`,
+> `action-outline`) carry a faint top light and a hairline shadow; `ghost`, `link` and `icon`
+> stay flat. (3) `action-bronze` and `action-bronze-outline` are removed: gold is the testnet
+> colour, so no button uses it (§4.8). This reverses the earlier rule "No rest shadows" (§1); the
+> old sentence is kept there. Not yet measured: label contrast on the new ink and red stops (§3.2).
 
 > **2026-10-10: the house-style adoption.** The button and menu geometry of the house style (pill
 > buttons, 44px controls, 8px gaps, as shipped in its stylesheet rather than as written in its
@@ -25,10 +36,19 @@ The button system is the house style's, measured in a browser rather than copied
 - **Pill buttons** (`rounded-full`) at **44px**: `h-11 px-5 text-sm`, 600 weight, sentence case
 - **One primary per view**: the coral sheen (`default`). Everything else is quieter
 - **A 120ms ease** (`duration-ui ease-ui`, `cubic-bezier(.2,.6,.2,1)`) on background, border,
-  shadow and press; no hover lift, no scale. Press is a **0.5px nudge** (`active:translate-y-[0.5px]`)
-- **No rest shadows**: depth comes from the coral gradient and from `shadow-pop` on hover
-- **Cliqs colours and type**: the brand coral `#FF6B4A` is already the house style's accent, so only the
-  gradient stops and the press fill are new tokens; the font stays Geist (the house style's SF
+  shadow and press; no hover lift (the button does not move, its shadow deepens), no scale. Press
+  is a **0.5px nudge** (`active:translate-y-[0.5px]`)
+- **Sheen and depth** (round 2): a solid button rests on a short neutral shadow (`shadow-btn`: a
+  lit top edge, a shaded bottom edge and a short drop), deepens to `shadow-btn-hover` on hover and
+  sinks to a flat fill with `shadow-btn-pressed` when pressed. Quiet buttons carry the lighter
+  `shadow-btn-quiet`. Shadows are always neutral (black, and white for the lit edge): never a
+  coloured glow. *Until 2026-10-10 (round 2) this bullet read: "**No rest shadows**: depth comes
+  from the coral gradient and from `shadow-pop` on hover".*
+- **Coral, ink and red; never gold** (round 2): gold is the testnet colour, so no button variant
+  uses it (§4.8)
+- **Cliqs colours and type**: the brand coral `#FF6B4A` is already the house style's accent, so the
+  coral needed only the gradient stops and the press fill as new tokens (round 2 added the shadow,
+  ink and red tokens, §3); the font stays Geist (the house style's SF
   Pro/Inter stack is not used, so its pixel widths do not transfer exactly)
 
 ---
@@ -37,9 +57,11 @@ The button system is the house style's, measured in a browser rather than copied
 
 | Category | Shape | Use Case |
 |----------|-------|----------|
-| Primary (`default`) | Pill, coral sheen | The one main action of a view: Claim all, Create |
-| Action (`action`) | Pill, solid ink | Strong secondary actions: Edit validator, Unjail |
-| Outline / ghost | Pill, 1px edge or none | Everyday actions, cancel, row actions |
+| Primary (`default`) | Pill, coral sheen and depth | The one main action of a view: Claim all, Create |
+| Action (`action`) | Pill, ink sheen and depth | Strong secondary actions: Edit validator, Unjail |
+| Destructive (`destructive`) | Pill, red sheen and depth | Dangerous actions, where one is needed |
+| Outline / secondary | Pill, 1px edge, faint top light and hairline shadow | Everyday actions, cancel, row actions |
+| Ghost | Pill, flat, no edge | Quiet row actions |
 | Dense chip (`xs`) | 24px, `rounded-md` | Dense table rows only |
 | Card CTAs | Rounded (`rounded-xl`) | Sign Up, Manage |
 | Tab Buttons | Pill | Filter tabs |
@@ -54,24 +76,69 @@ The button system is the house style's, measured in a browser rather than copied
 ### Colors (Dark Mode)
 
 Buttons compose the core tokens plus the house-style tokens added 2026-10-10
-(see [STYLE-GUIDE.md](../STYLE-GUIDE.md#house-style-control-tokens)).
+(see [STYLE-GUIDE.md](../STYLE-GUIDE.md#house-style-control-tokens)) and the round 2 sheen and
+depth tokens listed below the table.
 
-| Variant | Background | Edge | Text | Hover | Press |
-|---------|-----------|------|------|-------|-------|
-| `default` (coral sheen) | `bg-primary-gradient`: 135deg `--primary-sheen` 0%, `--primary` 45%, `--primary-press` 100% | `border-primary-press` | `text-primary-foreground` | adds `shadow-pop` | solid `--primary-press`, no shadow |
-| `action` | `bg-foreground` (solid ink) | none | `text-background` | `brightness-110` | 0.5px nudge |
-| `outline`, `action-outline` | transparent | 1px `border-border/15` | inherited | `bg-field` | 0.5px nudge |
-| `secondary` | `bg-field` | 1px `border-border/10` | `text-secondary-foreground` | `color-mix` 9% foreground into the fill | 0.5px nudge |
-| `ghost` | none | none | inherited | `bg-field` | 0.5px nudge |
-| `destructive` | `bg-destructive` | none | `text-destructive-foreground` | `bg-destructive/90` + `shadow-pop` | no shadow |
-| `action-bronze` | `bg-bronze` (gold) | none | `text-background` | `brightness-110` | nudge |
-| `action-bronze-outline` | transparent | 1px `border-bronze` | `text-foreground` | `bg-bronze/10` | nudge |
-| `link` | none | none | `text-primary` | underline | nudge |
-| Tab, active / inactive | unchanged | | | | |
+| Variant | Background | Edge | Text | Rest | Hover | Press |
+|---------|-----------|------|------|------|-------|-------|
+| `default` (coral sheen) | `bg-primary-gradient`: 135deg `--primary-sheen` 0%, `--primary` 45%, `--primary-press` 100% | `border-primary-press` | `text-primary-foreground` | `shadow-btn` | `shadow-btn-hover` | flat `--primary-press` fill (`active:bg-none` + `active:bg-primary-press`), `shadow-btn-pressed`, 0.5px nudge |
+| `destructive` (red sheen) | `bg-destructive-gradient`: 135deg `--destructive-sheen` 0%, `--destructive` 45%, `--destructive-press` 100% | `border-destructive-press` | `text-destructive-foreground` | `shadow-btn` | `shadow-btn-hover` | flat `--destructive-press` fill, `shadow-btn-pressed`, nudge |
+| `action` (ink sheen) | `bg-ink-gradient`: 135deg `--ink-sheen` 0%, `--foreground` 45%, `--ink-press` 100% | `border-ink-press` | `text-background` | `shadow-btn` | `shadow-btn-hover` | flat `--ink-press` fill, `shadow-btn-pressed`, nudge |
+| `outline`, `action-outline` | `bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015]` over a transparent fill | 1px `border-border/15` | inherited (`action-outline`: `text-foreground`) | `shadow-btn-quiet` | `bg-field` | `shadow-btn-pressed`, nudge |
+| `secondary` | `bg-field` with `bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015]` over it | 1px `border-border/10` | `text-secondary-foreground` | `shadow-btn-quiet` | `color-mix` 9% foreground into the fill | `shadow-btn-pressed`, nudge |
+| `ghost` | none | none | inherited | none | `bg-field` | 0.5px nudge |
+| `link` | none | none | `text-primary` | none | underline | nudge |
+| Tab, active / inactive | unchanged | | | | | |
+
+`icon` is flat like `ghost` (a `bg-field` hover, no gradient, no shadow).
+
+**Open at the round 2 commit:** the `secondary` row above is the design. The class string as
+committed (`bg-field bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015]`) loses its `bg-field` once `cn()` merges it, so the fill
+does not reach the page until that is fixed. See gotcha 6 in §9.
+
+*Until 2026-10-10 (round 2) this table read differently. `action` was a flat `bg-foreground` with
+no edge (hover `brightness-110`). `destructive` was a flat `bg-destructive` with no edge (hover
+`bg-destructive/90` plus `shadow-pop`, no shadow when pressed). `default` had no rest shadow (hover
+added `shadow-pop`; pressed was a solid `--primary-press` with no shadow). `outline`,
+`action-outline` and `secondary` had no gradient and no shadow. And it had two more rows, removed
+in round 2 because gold is the testnet colour: `action-bronze` (`bg-bronze`, no edge,
+`text-background`, hover `brightness-110`) and `action-bronze-outline` (transparent, 1px
+`border-bronze`, `text-foreground`, hover `bg-bronze/10`). They were the CLIQ-mode Claim buttons.*
 
 `secondary` is a visible fill on the dark card (`--field` `#26262A` on `#18181B` is 1.18:1, with
-a 10% edge); the previous `#1F1F22` fill was 1.08:1 and read as disabled. The house style's destructive
-reds are **not** ported (the recipe is: cliqs `--destructive` stays `#D94343`, solid, no gradient).
+a 10% edge; measured before round 2, to be re-measured, because the quiet gradient now lays a faint
+light over the fill); the previous `#1F1F22` fill was 1.08:1 and read as disabled. The red button
+keeps cliqs `--destructive` `#D94343` as its middle stop; the two end stops are new tokens (below).
+Whether those end stops match the house style's own destructive reds was not checked. *Until
+2026-10-10 (round 2) this paragraph said: "The house style's destructive reds are **not** ported
+(the recipe is: cliqs `--destructive` stays `#D94343`, solid, no gradient)."*
+
+### Sheen and depth tokens (round 2)
+
+All are in `styles/globals.css` (`:root`) and `tailwind.config.js`. The shadow values are copied
+from the stylesheet. Hex values are converted from the HSL triplets (the same conversion gives the
+documented `#D94343` and `#E5553A`); the code does not record a source hex for the ink and red
+stops.
+
+| Token | Value | Tailwind | Used for |
+|-------|-------|----------|----------|
+| `--shadow-btn` | `inset 0 1px 0 rgba(255,255,255,.3), inset 0 -1px 0 rgba(0,0,0,.2), 0 1px 2px rgba(0,0,0,.45), 0 3px 8px rgba(0,0,0,.3)` | `shadow-btn` | rest depth of a solid button: lit top edge, shaded bottom edge, short neutral drop |
+| `--shadow-btn-hover` | `inset 0 1px 0 rgba(255,255,255,.36), inset 0 -1px 0 rgba(0,0,0,.2), 0 8px 28px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.4)` | `shadow-btn-hover` | solid button on hover: the same lit edges plus the two layers of the popover shadow (`--shadow-pop`) |
+| `--shadow-btn-pressed` | `inset 0 2px 4px rgba(0,0,0,.35)` | `shadow-btn-pressed` | solid and quiet buttons while pressed: sunk in |
+| `--shadow-btn-quiet` | `inset 0 1px 0 rgba(255,255,255,.07), 0 1px 2px rgba(0,0,0,.35)` | `shadow-btn-quiet` | rest depth of `outline`, `secondary`, `action-outline` (and the Manage tiles, see the Validator Dashboard PRD) |
+| `--ink-sheen` | `0 0% 100%` (`#FFFFFF`) | none (used inside the gradient only) | start of `bg-ink-gradient` |
+| `--ink-press` | `48 7% 78%` (`#CBC9C3`) | `bg-ink-press`, `border-ink-press` | end of the ink gradient, the pressed fill and the edge of `action` |
+| `--destructive-sheen` | `2 74% 62%` (`#E65B56`) | none (used inside the gradient only) | start of `bg-destructive-gradient` |
+| `--destructive-press` | `358 62% 44%` (`#B62B2F`) | `bg-destructive-press`, `border-destructive-press` | end of the red gradient, the pressed fill and the edge of `destructive` |
+
+The gradients are Tailwind background images in `tailwind.config.js`:
+
+| Class | Value |
+|-------|-------|
+| `bg-primary-gradient` | `linear-gradient(135deg, --primary-sheen 0%, --primary 45%, --primary-press 100%)` (unchanged) |
+| `bg-ink-gradient` | `linear-gradient(135deg, --ink-sheen 0%, --foreground 45%, --ink-press 100%)` |
+| `bg-destructive-gradient` | `linear-gradient(135deg, --destructive-sheen 0%, --destructive 45%, --destructive-press 100%)` |
+| `bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015]` | `linear-gradient(180deg, --foreground at 7% 0%, --foreground at 1.5% 100%)`: a faint top-down light, not a fill |
 
 ### 3.1 Text on coral is near-black, never white
 
@@ -82,7 +149,16 @@ AA) while `#0E0E10` lands at about 6.9:1. On the gradient it is 8.3:1 at the lig
 
 There are **zero** `text-white` occurrences under `components/` or `pages/`. Do not
 reintroduce one. If you need light text use `text-foreground` (`#F2F1ED`) on a dark surface,
-never on coral.
+never on coral. The coral recipe is unchanged by round 2, so these figures still stand.
+
+### 3.2 Text on the ink and red buttons (round 2)
+
+`action` puts `text-background` (`#0E0E10`) on the ink gradient (`#FFFFFF` to `#CBC9C3`, with
+`--foreground` `#F2F1ED` in the middle). `destructive` puts `text-destructive-foreground`
+(`#F2F1ED`) on the red gradient (`#E65B56` to `#B62B2F`, with `--destructive` `#D94343` in the
+middle). Hex values are converted from the HSL tokens.
+
+**Contrast on the ink and red gradient stops: to be measured**
 
 ### Typography
 
@@ -123,29 +199,36 @@ disabled:pointer-events-none disabled:opacity-50
 ```
 
 One per view (Von Restorff: a second coral button dilutes the first). On the validator page it
-is "Claim all", or the one Claim row that can claim when only one amount exists.
+is "Claim all", or the one Claim row that can claim when only one amount exists. It follows the
+solid recipe in §4.7. The depth does not allow a second coral button: the rule is unchanged.
 
-### 4.2 Action (`action`): solid ink
+### 4.2 Action (`action`): the ink sheen
 
 ```tsx
 <Button variant="action" size="action">Create CLIQ</Button>
 ```
 
-`bg-foreground text-background`, sentence case. Hover brightens slightly (`brightness-110`,
-which takes the off-white to white without a hex). Use for strong actions that are not the
-view's one primary.
+`bg-ink-gradient text-background`, sentence case: the coral recipe in ink (§4.7). Hover deepens
+the shadow (`shadow-btn-hover`); there is no `brightness-110` any more. Use for strong actions
+that are not the view's one primary. *Until 2026-10-10 (round 2) `action` was a flat
+`bg-foreground` and hover brightened it (`brightness-110`, which takes the off-white to white
+without a hex).*
 
 ### 4.3 Outline and ghost
 
 ```tsx
 <Button variant="outline">Cancel</Button>
-<Button variant="action-outline">Cancel</Button>   {/* identical to outline */}
+<Button variant="action-outline">Cancel</Button>   {/* the same quiet recipe; the text is always text-foreground */}
 <Button variant="ghost">Details</Button>
 ```
 
-`outline` and `action-outline` are the ghost style: transparent, a visible 1px edge
-(`border-border/15`, about 1.6:1 on the card, versus the old `border-input` at 1.08:1), a field
-fill on hover. They are transparent: the page background shows through. `ghost` has no edge.
+`outline` and `action-outline` are quiet raised pills: a transparent fill with a faint top-down
+light over it (`bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015]`), a hairline shadow (`shadow-btn-quiet`), a visible 1px edge
+(`border-border/15`, about 1.6:1 on the card, versus the old `border-input` at 1.08:1; measured
+before round 2, to be re-measured), a field fill on hover, and `shadow-btn-pressed` when pressed.
+The fill colour is transparent, so the page background still shows through under the light.
+`ghost` has no edge, no light and no shadow. *Until 2026-10-10 (round 2) `outline` and
+`action-outline` were "the ghost style": transparent, with no light and no shadow.*
 
 ### 4.4 Secondary
 
@@ -153,7 +236,9 @@ fill on hover. They are transparent: the page background shows through. `ghost` 
 <Button variant="secondary">Learn more</Button>
 ```
 
-A quiet fill that stays visible on the dark card (see the table above).
+A quiet fill that stays visible on the dark card (see the table above), with the same faint top
+light and hairline shadow as `outline`. *Until round 2 it had neither.* Open at the round 2
+commit: the committed class string loses the fill (gotcha 6 in §9).
 
 ### 4.5 Dense chip (`xs`)
 
@@ -180,6 +265,42 @@ their treatment (the Sidebar renders `ghost` Buttons, see below). `icon` is a 44
 > `styles/globals.css` are legacy: components use the `Button` variants, not those classes
 > (only `components/ChainConnect/TabButton.tsx` still reads `.btn-tab`). They are not
 > the source of truth and were not updated.
+
+### 4.7 The depth recipe: solid, quiet, flat (round 2)
+
+Every variant follows one of three recipes. The tokens are in §3.
+
+| Recipe | Variants | Rest | Hover | Pressed |
+|--------|----------|------|-------|---------|
+| Solid | `default`, `destructive`, `action` | 135deg three-stop gradient, 1px `border-*-press`, `shadow-btn` | `hover:shadow-btn-hover` | the gradient is cleared (`active:bg-none`) for the flat `active:bg-*-press` fill, with `active:shadow-btn-pressed` and the 0.5px nudge |
+| Quiet | `outline`, `secondary`, `action-outline` | `bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015]`, 1px `border-border/10` or `/15`, `shadow-btn-quiet` | a fill (`hover:bg-field` or the `color-mix` fill) | `active:shadow-btn-pressed` and the nudge |
+| Flat | `ghost`, `link`, `icon` | no gradient, no shadow | a fill (`ghost`, `icon`) or an underline (`link`) | the nudge |
+
+Rules that hold for all three:
+
+- **Shadows are neutral.** Black for the drop, white for the lit top edge. Never a coloured glow,
+  never a coral shadow under a coral button.
+- **One primary (coral) per view** still holds. Sheen and depth make every button look finished;
+  they do not make a second primary acceptable.
+- **The lit top edge is part of the shadow** (`inset 0 1px 0`), not a border or a highlight
+  element, so it follows the pill's rounding.
+- A new solid colour is a new gradient plus a `-press` token, built like the three above. Do not
+  hand-write a one-off gradient or shadow on a call site.
+
+### 4.8 No gold on buttons (round 2)
+
+Gold (`--accent-gold` / `--accent-bronze`, the same value as `--warning`) is the testnet colour.
+No button **variant** uses it. `action-bronze` and `action-bronze-outline` were removed: in CLIQ
+mode the validator Claim buttons are the same coral `default` and `outline` as in wallet mode. The
+CLIQ path is told apart by its "Create:" labels and the note in the Rewards card ("Actions will
+create a transaction for multisig signing"; see the
+[Validator Dashboard PRD](VALIDATOR-DASHBOARD-PRD.md) §2 and §4.2). Colour is not a second
+signal for it. *Until 2026-10-10 (round 2) CLIQ-mode Claim buttons were gold so that "this
+creates a proposal" read differently from "this signs right now".* The `bronze` Tailwind colour
+and the `--accent-bronze` token still exist (nothing in `components/` or `pages/` reads `bronze`
+now); a few call sites paint their own button gold with the `warning` token, which is a call-site
+colour, not a variant (the Testnet box in the network control, and the "No with Veto" option in
+the vote dialog).
 
 ---
 
@@ -285,7 +406,7 @@ and a margin written as an inline `style`.
 
 ## 8. Accessibility
 
-- Minimum contrast 4.5:1 for text (see 3.1)
+- Minimum contrast 4.5:1 for text (see 3.1; the ink and red buttons are not yet measured, see 3.2)
 - Touch target 44px (see 5)
 - Disabled is `opacity-50` and `pointer-events-none`
 
@@ -297,7 +418,10 @@ stylesheet's own `:focus-visible` rule sets `border-radius: 8px`, so every keybo
 there snaps to a small radius (measured on six variants); that is a bug in that stylesheet and is
 deliberately not copied: do not add a `rounded-*` class under any focus variant. Tailwind composes ring and
 shadow in one `box-shadow`, so the hover shadow and the ring coexist (the reference stylesheet's
-"a shadow erases the ring" trap only bites hand-written `box-shadow` CSS). `__tests__/components/button.test.tsx` renders every variant at
+"a shadow erases the ring" trap only bites hand-written `box-shadow` CSS). Since round 2 every
+solid and quiet button also has a rest shadow (`shadow-btn`, `shadow-btn-quiet`) that goes through
+the same utility, so it should coexist with the ring the same way (INFERRED from that
+composition; not checked on a built page). `__tests__/components/button.test.tsx` renders every variant at
 every size (the names are read from `components/ui/button.tsx`, so a new one is covered) and fails
 on a rounding class under any focus variant: `focus:`, `focus-visible:`, `focus-within:`,
 `group-focus:`, `peer-focus:` or an arbitrary selector such as `[&:focus]:`, with other variants
@@ -308,12 +432,17 @@ It does not see a class passed to the Button as a prop, nor a rounding set in a 
 
 ## 9. Gotchas
 
-1. **A colour override on the default variant replaces the sheen, but not the edge or the
-   press fill.** `<Button className="bg-success">` drops the gradient (tailwind-merge treats the
-   two as the same group, `__tests__/components/button.test.tsx` pins it), yet
+1. **A colour override on a solid variant replaces the sheen, but not the edge, the press fill
+   or the shadows.** `<Button className="bg-success">` drops the gradient (tailwind-merge treats
+   the two as the same group, `__tests__/components/button.test.tsx` pins it for `default`), yet
    `border-primary-press` and `active:bg-primary-press` stay. Pass `border-transparent` and your
    own `active:bg-*`, or pick another variant. Call sites that needed it: the vote dialog buttons
-   (`ProposalViewer`), `ButtonWithConfirm`, and the three `DonateDialog` buttons.
+   (`ProposalViewer`), `ButtonWithConfirm`, and the three `DonateDialog` buttons. Since round 2
+   the same holds for `destructive` (`border-destructive-press`, `active:bg-destructive-press`)
+   and `action` (`border-ink-press`, `active:bg-ink-press`), and the three shadows
+   (`shadow-btn`, `hover:shadow-btn-hover`, `active:shadow-btn-pressed`) stay too, so an
+   overridden button keeps its depth (checked by running `tailwind-merge` 2.6.0 on the variant
+   strings; the rendered look of those call sites was not re-checked).
 2. **`whitespace-nowrap` is in the base.** Keep labels short; a button that must wrap needs
    `h-auto whitespace-normal`.
 3. **Tile-shaped buttons** (an icon above a label, `h-auto flex-col py-4`) are not pills: add
@@ -327,6 +456,23 @@ It does not see a class passed to the Button as a prop, nor a rounding set in a 
    patches are gone; `__tests__/components/input.test.tsx` pins it.)*
 5. **Copy buttons** (`CopyButton` in `AddressDisplay`) stay 24px on purpose (`h-6 w-6`
    overrides the 44px `icon` size).
+6. **A fill colour and a gradient in one class string: the last one wins.** `cn()` runs
+   `tailwind-merge`, which files every `bg-<name>` it does not know (`bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015]`,
+   `bg-ink-gradient`, `bg-primary-gradient`) in the same group as a fill colour (`bg-field`,
+   `bg-transparent`, `bg-success`) and keeps only the last. Found in round 2: at the round 2
+   commit `secondary` is written `bg-field bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015]`, and the merge drops `bg-field`, so
+   the fill the table in §3 promises does not reach the page (checked by running `tailwind-merge`
+   2.6.0 on that string). `outline` loses only `bg-transparent`, which changes nothing. When a variant needs a
+   fill and a gradient together, check the output of `cn()` and pin it with a test; a class under
+   a variant prefix (`hover:bg-field`) is a different key and is kept.
+7. **A `shadow-*` class from a call site does not replace the depth shadows.** `tailwind-merge`
+   reads `shadow-btn`, `shadow-btn-hover` and the other custom names as shadow colours, so
+   `shadow-none` and `shadow-lg` are kept beside `shadow-btn` in the class list; which one paints is
+   then decided by the order of the generated stylesheet (not checked). `shadow-pop` does replace it
+   (same group). For a flat button use `ghost`, `link` or `icon` instead of `shadow-none`.
+8. **`mx-auto` on a Button needs `flex`.** A Button is `inline-flex`, and auto margins do not
+   centre an inline box. The collapsed menu's Donate and Disconnect buttons sat left of the
+   column until they got `flex` with `mx-auto` (round 2, `components/Sidebar.tsx`).
 
 ---
 
@@ -337,17 +483,16 @@ It does not see a class passed to the Button as a prop, nor a rounding set in a 
 interface ButtonProps {
   variant?:
     // Standard
-    | 'default'            // coral sheen
-    | 'destructive'        // solid destructive token
-    | 'outline'            // ghost: transparent, 1px edge
-    | 'secondary'          // visible quiet fill
-    | 'ghost'              // no edge, fill on hover
+    | 'default'            // coral sheen and depth
+    | 'destructive'        // red sheen and depth
+    | 'outline'            // quiet raised: faint top light, hairline shadow, 1px edge
+    | 'secondary'          // visible quiet fill, same light and shadow
+    | 'ghost'              // flat: no edge, fill on hover
     | 'link'
     // UI4 institutional (names kept; sentence case since 2026-10-10)
-    | 'action'             // solid ink
-    | 'action-outline'     // same as outline
-    | 'action-bronze'      // solid gold
-    | 'action-bronze-outline'
+    | 'action'             // ink sheen and depth
+    | 'action-outline'     // same quiet recipe as outline
+    // 'action-bronze' and 'action-bronze-outline' were removed 2026-10-10 (round 2): gold is the testnet colour, see 4.8
     | 'card-cta'
     | 'card-cta-outline'
     | 'tab'

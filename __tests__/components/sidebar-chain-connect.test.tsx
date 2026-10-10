@@ -13,6 +13,11 @@
  * These assertions fail if ChainConnect is ever put back inside a `collapsed ?`
  * branch.
  *
+ * The collapsed rail is 80px wide and its footer buttons (Donate, Disconnect wallet) are centred
+ * with `mx-auto`. Auto margins do not centre an inline-flex box, so a Button (inline-flex) sat left
+ * of the column (2026-10-10); they carry `flex` beside `mx-auto`. jsdom has no layout, so the
+ * classes are pinned, with the expanded rail (full-width buttons) as the control.
+ *
  * Priority: P0
  */
 
@@ -22,6 +27,28 @@ import Sidebar from "@/components/Sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 let mockPendingCount = 0;
+let mockWalletInfo: { type: string; address: string; pubKey: string } | null = null;
+
+// Same shape as the global WalletContext mock in jest.setup.js, with a settable wallet so the
+// footer can show the Disconnect button.
+jest.mock("@/context/WalletContext", () => ({
+  useWallet: () => ({
+    walletInfo: mockWalletInfo,
+    isConnecting: false,
+    loading: {},
+    verificationSignature: null,
+    isVerified: false,
+    isVerifying: false,
+    ledgerSigner: null,
+    connectKeplr: jest.fn(),
+    connectLedger: jest.fn(),
+    disconnect: jest.fn(),
+    verify: jest.fn().mockResolvedValue(null),
+    getAminoSigner: jest.fn().mockResolvedValue(null),
+    getDirectSigner: jest.fn().mockResolvedValue(null),
+  }),
+  WalletProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
 
 // jest.setup.js mocks next/link down to <a href> and drops every other prop. The
 // bell's aria-label and the active link's aria-current are exactly what these
@@ -204,6 +231,59 @@ describe("Sidebar lists the shared navigation source: P0", () => {
     fireEvent.mouseEnter(getAside());
     const home = within(getAside()).getByRole("link", { name: /^Home/ });
     expect(within(home).getByText("3")).toBeInTheDocument();
+  });
+});
+
+describe("Sidebar footer buttons are centred in the collapsed rail: P2", () => {
+  beforeEach(() => {
+    mockPendingCount = 0;
+    mockWalletInfo = {
+      type: "Keplr",
+      address: "testcore14rmczf6t6qldyrqrv4jd0zzypkuymrhvxjxlfl",
+      pubKey: "pk",
+    };
+  });
+  afterEach(() => {
+    mockWalletInfo = null;
+  });
+
+  const collapsed = () => {
+    renderSidebar();
+    const aside = getAside();
+    expect(aside).toHaveAttribute("data-state", "collapsed");
+    return aside;
+  };
+  const expanded = () => {
+    renderSidebar();
+    const aside = getAside();
+    fireEvent.mouseEnter(aside);
+    expect(aside).toHaveAttribute("data-state", "expanded");
+    return aside;
+  };
+
+  it("collapsed: Donate is a flex box with auto margins, not inline-flex", () => {
+    const donate = within(collapsed()).getByRole("button", { name: "Donate" });
+
+    expect(donate).toHaveClass("flex", "mx-auto");
+    expect(donate).not.toHaveClass("inline-flex");
+  });
+
+  it("collapsed: Disconnect wallet is a flex box with auto margins, not inline-flex", () => {
+    const disconnect = within(collapsed()).getByRole("button", { name: "Disconnect wallet" });
+
+    expect(disconnect).toHaveClass("flex", "mx-auto", "h-10", "w-10", "justify-center");
+    expect(disconnect).not.toHaveClass("inline-flex");
+  });
+
+  it("expanded: the same two buttons are full width, with no auto margin (the control)", () => {
+    const aside = expanded();
+
+    const donate = within(aside).getByRole("button", { name: "Donate" });
+    const disconnect = within(aside).getByRole("button", { name: "Disconnect Wallet" });
+    for (const button of [donate, disconnect]) {
+      expect(button).toHaveClass("w-full");
+      expect(button).not.toHaveClass("mx-auto");
+    }
   });
 });
 

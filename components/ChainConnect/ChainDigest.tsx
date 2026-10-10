@@ -43,15 +43,10 @@ export default function ChainDigest({ chain, simplify }: ChainItemProps) {
           <span className="font-heading text-base font-semibold text-foreground">
             {chain.chainDisplayName}
           </span>
-          <div className="flex items-center gap-2">
-            <Badge
-              variant="outline"
-              className="border-border/[0.06] bg-muted/50 font-mono text-[10px] text-muted-foreground"
-            >
-              {chain.chainId}
-            </Badge>
+          <div className="flex items-center gap-3">
+            <Badge variant="secondary">{chain.chainId}</Badge>
             {isConnected && (
-              <Badge className="bg-[hsl(var(--accent-green)/0.2)] text-[10px] text-[hsl(var(--accent-green-bright))]">
+              <Badge variant="success" mark="signal">
                 Connected
               </Badge>
             )}

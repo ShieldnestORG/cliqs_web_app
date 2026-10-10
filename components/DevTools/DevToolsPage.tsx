@@ -697,7 +697,7 @@ export default function DevTools() {
                 className="text-muted-foreground"
               />
               <Badge
-                className="mt-2 capitalize"
+                className="mt-2"
                 variant={selectedAccount.type === "wallet" ? "default" : "outline"}
               >
                 {selectedAccount.type}

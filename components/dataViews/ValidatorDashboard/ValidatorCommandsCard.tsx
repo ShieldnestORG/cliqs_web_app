@@ -21,7 +21,17 @@ import { ValidatorInfo } from "@/lib/validatorHelpers";
 import { createCliqTransaction, buildEditValidatorMsg } from "@/lib/validatorTx";
 import { useChains } from "@/context/ChainsContext";
 import { useWallet } from "@/context/WalletContext";
-import { Settings, Edit3, Loader2, CheckCircle2, TrendingUp, Coins, Users } from "lucide-react";
+import {
+  Settings,
+  Loader2,
+  CheckCircle2,
+  TrendingUp,
+  TrendingDown,
+  ArrowLeftRight,
+  ArrowUpRight,
+  Coins,
+  Users,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { calculateFee, GasPrice, SigningStargateClient } from "@cosmjs/stargate";
@@ -31,6 +41,17 @@ import { Decimal } from "@cosmjs/math";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { BentoGrid, BentoCard } from "@/components/ui/bento-grid";
+import { cn } from "@/lib/utils";
+
+/** A sub-heading inside the Manage panel: the section-label type (mono, 11px, 0.14em). */
+const SUBHEAD =
+  "font-mono text-[11px] font-medium uppercase leading-4 tracking-[0.14em] text-muted-foreground";
+/** An action tile: a quiet raised surface (the outline button's light and depth) with room to breathe. */
+const TILE =
+  "group h-full min-h-0 bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015] p-5 shadow-btn-quiet";
+/** The corner arrow of a tile: muted, coral while the tile is hovered. */
+const TILE_ARROW =
+  "h-4 w-4 shrink-0 text-muted-foreground transition-colors duration-ui ease-ui group-hover:text-primary";
 
 interface ValidatorCommandsCardProps {
   validator: ValidatorInfo;
@@ -311,7 +332,7 @@ export default function ValidatorCommandsCard({
        * directly below this card is the way forward. */}
       {!isCliqMode ? (
         <div className="space-y-4">
-          <h3 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">{`// Staking & Governance`}</h3>
+          <h3 className={SUBHEAD}>{`// Staking & Governance`}</h3>
           <div className="rounded-lg border border-border/[0.06] bg-muted/30 p-4">
             <p className="text-sm text-muted-foreground">
               Delegate, Undelegate, Redelegate and Claim delegation rewards are proposed through a
@@ -326,22 +347,23 @@ export default function ValidatorCommandsCard({
       ) : (
         <div className="space-y-4">
           <div>
-            <h3 className="mb-4 text-sm font-medium uppercase tracking-wide text-muted-foreground">{`// Staking & Governance`}</h3>
+            <h3 className={cn(SUBHEAD, "mb-4")}>{`// Staking & Governance`}</h3>
             <BentoGrid className="grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
               {/* Delegate */}
               <Link
                 href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.Delegate)}`}
                 className="block"
               >
-                <BentoCard variant="default" interactive className="min-h-0 p-4">
-                  <div className="flex h-full flex-col">
-                    <div className="mb-2 flex items-center gap-2">
-                      <TrendingUp className="h-6 w-6" />
+                <BentoCard variant="default" interactive className={TILE}>
+                  <div className="flex h-full items-start gap-4">
+                    <TrendingUp className="mt-0.5 h-6 w-6 shrink-0" />
+                    <div className="min-w-0 flex-1 space-y-1">
                       <h4 className="font-heading text-sm font-semibold leading-tight">Delegate</h4>
+                      <p className="text-xs leading-snug text-muted-foreground">
+                        Stake tokens to validator
+                      </p>
                     </div>
-                    <p className="text-xs leading-tight text-muted-foreground">
-                      Stake tokens to validator
-                    </p>
+                    <ArrowUpRight className={TILE_ARROW} />
                   </div>
                 </BentoCard>
               </Link>
@@ -351,17 +373,18 @@ export default function ValidatorCommandsCard({
                 href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.Undelegate)}`}
                 className="block"
               >
-                <BentoCard variant="default" interactive className="min-h-0 p-4">
-                  <div className="flex h-full flex-col">
-                    <div className="mb-2 flex items-center gap-2">
-                      <TrendingUp className="h-6 w-6" />
+                <BentoCard variant="default" interactive className={TILE}>
+                  <div className="flex h-full items-start gap-4">
+                    <TrendingDown className="mt-0.5 h-6 w-6 shrink-0" />
+                    <div className="min-w-0 flex-1 space-y-1">
                       <h4 className="font-heading text-sm font-semibold leading-tight">
                         Undelegate
                       </h4>
+                      <p className="text-xs leading-snug text-muted-foreground">
+                        Unstake tokens from validator
+                      </p>
                     </div>
-                    <p className="text-xs leading-tight text-muted-foreground">
-                      Unstake tokens from validator
-                    </p>
+                    <ArrowUpRight className={TILE_ARROW} />
                   </div>
                 </BentoCard>
               </Link>
@@ -371,17 +394,18 @@ export default function ValidatorCommandsCard({
                 href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.BeginRedelegate)}`}
                 className="block"
               >
-                <BentoCard variant="default" interactive className="min-h-0 p-4">
-                  <div className="flex h-full flex-col">
-                    <div className="mb-2 flex items-center gap-2">
-                      <TrendingUp className="h-6 w-6" />
+                <BentoCard variant="default" interactive className={TILE}>
+                  <div className="flex h-full items-start gap-4">
+                    <ArrowLeftRight className="mt-0.5 h-6 w-6 shrink-0" />
+                    <div className="min-w-0 flex-1 space-y-1">
                       <h4 className="font-heading text-sm font-semibold leading-tight">
                         Redelegate
                       </h4>
+                      <p className="text-xs leading-snug text-muted-foreground">
+                        Move stake between validators
+                      </p>
                     </div>
-                    <p className="text-xs leading-tight text-muted-foreground">
-                      Move stake between validators
-                    </p>
+                    <ArrowUpRight className={TILE_ARROW} />
                   </div>
                 </BentoCard>
               </Link>
@@ -391,17 +415,18 @@ export default function ValidatorCommandsCard({
                 href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.WithdrawDelegatorReward)}`}
                 className="block"
               >
-                <BentoCard variant="default" interactive className="min-h-0 p-4">
-                  <div className="flex h-full flex-col">
-                    <div className="mb-2 flex items-center gap-2">
-                      <Coins className="h-6 w-6" />
+                <BentoCard variant="default" interactive className={TILE}>
+                  <div className="flex h-full items-start gap-4">
+                    <Coins className="mt-0.5 h-6 w-6 shrink-0" />
+                    <div className="min-w-0 flex-1 space-y-1">
                       <h4 className="font-heading text-sm font-semibold leading-tight">
                         Claim delegation rewards
                       </h4>
+                      <p className="text-xs leading-snug text-muted-foreground">
+                        From any validator this CLIQ delegates to
+                      </p>
                     </div>
-                    <p className="text-xs leading-tight text-muted-foreground">
-                      From any validator this CLIQ delegates to
-                    </p>
+                    <ArrowUpRight className={TILE_ARROW} />
                   </div>
                 </BentoCard>
               </Link>
@@ -413,20 +438,22 @@ export default function ValidatorCommandsCard({
       <Separator />
 
       {/* Edit validator: one section heading, one button */}
-      <div className="space-y-3">
-        <h3 className="flex items-center gap-2 text-sm font-medium uppercase tracking-wide text-muted-foreground">
-          <Edit3 className="h-4 w-4" />
-          Edit validator
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          Update your validator's name, description, website, and commission settings.
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
+        <div className="min-w-0 space-y-2">
+          <h3 className={SUBHEAD}>Edit validator</h3>
+          <p className="text-sm text-muted-foreground">
+            Update your validator's name, description, website, and commission settings.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Changes may take a few minutes to reflect on the network.
+          </p>
+        </div>
         <Dialog open={isEditing} onOpenChange={setIsEditing}>
           <DialogTrigger asChild>
             <Button
               variant="action"
               size="action"
-              className="w-full gap-2 sm:w-auto"
+              className="w-full shrink-0 gap-2 sm:w-auto"
               onClick={openEditDialog}
             >
               <Settings className="h-4 w-4" />
@@ -647,13 +674,6 @@ export default function ValidatorCommandsCard({
             </div>
           </DialogContent>
         </Dialog>
-      </div>
-
-      {/* Info */}
-      <div className="text-center">
-        <p className="text-xs text-muted-foreground">
-          Changes may take a few minutes to reflect on the network.
-        </p>
       </div>
     </div>
   );

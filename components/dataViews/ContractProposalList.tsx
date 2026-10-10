@@ -8,7 +8,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Badge, type BadgeMark } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -17,16 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  FileText,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  PlayCircle,
-  Loader2,
-  RefreshCw,
-  ChevronRight,
-} from "lucide-react";
+import { FileText, XCircle, Loader2, RefreshCw, ChevronRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 // ============================================================================
@@ -59,28 +50,27 @@ interface ProposalSummary {
 // Status Badge Component
 // ============================================================================
 
-function StatusBadge({ status }: { status: string }) {
+export function StatusBadge({ status }: { status: string }) {
   const statusConfig: Record<
     string,
     {
-      variant: "default" | "secondary" | "destructive" | "outline";
-      icon: React.ReactNode;
+      variant: "success" | "warning" | "destructive" | "secondary";
+      mark: BadgeMark;
       label: string;
     }
   > = {
-    pending: { variant: "secondary", icon: <Clock className="h-3 w-3" />, label: "Open" },
-    open: { variant: "secondary", icon: <Clock className="h-3 w-3" />, label: "Open" },
-    passed: { variant: "default", icon: <CheckCircle2 className="h-3 w-3" />, label: "Passed" },
-    executed: { variant: "default", icon: <PlayCircle className="h-3 w-3" />, label: "Executed" },
-    rejected: { variant: "destructive", icon: <XCircle className="h-3 w-3" />, label: "Rejected" },
-    expired: { variant: "outline", icon: <Clock className="h-3 w-3" />, label: "Expired" },
+    pending: { variant: "warning", mark: "half", label: "Open" },
+    open: { variant: "warning", mark: "half", label: "Open" },
+    passed: { variant: "success", mark: "signal", label: "Passed" },
+    executed: { variant: "success", mark: "signal", label: "Executed" },
+    rejected: { variant: "destructive", mark: "stripes", label: "Rejected" },
+    expired: { variant: "secondary", mark: "ring", label: "Expired" },
   };
 
   const config = statusConfig[status] || statusConfig.pending;
 
   return (
-    <Badge variant={config.variant} className="gap-1">
-      {config.icon}
+    <Badge variant={config.variant} mark={config.mark}>
       {config.label}
     </Badge>
   );

@@ -102,6 +102,30 @@
     /* The house style's popover shadow (dark): menus and the coral button's hover */
     --shadow-pop:
       0 8px 28px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.4);
+    /* Button sheen and depth (2026-10-10, owner: "sheen and depth", app-wide). A solid button is
+       lit from above: a light top edge, a shaded bottom edge and a short drop. Hover swaps the
+       drop for the popover shadow; pressed sinks in. Always neutral, never a coloured glow.
+       Quiet buttons (outline, secondary) get a fainter top light and a hairline drop. */
+    --shadow-btn:
+      inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+      0 1px 2px rgba(0, 0, 0, 0.45), 0 3px 8px rgba(0, 0, 0, 0.3);
+    --shadow-btn-hover:
+      inset 0 1px 0 rgba(255, 255, 255, 0.36), inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+      0 8px 28px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.4);
+    --shadow-btn-pressed: inset 0 2px 4px rgba(0, 0, 0, 0.35);
+    --shadow-btn-quiet: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 1px 2px rgba(0, 0, 0, 0.35);
+    /* Gradient stops for the two other solid buttons, same 135deg recipe as the coral one:
+       ink (the `action` button) and red (`destructive`). Measured label contrast at each stop:
+       ink, near-black label: 19.28 / 17.05 / 11.66:1.
+       red, light label (--destructive-foreground): 4.66 / 5.27 / 7.06:1. The red button has its
+       own three stops because --destructive itself (the red of text and edges on the dark
+       ground) is too light under a light label: 3.84:1, which is what the flat red button
+       measured until 2026-10-10. */
+    --ink-sheen: 0 0% 100%;
+    --ink-press: 48 7% 78%;
+    --destructive-sheen: 3 72% 47%;
+    --destructive-fill: 0 66% 45%;
+    --destructive-press: 358 62% 37%;
     /* The house style's motion: 120ms on cubic-bezier(.2,.6,.2,1) for controls */
     --dur-ui: 120ms;
     --ease-ui: cubic-bezier(0.2, 0.6, 0.2, 1);
@@ -651,6 +675,113 @@
       background-size: 100% 1px;
       -webkit-mask-image: none;
       mask-image: none;
+    }
+  }
+
+  /* ----------------------------------------
+     Status tag marks (components/ui/badge.tsx)
+
+     The small moving mark before a status word. Each state has its own shape
+     and motion, so colour is never the only signal. All of them paint in
+     currentColor, so the tag's text colour token sets the mark too. There is
+     no plain dot on purpose (owner, 2026-10-10: no dots beside a tag).
+     ---------------------------------------- */
+  .status-mark {
+    position: relative;
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 9999px;
+    background: currentColor;
+  }
+  /* signal: a three-bar meter, the readout of something live */
+  .status-mark-signal {
+    --bar: linear-gradient(currentColor, currentColor);
+    width: 13px;
+    height: 10px;
+    border-radius: 1px;
+    background:
+      var(--bar) left bottom / 3px 45% no-repeat,
+      var(--bar) center bottom / 3px 100% no-repeat,
+      var(--bar) right bottom / 3px 70% no-repeat;
+  }
+  /* half: a half-lit dot, part-way there */
+  .status-mark-half {
+    background: conic-gradient(
+      currentColor 0 50%,
+      color-mix(in srgb, currentColor 25%, transparent) 0
+    );
+    box-shadow: 0 0 0 1.5px color-mix(in srgb, currentColor 55%, transparent);
+  }
+  /* stripes: a short hazard bar, stopped */
+  .status-mark-stripes {
+    width: 18px;
+    height: 8px;
+    border-radius: 2px;
+    background: repeating-linear-gradient(
+      -45deg,
+      currentColor 0 3px,
+      color-mix(in srgb, currentColor 20%, transparent) 3px 6px
+    );
+    background-size: 17px 8px;
+  }
+  /* ring: a dashed outline, not running */
+  .status-mark-ring {
+    width: 10px;
+    height: 10px;
+    background: none;
+    border: 1.5px dashed currentColor;
+  }
+  /* Every mark moves (the motion carries the state), unless the visitor asked for less motion */
+  @media (prefers-reduced-motion: no-preference) {
+    .status-mark-signal {
+      animation: status-signal 1.6s ease-in-out infinite;
+    }
+    .status-mark-half {
+      animation: status-turn 4s linear infinite;
+    }
+    .status-mark-stripes {
+      animation: status-stripes 1.2s linear infinite;
+    }
+    .status-mark-ring {
+      animation: status-turn 9s linear infinite;
+    }
+  }
+  @keyframes status-turn {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes status-stripes {
+    to {
+      background-position: 17px 0;
+    }
+  }
+  @keyframes status-signal {
+    0%,
+    100% {
+      background-size:
+        3px 45%,
+        3px 100%,
+        3px 70%;
+    }
+    25% {
+      background-size:
+        3px 90%,
+        3px 55%,
+        3px 40%;
+    }
+    50% {
+      background-size:
+        3px 60%,
+        3px 80%,
+        3px 100%;
+    }
+    75% {
+      background-size:
+        3px 100%,
+        3px 40%,
+        3px 65%;
     }
   }
 }

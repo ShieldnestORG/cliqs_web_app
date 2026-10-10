@@ -30,7 +30,7 @@ function coralParts(svg: Element): number {
 }
 
 describe("Kit icons: the idiom: P2", () => {
-  it("ships the eight kit glyphs and the three new ones", () => {
+  it("ships the eleven kit glyphs and the eight new ones", () => {
     expect([...KIT_ICON_NAMES].sort()).toEqual(
       [
         "governance",
@@ -41,9 +41,17 @@ describe("Kit icons: the idiom: P2", () => {
         "dashboard",
         "multisig",
         "clock",
+        "guide",
+        "contract",
+        "journey",
         "rank",
         "withdraw",
         "stakers",
+        "tip",
+        "sign",
+        "database",
+        "search",
+        "wallet",
       ].sort(),
     );
   });

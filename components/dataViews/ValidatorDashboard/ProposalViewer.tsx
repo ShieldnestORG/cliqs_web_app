@@ -7,14 +7,14 @@
  * inline under the active ones.
  */
 
-import { Badge } from "@/components/ui/badge";
+import { Badge, type BadgeMark, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { KitIcon } from "@/components/icons/kit";
 import { readProposalTitle, ValidatorDashboardData } from "@/lib/validatorHelpers";
 import { createCliqTransaction, buildVoteMsg } from "@/lib/validatorTx";
 import { useChains } from "@/context/ChainsContext";
-import { CheckCircle2, AlertCircle, ChevronDown, ExternalLink, Loader2, Users } from "lucide-react";
+import { CheckCircle2, ChevronDown, ExternalLink, Loader2, Users } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -75,30 +75,25 @@ export default function ProposalViewer({
     if (!vote) return null;
 
     // Mapping vote options to labels
-    const options: Record<number, { label: string; className: string }> = {
-      1: { label: "YES", className: "bg-success/20 text-success border-success/30" },
-      2: { label: "ABSTAIN", className: "bg-muted text-muted-foreground" },
-      3: { label: "NO", className: "bg-destructive/20 text-destructive border-destructive/30" },
-      4: {
-        label: "NO WITH VETO",
-        className: "bg-warning/20 text-warning border-warning/30",
-      },
+    const options: Record<number, { label: string; variant: BadgeProps["variant"] }> = {
+      1: { label: "YES", variant: "success" },
+      2: { label: "ABSTAIN", variant: "secondary" },
+      3: { label: "NO", variant: "destructive" },
+      4: { label: "NO WITH VETO", variant: "warning" },
     };
 
     const option = vote.option;
-    return (
-      options[option] || {
-        label: "VOTED",
-        className: "bg-primary/20 text-primary border-primary/30",
-      }
-    );
+    return options[option] || { label: "VOTED", variant: "default" as const };
   };
 
   // v1beta1 numeric statuses for finished proposals (see convertV1ToV1Beta1Proposal)
-  const pastStatusBadges: Record<number, { label: string; className: string }> = {
-    3: { label: "PASSED", className: "bg-success/20 text-success border-success/30" },
-    4: { label: "REJECTED", className: "bg-destructive/20 text-destructive border-destructive/30" },
-    5: { label: "FAILED", className: "bg-muted text-muted-foreground" },
+  const pastStatusBadges: Record<
+    number,
+    { label: string; variant: BadgeProps["variant"]; mark: BadgeMark }
+  > = {
+    3: { label: "PASSED", variant: "success", mark: "signal" },
+    4: { label: "REJECTED", variant: "destructive", mark: "stripes" },
+    5: { label: "FAILED", variant: "destructive", mark: "stripes" },
   };
 
   const formatVotingEnd = (proposal: Proposal): string | null => {
@@ -312,13 +307,9 @@ export default function ProposalViewer({
                     </h4>
                   </div>
                   {voteInfo ? (
-                    <Badge className={voteInfo.className}>{voteInfo.label}</Badge>
+                    <Badge variant={voteInfo.variant}>{voteInfo.label}</Badge>
                   ) : (
-                    <Badge
-                      variant="outline"
-                      className="gap-1 border-warning/30 bg-warning/10 text-warning"
-                    >
-                      <AlertCircle className="h-3 w-3" />
+                    <Badge variant="warning" mark="half">
                       NEEDS VOTE
                     </Badge>
                   )}
@@ -421,7 +412,8 @@ export default function ProposalViewer({
                 const proposalId = proposal.proposalId as unknown as number;
                 const badge = pastStatusBadges[proposal.status] ?? {
                   label: "CLOSED",
-                  className: "bg-muted text-muted-foreground",
+                  variant: "secondary" as const,
+                  mark: "ring" as const,
                 };
                 const endDate = formatVotingEnd(proposal);
                 const explorerLink = chain.explorerLinks.proposal?.replace(
@@ -440,7 +432,9 @@ export default function ProposalViewer({
                         {getProposalTitle(proposal)}
                       </p>
                     </div>
-                    <Badge className={`shrink-0 ${badge.className}`}>{badge.label}</Badge>
+                    <Badge variant={badge.variant} mark={badge.mark} className="shrink-0">
+                      {badge.label}
+                    </Badge>
                   </div>
                 );
 

@@ -4,8 +4,11 @@
  * File: __tests__/components/validator-dashboard.test.tsx
  *
  * The orchestrating component of /[chainName]/validator:
- *   - the "Acting as" sentence states solo / CLIQ / read-only mode; it leads the context row
- *     (left of the network control), right under the identity strip
+ *   - the context row (right under the identity strip) holds the network control and Refresh on the
+ *     right, and a left-hand note ONLY when the visitor must know something before acting: no wallet
+ *     connected, or the CLIQ member check failed (the read-only warning). The "Acting as ..."
+ *     sentences are gone in every mode (owner, 2026-10-10): with a connected wallet and no warning
+ *     the row holds only the network control and Refresh
  *   - while jailed, the jailed alert (which hosts Unjail) is the very first block, above the strip
  *   - the page reads top to bottom as Rewards, Performance, Governance, Stakers, Manage
  *   - the CLIQ upgrade upsell is never shown to people already running through a CLIQ
@@ -15,6 +18,8 @@
  *     are bound to connectKeplr / connectLedger. The signing fence cannot see JSX wiring, so
  *     these tests are what pins it.
  *
+ * The page spacing is pinned too (space-y-8, a card grid with gap-x-8 gap-y-10, card padding
+ * p-5 sm:p-6): jsdom has no layout, so the classes are all there is to check.
  * Until 2026-10-10 the band was the first block of the page and the jailed state was an
  * `order-first` class on the identity card's grid slot.
  *
@@ -29,7 +34,7 @@ jest.unmock("@cosmjs/encoding");
 // jest.setup.js replaces the dashboard with a stub; this file tests the real one.
 jest.unmock("@/components/dataViews/ValidatorDashboard");
 
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import ValidatorDashboard from "@/components/dataViews/ValidatorDashboard";
 import { getValidatorDashboardData } from "@/lib/validatorHelpers";
 import { getDbUserMultisigs } from "@/lib/api";
@@ -165,58 +170,114 @@ beforeEach(() => {
   });
 });
 
-describe("ValidatorDashboard: Acting as band: P1", () => {
-  it("solo mode states that actions sign with the connected wallet", async () => {
+describe("ValidatorDashboard: context row: P1", () => {
+  const row = () => screen.getByTestId("context-row");
+  const isCliqView = () => Boolean(mockWalletInfo) && Boolean(mockQuery.address);
+
+  /**
+   * The dashboard has rendered (its cards are mounted) and, in CLIQ mode, the membership lookup has
+   * finished: awaiting the lookup's own promise runs after the component's continuation, which sets
+   * the member flag. A check for something that must be ABSENT is only worth anything after this.
+   */
+  const settled = async () => {
+    await screen.findByTestId("performance-card");
+    if (isCliqView()) {
+      await waitFor(() => expect(getDbUserMultisigs).toHaveBeenCalled());
+      const calls = (getDbUserMultisigs as jest.Mock).mock.results;
+      await act(async () => {
+        await calls[calls.length - 1].value;
+      });
+    }
+  };
+
+  const modes: [string, () => void][] = [
+    ["solo, wallet connected", () => {}],
+    ["CLIQ, verified member", () => (mockQuery = { address: CLIQ })],
+    [
+      "CLIQ, not a member",
+      () => {
+        mockQuery = { address: CLIQ };
+        (getDbUserMultisigs as jest.Mock).mockResolvedValue({ created: [], belonged: [] });
+      },
+    ],
+    [
+      "no wallet, linked ?address= lookup",
+      () => {
+        mockWalletInfo = null;
+        mockQuery = { address: CLIQ };
+      },
+    ],
+  ];
+
+  it.each(modes)(
+    "%s: no 'Acting as' sentence and no CLIQ address is printed",
+    async (_n, setup) => {
+      setup();
+      render(<ValidatorDashboard />);
+
+      await settled();
+      expect(screen.queryByText(/Acting as/i)).not.toBeInTheDocument();
+      expect(document.body).not.toHaveTextContent(/Acting as/i);
+      expect(document.body).not.toHaveTextContent(/sign it, then one member broadcasts/);
+      expect(document.body).not.toHaveTextContent(CLIQ.slice(0, 10));
+    },
+  );
+
+  it("solo mode with a wallet: the row holds only the network control and Refresh, on the right", async () => {
     render(<ValidatorDashboard />);
 
-    expect(
-      await screen.findByText("Acting as your wallet. Actions sign with your connected wallet."),
-    ).toBeInTheDocument();
+    await settled();
+    expect(row().children).toHaveLength(1);
+    expect(row().firstElementChild).toContainElement(screen.getByTestId("network-toggle"));
+    expect(row().firstElementChild).toContainElement(
+      screen.getByRole("button", { name: "Refresh" }),
+    );
+    expect(row()).toHaveTextContent(/^Refresh$/);
+    expect(row().querySelector("p")).toBeNull();
+    expect(row()).toHaveClass("lg:justify-end");
+    expect(row()).not.toHaveClass("lg:justify-between");
   });
 
-  it("with no wallet connected (linked ?address= lookup) never claims to act as your wallet", async () => {
+  it("CLIQ mode, verified member: the same bare row, no note and no warning", async () => {
+    mockQuery = { address: CLIQ };
+    render(<ValidatorDashboard />);
+
+    await settled();
+    // CLIQ mode is really on (the cards were handed it), so the empty row is not the solo case
+    expect(lastProps(mockRewardsProps)).toEqual(
+      expect.objectContaining({ isCliqMode: true, cliqAddress: CLIQ, readOnly: false }),
+    );
+    expect(row().children).toHaveLength(1);
+    expect(row()).toHaveTextContent(/^Refresh$/);
+    expect(row()).toHaveClass("lg:justify-end");
+    expect(screen.queryByText(/could not be verified as a member/i)).not.toBeInTheDocument();
+  });
+
+  it("with no wallet connected (linked ?address= lookup) the one note is on the left, ahead of the network control", async () => {
     mockWalletInfo = null;
     mockQuery = { address: CLIQ };
     render(<ValidatorDashboard />);
 
-    expect(
-      await screen.findByText("No wallet connected. Connect a wallet to act on this validator."),
-    ).toBeInTheDocument();
-    expect(screen.queryByText(/Acting as your wallet/)).not.toBeInTheDocument();
-  });
-
-  it("is the first block of the context row, ahead of the network control", async () => {
-    render(<ValidatorDashboard />);
-
-    const band = await screen.findByText(/^Acting as /);
-    const row = screen.getByTestId("context-row");
-    expect(row.firstElementChild?.contains(band)).toBe(true);
-    const all = Array.from(document.body.querySelectorAll("*"));
-    expect(all.indexOf(band)).toBeLessThan(all.indexOf(screen.getByTestId("network-toggle")));
-  });
-
-  it("sits right under the identity strip when the validator is not jailed", async () => {
-    const { container } = render(<ValidatorDashboard />);
-
-    await screen.findByText(/^Acting as /);
-    const blocks = Array.from(container.firstElementChild?.children ?? []);
-    expect(blocks[0]).toBe(screen.getByTestId("identity-card"));
-    expect(blocks[1]).toBe(screen.getByTestId("context-row"));
-  });
-
-  it("CLIQ mode names the short CLIQ address and the sign-then-broadcast flow", async () => {
-    mockQuery = { address: CLIQ };
-    render(<ValidatorDashboard />);
-
-    const band = await screen.findByText(/^Acting as CLIQ /);
-    expect(band).toHaveTextContent(
-      "Actions create a transaction for this CLIQ; its members sign it, then one member broadcasts.",
+    const note = await screen.findByText(
+      "No wallet connected. Connect a wallet to act on this validator.",
     );
-    expect(band).not.toHaveTextContent(CLIQ);
-    expect(band).toHaveTextContent(CLIQ.slice(0, 10));
+    expect(row().children).toHaveLength(2);
+    expect(row().firstElementChild).toContainElement(note);
+    expect(row().firstElementChild).not.toContainElement(screen.getByTestId("network-toggle"));
+    expect(row().lastElementChild).toContainElement(screen.getByTestId("network-toggle"));
+    expect(row()).toHaveClass("lg:justify-between");
+    expect(row()).not.toHaveClass("lg:justify-end");
+    expect(screen.queryByText(/Acting as/)).not.toBeInTheDocument();
   });
 
-  it("read-only CLIQ mode shows the read-only text inside the band as a warning line", async () => {
+  it("a connected wallet never shows the no-wallet note", async () => {
+    render(<ValidatorDashboard />);
+
+    await settled();
+    expect(screen.queryByText(/No wallet connected/)).not.toBeInTheDocument();
+  });
+
+  it("read-only CLIQ mode shows the read-only text alone on the left, as a warning line", async () => {
     mockQuery = { address: CLIQ };
     (getDbUserMultisigs as jest.Mock).mockResolvedValue({ created: [], belonged: [] });
     render(<ValidatorDashboard />);
@@ -226,15 +287,68 @@ describe("ValidatorDashboard: Acting as band: P1", () => {
     // moved, not duplicated: the old stand-alone card title is gone
     expect(screen.queryByText("Read-Only Mode")).not.toBeInTheDocument();
     expect(screen.getAllByText(/could not be verified as a member/i)).toHaveLength(1);
+    // it is the left side of the row, with the network control on the right and no other note
+    expect(row().children).toHaveLength(2);
+    expect(row().firstElementChild).toContainElement(warning);
+    expect(row()).toHaveClass("lg:justify-between");
+    expect(screen.queryByText(/No wallet connected/)).not.toBeInTheDocument();
   });
 
   it("shows no read-only text when the connected wallet is a verified member", async () => {
     mockQuery = { address: CLIQ };
     render(<ValidatorDashboard />);
 
-    await screen.findByText(/^Acting as CLIQ /);
-    await waitFor(() => expect(getDbUserMultisigs).toHaveBeenCalled());
+    await settled();
     expect(screen.queryByText(/could not be verified as a member/i)).not.toBeInTheDocument();
+  });
+
+  it("sits right under the identity strip when the validator is not jailed", async () => {
+    const { container } = render(<ValidatorDashboard />);
+
+    await settled();
+    const blocks = Array.from(container.firstElementChild?.children ?? []);
+    expect(blocks[0]).toBe(screen.getByTestId("identity-card"));
+    expect(blocks[1]).toBe(row());
+  });
+});
+
+describe("ValidatorDashboard: page spacing: P2", () => {
+  // The five section ids, in page order: the first four sit in a two-column grid, Manage below it.
+  const SECTIONS = [
+    "validator-rewards",
+    "validator-performance",
+    "validator-governance",
+    "validator-stakers",
+    "validator-manage",
+  ];
+  const section = (id: string) =>
+    document.querySelector(`section[aria-labelledby="${id}"]`) as HTMLElement;
+
+  it("loosens the page: space-y-8 between blocks and a card grid with gap-x-8 gap-y-10", async () => {
+    const { container } = render(<ValidatorDashboard />);
+
+    await screen.findByTestId("performance-card");
+    expect(container.firstElementChild).toHaveClass("space-y-8");
+    expect(container.firstElementChild).not.toHaveClass("space-y-6");
+    const grid = section("validator-rewards").parentElement as HTMLElement;
+    expect(grid).toHaveClass("grid", "grid-cols-1", "gap-x-8", "gap-y-10", "lg:grid-cols-2");
+    for (const id of SECTIONS.slice(0, 4)) {
+      expect(section(id).parentElement).toBe(grid);
+    }
+    // the stale values are gone
+    expect(grid).not.toHaveClass("gap-x-6");
+    expect(grid).not.toHaveClass("gap-y-8");
+  });
+
+  it.each(SECTIONS)("%s: the card padding is p-5 sm:p-6", async (id) => {
+    render(<ValidatorDashboard />);
+
+    await screen.findByTestId("performance-card");
+    // section > [scale rule, card > card content]
+    const content = section(id).lastElementChild?.firstElementChild as HTMLElement;
+    expect(content).toHaveClass("p-5", "sm:p-6");
+    expect(content).not.toHaveClass("p-4");
+    expect(content).not.toHaveClass("sm:p-5");
   });
 });
 
@@ -278,7 +392,15 @@ describe("ValidatorDashboard: CLIQ upsell: P1", () => {
     mockQuery = { address: CLIQ };
     render(<ValidatorDashboard />);
 
-    await screen.findByText(/^Acting as CLIQ /);
+    // Wait for the loaded dashboard, the same render that shows the upsell in solo mode (above).
+    // This test used to wait for the "Acting as CLIQ" sentence, which is gone; it never reached
+    // its assertion, so the failure said nothing about the upsell.
+    await screen.findByTestId("performance-card");
+    await waitFor(() => expect(getDbUserMultisigs).toHaveBeenCalled());
+    // CLIQ mode is really on, so a missing upsell is not just the solo page without one
+    expect(lastProps(mockRewardsProps)).toEqual(
+      expect.objectContaining({ isCliqMode: true, cliqAddress: CLIQ }),
+    );
     expect(screen.queryByTestId("cliq-upgrade-cta")).not.toBeInTheDocument();
   });
 

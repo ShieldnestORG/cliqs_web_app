@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -348,11 +349,11 @@ export function CredentialManagerPanel({
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Features</span>
-            <div className="flex gap-1">
+            <div className="flex gap-3">
               {credentialClass.features.map((f) => (
-                <span key={f} className="rounded bg-background px-2 py-1 text-xs capitalize">
+                <Badge key={f} variant="outline">
                   {f}
-                </span>
+                </Badge>
               ))}
             </div>
           </div>
@@ -388,7 +389,7 @@ export function CredentialManagerPanel({
                     <span className="text-sm capitalize">{cred.role}</span>
                   </TableCell>
                   <TableCell>
-                    <CredentialBadge status={getCredentialStatus(cred)} role={cred.role} compact />
+                    <CredentialBadge status={getCredentialStatus(cred)} role={cred.role} />
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {new Date(cred.issuedAt).toLocaleDateString()}

@@ -16,9 +16,11 @@ import { cn } from "@/lib/utils";
  * group is a second part, and breaks the rule.
  *
  * `multisig` and `clock` come from the TOKNS brand icon kit; `clock` is the kit's
- * clock face under a plain name. `rank`, `withdraw` and `stakers` are new in
- * cliqs, drawn in the same idiom. The TOKNS wordmark and product-named icons are
- * deliberately not copied.
+ * clock face under a plain name. `guide`, `contract` and `journey` are the kit's
+ * open book, page and road-to-a-flag glyphs, also under plain names. `rank`,
+ * `withdraw`, `stakers`, `tip`, `sign`, `database`, `search` and `wallet` are new
+ * in cliqs, drawn in the same idiom. The TOKNS wordmark and product-named icons
+ * are deliberately not copied.
  */
 
 /** Ink line: follows the text colour of the parent. */
@@ -139,6 +141,77 @@ const GLYPHS = {
         <path className={AC} d="M32.5 8.5a7 7 0 0 1 0 13" />
         <path className={AC} d="M36 29a10 10 0 0 1 8 9.8V41" />
       </g>
+    </>
+  ),
+  // an open book with a coral bookmark (the kit's learn book, under a plain name)
+  guide: (
+    <>
+      <path className={LN} d="M24 13c-4-3-10-4-17-3v26c7-1 13 0 17 3" />
+      <path className={LN} d="M24 13c4-3 10-4 17-3v26c-7-1-13 0-17 3" />
+      <path className={LN} d="M24 13v26" />
+      <path className={AF} d="M30 11.2V22l3.5-2.5L37 22V10.5Z" />
+    </>
+  ),
+  // a page whose heading line is coral (the kit's article page, used for a smart contract)
+  contract: (
+    <>
+      <path className={LN} d="M12 5h17l9 9v27a2 2 0 0 1-2 2H12a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" />
+      <path className={LN} d="M29 5v9h9" />
+      <path className={AC} d="M16 21h16" />
+      <path className={LN} d="M16 28h16" />
+      <path className={LN} d="M16 35h10" />
+    </>
+  ),
+  // a winding road to a coral flag (the kit's roadmap, under a plain name: a journey, finished)
+  journey: (
+    <>
+      <path className={LN} d="M6 40c4-6 9-6 13-2s9 4 13-2" />
+      <g data-coral="">
+        <path className={AC} d="M32 36V8" />
+        <path className={AC} d="M32 9h9l-3 4 3 4h-9" />
+      </g>
+    </>
+  ),
+  // NEW in cliqs: a lightbulb with a coral filament (a tip)
+  tip: (
+    <>
+      <path
+        className={LN}
+        d="M24 5a13 13 0 0 0-7.5 23.6c1.2.9 2 2.3 2 3.9V35h11v-2.5c0-1.6.8-3 2-3.9A13 13 0 0 0 24 5Z"
+      />
+      <path className={LN} d="M20 41h8" />
+      <path className={AC} d="M24 35V23m-4.5-4.5 4.5 4.5 4.5-4.5" />
+    </>
+  ),
+  // NEW in cliqs: a pen with a coral signature line under it (signing)
+  sign: (
+    <>
+      <path className={LN} d="M33.8 7.8 40.2 14.2 20.7 33.7 9 39l5.3-11.7Z" />
+      <path className={LN} d="m29 12.6 6.4 6.4" />
+      <path className={AC} d="M22 42c2-3 3.5-3 5 0s3.5 3 5.5 0 3-1.5 8.5 0" />
+    </>
+  ),
+  // NEW in cliqs: a database drum with a coral band (stored data)
+  database: (
+    <>
+      <path className={LN} d="M7 12a17 7 0 1 0 34 0 17 7 0 1 0-34 0Z" />
+      <path className={LN} d="M7 12v24c0 3.9 7.6 7 17 7s17-3.1 17-7V12" />
+      <path className={AC} d="M7 24c0 3.9 7.6 7 17 7s17-3.1 17-7" />
+    </>
+  ),
+  // NEW in cliqs: a magnifier with a coral handle (search, find)
+  search: (
+    <>
+      <circle className={LN} cx="21" cy="21" r="14" />
+      <path className={AC} d="m31.9 31.9 9.6 9.6" />
+    </>
+  ),
+  // NEW in cliqs: a wallet with a coral clasp (a wallet)
+  wallet: (
+    <>
+      <rect className={LN} x="6" y="14" width="36" height="27" rx="5" />
+      <path className={LN} d="M12 14 32 7a2.5 2.5 0 0 1 3.5 2.3V14" />
+      <rect className={AS} x="28" y="23" width="14" height="10" rx="3.5" />
     </>
   ),
 } as const;

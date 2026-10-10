@@ -426,26 +426,37 @@ motion is shipped (the landing's icon animations are not ported).
 
 | Name | Coral part | Where it is used | Source |
 |------|-----------|------------------|--------|
-| `governance` | the tick on the ballot | Vote Now (Governance) | the TOKNS brand icon kit |
+| `governance` | the tick on the ballot | Vote Now (Governance); the Contract Proposal guide; the "Governance Settings" headings of the contract and Flex create forms | the TOKNS brand icon kit |
 | `stake` | the check in the shield | Self-delegation rewards row | the TOKNS brand icon kit |
 | `rewards` | the bow | Validator commission row | the TOKNS brand icon kit |
 | `portfolio` | one pie slice (wash + outline) | Voting power (a slice of the whole) | the TOKNS brand icon kit |
 | `pulse` | the heartbeat | network health (not placed yet) | the TOKNS brand icon kit |
 | `dashboard` | one tile (wash + outline) | overview (not placed yet) | the TOKNS brand icon kit |
-| `multisig` | two of the three key dots | a CLIQ (not placed yet) | the TOKNS brand icon kit |
+| `multisig` | two of the three key dots | a CLIQ: the PubKey create form header, the "no CLIQs yet" empty state, the PubKey guide | the TOKNS brand icon kit |
 | `clock` | the minute hand and hub | Unbonding | the TOKNS brand icon kit (the kit names it after a TOKNS product; a plain name here) |
 | `rank` | the tallest bar (wash + outline) | Ranking | new in cliqs |
 | `withdraw` | the arrow leaving the frame | the "Paid to" line | new in cliqs |
-| `stakers` | the second figure | Stakers | new in cliqs |
+| `stakers` | the second figure | Stakers; also a group of members (the Flex CLIQ guide and create form header) | new in cliqs |
+| `guide` | the bookmark (solid) | Guides page header and empty state | the TOKNS brand icon kit (the kit's open-book "learn" glyph under a plain name) |
+| `contract` | the heading line | the Contract Fixed guide, the contract create form header | the TOKNS brand icon kit (the kit's "article" page under a plain name) |
+| `journey` | the flag (pole and pennant) | the "Journey Complete" banner on the Guides page | the TOKNS brand icon kit (the kit's "roadmap" glyph under a plain name) |
+| `tip` | the filament | the Pro Tip box on the Guides page | new in cliqs |
+| `sign` | the signature line | the Create and Sign guide | new in cliqs |
+| `database` | the middle band | Database settings header, the Set Up Your Own Database guide | new in cliqs |
+| `search` | the handle | Open a CLIQ by address, the "No chains found" empty state, the Find and Join guide | new in cliqs |
+| `wallet` | the clasp (wash + outline) | Balances header, the wallet prompt, the Connect Your Wallet guide | new in cliqs |
 
 The paths for the first eight were generated from the kit's sources by a script, not typed by
-hand, and re-diffed against them. `rank`, `withdraw` and `stakers` are drawn in the same idiom
-and should be added to the kit so the sources do not drift. Not copied, on purpose: the TOKNS
-wordmark and monogram, product-named icons (the kit's clock is named after a product; it is
-`clock` here), and the marketing-only marks. `__tests__/components/kit-icons.test.tsx`
-enforces the 48 grid, **exactly one** coral part (loose coral shapes plus `g[data-coral]`
-groups must add up to 1; a coral group may hold coral shapes only), no hex, and the decorative
-default. Until 2026-10-10 it only asked for "at least one".
+hand, and re-diffed against them. `guide`, `contract` and `journey` were copied from the kit's
+icon registry and re-diffed the same way. `rank`, `withdraw`, `stakers`, `tip`, `sign`,
+`database`, `search` and `wallet` are drawn in the same idiom and should be added to the kit so
+the sources do not drift. The Guides page names each journey's glyph in `lib/userJourneys.ts` as a
+`KitIconName`, so a journey cannot point at a glyph that does not exist. Not copied, on purpose:
+the TOKNS wordmark and monogram, product-named icons (the kit's clock is named after a product; it
+is `clock` here), and the marketing-only marks. `__tests__/components/kit-icons.test.tsx` enforces
+the 48 grid, **exactly one** coral part (loose coral shapes plus `g[data-coral]` groups must add
+up to 1; a coral group may hold coral shapes only), no hex, and the decorative default. Until
+2026-10-10 it only asked for "at least one".
 
 ---
 

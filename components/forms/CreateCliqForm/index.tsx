@@ -23,6 +23,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,6 @@ import { useRouter } from "next/router";
 import { useEffect, useCallback, useState } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import {
-  Users,
   Shield,
   ShieldPlus,
   UserPlus,
@@ -49,6 +49,7 @@ import {
   Key,
   AlertCircle,
 } from "lucide-react";
+import { KitIcon } from "@/components/icons/kit";
 import { useChains } from "../../../context/ChainsContext";
 import { createMultisigFromCompressedSecp256k1Pubkeys } from "../../../lib/multisigHelpers";
 import ConfirmCreateCliq from "./ConfirmCreateCliq";
@@ -192,9 +193,7 @@ export default function CreateCliqForm() {
       <Card variant="institutional" bracket="green" className="overflow-visible">
         <CardHeader>
           <div className="mb-2 flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border/[0.06] bg-muted">
-              <Users className="h-7 w-7 text-foreground" />
-            </div>
+            <KitIcon name="multisig" size={48} className="text-foreground" />
             <div>
               <CardLabel comment className="flex items-center gap-1">
                 <ShieldPlus className="h-3 w-3" />
@@ -364,9 +363,9 @@ export default function CreateCliqForm() {
                         Add the wallet addresses or public keys of CLIQ members
                       </p>
                     </div>
-                    <div className="rounded-full border border-border/[0.06] bg-muted px-3 py-1.5 text-sm font-medium text-foreground">
+                    <Badge variant="outline">
                       {filledMembersCount} member{filledMembersCount !== 1 ? "s" : ""} added
-                    </div>
+                    </Badge>
                   </div>
 
                   <div className="rounded-lg border border-border/[0.06] bg-muted/30 p-3">

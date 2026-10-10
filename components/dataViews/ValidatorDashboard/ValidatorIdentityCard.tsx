@@ -1,7 +1,7 @@
 /**
  * Validator Identity Strip
  *
- * One slim row under the page title: moniker, status badge, commission rate, operator and
+ * One slim row under the page title: moniker, status tag, commission rate, operator and
  * account addresses (each with a copy button) and the explorer link. It replaced the identity
  * card on 2026-10-10 (no card chrome, no "Validator" label). The jailed warning and the Unjail
  * action moved to JailedAlert, at the very top of the dashboard.
@@ -14,7 +14,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ValidatorInfo } from "@/lib/validatorHelpers";
-import { ExternalLink, Shield, AlertTriangle, CircleDashed } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { explorerLinkAccount } from "@/lib/displayHelpers";
 import { useChains } from "@/context/ChainsContext";
 import { AddressDisplay } from "@/components/ui/address-display";
@@ -26,24 +26,24 @@ interface ValidatorIdentityCardProps {
 export default function ValidatorIdentityCard({ validator }: ValidatorIdentityCardProps) {
   const { chain } = useChains();
 
-  // Active = success, Unbonding = warning, Jailed = destructive; anything else is a quiet outline.
+  // A status tag: each state has its own colour AND its own mark. Active = green signal meter,
+  // Unbonding = gold half-lit dot, Jailed = red hazard bar, anything else = a quiet dashed ring.
   const getStatusConfig = (status: ValidatorInfo["status"], jailed: boolean) => {
     if (jailed) {
-      return { label: "Jailed", variant: "destructive" as const, icon: AlertTriangle };
+      return { label: "Jailed", variant: "destructive" as const, mark: "stripes" as const };
     }
 
     switch (status) {
       case "BONDED":
-        return { label: "Active", variant: "success" as const, icon: Shield };
+        return { label: "Active", variant: "success" as const, mark: "signal" as const };
       case "UNBONDING":
-        return { label: "Unbonding", variant: "warning" as const, icon: CircleDashed };
+        return { label: "Unbonding", variant: "warning" as const, mark: "half" as const };
       default:
-        return { label: "Inactive", variant: "outline" as const, icon: CircleDashed };
+        return { label: "Inactive", variant: "secondary" as const, mark: "ring" as const };
     }
   };
 
   const statusConfig = getStatusConfig(validator.status, validator.jailed);
-  const StatusIcon = statusConfig.icon;
 
   // Format commission rate (stored as 18-decimal string)
   const formatCommissionRate = (rate: string): string => {
@@ -62,11 +62,10 @@ export default function ValidatorIdentityCard({ validator }: ValidatorIdentityCa
   const explorerLink = explorerLinkAccount(chain.explorerLinks.account, validator.operatorAddress);
 
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-      <div className="flex min-w-0 items-center gap-3">
+    <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+      <div className="flex min-w-0 items-center gap-4">
         <h2 className="min-w-0 truncate font-heading text-xl font-bold">{validator.moniker}</h2>
-        <Badge variant={statusConfig.variant} className="shrink-0">
-          <StatusIcon className="mr-1 h-3 w-3" />
+        <Badge variant={statusConfig.variant} mark={statusConfig.mark} className="shrink-0">
           {statusConfig.label}
         </Badge>
       </div>

@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useState, useMemo, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -712,15 +713,9 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
                               {(selectedToken.displayDenom.toLowerCase().includes("bridged") ||
                                 selectedToken.baseDenom.startsWith("drop-") ||
                                 selectedToken.baseDenom.includes("-core1")) && (
-                                <span className="rounded-full bg-info/10 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-info">
-                                  Bridged
-                                </span>
+                                <Badge variant="info">Bridged</Badge>
                               )}
-                              {selectedToken.baseDenom.startsWith("ibc/") && (
-                                <span className="rounded-full bg-purple-accent/10 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-purple-accent">
-                                  IBC
-                                </span>
-                              )}
+                              {selectedToken.baseDenom.startsWith("ibc/") && <Badge>IBC</Badge>}
                             </div>
                             <span className="text-xs text-muted-foreground">
                               {formatTokenAmount(selectedToken.displayAmount)} available
@@ -825,15 +820,9 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
                                           {(token.displayDenom.toLowerCase().includes("bridged") ||
                                             token.baseDenom.startsWith("drop-") ||
                                             token.baseDenom.includes("-core1")) && (
-                                            <span className="rounded-full border border-info/20 bg-info/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-info">
-                                              Bridged
-                                            </span>
+                                            <Badge variant="info">Bridged</Badge>
                                           )}
-                                          {token.baseDenom.startsWith("ibc/") && (
-                                            <span className="rounded-full border border-purple-accent/20 bg-purple-accent/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-purple-accent">
-                                              IBC
-                                            </span>
-                                          )}
+                                          {token.baseDenom.startsWith("ibc/") && <Badge>IBC</Badge>}
                                         </div>
                                         <span className="block max-w-[200px] truncate text-xs text-muted-foreground">
                                           {token.displayDenom}

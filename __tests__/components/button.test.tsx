@@ -6,7 +6,12 @@
  * The house-style button: pill, 44px, 8px gaps (components/ui/button.tsx, docs/ui/BUTTONS-PRD.md):
  *   - the default size is the 44px class (h-11) and every button keeps the pill shape
  *   - sm is 36px, lg is 48px, the new xs chip is 24px and not a pill, icon is 44px square
- *   - the default variant is the coral sheen, action is solid ink and no longer mono uppercase
+ *   - the default variant is the coral sheen, action is the ink sheen and no longer mono uppercase
+ *   - solid buttons (default coral, destructive red, action ink) share one recipe: a 135deg gradient,
+ *     rest depth (shadow-btn), a lifted hover (hover:shadow-btn-hover) and a pressed state that is a flat
+ *     fill (active:bg-none) with active:shadow-btn-pressed; quiet buttons (outline, secondary,
+ *     action-outline) carry bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015] and shadow-btn-quiet; ghost, link and icon stay flat
+ *   - the gold variants (action-bronze, action-bronze-outline) are gone: gold is the testnet colour
  *   - a colour override from a call site replaces the sheen, so it never shows through
  *   - disabled and loading buttons cannot be clicked
  *   - a focused button keeps its pill: no variant or size carries a rounding class under any
@@ -142,16 +147,17 @@ describe("Button variants: P2", () => {
     );
   });
 
-  it("action is solid ink in sentence case: no uppercase, no mono", () => {
+  it("action is the ink sheen in sentence case: no uppercase, no mono, no flat ink fill", () => {
     render(<Button variant="action">Create CLIQ</Button>);
 
     const button = screen.getByRole("button", { name: "Create CLIQ" });
-    expect(button).toHaveClass("bg-foreground", "text-background");
+    expect(button).toHaveClass("bg-ink-gradient", "text-background");
+    expect(button).not.toHaveClass("bg-foreground");
     expect(button).not.toHaveClass("uppercase");
     expect(button).not.toHaveClass("font-mono");
   });
 
-  it("outline and action-outline are a transparent ghost with a visible 1px edge", () => {
+  it("outline and action-outline are a quiet raised pill with a visible 1px edge", () => {
     render(
       <>
         <Button variant="outline">Out</Button>
@@ -161,7 +167,11 @@ describe("Button variants: P2", () => {
 
     for (const name of ["Out", "Act out"]) {
       const button = screen.getByRole("button", { name });
-      expect(button).toHaveClass("border", "bg-transparent", "border-border/15");
+      expect(button).toHaveClass(
+        "border",
+        "border-border/15",
+        "bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015]",
+      );
       expect(button).not.toHaveClass("border-2");
     }
   });
@@ -172,6 +182,121 @@ describe("Button variants: P2", () => {
     const button = screen.getByRole("button", { name: "Yes" });
     expect(button).toHaveClass("bg-success");
     expect(button).not.toHaveClass("bg-primary-gradient");
+  });
+});
+
+/**
+ * The utility classes of an element that give it depth or a sheen: a shadow-* or a *-gradient
+ * background, at any state (the base `transition-[...box-shadow...]` is a transition list, not a shadow).
+ */
+const depthClasses = (el: HTMLElement) =>
+  Array.from(el.classList).filter((cls) => /(^|:)(shadow-|bg-[a-z-]*gradient$)/.test(cls));
+
+describe("Button depth: solid, quiet and flat variants: P2", () => {
+  // [variant, sheen, edge, pressed fill]: the same recipe in coral, red and ink
+  const SOLID: [string, string, string, string][] = [
+    ["default", "bg-primary-gradient", "border-primary-press", "active:bg-primary-press"],
+    [
+      "destructive",
+      "bg-destructive-gradient",
+      "border-destructive-press",
+      "active:bg-destructive-press",
+    ],
+    ["action", "bg-ink-gradient", "border-ink-press", "active:bg-ink-press"],
+  ];
+  const QUIET = ["outline", "secondary", "action-outline"] as const;
+  const FLAT = ["ghost", "link", "icon"] as const;
+  type Variant = React.ComponentProps<typeof Button>["variant"];
+
+  it.each(SOLID)(
+    "solid %s: a sheen, rest depth, a lifted hover and a flat press fill that sinks in",
+    (variant, sheen, edge, pressed) => {
+      render(<Button variant={variant as Variant}>Solid</Button>);
+
+      const button = screen.getByRole("button", { name: "Solid" });
+      expect(button).toHaveClass(sheen, edge, "shadow-btn", "hover:shadow-btn-hover");
+      // pressed: the sheen is dropped for a flat fill, and the depth flattens
+      expect(button).toHaveClass(pressed, "active:bg-none", "active:shadow-btn-pressed");
+      // not the quiet depth, and not the old popover-shadow hover or shadow-less press
+      for (const gone of [
+        "shadow-btn-quiet",
+        "bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015]",
+        "hover:shadow-pop",
+        "active:shadow-none",
+      ]) {
+        expect(button).not.toHaveClass(gone);
+      }
+      // the pill and the focus ring are unchanged
+      expect(button).toHaveClass("rounded-full", "focus-visible:ring-2");
+    },
+  );
+
+  it.each(QUIET)(
+    "quiet %s: a faint top light and the quiet depth, not the solid recipe",
+    (variant) => {
+      render(<Button variant={variant}>Quiet</Button>);
+
+      const button = screen.getByRole("button", { name: "Quiet" });
+      expect(button).toHaveClass(
+        "bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015]",
+        "shadow-btn-quiet",
+        "active:shadow-btn-pressed",
+      );
+      for (const gone of [
+        "shadow-btn",
+        "hover:shadow-btn-hover",
+        "bg-primary-gradient",
+        "bg-ink-gradient",
+        "bg-destructive-gradient",
+      ]) {
+        expect(button).not.toHaveClass(gone);
+      }
+      expect(button).toHaveClass("rounded-full", "focus-visible:ring-2");
+    },
+  );
+
+  it.each(FLAT)("%s stays flat: no gradient and no shadow at any state", (variant) => {
+    render(<Button variant={variant}>Flat</Button>);
+
+    expect(depthClasses(screen.getByRole("button", { name: "Flat" }))).toEqual([]);
+  });
+
+  it("the check for flat is not vacuous: a solid and a quiet button do carry depth classes", () => {
+    render(
+      <>
+        <Button variant="default">Solid</Button>
+        <Button variant="outline">Quiet</Button>
+      </>,
+    );
+
+    expect(depthClasses(screen.getByRole("button", { name: "Solid" })).length).toBeGreaterThan(0);
+    expect(depthClasses(screen.getByRole("button", { name: "Quiet" })).length).toBeGreaterThan(0);
+  });
+
+  it("has no gold variants: action-bronze and action-bronze-outline are gone (gold is the testnet colour)", () => {
+    const variants = declaredKeys("variant");
+    expect(variants).toContain("action"); // the read found the real list
+    expect(variants).not.toContain("action-bronze");
+    expect(variants).not.toContain("action-bronze-outline");
+
+    // and no variant, at any size, renders a bronze class
+    for (const variant of variants) {
+      for (const size of declaredKeys("size")) {
+        const { container, unmount } = render(
+          <Button
+            variant={variant as Variant}
+            size={size as React.ComponentProps<typeof Button>["size"]}
+          >
+            Label
+          </Button>,
+        );
+        const bronze = Array.from(container.firstElementChild?.classList ?? []).filter((c) =>
+          /bronze/.test(c),
+        );
+        expect({ variant, size, bronze }).toEqual({ variant, size, bronze: [] });
+        unmount();
+      }
+    }
   });
 });
 

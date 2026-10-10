@@ -5,20 +5,8 @@
  * Each journey has steps displayed as tabs on the Guides page (/[chainName]/get-started).
  */
 
-import {
-  Key,
-  FileCode2,
-  UserPlus,
-  Send,
-  Database,
-  Search,
-  Wallet,
-  Users,
-  Settings,
-  PenTool,
-  Radio,
-  type LucideIcon,
-} from "lucide-react";
+import type { KitIconName } from "@/components/icons/kit";
+import { Send, Users, Settings } from "lucide-react";
 
 export interface JourneyStep {
   title: string;
@@ -33,7 +21,8 @@ export interface UserJourney {
   subtitle: string;
   description: string;
   highlights: string[];
-  icon: LucideIcon;
+  /** A glyph from the icon kit (components/icons/kit.tsx). */
+  icon: KitIconName;
   category: "create" | "transact" | "manage";
   estimatedTime: string;
   difficulty: "beginner" | "intermediate" | "advanced";
@@ -62,7 +51,7 @@ export const userJourneys: UserJourney[] = [
       "Ideal when members sign with hardware wallets like Ledger.",
       "The address changes if the member set changes.",
     ],
-    icon: Key,
+    icon: "multisig",
     category: "create",
     estimatedTime: "5-10 min",
     difficulty: "beginner",
@@ -151,7 +140,7 @@ export const userJourneys: UserJourney[] = [
       "Weighted voting — some members' votes can count for more.",
       "No Code IDs or technical knowledge needed; requires a CosmWasm chain.",
     ],
-    icon: FileCode2,
+    icon: "contract",
     category: "create",
     estimatedTime: "5-10 min",
     difficulty: "intermediate",
@@ -243,7 +232,7 @@ export const userJourneys: UserJourney[] = [
       "The multisig address never changes as membership evolves.",
       "Costs more gas than Fixed — it uploads two contracts.",
     ],
-    icon: UserPlus,
+    icon: "stakers",
     category: "create",
     estimatedTime: "10-15 min",
     difficulty: "advanced",
@@ -343,7 +332,7 @@ export const userJourneys: UserJourney[] = [
       "A progress tracker shows signatures collected vs. threshold.",
       "Broadcast to the chain once the threshold is met.",
     ],
-    icon: PenTool,
+    icon: "sign",
     category: "transact",
     estimatedTime: "5-15 min (per signer)",
     difficulty: "beginner",
@@ -428,7 +417,7 @@ export const userJourneys: UserJourney[] = [
       "Executes automatically once vote weight meets the threshold.",
       "Fails if the voting period expires before the threshold is met.",
     ],
-    icon: Radio,
+    icon: "governance",
     category: "transact",
     estimatedTime: "5-10 min",
     difficulty: "intermediate",
@@ -504,7 +493,7 @@ export const userJourneys: UserJourney[] = [
       "Three credential security levels, up to wallet-signature encryption.",
       "MongoDB Atlas free tier is plenty — test and set up from Settings › Database.",
     ],
-    icon: Database,
+    icon: "database",
     category: "manage",
     estimatedTime: "10-15 min",
     difficulty: "intermediate",
@@ -590,7 +579,7 @@ export const userJourneys: UserJourney[] = [
       "See members, threshold, balances, and recent activity.",
       "Found CLIQs open on their own page with members, balances and transactions.",
     ],
-    icon: Search,
+    icon: "search",
     category: "manage",
     estimatedTime: "2-5 min",
     difficulty: "beginner",
@@ -640,7 +629,7 @@ export const userJourneys: UserJourney[] = [
       "Your address appears in the wallet menu once connected.",
       "Ledger gives hardware-level key security for signing.",
     ],
-    icon: Wallet,
+    icon: "wallet",
     category: "manage",
     estimatedTime: "2-5 min",
     difficulty: "beginner",
