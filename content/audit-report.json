@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "updatedAt": "2026-10-09",
   "testSuite": {
-    "suites": 68,
-    "tests": 606,
-    "passed": 606,
+    "suites": 69,
+    "tests": 608,
+    "passed": 608,
     "failed": 0,
     "command": "npm run test:ci",
-    "commit": "f7c4352",
+    "commit": "dea73ac",
     "ranAt": "2026-10-09"
   },
   "entries": [
@@ -26,7 +26,7 @@
         "Unused code was removed: a hidden alternative transaction form and 21 files nothing used.",
         "Wallet and transaction signing code is unchanged, proven by a hash check over 63 files and 85 signing functions.",
         "The validator page no longer claims an existing validator can be moved into a CLIQ; that was checked against TX's own chain code.",
-        "Verified: 68 test suites and 606 tests pass, plus type, lint and format checks and a production build."
+        "Verified: 69 test suites and 608 tests pass, plus type, lint and format checks and a production build."
       ],
       "evidence": [
         {
