@@ -122,12 +122,13 @@ source hex for them, so the hex shown is converted back from the triplet and is 
 | `--shadow-btn-quiet` | `inset 0 1px 0 rgba(255,255,255,.07), 0 1px 2px rgba(0,0,0,.35)` | `shadow-btn-quiet` | `outline`, `secondary`, `action-outline`; the validator Manage tiles |
 | `--ink-sheen` | `0 0% 100%` (`#FFFFFF`) | none | start of `bg-ink-gradient` |
 | `--ink-press` | `48 7% 78%` (`#CBC9C3`) | `bg-ink-press`, `border-ink-press` | end of the ink gradient, pressed fill and edge of the `action` button |
-| `--destructive-sheen` | `2 74% 62%` (`#E65B56`) | none | start of `bg-destructive-gradient` |
-| `--destructive-press` | `358 62% 44%` (`#B62B2F`) | `bg-destructive-press`, `border-destructive-press` | end of the red gradient, pressed fill and edge of the `destructive` button |
+| `--destructive-sheen` | `3 72% 47%` (`#CE2A22`) | none | start of `bg-destructive-gradient` |
+| `--destructive-fill` | `0 66% 45%` (`#BE2727`) | none (used inside the gradient only) | middle of `bg-destructive-gradient` |
+| `--destructive-press` | `358 62% 37%` (`#992428`) | `bg-destructive-press`, `border-destructive-press` | end of the red gradient, pressed fill and edge of the `destructive` button |
 
 The gradients are Tailwind background images: `bg-ink-gradient` (135deg `--ink-sheen` 0%,
 `--foreground` 45%, `--ink-press` 100%), `bg-destructive-gradient` (135deg `--destructive-sheen`
-0%, `--destructive` 45%, `--destructive-press` 100%) and `bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015]` (180deg, `--foreground`
+0%, `--destructive-fill` 45%, `--destructive-press` 100%) and `bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015]` (180deg, `--foreground`
 at 7% opacity at the top to 1.5% at the bottom: a faint light, not a fill). Shadows are always
 neutral: black and white only, never a coloured glow.
 
@@ -301,7 +302,7 @@ The canonical pairing on any coral surface is near-black
 fails WCAG AA; `#0E0E10` lands at roughly 6.9:1 and passes. There are currently
 **zero** `text-white` occurrences under `components/` and `pages/` — keep it that
 way. When you need light text, use `text-foreground` (`#F2F1ED`) on a dark
-surface. Contrast of the label on the ink and red button gradients is not yet measured
+surface. The label on the ink and red button gradients is measured at every stop (ink 11.66:1 or better, red 4.66:1 or better)
 ([Buttons PRD §3.2](ui/BUTTONS-PRD.md#32-text-on-the-ink-and-red-buttons-round-2)).
 
 ### Focus states

@@ -82,7 +82,7 @@ depth tokens listed below the table.
 | Variant | Background | Edge | Text | Rest | Hover | Press |
 |---------|-----------|------|------|------|-------|-------|
 | `default` (coral sheen) | `bg-primary-gradient`: 135deg `--primary-sheen` 0%, `--primary` 45%, `--primary-press` 100% | `border-primary-press` | `text-primary-foreground` | `shadow-btn` | `shadow-btn-hover` | flat `--primary-press` fill (`active:bg-none` + `active:bg-primary-press`), `shadow-btn-pressed`, 0.5px nudge |
-| `destructive` (red sheen) | `bg-destructive-gradient`: 135deg `--destructive-sheen` 0%, `--destructive` 45%, `--destructive-press` 100% | `border-destructive-press` | `text-destructive-foreground` | `shadow-btn` | `shadow-btn-hover` | flat `--destructive-press` fill, `shadow-btn-pressed`, nudge |
+| `destructive` (red sheen) | `bg-destructive-gradient`: 135deg `--destructive-sheen` 0%, `--destructive-fill` 45%, `--destructive-press` 100% | `border-destructive-press` | `text-destructive-foreground` | `shadow-btn` | `shadow-btn-hover` | flat `--destructive-press` fill, `shadow-btn-pressed`, nudge |
 | `action` (ink sheen) | `bg-ink-gradient`: 135deg `--ink-sheen` 0%, `--foreground` 45%, `--ink-press` 100% | `border-ink-press` | `text-background` | `shadow-btn` | `shadow-btn-hover` | flat `--ink-press` fill, `shadow-btn-pressed`, nudge |
 | `outline`, `action-outline` | `bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015]` over a transparent fill | 1px `border-border/15` | inherited (`action-outline`: `text-foreground`) | `shadow-btn-quiet` | `bg-field` | `shadow-btn-pressed`, nudge |
 | `secondary` | `bg-field` with `bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015]` over it | 1px `border-border/10` | `text-secondary-foreground` | `shadow-btn-quiet` | `color-mix` 9% foreground into the fill | `shadow-btn-pressed`, nudge |
@@ -92,9 +92,7 @@ depth tokens listed below the table.
 
 `icon` is flat like `ghost` (a `bg-field` hover, no gradient, no shadow).
 
-**Open at the round 2 commit:** the `secondary` row above is the design. The class string as
-committed (`bg-field bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015]`) loses its `bg-field` once `cn()` merges it, so the fill
-does not reach the page until that is fixed. See gotcha 6 in §9.
+The fill and the light are separate classes on purpose (`bg-field` plus `bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015]`): a custom gradient class would be read as a fill colour by `cn()` and would remove `bg-field`. See gotcha 6 in §9.
 
 *Until 2026-10-10 (round 2) this table read differently. `action` was a flat `bg-foreground` with
 no edge (hover `brightness-110`). `destructive` was a flat `bg-destructive` with no edge (hover
@@ -108,7 +106,7 @@ in round 2 because gold is the testnet colour: `action-bronze` (`bg-bronze`, no 
 `secondary` is a visible fill on the dark card (`--field` `#26262A` on `#18181B` is 1.18:1, with
 a 10% edge; measured before round 2, to be re-measured, because the quiet gradient now lays a faint
 light over the fill); the previous `#1F1F22` fill was 1.08:1 and read as disabled. The red button
-keeps cliqs `--destructive` `#D94343` as its middle stop; the two end stops are new tokens (below).
+has its own three stops (below), darker than `--destructive` `#D94343`, so the light label stays readable (see §3.2).
 Whether those end stops match the house style's own destructive reds was not checked. *Until
 2026-10-10 (round 2) this paragraph said: "The house style's destructive reds are **not** ported
 (the recipe is: cliqs `--destructive` stays `#D94343`, solid, no gradient)."*
@@ -128,8 +126,9 @@ stops.
 | `--shadow-btn-quiet` | `inset 0 1px 0 rgba(255,255,255,.07), 0 1px 2px rgba(0,0,0,.35)` | `shadow-btn-quiet` | rest depth of `outline`, `secondary`, `action-outline` (and the Manage tiles, see the Validator Dashboard PRD) |
 | `--ink-sheen` | `0 0% 100%` (`#FFFFFF`) | none (used inside the gradient only) | start of `bg-ink-gradient` |
 | `--ink-press` | `48 7% 78%` (`#CBC9C3`) | `bg-ink-press`, `border-ink-press` | end of the ink gradient, the pressed fill and the edge of `action` |
-| `--destructive-sheen` | `2 74% 62%` (`#E65B56`) | none (used inside the gradient only) | start of `bg-destructive-gradient` |
-| `--destructive-press` | `358 62% 44%` (`#B62B2F`) | `bg-destructive-press`, `border-destructive-press` | end of the red gradient, the pressed fill and the edge of `destructive` |
+| `--destructive-sheen` | `3 72% 47%` (`#CE2A22`) | none (used inside the gradient only) | start of `bg-destructive-gradient` |
+| `--destructive-fill` | `0 66% 45%` (`#BE2727`) | none (used inside the gradient only) | middle of `bg-destructive-gradient` |
+| `--destructive-press` | `358 62% 37%` (`#992428`) | `bg-destructive-press`, `border-destructive-press` | end of the red gradient, the pressed fill and the edge of `destructive` |
 
 The gradients are Tailwind background images in `tailwind.config.js`:
 
@@ -155,10 +154,15 @@ never on coral. The coral recipe is unchanged by round 2, so these figures still
 
 `action` puts `text-background` (`#0E0E10`) on the ink gradient (`#FFFFFF` to `#CBC9C3`, with
 `--foreground` `#F2F1ED` in the middle). `destructive` puts `text-destructive-foreground`
-(`#F2F1ED`) on the red gradient (`#E65B56` to `#B62B2F`, with `--destructive` `#D94343` in the
+(`#F2F1ED`) on the red gradient (`#CE2A22` to `#992428`, with `--destructive-fill` `#BE2727` in the
 middle). Hex values are converted from the HSL tokens.
 
-**Contrast on the ink and red gradient stops: to be measured**
+**Measured (2026-10-10, WCAG contrast from the token values):** the near-black label on the ink
+button is 19.28:1 at the sheen stop, 17.05:1 at the middle and 11.66:1 at the press stop. The light
+label on the red button is 4.66:1, 5.27:1 and 7.06:1. The red button has its own three stops
+(`--destructive-sheen`, `--destructive-fill`, `--destructive-press`) because `--destructive`
+itself is too light under a light label: 3.84:1, which is what the flat red button measured
+until round 2.
 
 ### Typography
 
@@ -237,8 +241,7 @@ The fill colour is transparent, so the page background still shows through under
 ```
 
 A quiet fill that stays visible on the dark card (see the table above), with the same faint top
-light and hairline shadow as `outline`. *Until round 2 it had neither.* Open at the round 2
-commit: the committed class string loses the fill (gotcha 6 in §9).
+light and hairline shadow as `outline`. *Until round 2 it had neither.*
 
 ### 4.5 Dense chip (`xs`)
 

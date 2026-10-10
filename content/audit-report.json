@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "updatedAt": "2026-10-10",
   "testSuite": {
-    "suites": 78,
-    "tests": 796,
-    "passed": 796,
+    "suites": 80,
+    "tests": 871,
+    "passed": 871,
     "failed": 0,
     "command": "npm run test:ci",
-    "commit": "09a29be",
+    "commit": "f383fec",
     "ranAt": "2026-10-10"
   },
   "entries": [
@@ -17,16 +17,16 @@
       "area": "ux",
       "status": "verified",
       "title": "Validator page half as tall; one button style across the app",
-      "summary": "The validator page is about half as tall, buttons and text boxes share one 44px style, and a failed data load no longer reads as zero.",
+      "summary": "The validator page is about half as tall, buttons share one style, and a failed data load no longer reads as zero. (corrected 2026-10-10)",
       "details": [
-        "The validator page went from 3,454 to about 1,850 pixels tall on a desktop screen, measured on a production build.",
+        "The validator page went from 3,454 to about 1,850 pixels tall on a desktop screen, measured on a production build before a second pass added more spacing.",
         "A jailed validator's alert and its Unjail button now come first. The identity card became a one-row strip, and the Mainnet / Testnet switch is a small control with Testnet in gold.",
         "Rewards show a Claim per row plus Claim all, with the payout address on one line. Stakers show the count, the top five and a Show all list that scrolls in its own box.",
         "Past proposals sit in a closed drop-down. An open proposal shows its real on-chain title instead of 'Untitled Proposal'.",
         "A failed stakers or voting-power load now reads 'unavailable' or a dash, never 0.",
-        "Buttons, text boxes and menus across the app share one size and spacing; icons inside buttons are spaced the same everywhere.",
+        "Buttons, text boxes and menus share one size. After the owner's review: no gold buttons (gold marks testnet), buttons have depth, and status labels are a coloured word with a moving mark.",
         "Wallet and transaction signing code is unchanged, proven by a hash check over 63 files and 85 signing functions. New tests pin which action each button triggers.",
-        "Verified: 78 test suites and 796 tests pass, plus type, lint and format checks and a production build."
+        "Verified: 80 test suites and 871 tests pass, plus type, lint and format checks and a production build."
       ],
       "evidence": [
         {
