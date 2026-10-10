@@ -5,13 +5,13 @@
     "node": ">=20.19.0"
   },
   "scripts": {
-    "dev": "next dev -p 3003",
+    "dev": "next dev -p 3003 --webpack",
     "indexer:start": "node services/multisig-indexer/server.mjs",
     "indexer:dev": "node --watch services/multisig-indexer/server.mjs",
     "test": "jest --watch",
     "test:ci": "jest",
     "prebuild": "node scripts/validate-wasm.mjs",
-    "build": "next build",
+    "build": "next build --webpack",
     "build:wasm": "bash scripts/build-wasm-optimized.sh",
     "validate:wasm": "node scripts/validate-wasm.mjs --strict",
     "seed:coreum": "node scripts/seed-coreum-multisigs.mjs",
