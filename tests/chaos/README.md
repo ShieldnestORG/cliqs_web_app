@@ -140,7 +140,7 @@ npm test -- --watch tests/chaos
 
 - A fault controller and a scheduler can inject failures at named hooks, and `MultiRpcVerifier.broadcastAndVerify` fires `duringBroadcast` / `afterBroadcast` once patched.
 - The WebSocket scenario shows a drop-then-reconcile flow on fakes defined in the spec.
-- It does **not** show that the app stops a transaction because of a credential, a pause, a spend limit or a policy version. The app has none of those features (removed 2026-10-10).
+- It does **not** show that the app stops a transaction because of a credential, a pause, a spend limit or a policy version. The app has none of those features (pause, spend limits and policy versions removed 2026-10-10; credentials removed 2026-10-11). *(Until 2026-10-11 this said "(removed 2026-10-10)", which was ahead of the facts for credentials.)*
 
 ## Next Steps (Phase 3+)
 

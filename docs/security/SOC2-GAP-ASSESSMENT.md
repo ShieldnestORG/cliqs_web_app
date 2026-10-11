@@ -9,7 +9,7 @@
 
 ## Executive summary
 
-The dominant gap is **authorization**: before PR #31, 36 of 38 API routes read or mutated multisig data with no proof the caller is a member — including destructive operations (wipe history, cancel transactions, pause a multisig, mint role credentials). #31 remediated the highest-risk destructive routes (wipe, export), added security headers, gated the debug endpoint out of production, stripped sensitive payload logging, and closed the BYODB SSRF hole with DNS-resolving host validation. Still open: uniform authorization across the remaining routes (L1), a security audit log (L2 — live since PR #58 on 2026-08-17 but PARTIAL: transaction create, signing, emergency and credential actions are still unrecorded; *until 2026-10-09 this read "there is currently no record of who did what"*), rate limiting (L3), SSRF validation for client-supplied RPC endpoints (L4), error-message minimization (L5), BYODB export authorization (L6), and a Content-Security-Policy. Secrets hygiene is good and is documented here as audit evidence. Dependency remediation is **still in flight and unmerged** as [PR #29](https://github.com/ShieldnestORG/cliqs_web_app/pull/29).
+The dominant gap is **authorization**: before PR #31, 36 of 38 API routes read or mutated multisig data with no proof the caller is a member — including destructive operations (wipe history, cancel transactions, pause a multisig, issue role credentials *(this read "mint role credentials" until 2026-10-11: the route only stored a row, nothing was minted; it was deleted on 2026-10-11)*). #31 remediated the highest-risk destructive routes (wipe, export), added security headers, gated the debug endpoint out of production, stripped sensitive payload logging, and closed the BYODB SSRF hole with DNS-resolving host validation. Still open: uniform authorization across the remaining routes (L1), a security audit log (L2 — live since PR #58 on 2026-08-17 but PARTIAL: transaction create and signing are still unrecorded *(until 2026-10-11 this also named emergency and credential actions, whose routes are now deleted)*; *until 2026-10-09 this read "there is currently no record of who did what"*), rate limiting (L3), SSRF validation for client-supplied RPC endpoints (L4), error-message minimization (L5), BYODB export authorization (L6), and a Content-Security-Policy. Secrets hygiene is good and is documented here as audit evidence. Dependency remediation is **still in flight and unmerged** as [PR #29](https://github.com/ShieldnestORG/cliqs_web_app/pull/29).
 
 Net position after #31: **3 of 38 routes carry real ADR-36 authorization** (`transaction/list`, `transaction/wipe`, `transaction/export`), a fourth (`multisig/list`) accepts a signature but does not enforce it. Everything else is still open to any caller.
 
@@ -40,7 +40,7 @@ Grep-VERIFIED on merged `main`: `verifyKeplrSignature` is referenced by exactly 
 | `transaction/wipe` gained a `multisig` mode that cascades signatures → transactions → the `multisigs` row (`db.deleteMultisig`). Blast radius is now larger than before, which is why the auth above is load-bearing. Modes `all` and `multisig` return `409` if a pending tx carries a signature from a non-caller address — note that guard is keyed on `callerAddress`, so it does not run on the BYODB path | `pages/api/transaction/wipe/index.ts:32,120-146` | Shipped with #31 — accepted (member-scoped, own data) |
 | Reference auth pattern to extract into middleware | `pages/api/transaction/list/index.ts:32-56` | Reusable for L1 |
 | `multisig/list` accepts an unverified `{address, pubkey}` path and its signature path falls through on verification failure and proceeds anyway | `pages/api/chain/[chainId]/multisig/list/index.ts:76-88` | **Open — L1** |
-| `credentials/issue` mints role credentials with field validation only — no issuer authorization; `actor` on credential routes is a self-asserted body field *(until 2026-10-10 this read "emergency/credential routes"; the emergency routes were deleted)* | `credentials/issue.ts` *(`emergency/pause.ts:28-31` removed 2026-10-10)* | **Open — L1** |
+| Was: `credentials/issue` stored a role credential row (nothing was minted; until 2026-10-11 this said "mints role credentials") with field validation only — no issuer authorization; `actor` on credential routes was a self-asserted body field *(until 2026-10-10 this read "emergency/credential routes"; the emergency routes were deleted)* | `credentials/issue.ts` *(removed 2026-10-11; `emergency/pause.ts:28-31` removed 2026-10-10)* | **Removed (route deleted 2026-10-11)** *(was **Open — L1**)* |
 | Anyone can cancel any transaction or overwrite its `txHash` | `pages/api/transaction/[transactionID]/index.ts:30-41` | **Open — L1** |
 
 ### 2. Transport & security headers — CC6.7
@@ -136,7 +136,7 @@ Effort: **S** = <1hr, **M** = a few hrs, **L** = design + multi-file.
 | # | Control | Current state | Risk | Effort |
 |---|---|---|---|---|
 | L1 | **Uniform authn/authz on mutating routes** — extract the `transaction/list` ADR-36 pattern into middleware and apply everywhere | 3/38 routes enforce ADR-36 after #31 (`transaction/list`, `wipe`, `export`); a 4th, `multisig/list`, accepts a signature but falls through on verification failure | **Critical** | L |
-| L2 | **Security audit log** (actor, action, timestamp, tamper-evident) for tx create/sign/broadcast/cancel/wipe + emergency + credential ops | **Live but PARTIAL** (PR #58): broadcast, cancel, export, wipe and multisig delete are recorded; create, sign and credential ops are not *(this list also named emergency ops until 2026-10-10, when their routes were deleted)*. Actor is proven only on ADR-36 calls; append-only by convention, not by database role (see [README.md](README.md)). *Until 2026-10-09 this cell read "None".* | High | L |
+| L2 | **Security audit log** (actor, action, timestamp, tamper-evident) for tx create/sign/broadcast/cancel/wipe + emergency + credential ops *(emergency and credential ops no longer exist: their routes were deleted on 2026-10-10 and 2026-10-11)* | **Live but PARTIAL** (PR #58): broadcast, cancel, export, wipe and multisig delete are recorded; create and sign are not *(this list also named emergency ops until 2026-10-10 and credential ops until 2026-10-11, when their routes were deleted)*. Actor is proven only on ADR-36 calls; append-only by convention, not by database role (see [README.md](README.md)). *Until 2026-10-09 this cell read "None".* | High | L |
 | L3 | **Rate limiting / abuse controls** | **Partial** (PR #39): only `GET /api/transaction/[transactionID]` is limited, 60/min/IP, counted per serverless instance. Writes on that route are deliberately unlimited; every other route is unlimited. *Until 2026-10-09 this cell read "None in the app".* | High | M |
 | L4 | **SSRF validation for client-supplied RPC endpoints** (`multisig/list`, `ensure`) — reuse `lib/byodb/hostValidation.ts`; also close the two residuals on the Mongo path — DNS rebinding (the driver re-resolves after validation) and replica-set discovery (a validated public mongod can advertise private member addresses in its hello response, which the driver connects to unvalidated; `directConnection=true` for non-SRV URIs would close it) | Mongo URIs covered at connect time by #31; RPC URLs still open | High | M |
 | L5 | **Error-message minimization** on non-DB routes | Raw `err.message` returned | Low-Med | S-M |
@@ -145,7 +145,7 @@ Effort: **S** = <1hr, **M** = a few hrs, **L** = design + multi-file.
 
 ## Appendix A — Full API route inventory
 
-*30 route files remain after the 2026-10-10 removal of the 8 policy, emergency and monitoring routes. The counts in this document are as of 2026-08-16 and were not re-taken.*
+*24 route files remain after the 2026-10-10 removal of the 8 policy, emergency and monitoring routes and the 2026-10-11 removal of the 6 credential routes (until 2026-10-11 this said 30). The counts in this document are as of 2026-08-16 and were not re-taken.*
 
 All 38 route handlers under `pages/api/`. Methods VERIFIED by sweeping every handler's `req.method` dispatch. Auth column reflects merged `main` **after** PR #31.
 
@@ -165,12 +165,12 @@ All 38 route handlers under `pages/api/`. Methods VERIFIED by sweeping every han
 | 10 | `/api/chain/[chainId]/contract-multisig/[address]` | GET, POST | **None** | Read/sync/verify-vote/verify-execute/reconcile actions |
 | 11 | `/api/chain/[chainId]/contract-multisig/[address]/snapshots` | GET | **None** | Reads snapshots |
 | 12 | `/api/chain/[chainId]/contract-multisig` | GET, POST | **None** | Create/list contract multisigs |
-| 13 | `/api/chain/[chainId]/credentials/[address]` | GET | **None** | Reads credentials for any address |
-| 14 | `/api/chain/[chainId]/credentials/class` | GET, POST | **None** | Create/read credential classes |
-| 15 | `/api/chain/[chainId]/credentials/issue` | POST | **None** | Mints role credentials — field validation only, no issuer authorization |
-| 16 | `/api/chain/[chainId]/credentials/revoke` | POST | **None** | `actor` self-asserted |
-| 17 | `/api/chain/[chainId]/credentials/rotate` | POST | **None** | `actor` self-asserted |
-| 18 | `/api/chain/[chainId]/credentials/verify` | GET | **None** | Verifies a credential |
+| 13 | `/api/chain/[chainId]/credentials/[address]` | GET | **Removed (route deleted 2026-10-11)** | Was: reads credentials for any address |
+| 14 | `/api/chain/[chainId]/credentials/class` | GET, POST | **Removed (route deleted 2026-10-11)** | Was: create/read credential classes |
+| 15 | `/api/chain/[chainId]/credentials/issue` | POST | **Removed (route deleted 2026-10-11)** | Was: stores a role credential row (this said "mints" until 2026-10-11; nothing was minted) — field validation only, no issuer authorization |
+| 16 | `/api/chain/[chainId]/credentials/revoke` | POST | **Removed (route deleted 2026-10-11)** | Was: `actor` self-asserted |
+| 17 | `/api/chain/[chainId]/credentials/rotate` | POST | **Removed (route deleted 2026-10-11)** | Was: `actor` self-asserted |
+| 18 | `/api/chain/[chainId]/credentials/verify` | GET | **Removed (route deleted 2026-10-11)** | Was: verifies a credential |
 | 19 | `/api/chain/[chainId]/group/[address]` | GET, POST | **None** | Read/update group |
 | 20 | `/api/chain/[chainId]/group/[address]/members` | GET, PATCH | **None** | Read/patch group members |
 | 21 | `/api/chain/[chainId]/multisig/[multisigAddress]/ensure` | POST | **None** | **SSRF (open, L4)**: connects to client-supplied `body.chain` RPC |
