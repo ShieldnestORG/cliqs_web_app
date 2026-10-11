@@ -18,6 +18,11 @@
  * Until 2026-10-10 a second full pagination counted the stakers and returned 0 when it failed, so
  * the Performance tile read "0 total" next to a Stakers section that said "unavailable".
  *
+ * And the lookup itself (2026-10-11): only a real "not found" from the chain means "not a
+ * validator" (null). Any other failure (the node is down, the query errors) rejects, so the
+ * dashboard shows its error card with Try Again instead of the "No validator found" form. Until
+ * then getValidatorInfo and this function's outer catch both turned every error into null.
+ *
  * Priority: P1
  */
 
@@ -35,6 +40,7 @@ jest.mock("@cosmjs/stargate", () => ({
 }));
 
 import { QueryClient } from "@cosmjs/stargate";
+import { connectComet } from "@cosmjs/tendermint-rpc";
 import { getValidatorDashboardData } from "@/lib/validatorHelpers";
 
 const RPC = "https://rpc.invalid:26657";
@@ -211,5 +217,37 @@ describe("getValidatorDashboardData voting power share: P1", () => {
 
     expect(result!.votingPowerPercentage).toBe("1.00");
     expect(result!.ranking).toBe(1);
+  });
+});
+
+describe("getValidatorDashboardData lookup failure: P1", () => {
+  // What TX answered for a validator that does not exist (mainnet, measured 2026-10-11).
+  const NOT_FOUND =
+    "Query failed with (22): rpc error: code = NotFound desc = validator " +
+    `${VALOPER} not found: key not found`;
+
+  it("returns null when the chain says the validator does not exist", async () => {
+    stubClient({ validator: jest.fn().mockRejectedValue(new Error(NOT_FOUND)) });
+
+    await expect(load()).resolves.toBeNull();
+  });
+
+  it("returns null when the chain answers with no validator", async () => {
+    stubClient({ validator: jest.fn().mockResolvedValue({}) });
+
+    await expect(load()).resolves.toBeNull();
+  });
+
+  it("rejects when the validator query fails for any other reason", async () => {
+    stubClient({ validator: jest.fn().mockRejectedValue(new Error("fetch failed")) });
+
+    await expect(load()).rejects.toThrow("fetch failed");
+  });
+
+  it("rejects when the node cannot be reached at all", async () => {
+    stubClient({});
+    (connectComet as jest.Mock).mockRejectedValueOnce(new Error("connect ECONNREFUSED"));
+
+    await expect(load()).rejects.toThrow("connect ECONNREFUSED");
   });
 });

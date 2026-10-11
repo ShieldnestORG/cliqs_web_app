@@ -424,6 +424,27 @@ describe("ValidatorDashboard: not a validator: P1", () => {
   });
 });
 
+describe("ValidatorDashboard: the lookup fails: P1", () => {
+  // getValidatorDashboardData rejects when it could not check (node down, query error) and returns
+  // null only when the chain says "not found" (2026-10-11). A failure is an error with Try Again,
+  // never the "No validator found" form.
+  it("shows the error card with Try Again, not the not-a-validator form", async () => {
+    (getValidatorDashboardData as jest.Mock).mockRejectedValueOnce(new Error("fetch failed"));
+    render(<ValidatorDashboard />);
+
+    expect(await screen.findByText("Failed to Load Data")).toBeInTheDocument();
+    expect(screen.getByText("fetch failed")).toBeInTheDocument();
+    expect(screen.queryByText("No validator found for this wallet")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("cliq-upgrade-cta")).not.toBeInTheDocument();
+
+    // Try Again asks again; this time the node answers and the dashboard loads
+    fireEvent.click(screen.getByRole("button", { name: /try again/i }));
+    await waitFor(() => expect(getValidatorDashboardData).toHaveBeenCalledTimes(2));
+    expect(await screen.findByTestId("context-row")).toBeInTheDocument();
+    expect(screen.queryByText("Failed to Load Data")).not.toBeInTheDocument();
+  });
+});
+
 describe("ValidatorDashboard: what the cards are handed: P0", () => {
   const SIGNING_INFO = { tombstoned: false, jailedUntil: "later" };
   const actingCards = [

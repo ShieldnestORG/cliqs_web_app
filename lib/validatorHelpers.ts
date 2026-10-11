@@ -220,7 +220,11 @@ export function parseValidator(validator: Validator, addressPrefix: string): Val
 }
 
 /**
- * Get validator info by operator address
+ * Get validator info by operator address.
+ *
+ * null means the chain says there is no such validator. Any other failure (node down, query
+ * error) is thrown, so a caller can tell "not a validator" from "could not check". Until
+ * 2026-10-11 those failures returned null too, and the dashboard showed "No validator found".
  */
 export async function getValidatorInfo(
   queryClient: ValidatorQueryClient,
@@ -234,14 +238,15 @@ export async function getValidatorInfo(
     }
     return parseValidator(response.validator, addressPrefix);
   } catch (e) {
-    // Validator not found is expected for non-validator addresses
+    // Validator not found is expected for non-validator addresses. TX answers
+    // "rpc error: code = NotFound desc = validator <valoper> not found: key not found".
     const errorStr = e instanceof Error ? e.message : String(e);
     if (errorStr.includes("not found") || errorStr.includes("NotFound")) {
       return null;
     }
     // Log as a warning string, not a raw Error object, to prevent Next.js from spawning an error overlay.
     console.warn(`Failed to get validator info: ${errorStr}`);
-    return null;
+    throw e;
   }
 }
 
@@ -924,7 +929,11 @@ export interface ValidatorDashboardData {
 }
 
 /**
- * Fetch all validator dashboard data in one call
+ * Fetch all validator dashboard data in one call.
+ *
+ * null = the address is not a validator. A failed lookup (node unreachable, query error) rejects,
+ * so the dashboard shows its error state with Try Again. Until 2026-10-11 an outer catch returned
+ * null for those too, which made that error state unreachable.
  */
 export async function getValidatorDashboardData(
   rpcUrl: string,
@@ -1006,8 +1015,11 @@ export async function getValidatorDashboardData(
       signingInfo: signingInfoResult,
     };
   } catch (e) {
-    console.error("Failed to fetch validator dashboard data:", e);
-    return null;
+    // Log as a warning string, not a raw Error object, to prevent Next.js from spawning an error overlay.
+    console.warn(
+      `Failed to fetch validator dashboard data: ${e instanceof Error ? e.message : String(e)}`,
+    );
+    throw e;
   }
 }
 

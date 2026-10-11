@@ -808,6 +808,18 @@ House-style buttons since 2026-10-10 (see [Buttons PRD](BUTTONS-PRD.md)). Until 
 </Card>
 ```
 
+### Lookup failed: "could not check" is not "not a validator"
+`getValidatorDashboardData` returns `null` only when the chain says the validator does not exist
+(TX answers `rpc error: code = NotFound desc = validator <valoper> not found: key not found`,
+measured on mainnet 2026-10-11) or answers with no validator. Any other failure (the node cannot be
+reached, the query errors) rejects, and the page shows **Failed to Load Data** with the error text
+and a **Try Again** button, never the not-a-validator form. *Until 2026-10-11 `getValidatorInfo`
+and that function's outer `catch` both returned `null` for every error, so a node outage read as
+"No validator found for this wallet" and this error card could not be reached.* Pinned by
+`validator-dashboard-data` ("lookup failure") and `validator-dashboard` ("the lookup fails").
+`getAssociatedValidators` (the list of CLIQ validators to pick from) still skips an address it
+could not check, as before.
+
 ### Data that could not load (`null`) is not data that is empty (`[]`)
 The page never turns a failed fetch into a zero or an empty-list claim. `pastProposals` (null =
 "Proposal history unavailable"), `delegations` and `unbondingDelegations` (null = "unavailable
