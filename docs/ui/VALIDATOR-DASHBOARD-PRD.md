@@ -37,7 +37,7 @@
 > 1024px (the Explorer link wrapped), the withdraw address on two lines, and an opened "Past
 > proposals" list that grew Governance from 384px to 966px and dragged the Stakers card with it
 > (all measured on a real build). Now: the control is one row (§4.8), the strip is one row at
-> 1024px with an icon-only explorer link (§4.1; measured before round 2, to be re-measured), the
+> 1024px with an icon-only explorer link (§4.1; re-measured on production 2026-10-11: 32px tall), the
 > withdraw address is one line (§4.2), the
 > opened past list scrolls inside one box and its count is honest (§4.4), and the tile and the
 > section both say "Stakers" (§4.3, §4.5). Wording from before is kept as "until 2026-10-10".
@@ -56,11 +56,12 @@
 > [Buttons PRD](BUTTONS-PRD.md)). The collapsed menu's Donate and Disconnect buttons are also
 > centred now.
 >
-> **Measured figures.** After round 2 the page is **1,802px** tall at **1280px** wide (it was
-> 1,771px at 1280px just before round 2), in the no-wallet state, for validator TOKNS.FI. Every
-> other measured figure in this document that round 2 touches (page height at 1024px, the
-> context row, the identity strip, the network control) was measured before round 2 and is marked
-> "measured before round 2, to be re-measured" where it appears. Those marks are open.
+> **Measured figures.** Re-measured 2026-10-11 on production (app.cliqs.io, main `08a7041`, the
+> no-wallet state, validator TOKNS.FI with 645 stakers, proposal 47 in voting, past proposals
+> closed): the page is **1,769px** tall at **1280px** and **1,869px** at **1024px**. *(Until
+> 2026-10-11 this said 1,802px at 1280px after round 2, 1,771px just before it, and that the other
+> round-2 figures were "measured before round 2, to be re-measured"; those marks are now closed
+> with the figures below.)*
 
 > **Reconciled against the shipped code.** Sections 4, 6, 7, 9 and 12 were rewritten
 > to match `components/dataViews/ValidatorDashboard/` as it exists today; the rest is
@@ -168,14 +169,14 @@ stakers): 1,939px by default. The one-row changes remove the context-row wrap (7
 measured by editing the live DOM of that build) and the strip wrap (about 40px). Measured on a
 real build of the head after those changes (1024px, 645 stakers): 1,843px by default, the context
 row 40px, the identity strip and the withdraw line one row each.
-**All of the figures in this paragraph from "A static render" onward were measured before round 2,
-to be re-measured:** round 2 removed the mainnet caption and the "Acting as" sentence (so the
-40px context row no longer applies) and loosened the spacing (below), so none of them describes
-the page now. The only post-round-2 figure is **1,802px at 1280px wide** (no-wallet
-state, TOKNS.FI; 1,771px at 1280px just before round 2). The 1,843px at 1024px and the 1,802px at
-1280px are different widths: do not compare them.
+**All of the figures in this paragraph from "A static render" onward were measured before round
+2** and describe the page before the mainnet caption and the "Acting as" sentence went and the
+spacing grew. **Now** (re-measured 2026-10-11 on app.cliqs.io at main `08a7041`, TOKNS.FI, 645 stakers, no wallet): **1,869px at 1024px**
+and **1,769px at 1280px**, the context row **36px** at both widths, the identity strip one row
+(32px). Different widths: do not compare them.
 Nothing important is below the first screen: the header, the context row and the Rewards panel
-all fit in the first 768px (measured before round 2, to be re-measured: the spacing grew).
+all fit in the first 768px (re-measured 2026-10-11 on production: the Rewards panel ends at 644px
+at 1024px and at 612px at 1280px).
 
 Top to bottom (`pages/[chainName]/validator.tsx` and `ValidatorDashboard/index.tsx`):
 
@@ -183,7 +184,7 @@ Top to bottom (`pages/[chainName]/validator.tsx` and `ValidatorDashboard/index.t
 Validator Dashboard                                  (H1, under the breadcrumb)
 [JAILED ALERT, only while jailed, with Unjail]
 [UPGRADE NOTICE, only while a chain upgrade is proposed or scheduled (§4.0)]
-TOKNS.FI  ACTIVE  Commission 5.0%  Operator core1..  Account core1..  [explorer icon]   (header strip; status tag with a moving mark; one row at 1024px before round 2, to be re-measured)
+TOKNS.FI  ACTIVE  Commission 5.0%  Operator core1..  Account core1..  [explorer icon]   (header strip; status tag with a moving mark; one row at 1024px, re-measured 2026-10-11)
 [note, only with no wallet or a read-only CLIQ]     [Mainnet] [Testnet]  [Refresh]   (context row; on testnet a gold TESTNET status tag sits beside the boxes)
 
 | REWARDS  |||||||||||||     | PERFORMANCE  |||||||||||||      (scale rules; Rewards is coral)
@@ -388,10 +389,9 @@ upgrade guide rather than steps copied into cliqs, and the TOKNS link on mainnet
 - Operator address and account address (truncated, each with a copy button)
 - Explorer link, **icon-only** (`size="icon-sm"`, `aria-label="View validator in explorer"`, `title`
   "View in explorer", the same href; 44px on phones). With a text label it was 102px wide and
-  wrapped to a second row at 1024px (the other parts take about 707px of a 792px row; measured
-  before round 2, to be re-measured: the strip's gaps grew to `gap-x-6` and the tag replaced the
-  badge, so "one row at 1024px" is not confirmed for the page as it is now). Below 1024px
-  the strip may wrap. *Until 2026-10-10 the link read "Explorer".*
+  wrapped to a second row at 1024px (the other parts took about 707px of a 792px row, measured
+  before round 2). **Re-measured 2026-10-11 on production after round 2: one row at 1024px**
+  (32px tall, the five parts' tops within 6px of each other). Below 1024px the strip may wrap. *Until 2026-10-10 the link read "Explorer".*
 
 **Jailed alert** (only while `validator.jailed`): a full-width `role="alert"` block at the very
 top of the dashboard that says the validator is jailed and hosts the **Unjail validator** action
@@ -422,8 +422,10 @@ left 2/5 column; the jailed layout test pinned an `order-first` class on its gri
 - Self-delegation rewards are only included when they are actually non-zero, so a jailed
   validator with no self-delegation sends the commission message alone.
 - **The withdraw address, as one line** (`WithdrawAddressCard.tsx`, compact): "Paid to core1…asj6gw
-  [copy] [Change]". The row already fills a half-width Rewards card (342px of 342px; measured
-  before round 2, to be re-measured, because the card padding and the grid gap grew), so the fact
+  [copy] [Change]". The row filled a half-width Rewards card (342px of 342px, measured before round 2). **Re-measured
+  2026-10-11 on production after round 2: one line at 1280px, but at 1024px it wraps**, the
+  address on the first line (555-571px) and the Change button on a second (583-619px): the card
+  padding and the grid gap grew in round 2. Not changed here (an open item for the owner), so the fact
   "Same as operator account" / "Custom address" is not a second line any more: it is the "Paid
   to" label's `title` and a screen-reader-only phrase after the label (", same as operator
   account" or ", custom address"). For a custom address that is the only place the word
@@ -484,8 +486,10 @@ the real number up to 10 and "latest 10" only above that, so "(7)" could still u
 grows by one box instead of ten rows; opened, it used to grow Governance from 384px to 966px and
 drag the Stakers card to the same height, leaving about 580px of empty card (measured). Governance
 and Stakers are **equal-height panels** side by side from `lg`, so opening the history still
-leaves about 200px of empty space in the Stakers card (measured 199px on a real build, before round 2,
-to be re-measured; the 384px, 966px and 580px above are from before round 2 too); accepted,
+leaves about 200px of empty space in the Stakers card (199px before round 2; **re-measured
+2026-10-11 on production at 1280px: opening the list grows Governance and Stakers from 396px to
+576px and leaves 181px empty in the Stakers card**; the 384px, 966px and 580px above are from
+before round 2); accepted,
 because a second card that does not follow its neighbour's height would break the row. The vote dialog and
 `submitVote` are unchanged, except that `submitVote` no longer blocks later votes after a
 "connect your wallet first" toast (PR #81, 2026-10-10).
@@ -621,7 +625,7 @@ caption and the `sr-only` sentence together.
 
 *Until 2026-10-10 the sentence was a 22rem-wide line under the boxes that wrapped to two lines,
 so the control measured 352x74px and set the height of the whole context row.* **Measured before
-round 2, to be re-measured**, on a real build at 1024px (editing the live DOM, so INFERRED for the
+round 2** (now the context row is 36px at 1024px and 1280px, re-measured on production 2026-10-11), on a real build at 1024px (editing the live DOM, so INFERRED for the
 shipped classes): with the short caption the context row was 40px (the two-line "Acting as"
 sentence set it); with the longer example caption "Real assets. Check every address before you
 sign." it was 60px, because the right side then took 571px of 792px and squeezed the sentence to
