@@ -6,6 +6,15 @@ import { Coin } from "@cosmjs/stargate";
 import { ChainInfo } from "../context/ChainsContext/types";
 import { printableCoin, printableCoins, thinSpace, trimStringsObj } from "./displayHelpers";
 
+// displayHelpers imports @cosmjs/crypto, whose import starts libsodium's async WebAssembly set-up.
+// These tests finish before that set-up does; it then runs after Jest has torn this file down, cannot
+// `require("crypto")`, and throws "No secure random number generator found" into whatever the worker
+// runs next: a test there fails (create-tx-deeplink in CI, 2026-10-10) or, between tests, the whole
+// run dies of an unhandled rejection. Wait for the set-up the import started before the file ends.
+afterAll(async () => {
+  await jest.requireActual<{ ready: Promise<void> }>("libsodium-wrappers-sumo").ready;
+});
+
 const testChainInfo: ChainInfo = {
   registryName: "junotestnet",
   addressPrefix: "juno",
