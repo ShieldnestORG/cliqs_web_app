@@ -197,7 +197,8 @@ TOKNS.FI  ACTIVE  Commission 5.0%  Operator core1..  Account core1..  [explorer 
 [ Past proposals (latest N) v ]  [ top 5 rows, Show all 645 ]   (N = rows shown, at most 10)
 
 | MANAGE  ||||||||||||||||||||||||||||||||||||||||||||||||||
-[ four action tiles, each with an icon and a corner arrow (CLIQ mode only) ]
+[ CLIQ mode only: // Transfers (Send, CLIQ page), then // Staking & Governance (four tiles) ]
+[ each tile has an icon and a corner arrow ]
 [ Edit validator: description and note on the left, button on the right ]
 [ CLIQ upgrade CTA: unchanged, hidden in CLIQ mode ]
 ```
@@ -521,6 +522,19 @@ helper are gone.)*
   mono, 11px, medium, uppercase, 0.14em tracking, muted (the `SUBHEAD` constant in the file).
   *Until 2026-10-10 (round 2) they were `text-sm font-medium uppercase tracking-wide`, and
   "Edit validator" had a pencil icon (`Edit3`) before it.*
+- CLIQ mode only, first: a **"// Transfers"** row (added 2026-10-11; the owner, on a testnet
+  validator run by a multisig: "i can t figure how to send tx from valiadtor multisig on
+  cliqs kinda of confusing ux", and the screen that lost them was this page, which had no way to
+  start a send). Two tiles in the same grid and tile style as the row below: **Send** (`Send`
+  icon, "Send tokens from this CLIQ to any address") opens
+  `/[chainName]/<cliq>/transaction/new?type=/cosmos.bank.v1beta1.MsgSend`, so the builder opens
+  with Send picked and the CLIQ's balance shown; **CLIQ page** (`Users` icon, "Pending signatures
+  and every other transaction") opens `/[chainName]/<cliq>`. Measured in a browser on
+  2026-10-11: at 1280px the two tiles sit on the first two columns of the four-column grid
+  (232px wide, the same left edges as Delegate and Undelegate) and the row adds 152px to the page;
+  at 500px they stack and add 288px; no sideways scroll at either width.
+  *Until 2026-10-11 the only way to send from the validator's multisig was to find the CLIQ's own
+  page, which this page did not link to.*
 - CLIQ mode only: **four action tiles** that deep-link to the new-transaction page with a message
   type pre-selected: Delegate, Undelegate, Redelegate and "Claim delegation rewards"
   (`/[chainName]/<target>/transaction/new?type=<typeUrl>`). The last tile was labelled
@@ -797,6 +811,18 @@ House-style buttons since 2026-10-10 (see [Buttons PRD](BUTTONS-PRD.md)). Until 
   </CardContent>
 </Card>
 ```
+
+### Lookup failed: "could not check" is not "not a validator"
+`getValidatorDashboardData` returns `null` only when the chain says the validator does not exist
+(TX answers `rpc error: code = NotFound desc = validator <valoper> not found: key not found`,
+measured on mainnet 2026-10-11) or answers with no validator. Any other failure (the node cannot be
+reached, the query errors) rejects, and the page shows **Failed to Load Data** with the error text
+and a **Try Again** button, never the not-a-validator form. *Until 2026-10-11 `getValidatorInfo`
+and that function's outer `catch` both returned `null` for every error, so a node outage read as
+"No validator found for this wallet" and this error card could not be reached.* Pinned by
+`validator-dashboard-data` ("lookup failure") and `validator-dashboard` ("the lookup fails").
+`getAssociatedValidators` (the list of CLIQ validators to pick from) still skips an address it
+could not check, as before.
 
 ### Data that could not load (`null`) is not data that is empty (`[]`)
 The page never turns a failed fetch into a zero or an empty-list claim. `pastProposals` (null =

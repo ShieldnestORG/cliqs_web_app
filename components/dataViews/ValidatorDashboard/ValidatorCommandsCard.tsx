@@ -30,6 +30,7 @@ import {
   ArrowLeftRight,
   ArrowUpRight,
   Coins,
+  Send,
   Users,
 } from "lucide-react";
 import { useState } from "react";
@@ -345,7 +346,50 @@ export default function ValidatorCommandsCard({
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
+          {/* Transfers: sending out of the validator's multisig had no way in from this page
+           * (owner, 2026-10-11). Send opens the transaction builder with MsgSend picked; the CLIQ
+           * page holds the pending signatures and every other transaction type. */}
+          <div>
+            <h3 className={cn(SUBHEAD, "mb-4")}>{`// Transfers`}</h3>
+            <BentoGrid className="grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+              <Link
+                href={`/${chain.registryName}/${targetAddress}/transaction/new?type=${encodeURIComponent(MsgTypeUrls.Send)}`}
+                className="block"
+              >
+                <BentoCard variant="default" interactive className={TILE}>
+                  <div className="flex h-full items-start gap-4">
+                    <Send className="mt-0.5 h-6 w-6 shrink-0" />
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <h4 className="font-heading text-sm font-semibold leading-tight">Send</h4>
+                      <p className="text-xs leading-snug text-muted-foreground">
+                        Send tokens from this CLIQ to any address
+                      </p>
+                    </div>
+                    <ArrowUpRight className={TILE_ARROW} />
+                  </div>
+                </BentoCard>
+              </Link>
+
+              <Link href={`/${chain.registryName}/${targetAddress}`} className="block">
+                <BentoCard variant="default" interactive className={TILE}>
+                  <div className="flex h-full items-start gap-4">
+                    <Users className="mt-0.5 h-6 w-6 shrink-0" />
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <h4 className="font-heading text-sm font-semibold leading-tight">
+                        CLIQ page
+                      </h4>
+                      <p className="text-xs leading-snug text-muted-foreground">
+                        Pending signatures and every other transaction
+                      </p>
+                    </div>
+                    <ArrowUpRight className={TILE_ARROW} />
+                  </div>
+                </BentoCard>
+              </Link>
+            </BentoGrid>
+          </div>
+
           <div>
             <h3 className={cn(SUBHEAD, "mb-4")}>{`// Staking & Governance`}</h3>
             <BentoGrid className="grid-cols-1 md:grid-cols-2 lg:grid-cols-4">

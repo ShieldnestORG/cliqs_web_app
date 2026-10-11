@@ -6,7 +6,11 @@
  *   - no Vote tile (ProposalViewer already lists proposals with the vote dialog)
  *   - the delegator-side reward tile is "Claim delegation rewards" and keeps its ?type= link
  *   - Delegate / Undelegate / Redelegate links are unchanged: the four CLIQ action links keep their
- *     exact hrefs (and there are no others)
+ *     exact hrefs
+ *   - a "// Transfers" row comes first (2026-10-11, the owner could not find how to send TX out of
+ *     the validator's multisig): "Send" opens the new-transaction page with MsgSend picked, and
+ *     "CLIQ page" opens the multisig's own page (pending signatures, every other command). Those six
+ *     are the only links
  *   - the Manage card was restyled only (2026-10-10): each tile has its own icon and a corner arrow,
  *     the two sub-headings use the section-label type (mono, 11px, uppercase, 0.14em), "Edit
  *     validator" is one row (words on the left, the button on the right) and the sentence "Changes may
@@ -108,10 +112,37 @@ describe("ValidatorCommandsCard tiles (CLIQ mode): P1", () => {
     expect(screen.queryByText(/managing via cliq/i)).not.toBeInTheDocument();
   });
 
-  it("keeps exactly the four action links, with their exact hrefs and no others", () => {
+  it("puts a Transfers row first: Send picks MsgSend, CLIQ page opens the multisig's page", () => {
+    const transfers = screen.getByRole("heading", { name: "// Transfers" });
+    const staking = screen.getByRole("heading", { name: "// Staking & Governance" });
+    // Transfers is the first sub-heading, Staking & Governance the second
+    expect(screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual([
+      "// Transfers",
+      "// Staking & Governance",
+      "Edit validator",
+    ]);
+
+    const send = screen.getByRole("heading", { name: "Send" }).closest("a");
+    expect(send).toHaveAttribute("href", typeLink(MsgTypeUrls.Send));
+    expect(screen.getByText("Send tokens from this CLIQ to any address")).toBeInTheDocument();
+
+    const page = screen.getByRole("heading", { name: "CLIQ page" }).closest("a");
+    expect(page).toHaveAttribute("href", `/tx/${CLIQ}`);
+    expect(screen.getByText("Pending signatures and every other transaction")).toBeInTheDocument();
+
+    // both tiles live under the Transfers heading, not in the staking grid
+    const transfersBlock = transfers.parentElement as HTMLElement;
+    expect(transfersBlock).toContainElement(send);
+    expect(transfersBlock).toContainElement(page);
+    expect(transfersBlock).not.toContainElement(staking);
+  });
+
+  it("keeps exactly the six action links, with their exact hrefs and no others", () => {
     const hrefs = Array.from(document.querySelectorAll("a")).map((a) => a.getAttribute("href"));
 
     expect(hrefs).toEqual([
+      typeLink(MsgTypeUrls.Send),
+      `/tx/${CLIQ}`,
       typeLink(MsgTypeUrls.Delegate),
       typeLink(MsgTypeUrls.Undelegate),
       typeLink(MsgTypeUrls.BeginRedelegate),
@@ -122,6 +153,8 @@ describe("ValidatorCommandsCard tiles (CLIQ mode): P1", () => {
   it("gives each tile its own icon and a corner arrow", () => {
     // jest mocks lucide icons as a span with data-testid="icon-<Name>"
     const tiles: [string, string][] = [
+      ["Send", "icon-Send"],
+      ["CLIQ page", "icon-Users"],
       ["Delegate", "icon-TrendingUp"],
       ["Undelegate", "icon-TrendingDown"],
       ["Redelegate", "icon-ArrowLeftRight"],
@@ -140,11 +173,18 @@ describe("ValidatorCommandsCard tiles (CLIQ mode): P1", () => {
       leading.push(icons[0].getAttribute("data-testid"));
     }
     // the three staking tiles used to share one icon
-    expect(new Set(leading).size).toBe(4);
+    expect(new Set(leading).size).toBe(6);
   });
 
   it("gives the tiles the quiet raised surface and room to breathe", () => {
-    for (const name of ["Delegate", "Undelegate", "Redelegate", "Claim delegation rewards"]) {
+    for (const name of [
+      "Send",
+      "CLIQ page",
+      "Delegate",
+      "Undelegate",
+      "Redelegate",
+      "Claim delegation rewards",
+    ]) {
       const tile = screen.getByRole("heading", { name }).closest(".group") as HTMLElement;
       expect(tile).toHaveClass(
         "bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015]",
@@ -155,8 +195,8 @@ describe("ValidatorCommandsCard tiles (CLIQ mode): P1", () => {
     }
   });
 
-  it("sets both sub-headings in the section-label type, with no icon on Edit validator", () => {
-    for (const name of ["// Staking & Governance", "Edit validator"]) {
+  it("sets the sub-headings in the section-label type, with no icon on Edit validator", () => {
+    for (const name of ["// Transfers", "// Staking & Governance", "Edit validator"]) {
       const heading = screen.getByRole("heading", { name });
       expect(heading).toHaveClass(
         "font-mono",
@@ -240,8 +280,9 @@ describe("ValidatorCommandsCard (solo mode): P1", () => {
       words,
       screen.getByRole("button", { name: "Edit validator" }),
     ]);
-    // no action tiles outside a CLIQ view
+    // no action tiles outside a CLIQ view, and no Transfers row (a single wallet sends from itself)
     expect(document.querySelector("a")).toBeNull();
+    expect(screen.queryByRole("heading", { name: "// Transfers" })).not.toBeInTheDocument();
   });
 });
 
