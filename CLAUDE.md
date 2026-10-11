@@ -56,6 +56,12 @@ card that hosts it, byte for byte, but never change it. Keep the provider order 
   to run right after that spec it failed 8 of 8; between tests the same throw kills the whole run.
   The log line to look for is "You are trying to `require` a file after the Jest environment has
   been torn down. From <file>". The fix is to await libsodium's `ready` in that file's `afterAll`.
+- `setChainInUrl` (`context/ChainsContext/storage.ts`) rewrites the address bar every time a chain
+  is set. Next.js ignores a Back or Forward step whose `history.state` has no `__N` marker. Until
+  2026-10-11 it wrote `{}` and the bare path, so on app.cliqs.io Back changed the address bar but
+  not the page, and `?address=` vanished (a refresh lost the CLIQ). Any `history.replaceState` here
+  must pass `window.history.state` and keep the page's own query; `__tests__/lib/chain-url.test.ts`
+  pins both.
 
 ## 4. Gates before a pull request
 
