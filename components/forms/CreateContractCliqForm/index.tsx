@@ -192,11 +192,11 @@ export default function CreateContractCliqForm() {
   useEffect(() => {
     setChainConstraints(getChainConstraints(chain.chainId));
     if (chain.nodeAddress) {
-      queryChainConstraints(ensureProtocol(chain.nodeAddress), chain.chainId)
+      queryChainConstraints(ensureProtocol(chain.nodeAddress), chain.chainId, chain.restEndpoint)
         .then((live) => setChainConstraints(live))
         .catch(() => {});
     }
-  }, [chain.chainId, chain.nodeAddress]);
+  }, [chain.chainId, chain.nodeAddress, chain.restEndpoint]);
 
   useEffect(() => {
     checkBundledWasmAvailable("cw3-fixed").then(setBundledAvailable);
