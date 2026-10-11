@@ -214,7 +214,11 @@ export default function ValidatorDashboard() {
           setLoadingState("loaded");
         }
       } catch (e) {
-        console.error("Failed to fetch validator data:", e);
+        // A warning string, not a raw Error: in development Next.js turns console.error(Error) into an
+        // overlay that would cover this very error card (reachable since 2026-10-11).
+        console.warn(
+          `Failed to fetch validator data: ${e instanceof Error ? e.message : String(e)}`,
+        );
         setError(e instanceof Error ? e.message : "Failed to fetch validator data");
         setLoadingState("error");
       } finally {

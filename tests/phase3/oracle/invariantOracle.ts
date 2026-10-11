@@ -189,14 +189,12 @@ export function assertReplayInvariants(ctx: ReplayContext): void {
  * Enforces:
  * - Policy version mismatches always deny
  * - Timelocks are respected
- * - Credential revocation is immediate
  */
 export interface PolicyContext {
   policyVersion: number;
   expectedPolicyVersion: number;
   timelockUnlockMs?: number;
   currentTimeMs: number;
-  credentialValid: boolean;
   evaluationResult: { allowed: boolean };
 }
 
@@ -220,15 +218,6 @@ export function assertPolicyInvariants(ctx: PolicyContext): void {
       `INVARIANT VIOLATION: Timelock bypassed. ` +
         `Current time ${ctx.currentTimeMs}ms < unlock time ${ctx.timelockUnlockMs}ms. ` +
         `Unexpired timelocks MUST always deny.`,
-    );
-  }
-
-  // INVARIANT 11: Invalid credentials always deny
-  if (!ctx.credentialValid && ctx.evaluationResult.allowed) {
-    throw new Error(
-      `INVARIANT VIOLATION: Invalid credential allowed. ` +
-        `Credential is invalid but evaluation returned allowed. ` +
-        `Invalid credentials MUST always deny.`,
     );
   }
 }

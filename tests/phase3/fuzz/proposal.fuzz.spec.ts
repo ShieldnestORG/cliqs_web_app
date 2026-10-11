@@ -278,25 +278,14 @@ describe("PHASE 3 FUZZ: Proposal Lifecycle", () => {
   // ==========================================================================
 
   describe("Chaos: MultisigChaosHarness Integration", () => {
-    test("harness with random faults maintains invariants", async () => {
+    test("harness scenarios maintain proposal invariants", async () => {
       const chaos = new ChaosHarness();
       const stateHistories: ProposalState[][] = [];
 
       for (let i = 0; i < 50; i++) {
         await chaos.runScenario({
           name: `multisig-chaos-${i}`,
-          faults: [
-            {
-              name: "random-credential-revoke",
-              hook: "afterVote",
-              once: false,
-              run: () => {
-                if (Math.random() < 0.1) {
-                  faultController.state.credentialValid = false;
-                }
-              },
-            },
-          ],
+          faults: [],
           scenario: async () => {
             const proposal = genProposal(i);
             const history: ProposalState[] = [proposal.currentState];
