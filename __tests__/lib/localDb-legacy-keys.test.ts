@@ -1,11 +1,12 @@
 /**
- * localDb: files written before the Phase 4 removal
+ * localDb: files written before the Phase 4 and credential removals
  *
  * File: __tests__/lib/localDb-legacy-keys.test.ts
  *
  * The Phase 4 collections (policies, emergency state, incidents, alerts, spend records) were
- * removed from lib/localDb.ts on 2026-10-10. A local-db.json written before that date still
- * carries those keys, so this suite pins three things: such a file keeps loading and working,
+ * removed from lib/localDb.ts on 2026-10-10, and the Phase 3 credential collections (credential
+ * classes, credentials, credential events) on 2026-10-11. A local-db.json written before then
+ * still carries those keys, so this suite pins three things: such a file keeps loading and working,
  * its old rows are still in the file after the app writes to it (a write by the app must not
  * silently destroy data the owner can still want to read or export), and a database created or
  * migrated now no longer gets the removed collections.
@@ -43,6 +44,9 @@ const REMOVED_COLLECTIONS = [
   "alertRules",
   "alerts",
   "spendRecords",
+  "credentialClasses",
+  "credentials",
+  "credentialEvents",
 ];
 
 const CHAIN = "testchain-1";
@@ -95,9 +99,6 @@ function currentCollections() {
     memberSnapshots: [],
     voteSnapshots: [],
     groupEvents: [],
-    credentialClasses: [],
-    credentials: [],
-    credentialEvents: [],
   };
 }
 
@@ -112,6 +113,9 @@ function legacyCollections() {
     alertRules: [{ id: "r1" }],
     alerts: [{ id: "a1" }],
     spendRecords: [{ id: "x1" }],
+    credentialClasses: [{ id: "cc1", classId: "cliq1-core1legacyaddress" }],
+    credentials: [{ id: "c1", tokenId: "member-1" }],
+    credentialEvents: [{ id: "ce1", eventType: "issued" }],
   };
 }
 
@@ -137,7 +141,7 @@ function storedDb(): Record<string, unknown> {
   return JSON.parse(content);
 }
 
-describe("lib/localDb after the Phase 4 removal", () => {
+describe("lib/localDb after the Phase 4 and credential removals", () => {
   const originalVercel = process.env.VERCEL;
 
   beforeEach(() => {
@@ -150,7 +154,7 @@ describe("lib/localDb after the Phase 4 removal", () => {
     else process.env.VERCEL = originalVercel;
   });
 
-  test("a file that still carries the removed Phase 4 keys loads and keeps working", () => {
+  test("a file that still carries the removed Phase 4 and credential keys loads and keeps working", () => {
     mockFiles.set(DB_FILE, JSON.stringify({ ...currentCollections(), ...legacyCollections() }));
     const localDb = loadLocalDb();
 
@@ -167,7 +171,7 @@ describe("lib/localDb after the Phase 4 removal", () => {
     expect(localDb.getMultisig(CHAIN, ADDRESS)?.name).toBe("Legacy");
   });
 
-  test("a write by the app leaves the old Phase 4 rows in the file", () => {
+  test("a write by the app leaves the old removed rows in the file", () => {
     // policyVersion is set, so loading needs no migration and the only write is the app's own
     const current = currentCollections();
     current.contractMultisigs = current.contractMultisigs.map((c) => ({ ...c, policyVersion: 1 }));
@@ -186,17 +190,18 @@ describe("lib/localDb after the Phase 4 removal", () => {
     expectLegacyRowsKept(stored);
   });
 
-  test("the migration write keeps the old Phase 4 rows too", () => {
-    // a file from before the credential collections existed: the first read migrates and rewrites it
-    const { credentialEvents, ...olderCollections } = currentCollections();
-    void credentialEvents;
+  test("the migration write keeps the old removed rows too", () => {
+    // a file from before the group events collection existed: the first read migrates and rewrites it
+    // (this used credentialEvents until 2026-10-11, when that collection was removed)
+    const { groupEvents, ...olderCollections } = currentCollections();
+    void groupEvents;
     mockFiles.set(DB_FILE, JSON.stringify({ ...olderCollections, ...legacyCollections() }));
     const localDb = loadLocalDb();
 
     expect(localDb.getMultisig(CHAIN, ADDRESS)?.name).toBe("Legacy");
 
     const stored = storedDb();
-    expect(Object.keys(stored)).toContain("credentialEvents"); // the migration ran and wrote the file
+    expect(Object.keys(stored)).toContain("groupEvents"); // the migration ran and wrote the file
     expectLegacyRowsKept(stored);
   });
 
@@ -214,7 +219,7 @@ describe("lib/localDb after the Phase 4 removal", () => {
 
     const keys = Object.keys(storedDb());
     expect(keys).toContain("multisigs");
-    expect(keys).toContain("credentialEvents");
+    expect(keys).toContain("groupEvents");
     for (const removed of REMOVED_COLLECTIONS) {
       expect(keys).not.toContain(removed);
     }

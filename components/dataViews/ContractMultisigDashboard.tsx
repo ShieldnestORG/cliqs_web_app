@@ -38,7 +38,6 @@ import DashboardLayout, { QuickStatsRow, QuickStat } from "@/components/layout/D
 import ContractProposalList from "./ContractProposalList";
 import ContractVotePanel from "./ContractVotePanel";
 import BalancesTable from "./BalancesTable";
-import { CredentialManagerPanel } from "./CredentialManagerPanel";
 import {
   FileCode2,
   Users,
@@ -50,7 +49,6 @@ import {
   ExternalLink,
   Loader2,
   Info,
-  Key,
 } from "lucide-react";
 import { toast } from "sonner";
 import { CopyButton } from "@/components/ui/copy-button";
@@ -67,8 +65,6 @@ interface ContractMultisigDashboardProps {
   nodeAddress: string;
   userAddress?: string;
   explorerLink?: string;
-  /** Whether this multisig uses credential gating (Phase 3) */
-  isCredentialGated?: boolean;
   contractInfo?: {
     codeId: number;
     creator: string;
@@ -98,7 +94,6 @@ export default function ContractMultisigDashboard({
   nodeAddress,
   userAddress,
   explorerLink,
-  isCredentialGated = false,
   contractInfo,
 }: ContractMultisigDashboardProps) {
   const [config, setConfig] = useState<ContractConfig | null>(null);
@@ -267,13 +262,6 @@ export default function ContractMultisigDashboard({
               <Wallet className="h-4 w-4" />
               Balances
             </TabsTrigger>
-            {/* Phase 3: Credentials tab */}
-            {isCredentialGated && (
-              <TabsTrigger value="credentials" className="gap-2">
-                <Key className="h-4 w-4" />
-                Credentials
-              </TabsTrigger>
-            )}
           </TabsList>
 
           {/* Proposals Tab */}
@@ -369,20 +357,6 @@ export default function ContractMultisigDashboard({
           <TabsContent value="balances">
             <BalancesTable walletAddress={contractAddress} />
           </TabsContent>
-
-          {/* Phase 3: Credentials Tab */}
-          {isCredentialGated && (
-            <TabsContent value="credentials">
-              <CredentialManagerPanel
-                teamAddress={contractAddress}
-                chainId={chainId}
-                isAdmin={
-                  isMember &&
-                  userMember?.weight === Math.max(...(config?.members.map((m) => m.weight) || [0]))
-                }
-              />
-            </TabsContent>
-          )}
         </Tabs>
       </DashboardLayout>
 
@@ -400,7 +374,6 @@ export default function ContractMultisigDashboard({
               nodeAddress={nodeAddress}
               proposalId={selectedProposalId}
               userAddress={userAddress}
-              isCredentialGated={isCredentialGated}
               onVoteSuccess={() => {
                 setShowVoteDialog(false);
                 toast.success("Vote submitted successfully");

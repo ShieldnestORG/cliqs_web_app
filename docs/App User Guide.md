@@ -58,6 +58,8 @@ You may want to [Create a Transaction](#creating-a-transaction) next.
 
 On the CLIQ's page, click "New transaction" at the top right. (If the CLIQ has not been funded yet the button is disabled; send some tokens to its address first.) 
 
+If the CLIQ runs a validator, you can also start from the **Validator** page: the Manage section begins with "// Transfers", where **Send** opens this form with Send already picked and **CLIQ page** opens the CLIQ's page (pending signatures and every other transaction type).
+
 ![Screen Shot 2021-09-05 at 1 16 56 PM](https://user-images.githubusercontent.com/6718506/132136739-c43eeaeb-15fd-48d3-afa2-8e630740cf82.png)
 First pick what the transaction should do. The picker has two tabs — "Standard User Commands" (Send and IBC Transfer live under the "// Transfers" heading; Delegate, Redelegate, Undelegate, Withdraw Rewards and Vote under "// Staking & Governance") and "Validator Commands". Then enter in the to address, the amount and optionally a memo. The gas limit is adjustable, but you probably do not want to change it, as the gas fees are set automatically by the app; the gas price beside it is fixed by the network and cannot be edited. Once all the necessary fields are filled in, click "Create Transaction". 
 ![Screen Shot 2021-09-05 at 1 19 30 PM](https://user-images.githubusercontent.com/6718506/132136750-d2e91252-fa4d-4f56-9d80-8460c85deec4.png)

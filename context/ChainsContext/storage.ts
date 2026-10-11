@@ -300,9 +300,19 @@ export const setChainInUrl = (chain: ChainInfo, chains: ChainItems) => {
   const newPathname = location.pathname.includes(chain.registryName)
     ? location.pathname
     : `/${chain.registryName}`;
+  // Keep Next.js's history entry. Its router ignores a Back/Forward step whose state has no `__N`
+  // marker, so writing `{}` here made Back change the address bar but not the page (2026-10-11).
+  const historyState = window.history.state;
 
   if (chains.mainnets.has(chain.registryName) || chains.testnets.has(chain.registryName)) {
-    window.history.replaceState({}, "", newPathname);
+    // The path names the chain. Drop chain settings from the query but keep the page's own
+    // (?address=, ?type=, ?tab=), or a refresh loses which CLIQ or message the page was showing.
+    const pageParams = new URLSearchParams(location.search);
+    for (const key of Object.keys(chain)) {
+      pageParams.delete(key);
+    }
+    const query = pageParams.size ? `?${pageParams}` : "";
+    window.history.replaceState(historyState, "", `${newPathname}${query}${location.hash}`);
     return;
   }
 
@@ -319,5 +329,5 @@ export const setChainInUrl = (chain: ChainInfo, chains: ChainItems) => {
 
   const newUrl = params.size ? `${newPathname}?${params}` : newPathname;
 
-  window.history.replaceState({}, "", newUrl);
+  window.history.replaceState(historyState, "", newUrl);
 };
