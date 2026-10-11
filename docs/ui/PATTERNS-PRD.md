@@ -912,8 +912,9 @@ reference style drops it by owner decision, but a Radix select without one is no
 "interactive edge" and field fill are new tokens (`--border-interactive`, `--field`), see
 [STYLE-GUIDE.md](../STYLE-GUIDE.md#house-style-control-tokens).
 
-Where they are used: `Select` in the signer-rotation form, credentials panel, Dev Tools and the
-message forms (looks only; the frozen `MsgForm/*` files are not edited). `DropdownMenu` has no
+Where they are used: `Select` in Dev Tools and the
+message forms *(until 2026-10-11 this also named the signer-rotation form and the credentials
+panel; both were deleted, on 2026-10-10 and 2026-10-11)* (looks only; the frozen `MsgForm/*` files are not edited). `DropdownMenu` has no
 importer in the app today: only `__tests__/components/menus-select.test.tsx` imports it. *(This
 line said "has one importer today: none in the app", which contradicted itself, and before
 2026-10-10 it named `components/policies/PolicyManager.tsx` as the only importer; PR #82 deleted

@@ -49,6 +49,13 @@ card that hosts it, byte for byte, but never change it. Keep the provider order 
   (`validator-rewards`, `validator-vote-options`, `validator-edit-submit`,
   `validator-withdraw-address`, `jailed-alert`, `unjail-action`, `validator-dashboard`): run those
   as well as the fence whenever a signing button moves or is restyled.
+- Importing `@cosmjs/crypto` starts libsodium's async WebAssembly set-up. A test file that finishes
+  before it does (`lib/displayHelpers.spec.ts` did, in a few milliseconds) leaves it running after
+  Jest tears the file down; it then throws "No secure random number generator found" into the next
+  file in that worker. That was the "flaky" `create-tx-deeplink` failure (CI, 2026-10-10): forced
+  to run right after that spec it failed 8 of 8; between tests the same throw kills the whole run.
+  The log line to look for is "You are trying to `require` a file after the Jest environment has
+  been torn down. From <file>". The fix is to await libsodium's `ready` in that file's `afterAll`.
 - `setChainInUrl` (`context/ChainsContext/storage.ts`) rewrites the address bar every time a chain
   is set. Next.js ignores a Back or Forward step whose `history.state` has no `__N` marker. Until
   2026-10-11 it wrote `{}` and the bare path, so on app.cliqs.io Back changed the address bar but

@@ -28,9 +28,6 @@ export class FaultController {
     policyVersion: 1,
     expectedPolicyVersion: 1,
 
-    // credential "truth" at evaluation time
-    credentialValid: true,
-
     // websocket reliability
     websocketDropRate: 0, // 0..1
   };
@@ -43,7 +40,6 @@ export class FaultController {
       safeMode: false,
       policyVersion: 1,
       expectedPolicyVersion: 1,
-      credentialValid: true,
       websocketDropRate: 0,
     };
   }

@@ -22,16 +22,6 @@ export interface CliqMember {
   role: MemberRole;
 }
 
-/**
- * Phase 3: Credential configuration for credential-gated multisigs
- */
-export interface CredentialConfig {
-  enabled: boolean;
-  classSymbol: string;
-  className: string;
-  features: string[];
-}
-
 export const getCreateCliqSchema = (chain: ChainInfo) =>
   z
     .object({
@@ -96,28 +86,6 @@ export const getCreateCliqSchema = (chain: ChainInfo) =>
         .number({ invalid_type_error: "Threshold must be a number" })
         .int("Threshold can't have decimals")
         .min(1, "Threshold must be at least 1"),
-
-      // Phase 3: Credential gating configuration
-      enableCredentialGating: z.boolean().optional().default(false),
-
-      credentialConfig: z
-        .object({
-          classSymbol: z
-            .string()
-            .trim()
-            .max(16, "Symbol must be 16 characters or less")
-            .regex(/^[A-Z0-9]+$/, "Symbol must be uppercase letters and numbers only")
-            .optional()
-            .or(z.literal("")),
-          className: z
-            .string()
-            .trim()
-            .max(50, "Name must be 50 characters or less")
-            .optional()
-            .or(z.literal("")),
-          autoIssueCredentials: z.boolean().optional().default(true),
-        })
-        .optional(),
     })
     // Validate minimum members (at least 2)
     .superRefine(({ members }, ctx) => {
