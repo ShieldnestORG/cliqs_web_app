@@ -159,9 +159,6 @@ function readDb() {
       memberSnapshots: [],
       voteSnapshots: [],
       groupEvents: [],
-      credentialClasses: [],
-      credentials: [],
-      credentialEvents: [],
     };
     writeFileSync(DB_PATH, JSON.stringify(initial, null, 2));
     return initial;

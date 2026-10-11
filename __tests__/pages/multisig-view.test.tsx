@@ -99,9 +99,6 @@ jest.mock("@/lib/hooks/useMultisigType", () => ({
 
 jest.mock("@/components/dataViews/ContractProposalList", () => () => <div>Proposals</div>);
 jest.mock("@/components/dataViews/ContractVotePanel", () => () => <div>Vote</div>);
-jest.mock("@/components/dataViews/CredentialManagerPanel", () => ({
-  CredentialManagerPanel: () => <div>Credentials</div>,
-}));
 
 // Mock keplr
 jest.mock("@/lib/keplr", () => ({

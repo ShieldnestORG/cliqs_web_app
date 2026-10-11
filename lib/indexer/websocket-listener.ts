@@ -38,21 +38,6 @@ export type CW4EventType = "update_members" | "update_admin" | "add_hook" | "rem
 export type ContractEventType = CW3EventType | CW4EventType;
 
 // ============================================================================
-// Phase 3: Credential NFT Event Types
-// ============================================================================
-
-/**
- * Types of TX assetnft events for credentials
- */
-export type CredentialEventType =
-  "credential_mint" | "credential_burn" | "credential_freeze" | "credential_unfreeze";
-
-/**
- * All contract event types including credentials
- */
-export type AllEventTypes = ContractEventType | CredentialEventType;
-
-// ============================================================================
 // Types
 // ============================================================================
 
@@ -65,8 +50,6 @@ export interface WebSocketConfig {
   contractAddresses: string[];
   /** Group addresses to watch (CW4 groups) - Phase 2 */
   groupAddresses?: string[];
-  /** Credential class IDs to watch (Phase 3) */
-  credentialClassIds?: string[];
   /** Reconnection delay in ms */
   reconnectDelayMs?: number;
   /** Maximum reconnection attempts */
@@ -74,7 +57,7 @@ export interface WebSocketConfig {
 }
 
 export interface ParsedEvent {
-  type: ContractEventType | CredentialEventType;
+  type: ContractEventType;
   contractAddress: string;
   proposalId: number | null;
   txHash: string;
@@ -83,12 +66,6 @@ export interface ParsedEvent {
   timestamp: string;
   /** Whether this is a group event (Phase 2) */
   isGroupEvent?: boolean;
-  /** Whether this is a credential event (Phase 3) */
-  isCredentialEvent?: boolean;
-  /** Credential class ID for credential events (Phase 3) */
-  credentialClassId?: string;
-  /** Token ID for credential events (Phase 3) */
-  tokenId?: string;
 }
 
 export type EventCallback = (event: ParsedEvent) => void;
@@ -287,32 +264,6 @@ export class WebSocketListener {
     for (const event of result.events) {
       const attributes = this.parseEventAttributes(event.attributes);
 
-      // Phase 3: Handle TX assetnft events for credentials
-      if (
-        event.type === "coreum.asset.nft.v1.EventMinted" ||
-        event.type === "coreum.asset.nft.v1.EventBurnt" ||
-        event.type === "coreum.asset.nft.v1.EventFrozen" ||
-        event.type === "coreum.asset.nft.v1.EventUnfrozen"
-      ) {
-        const classId = attributes["class_id"] || attributes["classId"];
-
-        // Check if this is one of our watched credential classes
-        if (classId && this.config.credentialClassIds?.includes(classId)) {
-          const parsedEvent = this.parseCredentialEvent(
-            event.type,
-            classId,
-            attributes,
-            txHash,
-            height,
-          );
-
-          if (parsedEvent) {
-            this.handleParsedEvent(parsedEvent);
-          }
-        }
-        continue;
-      }
-
       if (event.type !== "wasm") {
         continue;
       }
@@ -343,61 +294,6 @@ export class WebSocketListener {
         this.handleParsedEvent(parsedEvent);
       }
     }
-  }
-
-  // ============================================================================
-  // Phase 3: Credential Event Parsing
-  // ============================================================================
-
-  /**
-   * Parse TX assetnft events for credentials
-   */
-  private parseCredentialEvent(
-    eventType: string,
-    classId: string,
-    attributes: Record<string, string>,
-    txHash: string,
-    height: number,
-  ): ParsedEvent | null {
-    const tokenId = attributes["id"] || attributes["token_id"];
-    const owner = attributes["owner"];
-
-    let type: CredentialEventType;
-
-    switch (eventType) {
-      case "coreum.asset.nft.v1.EventMinted":
-        type = "credential_mint";
-        break;
-      case "coreum.asset.nft.v1.EventBurnt":
-        type = "credential_burn";
-        break;
-      case "coreum.asset.nft.v1.EventFrozen":
-        type = "credential_freeze";
-        break;
-      case "coreum.asset.nft.v1.EventUnfrozen":
-        type = "credential_unfreeze";
-        break;
-      default:
-        return null;
-    }
-
-    return {
-      type,
-      contractAddress: classId, // Use classId as "contract" for credentials
-      proposalId: null,
-      txHash,
-      height,
-      attributes: {
-        classId,
-        tokenId: tokenId || "",
-        owner: owner || "",
-        ...attributes,
-      },
-      timestamp: new Date().toISOString(),
-      isCredentialEvent: true,
-      credentialClassId: classId,
-      tokenId,
-    };
   }
 
   private parseEventAttributes(
@@ -517,25 +413,12 @@ export class WebSocketListener {
 
   private handleParsedEvent(event: ParsedEvent): void {
     console.log(
-      `[WS] Event: ${event.type}${event.isGroupEvent ? " (group)" : ""}${event.isCredentialEvent ? " (credential)" : ""} ${event.proposalId !== null ? `for proposal ${event.proposalId}` : ""}`,
+      `[WS] Event: ${event.type}${event.isGroupEvent ? " (group)" : ""} ${event.proposalId !== null ? `for proposal ${event.proposalId}` : ""}`,
     );
 
     // Store event in database (unconfirmed)
     try {
-      if (event.isCredentialEvent) {
-        // Phase 3: Record credential event
-        const credEventType = this.mapCredentialEventType(event.type as CredentialEventType);
-        localDb.recordCredentialEvent({
-          classId: event.credentialClassId || "",
-          tokenId: event.tokenId || "",
-          eventType: credEventType,
-          actor: event.attributes["sender"] || event.attributes["owner"] || "",
-          targetAddress: event.attributes["owner"] || event.attributes["recipient"] || null,
-          txHash: event.txHash,
-          height: event.height,
-          chainId: this.config.chainId,
-        });
-      } else if (event.isGroupEvent) {
+      if (event.isGroupEvent) {
         // Phase 2: Record group event
         localDb.recordGroupEvent({
           groupAddress: event.contractAddress,
@@ -667,66 +550,9 @@ export class WebSocketListener {
           // Hook changed - informational only
           console.log(`[WS] Group ${event.contractAddress} hooks changed`);
           break;
-
-        // Phase 3: Credential events
-        case "credential_mint":
-          if (event.credentialClassId && event.tokenId) {
-            console.log(`[WS] Credential minted: ${event.credentialClassId}:${event.tokenId}`);
-            // The credential will be synced by the sync job
-            // Here we just log and notify callbacks
-          }
-          break;
-
-        case "credential_burn":
-          if (event.credentialClassId && event.tokenId) {
-            console.log(`[WS] Credential burned: ${event.credentialClassId}:${event.tokenId}`);
-            // Update status to revoked
-            try {
-              localDb.updateCredentialStatus(
-                event.credentialClassId,
-                event.tokenId,
-                "revoked",
-                new Date().toISOString(),
-              );
-            } catch {
-              // Credential might not be in DB yet
-            }
-          }
-          break;
-
-        case "credential_freeze":
-          if (event.credentialClassId && event.tokenId) {
-            console.log(`[WS] Credential frozen: ${event.credentialClassId}:${event.tokenId}`);
-            // Note: We don't have an isFrozen field in DB, but we record the event
-          }
-          break;
-
-        case "credential_unfreeze":
-          if (event.credentialClassId && event.tokenId) {
-            console.log(`[WS] Credential unfrozen: ${event.credentialClassId}:${event.tokenId}`);
-          }
-          break;
       }
     } catch (error) {
       console.error("[WS] Failed to update cached state:", error);
-    }
-  }
-
-  /**
-   * Phase 3: Map credential event type to DB event type
-   */
-  private mapCredentialEventType(
-    type: CredentialEventType,
-  ): "issued" | "revoked" | "frozen" | "unfrozen" {
-    switch (type) {
-      case "credential_mint":
-        return "issued";
-      case "credential_burn":
-        return "revoked";
-      case "credential_freeze":
-        return "frozen";
-      case "credential_unfreeze":
-        return "unfrozen";
     }
   }
 

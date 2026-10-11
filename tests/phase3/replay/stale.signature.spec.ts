@@ -4,7 +4,7 @@
  * File: tests/phase3/replay/stale.signature.spec.ts
  *
  * Tests that old signed transaction bytes cannot be reused after
- * state changes (nonce increases, credential revocation, etc.).
+ * state changes (nonce increases, etc.).
  *
  * Core Invariant: Replayed tx bytes must not re-execute
  */
@@ -180,39 +180,10 @@ describe("PHASE 3 REPLAY: Stale Signature Attack", () => {
   });
 
   // ==========================================================================
-  // CREDENTIAL REVOCATION PROTECTION
+  // CROSS-SIGNER PROTECTION
   // ==========================================================================
 
-  describe("Credential Revocation Protection", () => {
-    test("credential revocation prevents signature reuse", async () => {
-      // Create signed transaction with valid credential
-      faultController.state.credentialValid = true;
-
-      const tx = await walletFlow.buildTxBytes({
-        msgs: [{ typeUrl: "test", value: {} }],
-      });
-      const signedTx = await walletFlow.signTxBytes(tx, signer);
-      const txHash = hashTxBytes(signedTx);
-
-      // Execute successfully
-      const executedTxHashes = new Set([txHash]);
-
-      // Revoke credential
-      faultController.state.credentialValid = false;
-
-      // Attempt to replay same signed bytes should fail
-      const replayCtx: ReplayContext = {
-        txHash,
-        txBytes: signedTx,
-        previousExecutions: executedTxHashes,
-        executionSucceeded: false,
-      };
-
-      expect(() => assertReplayInvariants(replayCtx)).not.toThrow();
-
-      faultController.reset();
-    });
-
+  describe("Cross-Signer Protection", () => {
     test("different signers prevent cross-signature replay", async () => {
       const signerA = new MockWalletSigner({ address: "cosmos1signerA" });
       const signerB = new MockWalletSigner({ address: "cosmos1signerB" });

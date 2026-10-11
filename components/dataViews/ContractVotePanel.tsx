@@ -5,7 +5,7 @@
  * Shows vote breakdown, current status, and voting buttons.
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -29,16 +29,10 @@ import {
   Loader2,
   ShieldCheck,
   PlayCircle,
-  Shield,
 } from "lucide-react";
 import { toast } from "sonner";
 import { VoteOption } from "@/lib/multisig/contract-types";
 import { formatDistanceToNow } from "date-fns";
-import {
-  CredentialBadge,
-  CredentialStatusType,
-  mapVerificationResultToStatus,
-} from "@/components/ui/credential-badge";
 import { useWallet } from "@/context/WalletContext";
 import { useChains } from "@/context/ChainsContext";
 import { createSigningCW3ClientFromSigner } from "@/lib/contract/cw3-client";
@@ -57,8 +51,6 @@ interface ContractVotePanelProps {
   nodeAddress: string;
   proposalId: number;
   userAddress?: string;
-  /** Whether this multisig requires credential verification (Phase 3) */
-  isCredentialGated?: boolean;
   onVoteSuccess?: () => void;
   onExecuteSuccess?: () => void;
   onClose?: () => void;
@@ -128,7 +120,6 @@ export default function ContractVotePanel({
   nodeAddress,
   proposalId,
   userAddress,
-  isCredentialGated = false,
   onVoteSuccess,
   onExecuteSuccess,
   onClose,
@@ -141,54 +132,6 @@ export default function ContractVotePanel({
   const [isExecuting, setIsExecuting] = useState(false);
   const [selectedVote, setSelectedVote] = useState<VoteOption | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  // Phase 3: Credential verification state
-  const [credentialStatus, setCredentialStatus] = useState<CredentialStatusType>("loading");
-  const [credentialRole, setCredentialRole] = useState<string | undefined>(undefined);
-  // Phase 3: tracks credential check loading (not rendered yet, prep for loading indicator)
-  const [, setIsCheckingCredential] = useState(false);
-
-  // Phase 3: Check credential validity
-  const checkCredential = useCallback(async () => {
-    if (!isCredentialGated || !userAddress) {
-      setCredentialStatus("not_required");
-      return;
-    }
-
-    setIsCheckingCredential(true);
-    try {
-      const response = await fetch(
-        `/api/chain/${chainId}/credentials/verify?teamAddress=${contractAddress}&signerAddress=${userAddress}`,
-      );
-
-      if (!response.ok) {
-        setCredentialStatus("missing");
-        return;
-      }
-
-      const data = await response.json();
-      const status = mapVerificationResultToStatus(
-        { isValid: data.isValid, reason: data.reason },
-        false,
-        true,
-      );
-      setCredentialStatus(status);
-
-      if (data.credential) {
-        setCredentialRole(data.credential.role);
-      }
-    } catch (err) {
-      console.error("Failed to check credential:", err);
-      setCredentialStatus("missing");
-    } finally {
-      setIsCheckingCredential(false);
-    }
-  }, [isCredentialGated, userAddress, chainId, contractAddress]);
-
-  // Check credential on mount and when user changes
-  useEffect(() => {
-    checkCredential();
-  }, [checkCredential]);
 
   // Fetch proposal details and verify user can vote
   useEffect(() => {
@@ -517,38 +460,6 @@ export default function ContractVotePanel({
           </Alert>
         )}
 
-        {/* Phase 3: Credential Status for Credential-Gated Multisigs */}
-        {isCredentialGated && userAddress && (
-          <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-            <div className="flex items-center gap-2">
-              <Shield className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Credential Status</span>
-            </div>
-            <CredentialBadge status={credentialStatus} role={credentialRole} showTooltip />
-          </div>
-        )}
-
-        {/* Phase 3: Credential Warning */}
-        {isCredentialGated &&
-          credentialStatus !== "valid" &&
-          credentialStatus !== "not_required" &&
-          credentialStatus !== "loading" &&
-          userAddress && (
-            <Alert variant="destructive">
-              <Shield className="h-4 w-4" />
-              <AlertDescription>
-                {credentialStatus === "missing" &&
-                  "You need a valid credential to vote on this proposal."}
-                {credentialStatus === "expired" &&
-                  "Your credential has expired. Please request a new one."}
-                {credentialStatus === "frozen" && "Your credential is frozen and cannot be used."}
-                {credentialStatus === "revoked" && "Your credential has been revoked."}
-                {credentialStatus === "wrong_role" &&
-                  "Your credential does not have the required role."}
-              </AlertDescription>
-            </Alert>
-          )}
-
         {/* Voting Buttons */}
         {proposal.canVote && !proposal.userVote && (
           <div className="space-y-4">
@@ -563,7 +474,7 @@ export default function ContractVotePanel({
                 variant="default"
                 isSelected={selectedVote === "yes"}
                 isLoading={isVoting && selectedVote === "yes"}
-                disabled={isVoting || (isCredentialGated && credentialStatus !== "valid")}
+                disabled={isVoting}
                 onClick={() => handleVote("yes")}
               />
               <VoteButton
@@ -573,7 +484,7 @@ export default function ContractVotePanel({
                 variant="destructive"
                 isSelected={selectedVote === "no"}
                 isLoading={isVoting && selectedVote === "no"}
-                disabled={isVoting || (isCredentialGated && credentialStatus !== "valid")}
+                disabled={isVoting}
                 onClick={() => handleVote("no")}
               />
               <VoteButton
@@ -583,7 +494,7 @@ export default function ContractVotePanel({
                 variant="secondary"
                 isSelected={selectedVote === "abstain"}
                 isLoading={isVoting && selectedVote === "abstain"}
-                disabled={isVoting || (isCredentialGated && credentialStatus !== "valid")}
+                disabled={isVoting}
                 onClick={() => handleVote("abstain")}
               />
             </div>
