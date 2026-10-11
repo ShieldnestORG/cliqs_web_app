@@ -12,6 +12,11 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    ignore:
+      # bitcoinjs-lib 7 gives cliqs nothing (nothing imports it directly) and
+      # @keplr-wallet's crypto package supports 6 only. Closed as PR #70, 2026-10-10.
+      - dependency-name: "bitcoinjs-lib"
+        update-types: ["version-update:semver-major"]
     groups:
       # Signing and chain encoding. Kept separate and never auto-grouped with
       # anything else: a wire-encoding change here can break transaction signing
