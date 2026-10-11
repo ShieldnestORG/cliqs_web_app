@@ -303,10 +303,10 @@ These are checks on simulators inside the test folders. They do not show that th
 |---------------|-------|-------|
 | Invariants | 1 | 23 |
 | Fuzzing | 3 | 41 |
-| Replay | 2 | 25 |
-| **Total** | **6** | **89** |
+| Replay | 2 | 24 |
+| **Total** | **6** | **88** |
 
-Counted with `npx jest tests/phase3` on 2026-10-10 (after the Phase 4 removal). *(Until then this table read: 9 files, "90+" tests, "16,000+" iterations, coverage "Complete". Those numbers were estimates, and the policy suites they counted were deleted.)*
+Counted with `npx jest tests/phase3` on 2026-10-11 (after the credential removal). *(On 2026-10-10, after the Phase 4 removal, Replay was 25 and Total 89; the credential removal deleted one replay test. Until 2026-10-10 this table read: 9 files, "90+" tests, "16,000+" iterations, coverage "Complete". Those numbers were estimates, and the policy suites they counted were deleted.)*
 
 ---
 

@@ -29,7 +29,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
 import { getKeplrKey } from "@/lib/keplr";
 import { toastError, toastSuccess } from "@/lib/utils";
 import { StargateClient } from "@cosmjs/stargate";
@@ -46,7 +45,6 @@ import {
   Check,
   ChevronRight,
   ChevronLeft,
-  Key,
   AlertCircle,
 } from "lucide-react";
 import { KitIcon } from "@/components/icons/kit";
@@ -72,20 +70,7 @@ export default function CreateCliqForm() {
       description: "",
       members: [{ member: "" }],
       threshold: 1,
-      // Phase 3: Credential gating defaults
-      enableCredentialGating: false,
-      credentialConfig: {
-        classSymbol: "",
-        className: "",
-        autoIssueCredentials: true,
-      },
     },
-  });
-
-  // Phase 3: Watch credential gating toggle
-  const enableCredentialGating = useWatch({
-    control: createCliqForm.control,
-    name: "enableCredentialGating",
   });
 
   const {
@@ -532,100 +517,6 @@ export default function CreateCliqForm() {
                     }}
                   />
 
-                  {/* Phase 3: Credential Gating Section */}
-                  <div className="space-y-4 border-t border-border/[0.06] pt-6">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <h4 className="flex items-center gap-2 text-base font-semibold text-foreground">
-                          <Key className="h-4 w-4 text-green-accent" />
-                          Credential Gating
-                        </h4>
-                        <p className="text-sm text-muted-foreground">
-                          Require members to hold an identity NFT to vote and execute
-                        </p>
-                      </div>
-                      <FormField
-                        control={createCliqForm.control}
-                        name="enableCredentialGating"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Switch checked={field.value} onCheckedChange={field.onChange} />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    {enableCredentialGating && (
-                      <div className="space-y-4 rounded-lg border border-green-accent/20 bg-muted/30 p-4">
-                        <p className="text-sm text-muted-foreground">
-                          A credential NFT class will be created for this CLIQ. Members must hold a
-                          credential to participate.
-                        </p>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <FormField
-                            control={createCliqForm.control}
-                            name="credentialConfig.classSymbol"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Symbol</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="CLIQ1"
-                                    {...field}
-                                    className="uppercase"
-                                    onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-                                  />
-                                </FormControl>
-                                <FormDescription className="text-xs">
-                                  Short identifier (e.g., CLIQ1)
-                                </FormDescription>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={createCliqForm.control}
-                            name="credentialConfig.className"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Class Name</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Team Credential" {...field} />
-                                </FormControl>
-                                <FormDescription className="text-xs">
-                                  Display name for credentials
-                                </FormDescription>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-
-                        <FormField
-                          control={createCliqForm.control}
-                          name="credentialConfig.autoIssueCredentials"
-                          render={({ field }) => (
-                            <FormItem className="flex items-center justify-between py-2">
-                              <div>
-                                <FormLabel className="text-sm">Auto-issue credentials</FormLabel>
-                                <FormDescription className="text-xs">
-                                  Automatically issue credentials to initial members
-                                </FormDescription>
-                              </div>
-                              <FormControl>
-                                <Switch checked={field.value} onCheckedChange={field.onChange} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    )}
-                  </div>
-
                   {/* Summary Card */}
                   <div className="space-y-3 rounded-xl border border-border/[0.06] bg-muted/30 p-4">
                     <h4 className="text-sm font-semibold text-foreground">CLIQ Summary</h4>
@@ -650,14 +541,6 @@ export default function CreateCliqForm() {
                           {chain.chainDisplayName || chain.registryName}
                         </p>
                       </div>
-                      {enableCredentialGating && (
-                        <div className="col-span-2">
-                          <span className="text-muted-foreground">Credentials:</span>
-                          <p className="flex items-center gap-1 font-medium text-green-accent">
-                            <Key className="h-3 w-3" /> Enabled
-                          </p>
-                        </div>
-                      )}
                     </div>
                   </div>
 
