@@ -14,9 +14,10 @@ import {
   setupDistributionExtension,
   setupGovExtension,
   setupSlashingExtension,
+  createProtobufRpcClient,
   Coin,
 } from "@cosmjs/stargate";
-import { connectComet } from "@cosmjs/tendermint-rpc";
+import { connectComet, CometClient } from "@cosmjs/tendermint-rpc";
 import { sha256 } from "@cosmjs/crypto";
 import { fromBech32, toBech32 } from "@cosmjs/encoding";
 import { PubKey as Ed25519PubKey } from "cosmjs-types/cosmos/crypto/ed25519/keys";
@@ -28,6 +29,8 @@ import {
 } from "cosmjs-types/cosmos/staking/v1beta1/staking";
 import { DecCoin } from "cosmjs-types/cosmos/base/v1beta1/coin";
 import { Proposal, Vote, ProposalStatus } from "cosmjs-types/cosmos/gov/v1beta1/gov";
+import { MsgSoftwareUpgrade } from "cosmjs-types/cosmos/upgrade/v1beta1/tx";
+import { QueryClientImpl as UpgradeQueryClientImpl } from "cosmjs-types/cosmos/upgrade/v1beta1/query";
 import { deriveRestEndpoints } from "@/lib/restEndpoints";
 
 /**
@@ -881,6 +884,181 @@ export async function getPastProposals(
 }
 
 /**
+ * An upgrade of the chain software that a validator must prepare for.
+ *
+ * "proposed": a governance proposal carrying MsgSoftwareUpgrade is in its voting period; nothing is
+ * decided yet. "scheduled": the chain holds an upgrade plan (`current_plan`), which exists only
+ * after such a vote passes (TX: "If more than 50% of the voting power votes yes ... a new Upgrade
+ * plan is created", docs.tx.org upgrades instructions, read 2026-10-11).
+ */
+export interface UpgradeNotice {
+  state: "proposed" | "scheduled";
+  /** The plan name, which is also the cosmovisor folder: cosmovisor/upgrades/<name>/bin/txd */
+  name: string;
+  /** The block at which the chain switches binaries */
+  height: number;
+  /** The proposal carrying the upgrade ("proposed" only) */
+  proposalId: number | null;
+  votingEndTime: Date | null;
+  /** When the chain should reach `height`, from the recent block rate; null when not measured */
+  eta: Date | null;
+}
+
+const MSG_SOFTWARE_UPGRADE = "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade";
+/** Blocks averaged for the block rate (about two hours on TX at ~0.72 s per block, measured 2026-10-11) */
+const BLOCK_RATE_WINDOW = 10_000;
+
+type ProposedUpgrade = Omit<UpgradeNotice, "state" | "eta">;
+
+const timestampToDate = (t?: { seconds: bigint } | null): Date | null =>
+  t && t.seconds > 0n ? new Date(Number(t.seconds) * 1000) : null;
+
+/**
+ * The lowest upgrade among proposals in their voting period. v1beta1 proposals carry the message
+ * itself as `content`; a proposal that came through the gov v1 REST fallback has its content
+ * replaced (convertV1ToV1Beta1Proposal), so the raw gov v1 list is read for those.
+ */
+export function findProposedUpgrade(
+  activeProposals: readonly Proposal[],
+  govV1VotingProposals: readonly GovV1Proposal[] | null = null,
+): ProposedUpgrade | null {
+  const found: ProposedUpgrade[] = [];
+
+  for (const p of activeProposals) {
+    if (p.content?.typeUrl !== MSG_SOFTWARE_UPGRADE) continue;
+    try {
+      const { plan } = MsgSoftwareUpgrade.decode(p.content.value);
+      if (plan?.name && plan.height > 0n) {
+        found.push({
+          name: plan.name,
+          height: Number(plan.height),
+          proposalId: Number(p.proposalId),
+          votingEndTime: timestampToDate(p.votingEndTime),
+        });
+      }
+    } catch {
+      // not decodable: not counted
+    }
+  }
+
+  for (const p of govV1VotingProposals ?? []) {
+    if (p.status !== ACTIVE_PROPOSAL_STATUS) continue;
+    for (const m of p.messages ?? []) {
+      const msg = m as { "@type"?: string; plan?: { name?: string; height?: string } };
+      const height = Number(msg.plan?.height);
+      if (msg["@type"] === MSG_SOFTWARE_UPGRADE && msg.plan?.name && height > 0) {
+        found.push({
+          name: msg.plan.name,
+          height,
+          proposalId: Number(p.id),
+          votingEndTime: p.voting_end_time ? new Date(p.voting_end_time) : null,
+        });
+      }
+    }
+  }
+
+  found.sort((a, b) => a.height - b.height);
+  return found[0] ?? null;
+}
+
+/**
+ * When the chain reaches `targetHeight`, from the average block time between two measured blocks.
+ * Never from a configured blocks-per-year: on TX mainnet that implies 0.956 s per block against a
+ * measured ~0.72 s, which lands days late. null when the height is already passed or the two
+ * blocks do not give a positive rate.
+ */
+export function estimateTimeAtHeight(
+  latest: { height: number; time: Date },
+  earlier: { height: number; time: Date },
+  targetHeight: number,
+): Date | null {
+  const blocks = latest.height - earlier.height;
+  const ms = latest.time.getTime() - earlier.time.getTime();
+  if (targetHeight <= latest.height || blocks <= 0 || ms <= 0) {
+    return null;
+  }
+  return new Date(latest.time.getTime() + (targetHeight - latest.height) * (ms / blocks));
+}
+
+async function measureEta(comet: CometClient, targetHeight: number): Promise<Date | null> {
+  try {
+    const status = await comet.status();
+    const latest = {
+      height: status.syncInfo.latestBlockHeight,
+      time: status.syncInfo.latestBlockTime as Date,
+    };
+    const earlierHeight = Math.max(1, latest.height - BLOCK_RATE_WINDOW);
+    const earlierBlock = await comet.block(earlierHeight);
+    return estimateTimeAtHeight(
+      latest,
+      { height: earlierHeight, time: earlierBlock.block.header.time as Date },
+      targetHeight,
+    );
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The upgrade to show on the validator page, or null when there is none or it could not be read
+ * (the page then shows nothing: an upgrade notice is never invented).
+ */
+export async function getUpgradeNotice(
+  rpcUrl: string,
+  restEndpoint: string | undefined,
+  activeProposals: readonly Proposal[],
+): Promise<UpgradeNotice | null> {
+  let comet: CometClient;
+  try {
+    comet = await connectComet(rpcUrl);
+  } catch {
+    return null;
+  }
+
+  let notice: Omit<UpgradeNotice, "eta"> | null = null;
+
+  try {
+    const upgrade = new UpgradeQueryClientImpl(
+      createProtobufRpcClient(QueryClient.withExtensions(comet)),
+    );
+    const { plan } = await upgrade.CurrentPlan({});
+    if (plan?.name && plan.height > 0n) {
+      notice = {
+        state: "scheduled",
+        name: plan.name,
+        height: Number(plan.height),
+        proposalId: null,
+        votingEndTime: null,
+      };
+    }
+  } catch {
+    // no plan readable: fall through to the proposals
+  }
+
+  if (!notice) {
+    let proposed = findProposedUpgrade(activeProposals);
+    // A proposal from the REST fallback lost its message; read gov v1 for those.
+    const unreadable = activeProposals.some((p) => p.content?.typeUrl !== MSG_SOFTWARE_UPGRADE);
+    if (!proposed && unreadable) {
+      try {
+        const raw = await fetchGovV1Proposals(rpcUrl, restEndpoint, "proposal_status=2");
+        proposed = findProposedUpgrade([], raw);
+      } catch {
+        // no REST: nothing more to read
+      }
+    }
+    if (proposed) {
+      notice = { state: "proposed", ...proposed };
+    }
+  }
+
+  if (!notice) {
+    return null;
+  }
+  return { ...notice, eta: await measureEta(comet, notice.height) };
+}
+
+/**
  * Get validator's vote for a specific proposal
  */
 export async function getValidatorVote(
@@ -921,6 +1099,8 @@ export interface ValidatorDashboardData {
   votingPowerPercentage: string | null;
   /** Only fetched for a jailed validator (it gates the Unjail action); null otherwise or when unreadable */
   signingInfo: ValidatorSigningInfo | null;
+  /** A proposed or scheduled chain upgrade; null when there is none or it could not be read */
+  upgrade: UpgradeNotice | null;
 }
 
 /**
@@ -979,9 +1159,10 @@ export async function getValidatorDashboardData(
     }
 
     // These can be slow, fetch separately
-    const [ranking, votingPowerPercentage] = await Promise.all([
+    const [ranking, votingPowerPercentage, upgrade] = await Promise.all([
       getValidatorRanking(rpcUrl, validatorAddress),
       getVotingPowerPercentage(rpcUrl, validator.tokens),
+      getUpgradeNotice(rpcUrl, restEndpoint, activeProposalsResult),
     ]);
 
     // One number, one fetch: the stakers count is the length of the stakers list the page shows,
@@ -1004,6 +1185,7 @@ export async function getValidatorDashboardData(
       ranking,
       votingPowerPercentage,
       signingInfo: signingInfoResult,
+      upgrade,
     };
   } catch (e) {
     console.error("Failed to fetch validator dashboard data:", e);
