@@ -14,6 +14,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
@@ -37,16 +38,15 @@ import { useRouter } from "next/router";
 import { useState, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
-const difficultyConfig = {
-  beginner: { label: "Beginner", color: "text-success bg-success/10 border-success/20" },
-  intermediate: {
-    label: "Intermediate",
-    color: "text-warning bg-warning/10 border-warning/20",
-  },
-  advanced: {
-    label: "Advanced",
-    color: "text-destructive bg-destructive/10 border-destructive/20",
-  },
+// A status tag per difficulty (docs/ui/CARDS-PRD.md §5); a kind, so no mark. Until 2026-10-11 these
+// were hand-rolled pills (owner: "f yes", switch them to the status tag).
+const difficultyConfig: Record<
+  UserJourney["difficulty"],
+  { label: string; variant: BadgeProps["variant"] }
+> = {
+  beginner: { label: "Beginner", variant: "success" },
+  intermediate: { label: "Intermediate", variant: "warning" },
+  advanced: { label: "Advanced", variant: "destructive" },
 };
 
 function JourneyCard({
@@ -77,9 +77,7 @@ function JourneyCard({
           </CardHeader>
           <CardContent className="pt-0">
             <div className="flex items-center gap-3 text-xs">
-              <span className={cn("rounded-full border px-2 py-0.5 font-medium", diff.color)}>
-                {diff.label}
-              </span>
+              <Badge variant={diff.variant}>{diff.label}</Badge>
               <span className="flex items-center gap-1 text-muted-foreground">
                 <Clock className="h-3 w-3" />
                 {journey.estimatedTime}
@@ -171,9 +169,7 @@ function JourneyWalkthrough({
           </div>
           <p className="max-w-2xl text-sm text-muted-foreground">{journey.description}</p>
           <div className="mt-3 flex items-center gap-3 text-xs">
-            <span className={cn("rounded-full border px-2 py-0.5 font-medium", diff.color)}>
-              {diff.label}
-            </span>
+            <Badge variant={diff.variant}>{diff.label}</Badge>
             <span className="flex items-center gap-1 text-muted-foreground">
               <Clock className="h-3 w-3" />
               {journey.estimatedTime}

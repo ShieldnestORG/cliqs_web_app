@@ -191,24 +191,27 @@ export default function WithdrawAddressCard({
   return (
     <div className="space-y-1.5">
       {/* Current address, one line */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+      {/* Fits one line at 1024px (owner, 2026-10-11): gap-x-2, a 6 + 4 address (full in the title and
+          the copy button), and in CLIQ mode "(via CLIQ)" is the button's name and title. */}
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
         <KitIcon name="withdraw" size={24} className="shrink-0 text-foreground" />
         {/* `relative` contains the sr-only phrase (it is absolutely positioned) */}
         <span className="relative text-sm text-muted-foreground" title={addressKind}>
           Paid to
           <span className="sr-only">, {addressKind.toLowerCase()}</span>
         </span>
-        <AddressDisplay address={withdrawAddress} copyLabel="withdraw address" />
+        <AddressDisplay address={withdrawAddress} copyLabel="withdraw address" head={6} tail={4} />
         {!isEditing && (
           <Button
             variant="outline"
             size="sm"
-            className="ml-auto gap-2 max-sm:h-11"
+            className="relative ml-auto gap-2 max-sm:h-11"
+            title={isCliqMode ? "Change via CLIQ" : undefined}
             onClick={() => setIsEditing(true)}
           >
             {isCliqMode && <Users className="h-4 w-4" />}
             Change
-            {isCliqMode && <span className="text-xs opacity-70">(via CLIQ)</span>}
+            {isCliqMode && <span className="sr-only"> (via CLIQ)</span>}
           </Button>
         )}
       </div>

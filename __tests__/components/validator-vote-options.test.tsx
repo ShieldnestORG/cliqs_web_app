@@ -210,3 +210,29 @@ describe("ProposalViewer vote options are off when they must be: P0", () => {
     await waitFor(() => buttons.forEach((b) => expect(b).toBeDisabled()));
   });
 });
+
+describe("ProposalViewer: No with Veto is orange, not the gold testnet colour: P2", () => {
+  // Owner, 2026-10-11: "can do orange" (gold is the testnet colour). Coral is the primary token.
+  it("draws the No with Veto option on the coral primary fill", () => {
+    renderViewer();
+    openDialog(0);
+
+    const veto = option("No with Veto");
+    expect(veto).toHaveClass("bg-primary", "text-primary-foreground");
+    expect(veto.className).not.toMatch(/warning/);
+  });
+
+  it("writes a recorded No with Veto vote in coral", () => {
+    render(
+      <ProposalViewer
+        data={
+          { ...data, validatorVotes: { 47: { option: 4 } } } as unknown as ValidatorDashboardData
+        }
+      />,
+    );
+
+    const tag = screen.getByText("NO WITH VETO");
+    expect(tag).toHaveClass("text-primary");
+    expect(tag).not.toHaveClass("text-warning");
+  });
+});

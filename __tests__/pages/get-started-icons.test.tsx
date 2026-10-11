@@ -59,3 +59,34 @@ describe("Guides page icons: P2", () => {
     expect(screen.queryByTestId("icon-Lightbulb")).toBeNull();
   });
 });
+
+describe("Guides difficulty labels are status tags: P2", () => {
+  // Owner, 2026-10-11: the old difficulty pills switch to the status tag (docs/ui/CARDS-PRD.md §5).
+  // Difficulty is a kind, not a state, so it carries no mark.
+  const colour: Record<string, string> = {
+    Beginner: "text-success",
+    Intermediate: "text-warning",
+    Advanced: "text-destructive",
+  };
+  const expectTag = (el: HTMLElement) => {
+    expect(el).toHaveClass("font-mono", "text-[11px]", "uppercase", "tracking-[0.14em]");
+    expect(el).toHaveClass(colour[el.textContent ?? ""]);
+    expect(el.className).not.toMatch(/rounded-full|border|bg-|px-/);
+    expect(el.querySelector("[data-mark]")).toBeNull();
+  };
+
+  it("on every journey card", () => {
+    render(<GetStartedPage />);
+    const labels = screen.getAllByText(/^(Beginner|Intermediate|Advanced)$/);
+    expect(labels).toHaveLength(userJourneys.length);
+    labels.forEach(expectTag);
+  });
+
+  it("in the walkthrough header", () => {
+    const { container } = render(<GetStartedPage />);
+    fireEvent.click(container.querySelectorAll('[role="button"][tabindex="0"]')[0]);
+    const labels = screen.getAllByText(/^(Beginner|Intermediate|Advanced)$/);
+    expect(labels).toHaveLength(1);
+    expectTag(labels[0]);
+  });
+});

@@ -63,13 +63,14 @@ export const TransactionCard = ({
 
   const showReviewAction = reviewLabel !== undefined && !isBroadcast && !isCancelled;
 
-  const statusColor = isCancelled
-    ? "bg-muted-foreground"
+  // The row's state is a status tag (docs/ui/CARDS-PRD.md §5), not a plain dot (owner, 2026-10-11:
+  // "switch"): done = success + signal, waiting for signatures = warning + half, cancelled = ring.
+  const statusVariant: BadgeProps["variant"] = isCancelled
+    ? "secondary"
     : isBroadcast
-      ? "bg-success"
-      : hasSigned
-        ? "bg-warning"
-        : "bg-info";
+      ? "success"
+      : "warning";
+  const statusMark: BadgeProps["mark"] = isCancelled ? "ring" : isBroadcast ? "signal" : "half";
 
   const statusText = isCancelled
     ? "Cancelled"
@@ -94,11 +95,12 @@ export const TransactionCard = ({
             <p className="truncate text-sm font-medium text-foreground">{cliqLabel}</p>
           )}
           <div className="flex items-center gap-2">
-            <span className={cn("h-2 w-2 shrink-0 rounded-full", statusColor)} />
-            <span className="font-mono text-xs tabular-nums text-muted-foreground">
+            <Badge variant={statusVariant} mark={statusMark}>
               {statusText}
-              {hasSigned && !isBroadcast && !isCancelled && " (you signed)"}
-            </span>
+            </Badge>
+            {hasSigned && !isBroadcast && !isCancelled && (
+              <span className="font-mono text-xs text-muted-foreground">(you signed)</span>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
             {msgTypeCounts.map(({ msgType, count, tone }) => (
@@ -128,11 +130,6 @@ export const TransactionCard = ({
 
         {/* Desktop: Horizontal linear layout */}
         <div className="hidden items-center gap-4 md:flex">
-          {/* Status indicator */}
-          <div className="flex shrink-0 items-center gap-2">
-            <span className={cn("h-2 w-2 rounded-full", statusColor)} />
-          </div>
-
           {/* CLIQ label (inbox rows only) above the message types; chips wrap so
               the fixed-width columns to the right never get overlapped. */}
           <div className="min-w-0 flex-1">
@@ -153,10 +150,14 @@ export const TransactionCard = ({
             </div>
           </div>
 
-          {/* Status text */}
-          <div className="shrink-0 whitespace-nowrap font-mono text-xs tabular-nums text-muted-foreground">
-            {statusText}
-            {hasSigned && !isBroadcast && !isCancelled && " (you signed)"}
+          {/* Status tag */}
+          <div className="flex shrink-0 items-center gap-2 whitespace-nowrap">
+            <Badge variant={statusVariant} mark={statusMark}>
+              {statusText}
+            </Badge>
+            {hasSigned && !isBroadcast && !isCancelled && (
+              <span className="font-mono text-xs text-muted-foreground">(you signed)</span>
+            )}
           </div>
 
           {/* Transaction ID - full width, no truncation */}
@@ -376,19 +377,16 @@ export default function ListMultisigTxs({
         </div>
         <div className="flex items-center gap-4">
           {/* Compact status legend */}
-          <div className="hidden items-center gap-3 text-xs text-muted-foreground sm:flex">
-            <span className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-success"></span>
-              <span className="font-mono text-[10px]">done</span>
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-warning"></span>
-              <span className="font-mono text-[10px]">pending</span>
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground"></span>
-              <span className="font-mono text-[10px]">cancelled</span>
-            </span>
+          <div className="hidden items-center gap-3 sm:flex">
+            <Badge variant="success" mark="signal">
+              Done
+            </Badge>
+            <Badge variant="warning" mark="half">
+              Pending
+            </Badge>
+            <Badge variant="secondary" mark="ring">
+              Cancelled
+            </Badge>
           </div>
           <div className="flex items-center gap-2">
             <Tooltip>

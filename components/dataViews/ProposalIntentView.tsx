@@ -210,11 +210,7 @@ export function ProposalIntentView({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{msg.type}</span>
-                    {msg.risk === "high" && (
-                      <Badge variant="destructive" className="text-xs">
-                        High impact
-                      </Badge>
-                    )}
+                    {msg.risk === "high" && <Badge variant="destructive">High impact</Badge>}
                   </div>
                   <p className="mt-0.5 text-sm text-muted-foreground">{msg.description}</p>
                   {Object.keys(msg.details).length > 0 && (

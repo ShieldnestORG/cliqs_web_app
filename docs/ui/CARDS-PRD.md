@@ -298,7 +298,14 @@ in `currentColor`, so the variant's text token colours it too. The shapes live i
 | `ring` | dashed ring, turning slowly | not running, inactive, closed | Inactive, Expired, Closed |
 
 A plain label, a kind, a count or a name gets **no mark**: a vote choice (YES, NO), a chain ID, `3/5`,
-"Creator", "Bridged", "Mainnet".
+"Creator", "Bridged", "Mainnet", a guide's difficulty (Beginner `success`, Intermediate `warning`,
+Advanced `destructive`).
+
+**Where the last hand-rolled ones went (2026-10-11, owner's answers to round 2):** the transaction list's
+plain dots are tags now: Completed `success` + `signal`, "N/M signed" `warning` + `half`, Cancelled
+`secondary` + `ring` (the row's legend uses the same three); the Guides difficulty pills are tags (above);
+the "High impact" tag in `ProposalIntentView` lost its `text-xs` override; a recorded "No with Veto" vote
+is `default` (coral), not `warning`, because gold is the testnet colour.
 
 **Variants.** Pick by meaning. Tokens only, no raw colours. Never map success to `green-accent` (coral; see
 STYLE-GUIDE).

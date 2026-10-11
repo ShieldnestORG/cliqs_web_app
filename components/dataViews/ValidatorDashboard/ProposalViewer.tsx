@@ -79,7 +79,8 @@ export default function ProposalViewer({
       1: { label: "YES", variant: "success" },
       2: { label: "ABSTAIN", variant: "secondary" },
       3: { label: "NO", variant: "destructive" },
-      4: { label: "NO WITH VETO", variant: "warning" },
+      // coral, not gold: gold is the testnet colour (owner, 2026-10-11: "can do orange")
+      4: { label: "NO WITH VETO", variant: "default" },
     };
 
     const option = vote.option;
@@ -253,8 +254,9 @@ export default function ProposalViewer({
     {
       label: "No with Veto",
       value: 4,
+      // coral, not gold: gold is the testnet colour (owner, 2026-10-11: "can do orange")
       color:
-        "border-transparent bg-warning text-warning-foreground hover:bg-warning/80 active:bg-warning/70",
+        "border-transparent bg-primary text-primary-foreground hover:bg-primary/80 active:bg-primary/70",
     },
   ];
 

@@ -232,7 +232,7 @@ export const userJourneys: UserJourney[] = [
       "The multisig address never changes as membership evolves.",
       "Costs more gas than Fixed — it uploads two contracts.",
     ],
-    icon: "stakers",
+    icon: "members",
     category: "create",
     estimatedTime: "10-15 min",
     difficulty: "advanced",

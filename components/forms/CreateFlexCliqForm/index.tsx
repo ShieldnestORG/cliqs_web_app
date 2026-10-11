@@ -703,7 +703,7 @@ export default function CreateFlexCliqForm() {
     <Card variant="institutional" bracket="purple" className="overflow-visible">
       <CardHeader>
         <div className="mb-2 flex items-center gap-4">
-          <KitIcon name="stakers" size={48} className="text-foreground" />
+          <KitIcon name="members" size={48} className="text-foreground" />
           <div>
             <CardLabel comment className="flex items-center gap-1">
               <ShieldPlus className="h-3 w-3" />
