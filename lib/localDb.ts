@@ -211,60 +211,6 @@ interface DbGroupEvent {
   processed: boolean;
 }
 
-// ============================================================================
-// Phase 3: Credential NFT Types
-// ============================================================================
-
-/**
- * Credential Class - TX assetnft class for team credentials
- */
-interface DbCredentialClass {
-  id: string;
-  teamAddress: string; // Contract multisig address
-  chainId: string;
-  classId: string; // TX assetnft class ID
-  issuer: string; // Class issuer (admin)
-  features: string[]; // ["soulbound", "burning", ...]
-  createdAt: string;
-  updatedAt: string;
-}
-
-/**
- * Credential - Individual credential token
- */
-interface DbCredential {
-  id: string;
-  classId: string;
-  tokenId: string;
-  ownerAddress: string;
-  teamAddress: string;
-  chainId: string;
-  role: string; // "member" | "admin" | "proposer" | "executor"
-  version: number;
-  status: "active" | "revoked" | "expired";
-  issuedAt: string;
-  expiry: string | null;
-  revokedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-/**
- * Credential Event - Audit trail for credential operations
- */
-interface DbCredentialEvent {
-  id: string;
-  classId: string;
-  tokenId: string;
-  eventType: "class_created" | "issued" | "revoked" | "frozen" | "unfrozen" | "rotated" | "expired";
-  actor: string;
-  targetAddress: string | null;
-  txHash: string;
-  height: number;
-  chainId: string;
-  createdAt: string;
-}
-
 interface Database {
   multisigs: DbMultisig[];
   transactions: DbTransaction[];
@@ -281,10 +227,6 @@ interface Database {
   memberSnapshots: DbMemberSnapshot[];
   voteSnapshots: DbVoteSnapshot[];
   groupEvents: DbGroupEvent[];
-  // Phase 3 additions
-  credentialClasses: DbCredentialClass[];
-  credentials: DbCredential[];
-  credentialEvents: DbCredentialEvent[];
 }
 
 // On Vercel/serverless, process.cwd() is /var/task (read-only). Use /tmp instead.
@@ -315,9 +257,6 @@ const createEmptyDb = (): Database => ({
   memberSnapshots: [],
   voteSnapshots: [],
   groupEvents: [],
-  credentialClasses: [],
-  credentials: [],
-  credentialEvents: [],
 });
 
 // Initialize database file if it doesn't exist. Falls back to in-memory on serverless ENOENT.
@@ -396,20 +335,6 @@ const initDb = (): void => {
     }
     if (!db.groupEvents) {
       db.groupEvents = [];
-      needsWrite = true;
-    }
-
-    // Phase 3 migrations
-    if (!db.credentialClasses) {
-      db.credentialClasses = [];
-      needsWrite = true;
-    }
-    if (!db.credentials) {
-      db.credentials = [];
-      needsWrite = true;
-    }
-    if (!db.credentialEvents) {
-      db.credentialEvents = [];
       needsWrite = true;
     }
 
@@ -1396,274 +1321,6 @@ export const getGroupEventsByType = (
 };
 
 // ============================================================================
-// Phase 3: Credential Class Operations
-// ============================================================================
-
-/**
- * Get a credential class by team address
- */
-export const getCredentialClass = (
-  chainId: string,
-  teamAddress: string,
-): DbCredentialClass | null => {
-  const db = readDb();
-  return (
-    db.credentialClasses.find((c) => c.chainId === chainId && c.teamAddress === teamAddress) || null
-  );
-};
-
-/**
- * Get a credential class by class ID
- */
-export const getCredentialClassById = (
-  chainId: string,
-  classId: string,
-): DbCredentialClass | null => {
-  const db = readDb();
-  return db.credentialClasses.find((c) => c.chainId === chainId && c.classId === classId) || null;
-};
-
-/**
- * Create a new credential class
- */
-export const createCredentialClass = (
-  data: Omit<DbCredentialClass, "id" | "createdAt" | "updatedAt">,
-): string => {
-  const db = readDb();
-  const now = new Date().toISOString();
-
-  const existing = db.credentialClasses.find(
-    (c) => c.chainId === data.chainId && c.teamAddress === data.teamAddress,
-  );
-
-  if (existing) {
-    // Update existing
-    Object.assign(existing, data, { updatedAt: now });
-    writeDb(db);
-    return existing.id;
-  }
-
-  const newClass: DbCredentialClass = {
-    id: generateId(),
-    ...data,
-    createdAt: now,
-    updatedAt: now,
-  };
-
-  db.credentialClasses.push(newClass);
-  writeDb(db);
-
-  return newClass.id;
-};
-
-/**
- * Update a credential class
- */
-export const updateCredentialClass = (
-  chainId: string,
-  teamAddress: string,
-  updates: Partial<Pick<DbCredentialClass, "issuer" | "features">>,
-): void => {
-  const db = readDb();
-  const credClass = db.credentialClasses.find(
-    (c) => c.chainId === chainId && c.teamAddress === teamAddress,
-  );
-
-  if (!credClass) {
-    throw new Error(`Credential class not found for team: ${teamAddress}`);
-  }
-
-  Object.assign(credClass, updates, { updatedAt: new Date().toISOString() });
-  writeDb(db);
-};
-
-// ============================================================================
-// Phase 3: Credential Operations
-// ============================================================================
-
-/**
- * Get a credential by class ID and token ID
- */
-export const getCredential = (classId: string, tokenId: string): DbCredential | null => {
-  const db = readDb();
-  return db.credentials.find((c) => c.classId === classId && c.tokenId === tokenId) || null;
-};
-
-/**
- * Get a credential by owner address for a specific team
- */
-export const getCredentialByOwner = (
-  chainId: string,
-  teamAddress: string,
-  ownerAddress: string,
-): DbCredential | null => {
-  const db = readDb();
-  return (
-    db.credentials.find(
-      (c) =>
-        c.chainId === chainId &&
-        c.teamAddress === teamAddress &&
-        c.ownerAddress === ownerAddress &&
-        c.status === "active",
-    ) || null
-  );
-};
-
-/**
- * Get all credentials for a team
- */
-export const getCredentialsByTeam = (chainId: string, teamAddress: string): DbCredential[] => {
-  const db = readDb();
-  return db.credentials.filter((c) => c.chainId === chainId && c.teamAddress === teamAddress);
-};
-
-/**
- * Get all credentials owned by an address
- */
-export const getCredentialsByOwner = (chainId: string, ownerAddress: string): DbCredential[] => {
-  const db = readDb();
-  return db.credentials.filter((c) => c.chainId === chainId && c.ownerAddress === ownerAddress);
-};
-
-/**
- * Create a new credential
- */
-export const createCredential = (
-  data: Omit<DbCredential, "id" | "revokedAt" | "createdAt" | "updatedAt">,
-): string => {
-  const db = readDb();
-  const now = new Date().toISOString();
-
-  const newCredential: DbCredential = {
-    id: generateId(),
-    ...data,
-    revokedAt: null,
-    createdAt: now,
-    updatedAt: now,
-  };
-
-  db.credentials.push(newCredential);
-  writeDb(db);
-
-  return newCredential.id;
-};
-
-/**
- * Update credential status
- */
-export const updateCredentialStatus = (
-  classId: string,
-  tokenId: string,
-  status: DbCredential["status"],
-  revokedAt?: string,
-): void => {
-  const db = readDb();
-  const credential = db.credentials.find((c) => c.classId === classId && c.tokenId === tokenId);
-
-  if (!credential) {
-    throw new Error(`Credential not found: ${classId}:${tokenId}`);
-  }
-
-  credential.status = status;
-  if (revokedAt) {
-    credential.revokedAt = revokedAt;
-  }
-  credential.updatedAt = new Date().toISOString();
-  writeDb(db);
-};
-
-/**
- * List credentials with filters
- */
-export const listCredentials = (options: {
-  chainId: string;
-  classId?: string;
-  ownerAddress?: string;
-  teamAddress?: string;
-  status?: string;
-  role?: string;
-  limit?: number;
-}): DbCredential[] => {
-  const db = readDb();
-  let results = db.credentials.filter((c) => c.chainId === options.chainId);
-
-  if (options.classId) {
-    results = results.filter((c) => c.classId === options.classId);
-  }
-  if (options.ownerAddress) {
-    results = results.filter((c) => c.ownerAddress === options.ownerAddress);
-  }
-  if (options.teamAddress) {
-    results = results.filter((c) => c.teamAddress === options.teamAddress);
-  }
-  if (options.status) {
-    results = results.filter((c) => c.status === options.status);
-  }
-  if (options.role) {
-    results = results.filter((c) => c.role === options.role);
-  }
-  if (options.limit) {
-    results = results.slice(0, options.limit);
-  }
-
-  return results;
-};
-
-// ============================================================================
-// Phase 3: Credential Event Operations
-// ============================================================================
-
-/**
- * Record a credential event
- */
-export const recordCredentialEvent = (
-  event: Omit<DbCredentialEvent, "id" | "createdAt">,
-): string => {
-  const db = readDb();
-
-  const newEvent: DbCredentialEvent = {
-    id: generateId(),
-    ...event,
-    createdAt: new Date().toISOString(),
-  };
-
-  db.credentialEvents.push(newEvent);
-  writeDb(db);
-
-  return newEvent.id;
-};
-
-/**
- * Get credential events by class ID
- */
-export const getCredentialEventsByClass = (classId: string): DbCredentialEvent[] => {
-  const db = readDb();
-  return db.credentialEvents.filter((e) => e.classId === classId);
-};
-
-/**
- * Get credential events by token ID
- */
-export const getCredentialEventsByToken = (
-  classId: string,
-  tokenId: string,
-): DbCredentialEvent[] => {
-  const db = readDb();
-  return db.credentialEvents.filter((e) => e.classId === classId && e.tokenId === tokenId);
-};
-
-/**
- * Get credential events by type
- */
-export const getCredentialEventsByType = (
-  chainId: string,
-  eventType: DbCredentialEvent["eventType"],
-): DbCredentialEvent[] => {
-  const db = readDb();
-  return db.credentialEvents.filter((e) => e.chainId === chainId && e.eventType === eventType);
-};
-
-// ============================================================================
 // Type Exports
 // ============================================================================
 
@@ -1682,8 +1339,4 @@ export type {
   DbMemberSnapshot,
   DbVoteSnapshot,
   DbGroupEvent,
-  // Phase 3 types
-  DbCredentialClass,
-  DbCredential,
-  DbCredentialEvent,
 };

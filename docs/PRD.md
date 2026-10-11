@@ -3,13 +3,13 @@
 > **Cluster:** product · **Tags:** prd, multisig, phases, cliq, roadmap · **Related:** [User Guide](App%20User%20Guide.md), [Appendix](Appendix/), [SOC2 gap assessment](security/SOC2-GAP-ASSESSMENT.md), [UI design docs](ui/INDEX.md)
 
 ## Overview
-Production Next.js app for PubKey + Contract multisig on Cosmos/Coreum. Dual engines, credentials. *(Until 2026-10-10 this line read: "Dual engines, policies, credentials, monitoring." Phase 4 was removed, see below.)*
+Production Next.js app for PubKey + Contract multisig on Cosmos/Coreum. Dual engines. *(Until 2026-10-11 this line read: "Dual engines, credentials." The Phase 3 credential feature was removed, see below. Until 2026-10-10 it read: "Dual engines, policies, credentials, monitoring." Phase 4 was removed, see below.)*
 
 **Phases build progressively:**
 - Phase 0: PubKey hardening (canonical tx, hashing, multi-RPC).
 - Phase 1: CW3-fixed contracts + 3-layer indexer.
 - Phase 2: CW3-flex + CW4 groups, snapshots.
-- Phase 3: NFT credentials (soulbound, gated).
+- Phase 3: NFT credentials (soulbound, gated). **Removed 2026-10-11** (owner chose option B; never wired into the app), archived at git tag `archive/credentials-2026-10-11`.
 - Phase 4: Policies (timelock, spend, msg restrict), emergency/safe-mode, alerts. **Removed 2026-10-10** (owner chose option B), archived at git tag `archive/phase4-policies-2026-10-10`.
 
 See [User Guide](App%20User%20Guide.md), [Appendix](Appendix/).
@@ -32,6 +32,8 @@ Dynamic members via CW4. Dual snapshots (proposal/vote time). GroupProvider exte
 UI: MembershipPanel, AuditTrail. *(Removed 2026-10-10: the closest components, `MembershipManagementPanel` and `ProposalAuditTrail`, were never rendered by any page. The group and snapshot API routes stay.)*
 
 ## Phase 3: Identity NFTs
+**Removed 2026-10-11** (owner chose option B), archived at git tag `archive/credentials-2026-10-11`. Nothing in the app ever used it: the create form's "Credential Gating" switch was never read when a CLIQ was created, the Credentials tab and the vote check were never switched on, no NFT was ever minted, and the six credential API routes only wrote rows to the server's temporary store. The switch, the screens, the routes, the library code (`lib/credentials/service.ts`, `lib/coreum/`) and the credential collections in `lib/localDb.ts` are deleted; only `lib/credentials/types.ts` stays, because `lib/policies/types.ts` and the contract engine import it. *(Until the second change this said the library code would be removed in a second change.)* The text below is the old plan, kept for the record.
+
 Coreum assetnft soulbound creds. Gated voting/execution. Burn→revoke.
 
 CredentialService, verifyCredential(). DB: classes/credentials/events.
@@ -43,11 +45,11 @@ PolicyEvaluator (P1 timelock, P2 emergency, P3 msg-type, P4 spend, P5 address fi
 
 Emergency: Pause/safe-mode. Monitoring: Events/anomalies/alerts/playbooks.
 
-**Status**: Phases 0-3 have code under `lib/` (engines, canonical builder/hasher, multi-RPC verifier, indexer, CW3/CW4 clients, credential service). Checked by import graph on 2026-10-10: the app uses the hasher, the multi-RPC verifier, the indexer sync job and the CW3/CW4 clients; the engine classes and the canonical builder are reached only by tests; nothing imports the credential service. Phase 4 was removed on 2026-10-10. *(Until 2026-10-10 this line read: "All five phases have shipping code (engines, canonical builder/hasher, multi-RPC verifier, indexer, CW3/CW4 clients, credential service, policy registry, emergency + monitoring modules all exist under `lib/`).")*
+**Status**: Phases 0-2 have code under `lib/` (engines, canonical builder/hasher, multi-RPC verifier, indexer, CW3/CW4 clients). Checked by import graph on 2026-10-10: the app uses the hasher, the multi-RPC verifier, the indexer sync job and the CW3/CW4 clients; the engine classes and the canonical builder are reached only by tests. Phase 4 was removed on 2026-10-10 and the Phase 3 credential code on 2026-10-11. *(Until 2026-10-11 this line began "Phases 0-3 have code under `lib/` (…, credential service)" and said "nothing imports the credential service".)* *(Until 2026-10-10 this line read: "All five phases have shipping code (engines, canonical builder/hasher, multi-RPC verifier, indexer, CW3/CW4 clients, credential service, policy registry, emergency + monitoring modules all exist under `lib/`).")*
 
 **Not in scope of that status — open, not shipped:**
 - Uniform authorization across the API surface. `/api/transaction/wipe` and `/api/transaction/export` now require an ADR-36 membership proof; most other routes remain unauthenticated. Tracked as follow-up L1 in [SOC2-GAP-ASSESSMENT.md](security/SOC2-GAP-ASSESSMENT.md).
-- Security audit log is **live but PARTIAL** (L2, PR #58): `lib/audit.ts` records transaction cancel and broadcast, history export, and history wipe / multisig delete (refused wipes included). Creating or signing a transaction, emergency and credential actions are not recorded. Rate limiting is **partial** (L3, PR #39): only transaction reads on `/api/transaction/[transactionID]`, counted per serverless instance. No Content-Security-Policy (CSP is deliberately deferred; the other security headers ship in `next.config.js`). Caveats: [security/README.md](security/README.md). *Until 2026-10-09 this line read: "No security audit log, no rate limiting, no Content-Security-Policy" — accurate until PRs #39 and #58 merged on 2026-08-17.*
+- Security audit log is **live but PARTIAL** (L2, PR #58): `lib/audit.ts` records transaction cancel and broadcast, history export, and history wipe / multisig delete (refused wipes included). Creating or signing a transaction is not recorded *(until 2026-10-11 this also named emergency and credential actions; their routes were deleted on 2026-10-10 and 2026-10-11)*. Rate limiting is **partial** (L3, PR #39): only transaction reads on `/api/transaction/[transactionID]`, counted per serverless instance. No Content-Security-Policy (CSP is deliberately deferred; the other security headers ship in `next.config.js`). Caveats: [security/README.md](security/README.md). *Until 2026-10-09 this line read: "No security audit log, no rate limiting, no Content-Security-Policy" — accurate until PRs #39 and #58 merged on 2026-08-17.*
 - Dependency remediation is in **PR #29, which is open and not merged**.
 - `MsgUnjail`: since PR #77 (2026-10-08) the validator page has a one-click Unjail inside the jailed banner, for single-wallet and CLIQ operators. *(Until 2026-10-09 this line read: "has codec and gas support but no UI entry point.")*
 - A transaction that lands on chain but fails execution (DeliverTx code != 0) still renders the "Completed" view — there is no failed status in the data model.

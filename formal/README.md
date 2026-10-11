@@ -2,7 +2,7 @@
 
 > **Cluster:** formal · **Tags:** tla, model-only, phase4-removed, invariants · **Related:** [PRD](../docs/PRD.md), [Chaos tests](../tests/chaos/README.md), [Phase 3 tests](../tests/phase3/README.md)
 
-> **Model only:** this TLA+ spec describes a design the app does not implement. The policy, emergency-pause and spend-limit code it models was removed from the app on 2026-10-10 (archived at git tag `archive/phase4-policies-2026-10-10`), so a TLC pass says nothing about the running app.
+> **Model only:** this TLA+ spec describes a design the app does not implement. The policy, emergency-pause and spend-limit code it models was removed from the app on 2026-10-10 (archived at git tag `archive/phase4-policies-2026-10-10`), so a TLC pass says nothing about the running app. The credential checks it models ("Credential Validity", revocation mid-vote) were never wired into the app either, and that code was removed on 2026-10-11 (archived at git tag `archive/credentials-2026-10-11`).
 
 ## Requirements
 - TLA+ Toolbox (recommended), OR
