@@ -30,7 +30,7 @@ function coralParts(svg: Element): number {
 }
 
 describe("Kit icons: the idiom: P2", () => {
-  it("ships the eleven kit glyphs and the eight new ones", () => {
+  it("ships the eleven kit glyphs and the nine new ones", () => {
     expect([...KIT_ICON_NAMES].sort()).toEqual(
       [
         "governance",
@@ -47,6 +47,7 @@ describe("Kit icons: the idiom: P2", () => {
         "rank",
         "withdraw",
         "stakers",
+        "members",
         "tip",
         "sign",
         "database",
@@ -159,5 +160,15 @@ describe("Kit icons: accessibility and size: P2", () => {
     const { container } = render(<KitIcon name="pulse" size={24} strokeWidth={2.5} />);
 
     expect(container.querySelector("svg")).toHaveAttribute("stroke-width", "2.5");
+  });
+});
+
+describe("Kit icons: Flex members have their own glyph: P2", () => {
+  // Owner, 2026-10-11: the stakers glyph was reused for Flex CLIQ members ("g yes": give them
+  // their own). `members` is a group of three, the centre figure coral; `stakers` stays for stakers.
+  it("draws members differently from stakers", () => {
+    const a = render(<KitIcon name="members" />).container.innerHTML;
+    const b = render(<KitIcon name="stakers" />).container.innerHTML;
+    expect(a).not.toBe(b);
   });
 });

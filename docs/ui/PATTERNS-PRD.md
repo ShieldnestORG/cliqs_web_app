@@ -436,7 +436,8 @@ motion is shipped (the landing's icon animations are not ported).
 | `clock` | the minute hand and hub | Unbonding | the TOKNS brand icon kit (the kit names it after a TOKNS product; a plain name here) |
 | `rank` | the tallest bar (wash + outline) | Ranking | new in cliqs |
 | `withdraw` | the arrow leaving the frame | the "Paid to" line | new in cliqs |
-| `stakers` | the second figure | Stakers; also a group of members (the Flex CLIQ guide and create form header) | new in cliqs |
+| `stakers` | the second figure | Stakers (validator page). *Until 2026-10-11 also the members of a Flex CLIQ (its guide and create form header).* | new in cliqs |
+| `members` | the centre figure (head and shoulders, one group) | the members of a Flex CLIQ: the Flex guide card and the Flex create form header (owner, 2026-10-11: their own glyph, not the stakers one) | new in cliqs |
 | `guide` | the bookmark (solid) | Guides page header and empty state | the TOKNS brand icon kit (the kit's open-book "learn" glyph under a plain name) |
 | `contract` | the heading line | the Contract Fixed guide, the contract create form header | the TOKNS brand icon kit (the kit's "article" page under a plain name) |
 | `journey` | the flag (pole and pennant) | the "Journey Complete" banner on the Guides page | the TOKNS brand icon kit (the kit's "roadmap" glyph under a plain name) |
@@ -448,7 +449,7 @@ motion is shipped (the landing's icon animations are not ported).
 
 The paths for the first eight were generated from the kit's sources by a script, not typed by
 hand, and re-diffed against them. `guide`, `contract` and `journey` were copied from the kit's
-icon registry and re-diffed the same way. `rank`, `withdraw`, `stakers`, `tip`, `sign`,
+icon registry and re-diffed the same way. `rank`, `withdraw`, `stakers`, `members`, `tip`, `sign`,
 `database`, `search` and `wallet` are drawn in the same idiom and should be added to the kit so
 the sources do not drift. The Guides page names each journey's glyph in `lib/userJourneys.ts` as a
 `KitIconName`, so a journey cannot point at a glyph that does not exist. Not copied, on purpose:

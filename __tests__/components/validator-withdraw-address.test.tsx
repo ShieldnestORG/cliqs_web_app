@@ -19,7 +19,7 @@
 // jest.setup.js stubs the cosmjs encoding package; address validation needs the real bech32 helpers.
 jest.unmock("@cosmjs/encoding");
 
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, within, waitFor } from "@testing-library/react";
 import WithdrawAddressCard from "@/components/dataViews/ValidatorDashboard/WithdrawAddressCard";
 import { ValidatorInfo } from "@/lib/validatorHelpers";
 import { createCliqTransaction } from "@/lib/validatorTx";
@@ -131,6 +131,29 @@ describe("WithdrawAddress one-line view: P0", () => {
     renderCard({ isCliqMode: true, cliqAddress: OTHER });
 
     expect(change()).toHaveTextContent("(via CLIQ)");
+    expect(change()).toHaveAccessibleName("Change (via CLIQ)");
+  });
+
+  // Owner, 2026-10-11 ("3 yes"): at 1024px the row wrapped, Change on a second line (measured on
+  // production). The row now fits: a shorter address (6 + 4, full address in the title and the
+  // copy button), tighter gaps, and in CLIQ mode "(via CLIQ)" is the button's name and title, not
+  // visible text, while the people icon stays as the visible CLIQ cue.
+  it("fits one line at 1024px: shorter address, tighter gaps, a compact CLIQ button", () => {
+    const { unmount } = renderCard();
+    const row = screen.getByText("Paid to").parentElement as HTMLElement;
+    expect(row).toHaveClass("gap-x-2");
+    expect(row).not.toHaveClass("gap-x-3");
+    const shown = screen.getByTitle(OPERATOR_ACCOUNT).textContent ?? "";
+    expect(shown).toBe(`${OPERATOR_ACCOUNT.slice(0, 6)}...${OPERATOR_ACCOUNT.slice(-4)}`);
+    unmount();
+
+    renderCard({ isCliqMode: true, cliqAddress: OTHER });
+    const via = screen.getByText("(via CLIQ)");
+    expect(via).toHaveClass("sr-only");
+    // the sr-only phrase needs a positioned parent (CLAUDE.md §3)
+    expect(change()).toHaveClass("relative");
+    expect(change()).toHaveAttribute("title", "Change via CLIQ");
+    expect(within(change()).getByTestId("icon-Users")).toBeInTheDocument();
   });
 });
 

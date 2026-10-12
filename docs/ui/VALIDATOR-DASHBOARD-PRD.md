@@ -421,11 +421,17 @@ left 2/5 column; the jailed layout test pinned an `order-first` class on its gri
   testnet colour (§2).*
 - Self-delegation rewards are only included when they are actually non-zero, so a jailed
   validator with no self-delegation sends the commission message alone.
-- **The withdraw address, as one line** (`WithdrawAddressCard.tsx`, compact): "Paid to core1…asj6gw
+- **The withdraw address, as one line** (`WithdrawAddressCard.tsx`, compact): "Paid to core1j…j6gw
   [copy] [Change]". The row filled a half-width Rewards card (342px of 342px, measured before round 2). **Re-measured
-  2026-10-11 on production after round 2: one line at 1280px, but at 1024px it wraps**, the
+  2026-10-11 on production after round 2: one line at 1280px, but at 1024px it wrapped**, the
   address on the first line (555-571px) and the Change button on a second (583-619px): the card
-  padding and the grid gap grew in round 2. Not changed here (an open item for the owner), so the fact
+  padding and the grid gap grew in round 2. **Fixed 2026-10-11** (owner: "3 yes"): `gap-x-2`
+  (was `gap-x-3`), the address shown as 6 + 4 characters (was 8 + 6; the full address is the
+  title and the copy button's value), and in CLIQ mode "(via CLIQ)" is the Change button's
+  accessible name and its `title` ("Change via CLIQ") next to the visible people icon, instead of
+  visible text. Measured in a browser at 1024px: one line without a wallet (Change at 551-587px,
+  the address at 561-577px, the page 32px shorter) and in CLIQ mode (the people icon plus
+  "Change", 106px wide), so the fact
   "Same as operator account" / "Custom address" is not a second line any more: it is the "Paid
   to" label's `title` and a screen-reader-only phrase after the label (", same as operator
   account" or ", custom address"). For a custom address that is the only place the word
@@ -472,7 +478,9 @@ total" next to a Stakers section that said "unavailable right now", and a failed
 **Section:** `ScaleRule label="Governance"`.
 Active proposals as before (a tile each, vote badge or NEEDS VOTE, **Vote Now** and **Details**).
 Governance proposals are voted Yes / No / Abstain / No-with-veto (`MsgVote`); Yes uses the
-`success` token, and the tally chips are semantic, not decorative. **Past proposals sit in a
+`success` token, and the tally chips are semantic, not decorative. **No with Veto is coral**
+(`primary`): the dialog button's fill and a recorded veto's tag (`default`). *Until 2026-10-11 both
+were gold (`warning`); gold is the testnet colour (owner: "can do orange").* **Past proposals sit in a
 drop-down, "Past proposals (latest N)", closed by default** (`components/ui/collapsible.tsx`); it
 lists the latest 10 finished proposals, or says the history is unavailable. **N is honest:** the
 label reads **"latest N" whenever N is 1 or more** (N = the rows shown, at most 10), "(0)" with the

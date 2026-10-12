@@ -18,8 +18,8 @@ import { cn } from "@/lib/utils";
  * `multisig` and `clock` come from the TOKNS brand icon kit; `clock` is the kit's
  * clock face under a plain name. `guide`, `contract` and `journey` are the kit's
  * open book, page and road-to-a-flag glyphs, also under plain names. `rank`,
- * `withdraw`, `stakers`, `tip`, `sign`, `database`, `search` and `wallet` are new
- * in cliqs, drawn in the same idiom. The TOKNS wordmark and product-named icons
+ * `withdraw`, `stakers`, `members`, `tip`, `sign`, `database`, `search` and `wallet` are
+ * new in cliqs, drawn in the same idiom. The TOKNS wordmark and product-named icons
  * are deliberately not copied.
  */
 
@@ -140,6 +140,19 @@ const GLYPHS = {
       <g data-coral="">
         <path className={AC} d="M32.5 8.5a7 7 0 0 1 0 13" />
         <path className={AC} d="M36 29a10 10 0 0 1 8 9.8V41" />
+      </g>
+    </>
+  ),
+  // NEW in cliqs: a group of three, the centre figure coral (the members of a Flex CLIQ)
+  members: (
+    <>
+      <circle className={LN} cx="11" cy="19" r="4.5" />
+      <path className={LN} d="M3 37v-1.5A6.5 6.5 0 0 1 9.5 29H13" />
+      <circle className={LN} cx="37" cy="19" r="4.5" />
+      <path className={LN} d="M45 37v-1.5A6.5 6.5 0 0 0 38.5 29H35" />
+      <g data-coral="">
+        <circle className={AC} cx="24" cy="15" r="6.5" />
+        <path className={AC} d="M13 41v-2.5A9.5 9.5 0 0 1 22.5 29h3a9.5 9.5 0 0 1 9.5 9.5V41" />
       </g>
     </>
   ),
