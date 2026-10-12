@@ -1,16 +1,60 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-10",
+  "updatedAt": "2026-10-12",
   "testSuite": {
-    "suites": 80,
-    "tests": 871,
-    "passed": 871,
+    "suites": 87,
+    "tests": 916,
+    "passed": 916,
     "failed": 0,
     "command": "npm run test:ci",
-    "commit": "f383fec",
-    "ranAt": "2026-10-10"
+    "commit": "3e4ff73",
+    "ranAt": "2026-10-12"
   },
   "entries": [
+    {
+      "id": "validator-page-follow-ups-2026-10-11",
+      "date": "2026-10-11",
+      "area": "ux",
+      "status": "verified",
+      "title": "Validator page follow-ups: send, navigation, errors, upgrades",
+      "summary": "A CLIQ-run validator can start a send from its page, Back works again, failed lookups say so, and chain upgrades are announced.",
+      "details": [
+        "A validator run by a CLIQ now has a Send tile and a link to its CLIQ page on the validator page, so a send no longer needs a detour.",
+        "The browser's Back button works again after leaving a page, and a link with a CLIQ address keeps it after a refresh. Checked on the live site.",
+        "When the chain cannot be reached, the validator page shows an error with Try Again instead of saying the account is not a validator. Checked on the live site.",
+        "A notice at the top of the validator page announces a proposed or scheduled chain upgrade, its block and an estimated time, with links to TX's upgrade guide and the TOKNS proposals page.",
+        "A test that failed at random was traced to another test file finishing too early; it now waits, and ten full runs in a row passed.",
+        "Status labels, the No with Veto colour, a members icon and the withdraw-address line were tidied to the design system.",
+        "Signing code is unchanged except one label's text size, approved by the owner; every signing function's hash is the same.",
+        "Verified: type, lint and format checks, a production build and the full test suite before each merge."
+      ],
+      "evidence": [
+        {
+          "label": "PR #85",
+          "url": "https://github.com/ShieldnestORG/cliqs_web_app/pull/85"
+        },
+        {
+          "label": "PR #86",
+          "url": "https://github.com/ShieldnestORG/cliqs_web_app/pull/86"
+        },
+        {
+          "label": "PR #87",
+          "url": "https://github.com/ShieldnestORG/cliqs_web_app/pull/87"
+        },
+        {
+          "label": "PR #88",
+          "url": "https://github.com/ShieldnestORG/cliqs_web_app/pull/88"
+        },
+        {
+          "label": "PR #91",
+          "url": "https://github.com/ShieldnestORG/cliqs_web_app/pull/91"
+        },
+        {
+          "label": "PR #93",
+          "url": "https://github.com/ShieldnestORG/cliqs_web_app/pull/93"
+        }
+      ]
+    },
     {
       "id": "validator-page-polish-2026-10-10",
       "date": "2026-10-10",
