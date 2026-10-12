@@ -183,6 +183,7 @@ Top to bottom (`pages/[chainName]/validator.tsx` and `ValidatorDashboard/index.t
 ```
 Validator Dashboard                                  (H1, under the breadcrumb)
 [JAILED ALERT, only while jailed, with Unjail]
+[UPGRADE NOTICE, only while a chain upgrade is proposed or scheduled (§4.0)]
 TOKNS.FI  ACTIVE  Commission 5.0%  Operator core1..  Account core1..  [explorer icon]   (header strip; status tag with a moving mark; one row at 1024px, re-measured 2026-10-11)
 [note, only with no wallet or a read-only CLIQ]     [Mainnet] [Testnet]  [Refresh]   (context row; on testnet a gold TESTNET status tag sits beside the boxes)
 
@@ -331,6 +332,38 @@ Quick Stats row and a Recent Transactions card) were never built; their content 
 into the strip and the Performance section instead. **Since 2026-10-10 the section components
 render their content only**: the panel (a `Card`) and the `ScaleRule` heading come from
 `ValidatorDashboard/index.tsx`, so no section carries its own `// label` and title.
+
+### 4.0 Upgrade notice (`UpgradeNotice.tsx`)
+Added 2026-10-11. Owner, 2026-10-10: "an area to notify them of upcoming validator upgrades and set
+up staging to be ready"; the owner chose (2026-10-11) the top of the page, a link to TX's own
+upgrade guide rather than steps copied into cliqs, and the TOKNS link on mainnet.
+- **When:** only while a chain upgrade is **proposed** (a proposal carrying `MsgSoftwareUpgrade` is
+  in its voting period) or **scheduled** (`current_plan` holds a plan, which exists only after such
+  a vote passes; TX's upgrade instructions on docs.tx.org, read 2026-10-11). A scheduled plan wins
+  over a proposal. Nothing is shown when neither exists or neither could be read: the notice is
+  never invented.
+- **Where:** first on the page, right after the jailed alert (which stays first: it is more urgent).
+- **Says:** "Upgrade proposed · v8 (proposal #47)" or "Upgrade scheduled · v8"; for a proposal the
+  vote's end and "If it passes, the chain switches at block N"; the estimated time; "Stage the new
+  binary for cosmovisor before then, under upgrades/<plan name>". Times are UTC so every operator
+  reads the same one. Links (outline buttons, new tab): **TX upgrade guide**
+  (`docs.tx.org/docs/next/nodes-and-validators/upgrades/upgrades-instructions`) always; **Vote on
+  TOKNS** (`app.tokns.fi/proposals`) only for a proposal on mainnet (`coreum-mainnet-1`).
+- **Data** (`getUpgradeNotice` in `lib/validatorHelpers.ts`, fetched with the dashboard): the plan
+  from the upgrade module over RPC; the proposal from the active-proposals list (v1beta1 carries the
+  message as `content`), and from the raw gov v1 list when a proposal came through the REST fallback
+  (whose conversion drops the message). The time is the **measured** block rate over the last
+  10,000 blocks projected to the height, never a blocks-per-year figure (TX mainnet's 33,000,000 a
+  year implies 0.956 s a block against a measured 0.7202 s, which lands days late). No rate, no
+  "about ..." claim.
+- **Colour:** `info` (border `info/40`, fill `info/10`, title and icon `text-info`), never gold: gold
+  is the testnet colour.
+- **Measured** 2026-10-11 on local dev against TX mainnet (proposal 47 in voting): the notice read
+  "Voting ends Oct 14, 14:57 UTC. If it passes, the chain switches at block 90,850,000, about Oct 20,
+  12:27 UTC (estimate)"; 158px tall at 1280px (page 1,959px), 190px at 500px (page 3,203px), no
+  sideways scroll. On testnet (v8 already applied there) no notice.
+- Pinned by `upgrade-notice` (component), `upgrade-notice` (lib: plan reading, REST fallback,
+  lowest height, the rate maths) and `validator-dashboard` ("upgrade notice and TOKNS link").
 
 ### 4.1 Jailed Alert and Validator Identity Strip
 `JailedAlert.tsx` · `ValidatorIdentityCard.tsx` (a strip now, not a card)
@@ -494,6 +527,11 @@ gov v1 is not simply made the source of the list (it carries the title): a REST 
 `[]` would hide a proposal v1beta1 knows, and a REST host that ignores `proposal_status=2` could
 put a finished proposal on the page with a Vote Now button (both shown with probes); the list
 drives the vote buttons, so it must not get less reliable.
+**All proposals on TOKNS** (added 2026-10-11, mainnet only): a `link` button at the foot of the
+Governance card opens `https://app.tokns.fi/proposals` in a new tab (owner: "a way to be connected
+to the proposals page from tokns to vote"). It sits in `index.tsx` under `ProposalViewer`, so the
+fenced vote code is not touched. Whether the TOKNS page lists testnet proposals was not checked, so
+testnet shows no link.
 The vote flow is untouched: `submitVote`, `gasLimit` and the vote option table are byte for byte
 what they were, the signing fence still prints `FENCE OK`, and `validator-vote-options` still pins
 what each option sends. Not done (nothing showed it was needed): reading a title out of a v1

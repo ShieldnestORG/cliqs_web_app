@@ -43,12 +43,14 @@ import {
   ArrowRight,
   CheckCircle,
   Info,
+  ExternalLink,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { fromBech32, toBech32 } from "@cosmjs/encoding";
 import JailedAlert from "./JailedAlert";
+import UpgradeNotice, { TOKNS_PROPOSALS_URL, TX_MAINNET_CHAIN_ID } from "./UpgradeNotice";
 import ValidatorIdentityCard from "./ValidatorIdentityCard";
 import PendingRewardsCard from "./PendingRewardsCard";
 import ValidatorPerformanceCard from "./ValidatorPerformanceCard";
@@ -793,6 +795,11 @@ export default function ValidatorDashboard() {
         />
       )}
 
+      {/* Upgrade notice: while a chain upgrade is proposed or scheduled (after the jailed alert, which is more urgent) */}
+      {dashboardData.upgrade && (
+        <UpgradeNotice upgrade={dashboardData.upgrade} chainId={chain.chainId} />
+      )}
+
       {/* Header strip: moniker, status, commission, addresses, explorer link */}
       <ValidatorIdentityCard validator={dashboardData.validator} />
 
@@ -970,7 +977,7 @@ export default function ValidatorDashboard() {
         <section aria-labelledby="validator-governance" className="flex flex-col gap-4">
           <ScaleRule headingId="validator-governance" label="Governance" />
           <Card className="flex-1">
-            <CardContent className="p-5 sm:p-6">
+            <CardContent className="space-y-4 p-5 sm:p-6">
               <ProposalViewer
                 data={dashboardData}
                 onTransactionComplete={handleTransactionComplete}
@@ -978,6 +985,15 @@ export default function ValidatorDashboard() {
                 cliqAddress={cliqAddress}
                 readOnly={cliqReadOnly}
               />
+              {/* The TOKNS site's governance page, for voting there (mainnet only) */}
+              {chain.chainId === TX_MAINNET_CHAIN_ID && (
+                <Button asChild variant="link" size="sm" className="gap-1.5 px-0">
+                  <a href={TOKNS_PROPOSALS_URL} target="_blank" rel="noopener noreferrer">
+                    All proposals on TOKNS
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                </Button>
+              )}
             </CardContent>
           </Card>
         </section>

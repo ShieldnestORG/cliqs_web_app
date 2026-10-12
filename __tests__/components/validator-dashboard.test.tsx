@@ -48,11 +48,13 @@ jest.mock("next/router", () => ({
   useRouter: () => ({ push: jest.fn(), query: mockQuery, pathname: "/tx/validator" }),
 }));
 
+// The chain id the page sees; a test that needs mainnet sets it and beforeEach resets it.
+let mockChainId = "coreum-testnet-1";
 jest.mock("@/context/ChainsContext", () => ({
   useChains: () => ({
     chain: {
       registryName: "tx",
-      chainId: "coreum-testnet-1",
+      chainId: mockChainId,
       chainDisplayName: "TX",
       addressPrefix: "testcore",
       nodeAddress: "https://rpc.invalid:26657",
@@ -161,6 +163,7 @@ const lastProps = (mock: jest.Mock) => mock.mock.calls[mock.mock.calls.length - 
 beforeEach(() => {
   jest.clearAllMocks();
   mockQuery = {};
+  mockChainId = "coreum-testnet-1";
   mockLoading = {};
   mockWalletInfo = { address: WALLET, pubKey: "pk" };
   (getValidatorDashboardData as jest.Mock).mockResolvedValue(dashboardData());
@@ -442,6 +445,67 @@ describe("ValidatorDashboard: the lookup fails: P1", () => {
     await waitFor(() => expect(getValidatorDashboardData).toHaveBeenCalledTimes(2));
     expect(await screen.findByTestId("context-row")).toBeInTheDocument();
     expect(screen.queryByText("Failed to Load Data")).not.toBeInTheDocument();
+  });
+});
+
+describe("ValidatorDashboard: upgrade notice and TOKNS link: P1", () => {
+  // Owner, 2026-10-11: the notice at the top of the page; the TOKNS proposals link in Governance
+  // and in the notice, mainnet only.
+  const upgrade = {
+    state: "proposed",
+    name: "v8",
+    height: 90_850_000,
+    proposalId: 47,
+    votingEndTime: new Date("2026-10-14T14:57:00Z"),
+    eta: null,
+  };
+  const tokns = () => screen.queryByRole("link", { name: /All proposals on TOKNS/ });
+
+  it("puts the notice first, above the identity strip, while an upgrade is proposed", async () => {
+    (getValidatorDashboardData as jest.Mock).mockResolvedValue({ ...dashboardData(), upgrade });
+    const { container } = render(<ValidatorDashboard />);
+
+    const notice = await screen.findByRole("region", { name: "Chain upgrade" });
+    expect(container.firstElementChild?.firstElementChild).toBe(notice);
+    expect(notice.nextElementSibling).toBe(screen.getByTestId("identity-card"));
+  });
+
+  it("keeps the jailed alert above the notice", async () => {
+    (getValidatorDashboardData as jest.Mock).mockResolvedValue({
+      ...dashboardData(true),
+      upgrade,
+    });
+    const { container } = render(<ValidatorDashboard />);
+
+    const alert = await screen.findByTestId("jailed-alert");
+    expect(container.firstElementChild?.firstElementChild).toBe(alert);
+    expect(alert.nextElementSibling).toBe(screen.getByRole("region", { name: "Chain upgrade" }));
+  });
+
+  it("shows no notice when there is no upgrade", async () => {
+    (getValidatorDashboardData as jest.Mock).mockResolvedValue({
+      ...dashboardData(),
+      upgrade: null,
+    });
+    render(<ValidatorDashboard />);
+
+    await screen.findByTestId("identity-card");
+    expect(screen.queryByRole("region", { name: "Chain upgrade" })).not.toBeInTheDocument();
+  });
+
+  it("links the TOKNS proposals page from Governance on mainnet only", async () => {
+    const { unmount } = render(<ValidatorDashboard />);
+    await screen.findByTestId("identity-card");
+    expect(tokns()).not.toBeInTheDocument();
+    unmount();
+
+    mockChainId = "coreum-mainnet-1";
+    render(<ValidatorDashboard />);
+    await screen.findByTestId("identity-card");
+    const link = tokns();
+    expect(link).toHaveAttribute("href", "https://app.tokns.fi/proposals");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link?.closest("section")).toHaveAttribute("aria-labelledby", "validator-governance");
   });
 });
 
