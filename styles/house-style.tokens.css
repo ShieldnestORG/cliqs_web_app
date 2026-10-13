@@ -1,0 +1,294 @@
+/* VENDORED-FROM: ShieldnestORG/house-style 048c681 tokens.css, unchanged; do not edit, re-vendor */
+/* ==========================================================================
+   house style: TOKENS (canonical). Prefix --hs-. Generated once from the sources named on each line, then
+   maintained here by hand; tokens.json is generated from THIS file (scripts/build-tokens-json.mjs).
+
+   PROVENANCE. Every line ends with a comment naming where its value came from:
+     app.css:N          the forensic app's static stylesheet, token blocks (light :root at line 3792, dark twin at 4029-4099);
+                        read at commit caa449f9a on 2026-10-12. Line numbers moved by -7 since the draft's c726a6af0.
+     labs/tokens.css:N  the Labs layer of the tokns app, app/labs/_design/tokens.css at 39879d73 (2026-10-12)
+     other paths        named in full from their checkout (tokns_landing_page, coherencedaddy-landing)
+   A value that differs between app.css and labs/tokens.css says so on its line and says which won.
+
+   OWNER DECISIONS applied (2026-10-12): 2 status palette = the forensic app's; 3 dark card ramp #1C1C1E / #26262A;
+   4 pill buttons behind --hs-radius-btn; 7 one coral #FF6B4A; 8 both themes on every product; 11 Geist everywhere;
+   12 bordered fields, wells for read-only values.
+
+   THEMES. :root is DARK (the default). :root[data-theme="light"] forces light. With no attribute, the OS decides:
+   the prefers-color-scheme block repeats the light overrides for :root:not([data-theme="dark"]). The two light blocks
+   must stay byte-equal (check/selftest.mjs asserts it). Tokens that do not change by theme live in :root only.
+
+   RULES. This is the ONLY file in the repo that may hold a raw colour (hex, rgb(), rgba() with digits). Components
+   read var(--hs-*) and write an alpha colour as rgba(var(--hs-<kind>-rgb), a). Coral is a FILL; as text use
+   --hs-accent-text. Status colour is never the only signal (a word, glyph or shape goes with it).
+   VENDORING. A product copies this file at a pinned commit and puts `VENDORED-FROM: <sha>` in its copy's header.
+   ========================================================================== */
+
+:root {
+  color-scheme: dark;
+
+  /* ---- SURFACES: canvas, cards, wells, hairlines (decision 3: the dark card ramp is #1C1C1E / #26262A) ---- */
+  --hs-bg: #0E0E10;  /* app.css:4032 */
+  --hs-panel: #1C1C1E;  /* app.css:4033; decision 3 (owner 2026-10-12): the card ramp; the Labs layer had #18181B (labs/tokens.css:166), app.css wins */
+  --hs-panel-2: #26262A;  /* app.css:4034; decision 3; Labs had #1F1F22, app.css wins */
+  --hs-panel-3: #161618;  /* app.css:4035; the well / inset fill */
+  --hs-border: #2A2A2E;  /* app.css:4036; decorative hairline only; Labs had translucent white .08 (labs/tokens.css:240), app.css wins: a solid value has one contrast number */
+  --hs-border-strong: #3A3A3F;  /* app.css:4037; Labs had rgba(255,255,255,.10) (labs/tokens.css:241) */
+  --hs-border-interactive: #7C7C80;  /* app.css:4038; the rest edge of a control, 3:1 on every ground (1.4.11); Labs dark #6B6B70 measured 3.34 on its card (labs/tokens.css:242) */
+  --hs-card-edge: transparent;  /* app.css:4097; dark cards lift by surface and edge light, not by a line */
+  --hs-field-bg: #26262A;  /* app.css:4068; decision 12: bordered field fill (editable); read-only values use a well, --hs-panel-3 + --hs-well-shadow */
+  --hs-field-focus-bg: #2C2C30;  /* app.css:4069 */
+
+  /* ---- INK (text) ---- */
+  --hs-ink: #F2F1ED;  /* app.css:4045 */
+  --hs-ink-2: #D1D0CB;  /* app.css:4046; Labs had ink-2 == ink (labs/tokens.css:245); app.css wins */
+  --hs-ink-3: #A1A1A6;  /* app.css:4047; muted text, >= 4.5:1 on every ground */
+  --hs-ink-4: #939397;  /* app.css:4048; quiet text; never on --hs-accent-soft (3.93:1); Labs dark #6B6B70 is 3.3-3.6:1, retired as text (labs/tokens.css:247) */
+
+  /* ---- ACCENT: one coral #FF6B4A family for every product (decision 7). Coral is a FILL; text takes --hs-accent-text; a label on a fill is --hs-accent-ink ---- */
+  --hs-accent: #FF6B4A;  /* labs/tokens.css:248; same coral in both themes; equals app.css:3830 */
+  --hs-accent-hover: #FF8A6D;  /* app.css:4051; FILL hover. Labs light --labs-accent-hover is #832916 (labs/tokens.css:54), a text hover under a fill name: the name wins its meaning from app.css, the text hover is --hs-accent-text-hover */
+  --hs-accent-sheen: #FD8A6F;  /* labs/tokens.css:253; light corner of the primary gradient; never text, never an edge (2.11:1 on bg); same in both themes (app.css:3835) */
+  --hs-accent-press: #E5553A;  /* labs/tokens.css:250; dark corner of the primary gradient; ink label 5.23:1 */
+  --hs-accent-soft: #3A1D15;  /* app.css:4058; solid wash, so one ground has one number. Labs dark is rgba(255,107,74,.18) (labs/tokens.css:251): app.css wins */
+  --hs-accent-ink: #0E0E10;  /* labs/tokens.css:252; the label on a coral fill, 6.84:1; the primary does not invert (white is 2.82:1) */
+  --hs-accent-text: #FF6B4A;  /* labs/tokens.css:254; coral as text: itself on dark, the twin on light (coral on white is 2.56-2.82:1) */
+  --hs-accent-text-hover: #FF8A6D;  /* labs/tokens.css:255 */
+  --hs-accent-haze: rgba(255, 107, 74, 0.06);  /* labs/tokens.css:256; decorative atmosphere; same in both themes (draft section 3) */
+  --hs-accent-rgb: 255, 107, 74;  /* labs/tokens.css:287; triplet for rgba(var(--hs-accent-rgb), a): the only form a component may write an alpha colour in */
+  --hs-accent-gradient: linear-gradient(135deg, var(--hs-accent-sheen) 0%, var(--hs-accent) 45%, var(--hs-accent-press) 100%);  /* labs/tokens.css:285; the primary button fill: sheen, accent 45%, press */
+  --hs-brand: #FF6B4A;  /* labs/tokens.css:284; wordmark colour, a mark not text: 3.69:1 on a white card in light, so the pressed coral there */
+
+  /* ---- STATUS: one set for every product (decision 2): five tokens per kind. text = readable on a page; mark = icon/bar fill; on = label on a mark; soft = wash; edge = 1px border ---- */
+  --hs-bad: #FF5A4F;  /* app.css:4060; Labs/tokns had #D94343 / #93302F (labs/tokens.css:188, 64): retired, app.css wins (owner decision 2; those fail as text, 4.44/4.08:1) */
+  --hs-bad-mark: #D92D20;  /* app.css:4060 */
+  --hs-bad-on: #FFFFFF;  /* app.css:4060 */
+  --hs-bad-soft: #3A1512;  /* app.css:4060 */
+  --hs-bad-edge: #F04438;  /* app.css:4060 */
+  --hs-warn: #FFC53D;  /* app.css:4062; Labs/tokns had tan #C8A96E / #775D1B (labs/tokens.css:191, 67): retired; gold is never a button colour */
+  --hs-warn-mark: #FFC400;  /* app.css:4062 */
+  --hs-warn-on: #0E0E10;  /* app.css:4062 */
+  --hs-warn-soft: #382B06;  /* app.css:4062 */
+  --hs-warn-edge: #FFC400;  /* app.css:4062 */
+  --hs-good: #32D583;  /* app.css:4063; Labs/tokns had sage #4A9D7C / #2F6B3D (labs/tokens.css:186, 62): retired */
+  --hs-good-mark: #17B26A;  /* app.css:4063 */
+  --hs-good-on: #0E0E10;  /* app.css:4063 */
+  --hs-good-soft: #0F2E1D;  /* app.css:4063 */
+  --hs-good-edge: #17B26A;  /* app.css:4063 */
+  --hs-info: #53B1FD;  /* app.css:4064 */
+  --hs-info-mark: #2E90FA;  /* app.css:4064 */
+  --hs-info-on: #0E0E10;  /* app.css:4064 */
+  --hs-info-soft: #0E2540;  /* app.css:4064 */
+  --hs-info-edge: #2E90FA;  /* app.css:4064 */
+  --hs-bad-sheen: #DF3326;  /* app.css:4061; danger button gradient light stop; white label 4.53:1 */
+  --hs-bad-press: #B42318;  /* app.css:4061; danger button gradient dark stop; white label 6.57:1 */
+  --hs-bad-rgb: 217, 45, 32;  /* app.css:4060; r, g, b of --hs-bad-mark, for rgba(var(--hs-bad-rgb), a) */
+  --hs-warn-rgb: 255, 196, 0;  /* app.css:4062; r, g, b of --hs-warn-mark, for rgba(var(--hs-warn-rgb), a) */
+  --hs-good-rgb: 23, 178, 106;  /* app.css:4063; r, g, b of --hs-good-mark, for rgba(var(--hs-good-rgb), a) */
+  --hs-info-rgb: 46, 144, 250;  /* app.css:4064; r, g, b of --hs-info-mark, for rgba(var(--hs-info-rgb), a) */
+
+  /* ---- ELEVATION AND FOCUS ---- */
+  --hs-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.40), 0 1px 3px rgba(0, 0, 0, 0.50);  /* app.css:4070 */
+  --hs-shadow-2: 0 8px 28px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.40);  /* app.css:4071 */
+  --hs-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.25);  /* app.css:4073 */
+  --hs-shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.35);  /* app.css:4074 */
+  --hs-shadow-lg: 0 12px 34px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.40);  /* app.css:4075 */
+  --hs-shadow-cta: var(--hs-shadow-1), inset 0 1px 0 rgba(255, 255, 255, 0.28);  /* labs/tokens.css:93; rest shadow of a coral fill: shadow-1 plus a white top highlight; never a coral glow */
+  --hs-ring: 0 0 0 2px var(--hs-panel), 0 0 0 4px var(--hs-accent);  /* app.css:4096; two solid layers; the 2px panel spacer is what makes it visible against a coral fill */
+
+  /* ---- RAISED SURFACES, WELLS, WASHES (draft section 3) ---- */
+  --hs-sheet: linear-gradient(180deg, #202023 0%, var(--hs-panel) 38%, #19191B 100%);  /* tokns_landing_page/index.html:104; labs/tokens.css:205 (the end stops are the landing kit's); the raised card fill, light from above */
+  --hs-edge-light: inset 0 1px 0 rgba(255, 255, 255, 0.05);  /* labs/tokens.css:277 */
+  --hs-well-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.45);  /* labs/tokens.css:278; read-only values sit into the page (decision 12) */
+  --hs-hover-wash: rgba(255, 255, 255, 0.03);  /* labs/tokens.css:279 */
+  --hs-shimmer: rgba(255, 255, 255, 0.04);  /* labs/tokens.css:280 */
+
+  /* ---- TEXTURE (draft section 3): pinstripe on app canvases, scanlines only inside accent blocks, never both on one surface ---- */
+  --hs-pinstripe: rgba(255, 255, 255, 0.05);  /* labs/tokens.css:266; 1px line every 4px; the same line is in coherencedaddy-landing/DESIGN.md:294-296 */
+  --hs-scanline: rgba(14, 14, 16, 0.14);  /* coherencedaddy-landing/DESIGN.md:290-292 (ink, opacity .14, spacing 3); ink at .14 on a coral block, 1px every 3px; coral is the same fill in both themes, so one value */
+
+  /* ---- TYPE (decision 11: Geist and Geist Mono everywhere) ---- */
+  --hs-font-sans: "Geist", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;  /* labs/tokens.css:104; Geist first, the old system stack kept behind it (app.css:3889) for where Geist is not loaded */
+  --hs-font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;  /* labs/tokens.css:105; figures, state words, eyebrows; tabular */
+  --hs-fs-11: 11px;  /* app.css:3894 */
+  --hs-fs-12: 12px;  /* app.css:3894 */
+  --hs-fs-13: 13px;  /* app.css:3894 */
+  --hs-fs-14: 14px;  /* app.css:3894 */
+  --hs-fs-16: 16px;  /* app.css:3895 */
+  --hs-fs-18: 18px;  /* app.css:3895 */
+  --hs-fs-22: 22px;  /* app.css:3895 */
+  --hs-fs-28: 28px;  /* app.css:3895 */
+  --hs-fs-44: 44px;  /* coherencedaddy-landing/DESIGN.md:36 (h2 2.75rem at a 16px root); marketing only; apps stop at fs-28 */
+  --hs-fs-72: 72px;  /* coherencedaddy-landing/DESIGN.md:31 (h1 4.5rem at a 16px root); marketing only */
+  --hs-lh-tight: 1.25;  /* app.css:3896 */
+  --hs-lh-body: 1.5;  /* app.css:3896 */
+  --hs-lh-loose: 1.6;  /* app.css:3896 */
+  --hs-tracking-caps: 0.14em;  /* labs/tokens.css:119; label-caps 11px Geist Mono 500; the forensic app had .06em (app.css:3898), .14em won (draft conflict C8) */
+  --hs-tracking-title: -0.035em;  /* labs/tokens.css:154; large Geist titles */
+
+  /* ---- SPACE (4px grid), RADIUS, MOTION, Z, LAYOUT ---- */
+  --hs-space-1: 4px;  /* app.css:3901 */
+  --hs-space-2: 8px;  /* app.css:3901 */
+  --hs-space-3: 12px;  /* app.css:3901 */
+  --hs-space-4: 16px;  /* app.css:3901 */
+  --hs-space-5: 20px;  /* app.css:3902 */
+  --hs-space-6: 24px;  /* app.css:3902 */
+  --hs-space-7: 32px;  /* app.css:3902 */
+  --hs-space-8: 40px;  /* app.css:3902 */
+  --hs-radius-sm: 8px;  /* app.css:3905 */
+  --hs-radius-base: 10px;  /* app.css:3906; inputs and small controls (named --radius in app.css) */
+  --hs-radius-md: 12px;  /* labs/tokens.css:98; tabs track, notices, appearance control (named --labs-radius-control there) */
+  --hs-radius-lg: 16px;  /* labs/tokens.css:132; card default; the forensic app had 14 here and 22 for cards (app.css:3907, 3910), both retired (draft conflict C4) */
+  --hs-radius-xl: 24px;  /* coherencedaddy-landing/DESIGN.md:62 (xl 24px); feature cards */
+  --hs-radius-pill: 999px;  /* app.css:3908 */
+  --hs-radius-none: 0;  /* app.css:3909 */
+  --hs-radius-btn: var(--hs-radius-pill);  /* owner decision 4 (2026-10-12); app.css:5587-5590 is the pill it follows; the one line that flips every button shape */
+  --hs-radius-card: var(--hs-radius-lg);  /* labs/tokens.css:132 */
+  --hs-motion-fast: 120ms;  /* app.css:4011 */
+  --hs-motion: 160ms;  /* app.css:4012 */
+  --hs-motion-slow: 260ms;  /* coherencedaddy-landing/DESIGN.md:238 (default 260ms) */
+  --hs-motion-loop: 1500ms;  /* labs/tokens.css:144; skeleton shimmer period */
+  --hs-ease: cubic-bezier(.2, .6, .2, 1);  /* app.css:4013 */
+  --hs-ease-reveal: cubic-bezier(.22, .61, .36, 1);  /* coherencedaddy-landing/DESIGN.md:238; page reveals */
+  --hs-z-base: 0;  /* app.css:3944 */
+  --hs-z-raised: 10;  /* app.css:3945 */
+  --hs-z-sticky: 20;  /* app.css:3946 */
+  --hs-z-dropdown: 30;  /* app.css:3947 */
+  --hs-z-overlay: 50;  /* app.css:3948 */
+  --hs-z-modal: 100;  /* app.css:3949 */
+  --hs-z-toast: 200;  /* app.css:3950 */
+  --hs-z-popover: 500;  /* app.css:3951 */
+  --hs-z-max: 1000;  /* app.css:3952 */
+  --hs-topbar-h: 60px;  /* app.css:3913 */
+  --hs-shell-w: 220px;  /* labs/tokens.css:152; the sidebar */
+  --hs-shell-bar-h: 56px;  /* labs/tokens.css:155; the phone bar */
+  --hs-page-gutter: 40px;  /* app.css:3917 */
+  --hs-page-max: 1320px;  /* labs/tokens.css:148; app main column */
+  --hs-page-max-marketing: 1200px;  /* draft section 4 (Layout row): marketing 1200 [draft, not re-measured] */
+  --hs-target-min: 44px;  /* labs/tokens.css:139 */
+  --hs-target-min-sm: 24px;  /* labs/tokens.css:140; WCAG 2.5.8 floor, dense sm only */
+}
+
+/* ---- LIGHT, follows the OS when the page is not force-set (System = no data-theme attribute) ---- */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --hs-bg: #F5F4F2;  /* app.css:3796 */
+    --hs-panel: #FFFFFF;  /* app.css:3797; decision 3 (owner 2026-10-12): the card ramp; the Labs layer had #18181B (labs/tokens.css:166), app.css wins */
+    --hs-panel-2: #ECECEA;  /* app.css:3798; decision 3; Labs had #1F1F22, app.css wins */
+    --hs-panel-3: #F3F2F0;  /* app.css:3799; the well / inset fill */
+    --hs-border: #E4E2DE;  /* app.css:3802; decorative hairline only; Labs had translucent white .08 (labs/tokens.css:240), app.css wins: a solid value has one contrast number */
+    --hs-border-strong: #CFCCC6;  /* app.css:3803; Labs had rgba(255,255,255,.10) (labs/tokens.css:241) */
+    --hs-border-interactive: #86827A;  /* app.css:3804; the rest edge of a control, 3:1 on every ground (1.4.11); Labs dark #6B6B70 measured 3.34 on its card (labs/tokens.css:242) */
+    --hs-card-edge: var(--hs-border);  /* app.css:3914; dark cards lift by surface and edge light, not by a line */
+    --hs-field-bg: #FFFFFF;  /* app.css:3885; decision 12: bordered field fill (editable); read-only values use a well, --hs-panel-3 + --hs-well-shadow */
+    --hs-field-focus-bg: #FFFDFB;  /* app.css:3886 */
+    --hs-ink: #1D1D1F;  /* app.css:3821 */
+    --hs-ink-2: #3A3A3C;  /* app.css:3822; Labs had ink-2 == ink (labs/tokens.css:245); app.css wins */
+    --hs-ink-3: #616165;  /* app.css:3823; muted text, >= 4.5:1 on every ground */
+    --hs-ink-4: #6A6A6E;  /* app.css:3825; quiet text; never on --hs-accent-soft (3.93:1); Labs dark #6B6B70 is 3.3-3.6:1, retired as text (labs/tokens.css:247) */
+    --hs-accent: #FF6B4A;  /* labs/tokens.css:53; same coral in both themes; equals app.css:3830 */
+    --hs-accent-hover: #FF8468;  /* app.css:3831; FILL hover. Labs light --labs-accent-hover is #832916 (labs/tokens.css:54), a text hover under a fill name: the name wins its meaning from app.css, the text hover is --hs-accent-text-hover */
+    --hs-accent-soft: #FAD4CA;  /* app.css:3833; solid wash, so one ground has one number. Labs dark is rgba(255,107,74,.18) (labs/tokens.css:251): app.css wins */
+    --hs-accent-text: #A8341C;  /* labs/tokens.css:59; coral as text: itself on dark, the twin on light (coral on white is 2.56-2.82:1) */
+    --hs-accent-text-hover: #832916;  /* labs/tokens.css:60 */
+    --hs-brand: #E5553A;  /* labs/tokens.css:91; wordmark colour, a mark not text: 3.69:1 on a white card in light, so the pressed coral there */
+    --hs-bad: #B42318;  /* app.css:3871; Labs/tokns had #D94343 / #93302F (labs/tokens.css:188, 64): retired, app.css wins (owner decision 2; those fail as text, 4.44/4.08:1) */
+    --hs-bad-mark: #D92D20;  /* app.css:3871 */
+    --hs-bad-on: #FFFFFF;  /* app.css:3871 */
+    --hs-bad-soft: #FEE4E2;  /* app.css:3871 */
+    --hs-bad-edge: #F04438;  /* app.css:3871 */
+    --hs-warn: #93370D;  /* app.css:3873; Labs/tokns had tan #C8A96E / #775D1B (labs/tokens.css:191, 67): retired; gold is never a button colour */
+    --hs-warn-mark: #D96200;  /* app.css:3873 */
+    --hs-warn-on: #1D1D1F;  /* app.css:3873 */
+    --hs-warn-soft: #FEF0C7;  /* app.css:3873 */
+    --hs-warn-edge: #D96200;  /* app.css:3873 */
+    --hs-good: #067647;  /* app.css:3874; Labs/tokns had sage #4A9D7C / #2F6B3D (labs/tokens.css:186, 62): retired */
+    --hs-good-mark: #067647;  /* app.css:3874 */
+    --hs-good-on: #FFFFFF;  /* app.css:3874 */
+    --hs-good-soft: #DCFAE6;  /* app.css:3874 */
+    --hs-good-edge: #079455;  /* app.css:3874 */
+    --hs-info: #175CD3;  /* app.css:3875 */
+    --hs-info-mark: #1570EF;  /* app.css:3875 */
+    --hs-info-on: #FFFFFF;  /* app.css:3875 */
+    --hs-info-soft: #D1E9FF;  /* app.css:3875 */
+    --hs-info-edge: #2E90FA;  /* app.css:3875 */
+    --hs-bad-rgb: 217, 45, 32;  /* app.css:3871; r, g, b of --hs-bad-mark, for rgba(var(--hs-bad-rgb), a) */
+    --hs-warn-rgb: 217, 98, 0;  /* app.css:3873; r, g, b of --hs-warn-mark, for rgba(var(--hs-warn-rgb), a) */
+    --hs-good-rgb: 6, 118, 71;  /* app.css:3874; r, g, b of --hs-good-mark, for rgba(var(--hs-good-rgb), a) */
+    --hs-info-rgb: 21, 112, 239;  /* app.css:3875; r, g, b of --hs-info-mark, for rgba(var(--hs-info-rgb), a) */
+    --hs-shadow-1: 0 1px 2px rgba(17, 17, 17, 0.05), 0 1px 3px rgba(17, 17, 17, 0.06);  /* app.css:3955 */
+    --hs-shadow-2: 0 6px 20px rgba(17, 17, 17, 0.10), 0 2px 6px rgba(17, 17, 17, 0.06);  /* app.css:3956 */
+    --hs-shadow-sm: 0 1px 2px rgba(17, 17, 17, 0.06), 0 1px 2px rgba(17, 17, 17, 0.04);  /* app.css:3963 */
+    --hs-shadow-md: 0 4px 12px rgba(17, 17, 17, 0.08), 0 2px 4px rgba(17, 17, 17, 0.06);  /* app.css:3964 */
+    --hs-shadow-lg: 0 10px 30px rgba(17, 17, 17, 0.12), 0 4px 10px rgba(17, 17, 17, 0.08);  /* app.css:3965 */
+    --hs-ring: 0 0 0 2px var(--hs-panel), 0 0 0 4px var(--hs-accent-text);  /* app.css:4008; two solid layers; the 2px panel spacer is what makes it visible against a coral fill */
+    --hs-sheet: linear-gradient(180deg, #FFFFFF 0%, var(--hs-panel) 38%, #FAF9F7 100%);  /* labs/tokens.css:83; the raised card fill, light from above */
+    --hs-edge-light: inset 0 1px 0 rgba(255, 255, 255, 0.8);  /* labs/tokens.css:84 */
+    --hs-well-shadow: inset 0 1px 3px rgba(29, 29, 31, 0.10);  /* labs/tokens.css:85; read-only values sit into the page (decision 12) */
+    --hs-hover-wash: rgba(29, 29, 31, 0.03);  /* labs/tokens.css:86 */
+    --hs-shimmer: rgba(29, 29, 31, 0.05);  /* labs/tokens.css:87 */
+    --hs-pinstripe: rgba(29, 29, 31, 0.035);  /* labs/tokens.css:71; 1px line every 4px; the same line is in coherencedaddy-landing/DESIGN.md:294-296 */
+  }
+}
+
+/* ---- LIGHT, forced by the theme button. Byte-equal twin of the block above. ---- */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --hs-bg: #F5F4F2;  /* app.css:3796 */
+  --hs-panel: #FFFFFF;  /* app.css:3797; decision 3 (owner 2026-10-12): the card ramp; the Labs layer had #18181B (labs/tokens.css:166), app.css wins */
+  --hs-panel-2: #ECECEA;  /* app.css:3798; decision 3; Labs had #1F1F22, app.css wins */
+  --hs-panel-3: #F3F2F0;  /* app.css:3799; the well / inset fill */
+  --hs-border: #E4E2DE;  /* app.css:3802; decorative hairline only; Labs had translucent white .08 (labs/tokens.css:240), app.css wins: a solid value has one contrast number */
+  --hs-border-strong: #CFCCC6;  /* app.css:3803; Labs had rgba(255,255,255,.10) (labs/tokens.css:241) */
+  --hs-border-interactive: #86827A;  /* app.css:3804; the rest edge of a control, 3:1 on every ground (1.4.11); Labs dark #6B6B70 measured 3.34 on its card (labs/tokens.css:242) */
+  --hs-card-edge: var(--hs-border);  /* app.css:3914; dark cards lift by surface and edge light, not by a line */
+  --hs-field-bg: #FFFFFF;  /* app.css:3885; decision 12: bordered field fill (editable); read-only values use a well, --hs-panel-3 + --hs-well-shadow */
+  --hs-field-focus-bg: #FFFDFB;  /* app.css:3886 */
+  --hs-ink: #1D1D1F;  /* app.css:3821 */
+  --hs-ink-2: #3A3A3C;  /* app.css:3822; Labs had ink-2 == ink (labs/tokens.css:245); app.css wins */
+  --hs-ink-3: #616165;  /* app.css:3823; muted text, >= 4.5:1 on every ground */
+  --hs-ink-4: #6A6A6E;  /* app.css:3825; quiet text; never on --hs-accent-soft (3.93:1); Labs dark #6B6B70 is 3.3-3.6:1, retired as text (labs/tokens.css:247) */
+  --hs-accent: #FF6B4A;  /* labs/tokens.css:53; same coral in both themes; equals app.css:3830 */
+  --hs-accent-hover: #FF8468;  /* app.css:3831; FILL hover. Labs light --labs-accent-hover is #832916 (labs/tokens.css:54), a text hover under a fill name: the name wins its meaning from app.css, the text hover is --hs-accent-text-hover */
+  --hs-accent-soft: #FAD4CA;  /* app.css:3833; solid wash, so one ground has one number. Labs dark is rgba(255,107,74,.18) (labs/tokens.css:251): app.css wins */
+  --hs-accent-text: #A8341C;  /* labs/tokens.css:59; coral as text: itself on dark, the twin on light (coral on white is 2.56-2.82:1) */
+  --hs-accent-text-hover: #832916;  /* labs/tokens.css:60 */
+  --hs-brand: #E5553A;  /* labs/tokens.css:91; wordmark colour, a mark not text: 3.69:1 on a white card in light, so the pressed coral there */
+  --hs-bad: #B42318;  /* app.css:3871; Labs/tokns had #D94343 / #93302F (labs/tokens.css:188, 64): retired, app.css wins (owner decision 2; those fail as text, 4.44/4.08:1) */
+  --hs-bad-mark: #D92D20;  /* app.css:3871 */
+  --hs-bad-on: #FFFFFF;  /* app.css:3871 */
+  --hs-bad-soft: #FEE4E2;  /* app.css:3871 */
+  --hs-bad-edge: #F04438;  /* app.css:3871 */
+  --hs-warn: #93370D;  /* app.css:3873; Labs/tokns had tan #C8A96E / #775D1B (labs/tokens.css:191, 67): retired; gold is never a button colour */
+  --hs-warn-mark: #D96200;  /* app.css:3873 */
+  --hs-warn-on: #1D1D1F;  /* app.css:3873 */
+  --hs-warn-soft: #FEF0C7;  /* app.css:3873 */
+  --hs-warn-edge: #D96200;  /* app.css:3873 */
+  --hs-good: #067647;  /* app.css:3874; Labs/tokns had sage #4A9D7C / #2F6B3D (labs/tokens.css:186, 62): retired */
+  --hs-good-mark: #067647;  /* app.css:3874 */
+  --hs-good-on: #FFFFFF;  /* app.css:3874 */
+  --hs-good-soft: #DCFAE6;  /* app.css:3874 */
+  --hs-good-edge: #079455;  /* app.css:3874 */
+  --hs-info: #175CD3;  /* app.css:3875 */
+  --hs-info-mark: #1570EF;  /* app.css:3875 */
+  --hs-info-on: #FFFFFF;  /* app.css:3875 */
+  --hs-info-soft: #D1E9FF;  /* app.css:3875 */
+  --hs-info-edge: #2E90FA;  /* app.css:3875 */
+  --hs-bad-rgb: 217, 45, 32;  /* app.css:3871; r, g, b of --hs-bad-mark, for rgba(var(--hs-bad-rgb), a) */
+  --hs-warn-rgb: 217, 98, 0;  /* app.css:3873; r, g, b of --hs-warn-mark, for rgba(var(--hs-warn-rgb), a) */
+  --hs-good-rgb: 6, 118, 71;  /* app.css:3874; r, g, b of --hs-good-mark, for rgba(var(--hs-good-rgb), a) */
+  --hs-info-rgb: 21, 112, 239;  /* app.css:3875; r, g, b of --hs-info-mark, for rgba(var(--hs-info-rgb), a) */
+  --hs-shadow-1: 0 1px 2px rgba(17, 17, 17, 0.05), 0 1px 3px rgba(17, 17, 17, 0.06);  /* app.css:3955 */
+  --hs-shadow-2: 0 6px 20px rgba(17, 17, 17, 0.10), 0 2px 6px rgba(17, 17, 17, 0.06);  /* app.css:3956 */
+  --hs-shadow-sm: 0 1px 2px rgba(17, 17, 17, 0.06), 0 1px 2px rgba(17, 17, 17, 0.04);  /* app.css:3963 */
+  --hs-shadow-md: 0 4px 12px rgba(17, 17, 17, 0.08), 0 2px 4px rgba(17, 17, 17, 0.06);  /* app.css:3964 */
+  --hs-shadow-lg: 0 10px 30px rgba(17, 17, 17, 0.12), 0 4px 10px rgba(17, 17, 17, 0.08);  /* app.css:3965 */
+  --hs-ring: 0 0 0 2px var(--hs-panel), 0 0 0 4px var(--hs-accent-text);  /* app.css:4008; two solid layers; the 2px panel spacer is what makes it visible against a coral fill */
+  --hs-sheet: linear-gradient(180deg, #FFFFFF 0%, var(--hs-panel) 38%, #FAF9F7 100%);  /* labs/tokens.css:83; the raised card fill, light from above */
+  --hs-edge-light: inset 0 1px 0 rgba(255, 255, 255, 0.8);  /* labs/tokens.css:84 */
+  --hs-well-shadow: inset 0 1px 3px rgba(29, 29, 31, 0.10);  /* labs/tokens.css:85; read-only values sit into the page (decision 12) */
+  --hs-hover-wash: rgba(29, 29, 31, 0.03);  /* labs/tokens.css:86 */
+  --hs-shimmer: rgba(29, 29, 31, 0.05);  /* labs/tokens.css:87 */
+  --hs-pinstripe: rgba(29, 29, 31, 0.035);  /* labs/tokens.css:71; 1px line every 4px; the same line is in coherencedaddy-landing/DESIGN.md:294-296 */
+}
