@@ -46,7 +46,7 @@ export default function DialogButton() {
     </DialogTrigger>
   ) : (
     <div className="flex items-center gap-1.5 rounded-md border border-transparent px-2 py-1.5">
-      <Link className="h-3.5 w-3.5 text-[hsl(var(--accent-green))]" />
+      <Link className="h-3.5 w-3.5 text-primary-text" />
       <ChainHeader />
     </div>
   );

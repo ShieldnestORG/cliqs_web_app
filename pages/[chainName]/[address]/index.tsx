@@ -220,7 +220,7 @@ export default function CliqDashboardPage() {
           <div className="flex flex-col items-center gap-4 text-center">
             <div className="relative">
               <div className="h-16 w-16 animate-pulse rounded-full bg-gradient-to-br from-green-accent/20 to-green-accent/10" />
-              <Loader2 className="absolute inset-0 m-auto h-8 w-8 animate-spin text-green-accent" />
+              <Loader2 className="absolute inset-0 m-auto h-8 w-8 animate-spin text-primary-text" />
             </div>
             <div>
               <p className="font-medium">Loading your CLIQ...</p>
@@ -434,7 +434,7 @@ export default function CliqDashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-green-accent" />
+                <Users className="h-5 w-5 text-primary-text" />
                 Members ({memberCount})
               </CardTitle>
             </CardHeader>
@@ -451,7 +451,7 @@ export default function CliqDashboardPage() {
                     className="group flex items-center gap-4 rounded-lg border border-border/[0.06] bg-card p-4 transition-colors hover:bg-muted/50"
                   >
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-green-accent/30 bg-gradient-to-br from-green-accent/20 to-green-accent/10">
-                      <span className="text-sm font-bold text-green-accent">{index + 1}</span>
+                      <span className="text-sm font-bold text-primary-text">{index + 1}</span>
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">

@@ -52,7 +52,7 @@ const TILE =
   "group h-full min-h-0 bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015] p-5 shadow-btn-quiet";
 /** The corner arrow of a tile: muted, coral while the tile is hovered. */
 const TILE_ARROW =
-  "h-4 w-4 shrink-0 text-muted-foreground transition-colors duration-ui ease-ui group-hover:text-primary";
+  "h-4 w-4 shrink-0 text-muted-foreground transition-colors duration-ui ease-ui group-hover:text-primary-text";
 
 interface ValidatorCommandsCardProps {
   validator: ValidatorInfo;

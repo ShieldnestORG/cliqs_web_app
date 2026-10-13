@@ -1,6 +1,6 @@
 import { useChains } from "@/context/ChainsContext";
 import { useWallet } from "@/context/WalletContext";
-import { Unplug, Loader2, ChevronRight, PanelLeftClose, PanelLeftOpen, Heart } from "lucide-react";
+import { Unplug, Loader2, PanelLeftClose, PanelLeftOpen, Heart } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -193,7 +193,10 @@ export default function Sidebar() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="mx-auto flex h-10 w-10 cursor-help items-center justify-center rounded-full bg-muted">
-                  <div className="h-2 w-2 animate-pulse rounded-full bg-green-accent" />
+                  <span
+                    aria-hidden="true"
+                    className="status-mark status-mark-signal text-success"
+                  />
                 </div>
               </TooltipTrigger>
               <TooltipContent side="right">
@@ -228,14 +231,14 @@ export default function Sidebar() {
                           "group relative h-11 w-full justify-start overflow-hidden px-4 transition-all duration-200",
                           collapsed ? "justify-center px-0" : "gap-3",
                           isActive
-                            ? "bg-muted font-semibold text-foreground shadow-sm"
+                            ? "font-semibold text-foreground"
                             : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
                         )}
                       >
                         <Icon
                           className={cn(
                             "h-5 w-5 shrink-0 transition-colors",
-                            isActive ? "text-green-accent" : "group-hover:text-foreground",
+                            isActive ? "text-foreground" : "group-hover:text-foreground",
                           )}
                         />
                         {!collapsed && (
@@ -246,19 +249,23 @@ export default function Sidebar() {
                         {!collapsed && showBadge && (
                           <div className="flex items-center gap-1.5">
                             <span className="text-xs font-medium text-warning">{needsMyCount}</span>
-                            <div className="relative flex h-2 w-2">
-                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-warning opacity-75"></span>
-                              <span className="relative inline-flex h-2 w-2 rounded-full bg-warning"></span>
-                            </div>
+                            <span
+                              aria-hidden="true"
+                              className="status-mark status-mark-signal text-warning"
+                            />
                           </div>
                         )}
                         {collapsed && showBadge && (
-                          <div className="absolute right-2 top-2 flex h-2 w-2">
-                            <span className="relative inline-flex h-2 w-2 rounded-full bg-warning"></span>
-                          </div>
+                          <span
+                            aria-hidden="true"
+                            className="status-mark status-mark-signal absolute right-1.5 top-1.5 text-warning"
+                          />
                         )}
-                        {!collapsed && isActive && !showBadge && (
-                          <ChevronRight className="h-4 w-4 shrink-0 text-green-accent/50" />
+                        {isActive && (
+                          <span
+                            aria-hidden="true"
+                            className="absolute inset-y-2 left-0 w-[3px] rounded-full bg-primary"
+                          />
                         )}
                       </Button>
                     );

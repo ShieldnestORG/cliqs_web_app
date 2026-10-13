@@ -26,7 +26,7 @@ import { Badge, type BadgeMark } from "@/components/ui/badge";
 type Variant = NonNullable<React.ComponentProps<typeof Badge>["variant"]>;
 
 const VARIANTS: [Variant, string][] = [
-  ["default", "text-primary"],
+  ["default", "text-primary-text"],
   ["secondary", "text-muted-foreground"],
   ["destructive", "text-destructive"],
   ["outline", "text-foreground"],

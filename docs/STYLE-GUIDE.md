@@ -5,6 +5,8 @@
 **Updated:** 2026-10-10
 **Brand:** Coherence Daddy (ShieldNest ecosystem)
 
+> **Superseded in part on 2026-10-12 (unit 2 of the one-design-system migration).** Colour, radius, shadow, easing and tracking values now come from the house style, vendored in `styles/house-style.tokens.css` and bridged to the shadcn variables in `styles/house-style.bridge.css` (README "House style"). The HSL triplets and hexes in the tables below are what the app used **until** that date; the live values are in the generated bridge. What changed: the card is `#1C1C1E` and secondary `#26262A` (was `#18181B` / `#1F1F22`); the status set is the house style's (success `#32D583`, warning `#FFC53D`, info `#53B1FD`, destructive text `#FF5A4F` on dark, with `-mark`, `-soft`, `-edge` and a light theme for each; was sage/amber/blue); `--accent-purple` and `--accent-blue` now take the info blue; `--input` is the visible control edge; `--border` is the ink colour of an alpha hairline; buttons are `rounded-[var(--radius-btn)]` (still the pill). Light theme ships (OS or `data-theme="light"`); `dark:` is still unused. *Until 2026-10-12 this document said the Coherence Daddy portal's `.dark` block was the source of truth and the app was dark-only.*
+
 ## Source of truth
 
 The canonical design system is the Coherence Daddy portal — its `app/globals.css`,

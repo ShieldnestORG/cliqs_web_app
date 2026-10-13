@@ -11,6 +11,9 @@ import { useEffect } from "react";
 import { Analytics } from "@vercel/analytics/next";
 import { toast } from "sonner";
 import { ChainsProvider } from "../context/ChainsContext";
+// The house style, in this order: the vendored tokens, the generated shadcn bridge, then the app's own rules.
+import "@/styles/house-style.tokens.css";
+import "@/styles/house-style.bridge.css";
 import "@/styles/globals.css";
 
 // Extend the Window interface for the error bridge injected by _document.tsx

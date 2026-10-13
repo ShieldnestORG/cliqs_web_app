@@ -94,7 +94,7 @@ export default function CreateCliqPage() {
                       <div
                         className={`rounded-lg p-1.5 ${
                           multisigType === "pubkey"
-                            ? "bg-primary/10 text-primary"
+                            ? "bg-primary/10 text-primary-text"
                             : "bg-muted text-muted-foreground"
                         }`}
                       >
@@ -105,13 +105,13 @@ export default function CreateCliqPage() {
                     <ul className="hidden space-y-2 text-muted-foreground sm:block">
                       <li className="flex items-start gap-2">
                         <Shield
-                          className={`mt-0.5 h-4 w-4 shrink-0 ${multisigType === "pubkey" ? "text-primary" : "text-muted-foreground/60"}`}
+                          className={`mt-0.5 h-4 w-4 shrink-0 ${multisigType === "pubkey" ? "text-primary-text" : "text-muted-foreground/60"}`}
                         />
                         <span>Maximum security</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <Wallet
-                          className={`mt-0.5 h-4 w-4 shrink-0 ${multisigType === "pubkey" ? "text-primary" : "text-muted-foreground/60"}`}
+                          className={`mt-0.5 h-4 w-4 shrink-0 ${multisigType === "pubkey" ? "text-primary-text" : "text-muted-foreground/60"}`}
                         />
                         <span>Cold storage ready</span>
                       </li>
@@ -138,7 +138,7 @@ export default function CreateCliqPage() {
                       <div
                         className={`rounded-lg p-1.5 ${
                           multisigType === "contract"
-                            ? "bg-primary/10 text-primary"
+                            ? "bg-primary/10 text-primary-text"
                             : "bg-muted text-muted-foreground"
                         }`}
                       >
@@ -149,13 +149,13 @@ export default function CreateCliqPage() {
                     <ul className="hidden space-y-2 text-muted-foreground sm:block">
                       <li className="flex items-start gap-2">
                         <RefreshCw
-                          className={`mt-0.5 h-4 w-4 shrink-0 ${multisigType === "contract" ? "text-primary" : "text-muted-foreground/60"}`}
+                          className={`mt-0.5 h-4 w-4 shrink-0 ${multisigType === "contract" ? "text-primary-text" : "text-muted-foreground/60"}`}
                         />
                         <span>Stable address</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <Users
-                          className={`mt-0.5 h-4 w-4 shrink-0 ${multisigType === "contract" ? "text-primary" : "text-muted-foreground/60"}`}
+                          className={`mt-0.5 h-4 w-4 shrink-0 ${multisigType === "contract" ? "text-primary-text" : "text-muted-foreground/60"}`}
                         />
                         <span>Weighted voting</span>
                       </li>
@@ -182,7 +182,7 @@ export default function CreateCliqPage() {
                       <div
                         className={`rounded-lg p-1.5 ${
                           multisigType === "flex"
-                            ? "bg-primary/10 text-primary"
+                            ? "bg-primary/10 text-primary-text"
                             : "bg-muted text-muted-foreground"
                         }`}
                       >
@@ -193,19 +193,19 @@ export default function CreateCliqPage() {
                     <ul className="hidden space-y-2 text-muted-foreground sm:block">
                       <li className="flex items-start gap-2">
                         <RefreshCw
-                          className={`mt-0.5 h-4 w-4 shrink-0 ${multisigType === "flex" ? "text-primary" : "text-muted-foreground/60"}`}
+                          className={`mt-0.5 h-4 w-4 shrink-0 ${multisigType === "flex" ? "text-primary-text" : "text-muted-foreground/60"}`}
                         />
                         <span>Stable address</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <UserPlus
-                          className={`mt-0.5 h-4 w-4 shrink-0 ${multisigType === "flex" ? "text-primary" : "text-muted-foreground/60"}`}
+                          className={`mt-0.5 h-4 w-4 shrink-0 ${multisigType === "flex" ? "text-primary-text" : "text-muted-foreground/60"}`}
                         />
                         <span>Dynamic membership</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <Shield
-                          className={`mt-0.5 h-4 w-4 shrink-0 ${multisigType === "flex" ? "text-primary" : "text-muted-foreground/60"}`}
+                          className={`mt-0.5 h-4 w-4 shrink-0 ${multisigType === "flex" ? "text-primary-text" : "text-muted-foreground/60"}`}
                         />
                         <span>Audit-grade snapshots</span>
                       </li>

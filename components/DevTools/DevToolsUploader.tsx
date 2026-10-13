@@ -107,7 +107,7 @@ export default function DevToolsUploader({
     <Card variant="institutional" bracket="green-round" className="border-border/60">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-xl">
-          <UploadCloud className="h-5 w-5 text-green-accent" />
+          <UploadCloud className="h-5 w-5 text-primary-text" />
           Upload WASM
         </CardTitle>
         <CardDescription>

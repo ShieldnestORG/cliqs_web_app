@@ -514,7 +514,7 @@ export default function DevTools() {
 
       <div>
         <h1 className="mb-2 flex items-center gap-2 font-heading text-3xl font-bold tracking-tight">
-          <Terminal className="h-8 w-8 text-green-accent" />
+          <Terminal className="h-8 w-8 text-primary-text" />
           Developer Tools
         </h1>
         <p className="text-muted-foreground">
@@ -723,7 +723,7 @@ export default function DevTools() {
                     >
                       <div className="flex h-full flex-col">
                         <div className="mb-3 flex items-center gap-3">
-                          <div className="rounded-lg bg-green-accent/10 p-2 text-green-accent">
+                          <div className="rounded-lg bg-green-accent/10 p-2 text-primary-text">
                             {command.icon}
                           </div>
                           <h4 className="font-heading text-lg font-bold leading-tight">
@@ -731,7 +731,7 @@ export default function DevTools() {
                           </h4>
                         </div>
                         <p className="mb-4 text-sm text-muted-foreground">{command.description}</p>
-                        <div className="mt-auto flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-green-accent opacity-0 transition-opacity group-hover:opacity-100">
+                        <div className="mt-auto flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-primary-text opacity-0 transition-opacity group-hover:opacity-100">
                           Configure <ArrowRight className="h-3 w-3" />
                         </div>
                       </div>
@@ -747,7 +747,7 @@ export default function DevTools() {
                 className="group flex w-full items-center gap-3 rounded-xl border border-border/60 bg-muted/30 px-4 py-3 text-left transition-colors hover:border-green-accent/40 hover:bg-muted/50"
               >
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted transition-colors group-hover:bg-green-accent/10">
-                  <ArrowRight className="h-4 w-4 rotate-180 text-muted-foreground transition-colors group-hover:text-green-accent" />
+                  <ArrowRight className="h-4 w-4 rotate-180 text-muted-foreground transition-colors group-hover:text-primary-text" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">

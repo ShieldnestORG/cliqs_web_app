@@ -268,7 +268,7 @@ const TransactionInfo = ({ tx, currentOnChainSequence, compact }: TransactionInf
         }
         .meta-data li {
           margin-top: 10px;
-          background: rgba(255, 255, 255, 0.03);
+          background: hsl(var(--foreground) / 0.03);
           padding: 6px 10px;
           border-radius: 8px;
           display: flex;
@@ -290,7 +290,7 @@ const TransactionInfo = ({ tx, currentOnChainSequence, compact }: TransactionInf
         }
         .meta-data label {
           font-size: 12px;
-          background: rgba(255, 255, 255, 0.1);
+          background: hsl(var(--foreground) / 0.1);
           padding: 3px 6px;
           border-radius: 5px;
           display: block;

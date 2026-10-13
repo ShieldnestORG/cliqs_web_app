@@ -10,138 +10,44 @@
 @layer base {
   :root {
     /* ────────────────────────────────────────────────────────────────
-       Coherence Daddy design system.
+       The house style (unit 2, 2026-10-12).
 
-       Values are taken from the canonical portal
-       (app-coherencedaddy-portal/app/globals.css, ".dark" block) and
-       converted from hex to the HSL-triplet form this repo's Tailwind
-       config consumes via hsl(var(--token)).
-
-       hex -> triplet, for review against the source:
-         #0E0E10 background   #18181B card/popover   #1F1F22 secondary/muted
-         #F2F1ED foreground   #A1A1A6 muted-foreground
-         #FF6B4A primary      #D94343 destructive
-         #4A9D7C success      #5B8DEF info           #E0A33E idea/warning
+       Colour, radius, the shadow scale, easing, durations and tracking are NOT
+       declared here any more. They come from two files that pages/_app.tsx
+       imports before this one:
+         styles/house-style.tokens.css   the canonical --hs-* tokens, vendored
+                                         (scripts/vendor-house-style.mjs)
+         styles/house-style.bridge.css   the shadcn variables (--background,
+                                         --primary, --destructive ...) as HSL
+                                         triplets, GENERATED from them
+                                         (scripts/build-bridge.mjs)
+       Both themes: dark is :root, light is :root[data-theme="light"] and,
+       with no attribute, the OS setting. To change a value, change the house
+       style and re-vendor; never edit those two files. No colour literal may
+       appear in styles/ outside them (scripts/check-house-style.mjs).
        ──────────────────────────────────────────────────────────────── */
-    --background: 240 6.7% 5.9%;
-    --foreground: 48 16.1% 93.9%;
-    --card: 240 5.9% 10%;
-    --card-foreground: 48 16.1% 93.9%;
-    --popover: 240 5.9% 10%;
-    --popover-foreground: 48 16.1% 93.9%;
-    --primary: 10.9 100% 64.5%;
-    --primary-foreground: 240 6.7% 5.9%;
-    --secondary: 240 4.6% 12.7%;
-    --secondary-foreground: 48 16.1% 93.9%;
-    --muted: 240 4.6% 12.7%;
-    --muted-foreground: 240 2.7% 64.1%;
-    --accent: 240 4.6% 12.7%;
-    --accent-foreground: 48 16.1% 93.9%;
-    --destructive: 0 66.4% 55.7%;
-    --destructive-foreground: 48 16.1% 93.9%;
-    --border: 0 0% 100%;
-    --input: 240 4.6% 12.7%;
-    --ring: 10.9 100% 64.5%;
 
-    /* Radius scale (portal: --radius 0.625rem plus sm/md/lg/xl/pill) */
-    --radius: 0.625rem;
-    --radius-sm: 0.375rem;
-    --radius-md: 0.625rem;
-    --radius-lg: 1rem;
-    --radius-xl: 1.5rem;
+    /* Cliqs-only compositions of house-style shadows. Button depth: rest = the
+       coral fill's shadow (shadow-1 plus a light top edge), hover = the popover
+       shadow, pressed = the well. Quiet buttons (outline, secondary) = shadow-1
+       and the edge light. Always neutral, never a coloured glow. */
+    --shadow-pop: var(--hs-shadow-2);
+    --shadow-btn: var(--hs-shadow-cta);
+    --shadow-btn-hover: var(--hs-shadow-2);
+    --shadow-btn-pressed: var(--hs-well-shadow);
+    --shadow-btn-quiet: var(--hs-shadow-1), var(--hs-edge-light);
 
-    /* Coherence Daddy accent colours.
-       NOTE the historical name: --accent-green is hue 11, i.e. the coral
-       primary, not a green. It is kept because 97 call sites use
-       `green-accent`, and is now pinned to the brand coral #FF6B4A. */
-    --accent-green: 10.9 100% 64.5%;
-    --accent-green-bright: 10.9 100% 70%;
-    --toast-green: 156.1 35.9% 45.3%;
-    --accent-purple: 260 28% 55%;
-    --accent-blue: 219.7 82.2% 64.7%;
-    --accent-gold: 37.4 72.3% 56.1%;
-    --accent-bronze: 37.4 72.3% 56.1%;
-    --accent-bronze-foreground: 240 6.7% 5.9%;
-
-    /* Semantic status colours — the portal's success / info / idea. */
-    --success: 156.1 35.9% 45.3%;
-    --success-foreground: 48 16.1% 93.9%;
-    --warning: 37.4 72.3% 56.1%;
-    --warning-foreground: 240 6.7% 5.9%;
-    --info: 219.7 82.2% 64.7%;
-    --info-foreground: 240 6.7% 5.9%;
-
-    /* Elevation scale (portal --shadow-*) */
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
-    --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.45);
-    --shadow-lift:
-      0 10px 24px -8px rgba(0, 0, 0, 0.55), 0 2px 6px -1px rgba(0, 0, 0, 0.4),
-      inset 0 1px 0 rgba(255, 255, 255, 0.18);
-    --shadow-lift-hover:
-      0 18px 36px -10px rgba(0, 0, 0, 0.65), 0 4px 12px -2px rgba(0, 0, 0, 0.5),
-      inset 0 1px 0 rgba(255, 255, 255, 0.22);
-
-    /* Motion */
-    --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+    /* Durations the house style has no token for (--dur-ui and --dur-base come
+       from the bridge) */
     --dur-fast: 180ms;
-    --dur-base: 260ms;
     --dur-slow: 480ms;
 
-    /* House-style control tokens (2026-10-10): button, menu, select and scale-rule tokens.
-       Converted from the house style's dark-theme hexes with the same
-       hex -> HSL-triplet rule as the portal values above:
-         #FD8A6F primary-sheen   #E5553A primary-press   #3A1D15 primary-soft
-         #26262A field           #7C7C80 border-interactive
-       The coral stays cliqs' own (--primary is already the house style's accent). */
-    --primary-sheen: 11.4 97.3% 71.4%;
-    --primary-press: 9.5 76.7% 56.3%;
-    --primary-soft: 13 46.8% 15.5%;
-    --field: 240 5% 15.7%;
-    --border-interactive: 240 1.6% 49.4%;
-    /* The house style's popover shadow (dark): menus and the coral button's hover */
-    --shadow-pop:
-      0 8px 28px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.4);
-    /* Button sheen and depth (2026-10-10, owner: "sheen and depth", app-wide). A solid button is
-       lit from above: a light top edge, a shaded bottom edge and a short drop. Hover swaps the
-       drop for the popover shadow; pressed sinks in. Always neutral, never a coloured glow.
-       Quiet buttons (outline, secondary) get a fainter top light and a hairline drop. */
-    --shadow-btn:
-      inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 -1px 0 rgba(0, 0, 0, 0.2),
-      0 1px 2px rgba(0, 0, 0, 0.45), 0 3px 8px rgba(0, 0, 0, 0.3);
-    --shadow-btn-hover:
-      inset 0 1px 0 rgba(255, 255, 255, 0.36), inset 0 -1px 0 rgba(0, 0, 0, 0.2),
-      0 8px 28px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.4);
-    --shadow-btn-pressed: inset 0 2px 4px rgba(0, 0, 0, 0.35);
-    --shadow-btn-quiet: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 1px 2px rgba(0, 0, 0, 0.35);
-    /* Gradient stops for the two other solid buttons, same 135deg recipe as the coral one:
-       ink (the `action` button) and red (`destructive`). Measured label contrast at each stop:
-       ink, near-black label: 19.28 / 17.05 / 11.66:1.
-       red, light label (--destructive-foreground): 4.66 / 5.27 / 7.06:1. The red button has its
-       own three stops because --destructive itself (the red of text and edges on the dark
-       ground) is too light under a light label: 3.84:1, which is what the flat red button
-       measured until 2026-10-10. */
-    --ink-sheen: 0 0% 100%;
-    --ink-press: 48 7% 78%;
-    --destructive-sheen: 3 72% 47%;
-    --destructive-fill: 0 66% 45%;
-    --destructive-press: 358 62% 37%;
-    /* The house style's motion: 120ms on cubic-bezier(.2,.6,.2,1) for controls */
-    --dur-ui: 120ms;
-    --ease-ui: cubic-bezier(0.2, 0.6, 0.2, 1);
-
-    /* Letter-spacing scale */
-    --tracking-tighter: -0.035em;
+    /* Letter-spacing scale (--tracking-tighter and --tracking-widest come from
+       the bridge) */
     --tracking-tight: -0.02em;
     --tracking-normal: 0;
     --tracking-wide: 0.02em;
     --tracking-wider: 0.06em;
-    --tracking-widest: 0.14em;
-
-    /* Legacy Compatibility */
-    --accent-teal: 219.7 82.2% 64.7%;
-    --accent-orange: 10.9 100% 64.5%;
-    --accent-peach: 11 100% 86%;
   }
 }
 
@@ -155,6 +61,15 @@
      the animated dot field shows through everywhere. */
   html {
     background-color: hsl(var(--background));
+    /* The app canvas texture (house style, DESIGN-SYSTEM.md section 5): the coral haze at the top
+       and a 1px pinstripe every 4px, fixed behind the content, in both themes (the colours are
+       tokens that change with the theme). Reading surfaces (cards, panels) paint their own
+       fill over it. No scanlines here: they belong inside coral blocks and never share a
+       surface with the pinstripe. */
+    background-image:
+      radial-gradient(900px 500px at 50% 0%, var(--hs-accent-haze), transparent 70%),
+      repeating-linear-gradient(0deg, var(--hs-pinstripe) 0 1px, transparent 1px 4px);
+    background-attachment: fixed;
   }
   body {
     @apply text-foreground;
@@ -240,17 +155,13 @@
   .card-institutional {
     @apply relative border-2 transition-all duration-200;
     border-color: hsl(var(--border) / 0.06);
-    box-shadow:
-      0 1px 3px rgba(0, 0, 0, 0.04),
-      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    box-shadow: var(--hs-shadow-1), var(--hs-edge-light);
   }
 
   .card-institutional:hover {
     transform: translateY(-3px);
     border-color: hsl(var(--border) / 0.12);
-    box-shadow:
-      0 8px 24px rgba(0, 0, 0, 0.12),
-      0 4px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--hs-shadow-md);
   }
 
   /* Card Accent Borders */
@@ -573,11 +484,11 @@
 
   /* Change Indicators */
   .change-positive {
-    color: hsl(11 100% 71%);
+    color: hsl(var(--success));
   }
 
   .change-negative {
-    color: hsl(0 84% 60%);
+    color: hsl(var(--destructive));
   }
 
   /* ----------------------------------------
@@ -593,13 +504,11 @@
     @apply h-full rounded-full;
     background: linear-gradient(
       90deg,
-      hsl(11 100% 80%) 0%,
-      hsl(11 100% 71%) 50%,
-      hsl(11 100% 60%) 100%
+      hsl(var(--primary-sheen)) 0%,
+      hsl(var(--primary)) 50%,
+      hsl(var(--primary-press)) 100%
     );
-    box-shadow:
-      0 0 12px hsl(var(--accent-green) / 0.4),
-      inset 0 1px 2px rgba(255, 255, 255, 0.3);
+    box-shadow: var(--hs-shadow-cta);
   }
 
   /* ----------------------------------------
@@ -1070,9 +979,7 @@
 
   .bento-card:hover {
     transform: translateY(-2px);
-    box-shadow:
-      0 8px 24px rgba(0, 0, 0, 0.08),
-      0 4px 8px rgba(0, 0, 0, 0.04);
+    box-shadow: var(--hs-shadow-md);
   }
 
   /* Bento Card Sizes */
@@ -1146,7 +1053,7 @@
   .dashboard-tab-active {
     background: hsl(var(--background));
     color: hsl(var(--foreground));
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--hs-shadow-1);
   }
 }
 
@@ -1275,11 +1182,11 @@
 
 /* Warning Toast */
 [data-sonner-toast][data-type="warning"] {
-  border-left: 4px solid hsl(43 100% 50%) !important;
+  border-left: 4px solid hsl(var(--warning)) !important;
 }
 
 [data-sonner-toast][data-type="warning"] [data-icon] svg {
-  color: hsl(43 100% 50%);
+  color: hsl(var(--warning));
 }
 
 /* Info Toast */

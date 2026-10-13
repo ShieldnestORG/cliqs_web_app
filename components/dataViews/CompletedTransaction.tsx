@@ -74,7 +74,7 @@ const CompletedTransaction = ({ transactionHash }: CompletedTransactionProps) =>
           margin-right: 0.5em;
         }
         .hash-card {
-          background: rgba(255, 255, 255, 0.03);
+          background: hsl(var(--foreground) / 0.03);
           border: 1px solid hsl(var(--border) / 0.1);
           border-radius: 12px;
           padding: 16px;
@@ -85,7 +85,7 @@ const CompletedTransaction = ({ transactionHash }: CompletedTransactionProps) =>
           overflow: hidden;
         }
         .hash-card:hover {
-          background: rgba(255, 255, 255, 0.06);
+          background: hsl(var(--foreground) / 0.06);
           border-color: hsl(var(--border) / 0.2);
         }
         .hash-card:focus {

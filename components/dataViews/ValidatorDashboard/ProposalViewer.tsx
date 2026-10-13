@@ -238,7 +238,7 @@ export default function ProposalViewer({
       label: "Yes",
       value: 1,
       color:
-        "border-transparent bg-success text-success-foreground hover:bg-success/80 active:bg-success/70",
+        "border-transparent bg-success-mark text-success-foreground hover:bg-success-mark/80 active:bg-success-mark/70",
     },
     {
       label: "Abstain",
@@ -249,7 +249,7 @@ export default function ProposalViewer({
       label: "No",
       value: 3,
       color:
-        "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80 active:bg-destructive/70",
+        "border-transparent bg-destructive-mark text-destructive-foreground hover:bg-destructive-mark/80 active:bg-destructive-mark/70",
     },
     {
       label: "No with Veto",
@@ -277,7 +277,7 @@ export default function ProposalViewer({
     <div className="space-y-4">
       {activeProposals.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border/50 bg-muted/20 py-8 text-center">
-          <CheckCircle2 className="mx-auto mb-2 h-8 w-8 text-green-accent opacity-50" />
+          <CheckCircle2 className="mx-auto mb-2 h-8 w-8 text-primary-text opacity-50" />
           <p className="text-sm text-muted-foreground">No active proposals in voting period.</p>
         </div>
       ) : (

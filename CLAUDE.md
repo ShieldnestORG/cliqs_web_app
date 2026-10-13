@@ -63,8 +63,17 @@ card that hosts it, byte for byte, but never change it. Keep the provider order 
   must pass `window.history.state` and keep the page's own query; `__tests__/lib/chain-url.test.ts`
   pins both.
 
-## 4. Gates before a pull request
+## 4. The house style owns the colours (unit 2, 2026-10-12)
 
-`npx tsc --noEmit`, `npm run lint` (zero warnings), `npm run format:check`, `npm run test:ci`, `npm run build`
+`styles/house-style.tokens.css` (vendored) and `styles/house-style.bridge.css` (generated) are never edited by hand; a colour,
+radius, shadow, easing or tracking value changes in the house-style repo and is re-vendored (README "House style"). No numeric
+colour (`#hex`, `rgb(1`, `hsl(1`) in `styles/*.css` or `tailwind.config.js` outside those two files: `scripts/raw-colour.sh`
+prints nothing when clean. Coral as TEXT is `text-primary-text` (the darker twin in light), never `text-primary`; a solid status
+fill is `bg-{success,warning,destructive,info}-mark`, never `bg-success` (that is the text colour).
+Status kit per kind: DEFAULT = text, `-foreground` = label on a fill, `-mark`, `-soft`, `-edge`.
+
+## 5. Gates before a pull request
+
+`npx tsc --noEmit`, `npm run lint` (zero warnings), `npm run format:check`, `npm run test:ci` (its first step is the house-style gate, `npm run check:house-style`), `npm run build`
 (CI copies `.env.sample` to `.env.local` first). UI changes follow `docs/STYLE-GUIDE.md` (canonical tokens) and
 `docs/ui/*.md`: tokens only, no raw colours, no one-off components.

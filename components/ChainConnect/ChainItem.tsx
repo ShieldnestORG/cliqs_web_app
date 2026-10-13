@@ -61,7 +61,7 @@ export default function ChainItem({ chain, hoverCardElementBoundary }: ChainItem
           <span
             className={cn(
               "block min-h-[1.25rem] text-center font-mono text-[11px] font-medium leading-tight",
-              isConnected ? "text-[hsl(var(--accent-green-bright))]" : "text-foreground",
+              isConnected ? "text-primary-text" : "text-foreground",
             )}
           >
             {chain.registryName}

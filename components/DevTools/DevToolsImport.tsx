@@ -471,7 +471,7 @@ export default function DevToolsImport({
     <Card variant="institutional" bracket="green-round" className="border-border/60">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-xl">
-          <FileInput className="h-5 w-5 text-green-accent" />
+          <FileInput className="h-5 w-5 text-primary-text" />
           Import Transaction
         </CardTitle>
         <CardDescription>

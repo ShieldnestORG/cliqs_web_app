@@ -168,7 +168,7 @@ export function ProposalIntentView({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Shield className="h-5 w-5 text-primary" />
+            <Shield className="h-5 w-5 text-primary-text" />
             Transaction Intent Verification
           </CardTitle>
           <Badge variant={overallRisk === "high" ? "destructive" : "outline"}>
@@ -519,7 +519,7 @@ function SendIcon() {
 function StakeIcon() {
   return (
     <svg
-      className="h-4 w-4 text-green-accent"
+      className="h-4 w-4 text-primary-text"
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"

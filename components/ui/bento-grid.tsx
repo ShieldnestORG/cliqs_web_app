@@ -203,7 +203,7 @@ export function BentoActionCard({
     >
       {icon}
       <div className="mt-auto pt-4">
-        <h4 className="font-heading font-semibold text-foreground group-hover:text-green-accent transition-colors">
+        <h4 className="font-heading font-semibold text-foreground group-hover:text-primary-text transition-colors">
           {title}
         </h4>
         {description && (

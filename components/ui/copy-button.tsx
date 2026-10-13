@@ -68,7 +68,7 @@ export function CopyButton({
             {children || <span className="sr-only">Copy {copyLabel}</span>}
           </Button>
         </TooltipTrigger>
-        <TooltipContent side="top" className="bg-success text-success-foreground border-success">
+        <TooltipContent side="top" className="bg-success-mark text-success-foreground border-success-mark">
           <p className="text-xs font-bold">Copied!</p>
         </TooltipContent>
       </Tooltip>

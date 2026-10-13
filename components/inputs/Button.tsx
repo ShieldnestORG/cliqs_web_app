@@ -36,7 +36,7 @@ const Button = (props: Props) => (
       .button {
         display: block;
         border-radius: 10px;
-        background: rgba(255, 255, 255, 0.15);
+        background: hsl(var(--foreground) / 0.15);
         border: none;
         padding: 12px;
         font-size: 1rem;

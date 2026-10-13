@@ -1,0 +1,182 @@
+/* GENERATED-FROM: ShieldnestORG/house-style 459c6b5 tokens.json + check/adapters/cliqs.json by scripts/build-bridge.mjs; do not edit, regenerate */
+/* The house style's tokens as the shadcn variables this app reads: HSL channel triplets for hsl(var(--x)), other values as written.
+   71 variables; 48 differ in the light theme. Dark is :root; light is the OS-light media block and :root[data-theme="light"] (same selectors as house-style.tokens.css).
+   Which variable takes which token is the "bridge" map of the adapter named above. Allowed to hold raw colours, with house-style.tokens.css (the gate in scripts/check-house-style.mjs). */
+
+:root {
+  --background: 240 6.7% 5.9%;  /* --hs-bg #0E0E10 */
+  --foreground: 48 16.1% 93.9%;  /* --hs-ink #F2F1ED */
+  --card: 240 3.4% 11.4%;  /* --hs-panel #1C1C1E */
+  --card-foreground: 48 16.1% 93.9%;  /* --hs-ink #F2F1ED */
+  --popover: 240 3.4% 11.4%;  /* --hs-panel #1C1C1E */
+  --popover-foreground: 48 16.1% 93.9%;  /* --hs-ink #F2F1ED */
+  --secondary: 240 5% 15.7%;  /* --hs-panel-2 #26262A */
+  --secondary-foreground: 48 16.1% 93.9%;  /* --hs-ink #F2F1ED */
+  --muted: 240 5% 15.7%;  /* --hs-panel-2 #26262A */
+  --muted-foreground: 240 2.7% 64.1%;  /* --hs-ink-3 #A1A1A6 */
+  --accent: 240 5% 15.7%;  /* --hs-panel-2 #26262A */
+  --accent-foreground: 48 16.1% 93.9%;  /* --hs-ink #F2F1ED */
+  --border: 48 16.1% 93.9%;  /* --hs-ink #F2F1ED */
+  --input: 240 1.6% 49.4%;  /* --hs-border-interactive #7C7C80 */
+  --border-interactive: 240 1.6% 49.4%;  /* --hs-border-interactive #7C7C80 */
+  --field: 240 5% 15.7%;  /* --hs-field-bg #26262A */
+  --ring: 10.9 100% 64.5%;  /* --hs-accent-text #FF6B4A */
+  --primary: 10.9 100% 64.5%;  /* --hs-accent #FF6B4A */
+  --primary-foreground: 240 6.7% 5.9%;  /* --hs-accent-ink #0E0E10 */
+  --primary-text: 10.9 100% 64.5%;  /* --hs-accent-text #FF6B4A */
+  --primary-text-hover: 11.9 100% 71.4%;  /* --hs-accent-text-hover #FF8A6D */
+  --primary-sheen: 11.4 97.3% 71.4%;  /* --hs-accent-sheen #FD8A6F */
+  --primary-press: 9.5 76.7% 56.3%;  /* --hs-accent-press #E5553A */
+  --primary-soft: 13 46.8% 15.5%;  /* --hs-accent-soft #3A1D15 */
+  --accent-green: 10.9 100% 64.5%;  /* --hs-accent #FF6B4A */
+  --accent-green-bright: 11.9 100% 71.4%;  /* --hs-accent-hover #FF8A6D */
+  --destructive: 3.8 100% 65.5%;  /* --hs-bad #FF5A4F */
+  --destructive-foreground: 0 0% 100%;  /* --hs-bad-on #FFFFFF */
+  --destructive-mark: 4.2 74.3% 48.8%;  /* --hs-bad-mark #D92D20 */
+  --destructive-soft: 4.5 52.6% 14.9%;  /* --hs-bad-soft #3A1512 */
+  --destructive-edge: 3.9 86% 58%;  /* --hs-bad-edge #F04438 */
+  --destructive-sheen: 4.2 74.3% 51.2%;  /* --hs-bad-sheen #DF3326 */
+  --destructive-press: 4.2 76.5% 40%;  /* --hs-bad-press #B42318 */
+  --success: 149.8 66% 51.6%;  /* --hs-good #32D583 */
+  --success-foreground: 240 6.7% 5.9%;  /* --hs-good-on #0E0E10 */
+  --success-mark: 152.1 77.1% 39.4%;  /* --hs-good-mark #17B26A */
+  --success-soft: 147.1 50.8% 12%;  /* --hs-good-soft #0F2E1D */
+  --success-edge: 152.1 77.1% 39.4%;  /* --hs-good-edge #17B26A */
+  --toast-green: 149.8 66% 51.6%;  /* --hs-good #32D583 */
+  --warning: 42.1 100% 62%;  /* --hs-warn #FFC53D */
+  --warning-foreground: 240 6.7% 5.9%;  /* --hs-warn-on #0E0E10 */
+  --warning-mark: 46.1 100% 50%;  /* --hs-warn-mark #FFC400 */
+  --warning-soft: 44.4 80.6% 12.2%;  /* --hs-warn-soft #382B06 */
+  --warning-edge: 46.1 100% 50%;  /* --hs-warn-edge #FFC400 */
+  --accent-gold: 42.1 100% 62%;  /* --hs-warn #FFC53D */
+  --accent-bronze: 42.1 100% 62%;  /* --hs-warn #FFC53D */
+  --accent-bronze-foreground: 240 6.7% 5.9%;  /* --hs-warn-on #0E0E10 */
+  --info: 206.8 97.7% 65.9%;  /* --hs-info #53B1FD */
+  --info-foreground: 240 6.7% 5.9%;  /* --hs-info-on #0E0E10 */
+  --info-mark: 211.2 95.3% 58%;  /* --hs-info-mark #2E90FA */
+  --info-soft: 212.4 64.1% 15.3%;  /* --hs-info-soft #0E2540 */
+  --info-edge: 211.2 95.3% 58%;  /* --hs-info-edge #2E90FA */
+  --accent-blue: 206.8 97.7% 65.9%;  /* --hs-info #53B1FD */
+  --accent-purple: 206.8 97.7% 65.9%;  /* --hs-info #53B1FD */
+  --ink-sheen: 48 16.1% 93.9%;  /* --hs-ink #F2F1ED */
+  --ink-press: 50 6.1% 80.8%;  /* --hs-ink-2 #D1D0CB */
+  --radius-sm: 8px;  /* --hs-radius-sm as written */
+  --radius: 10px;  /* --hs-radius-base as written */
+  --radius-md: 12px;  /* --hs-radius-md as written */
+  --radius-lg: 16px;  /* --hs-radius-lg as written */
+  --radius-xl: 24px;  /* --hs-radius-xl as written */
+  --radius-btn: var(--hs-radius-pill);  /* --hs-radius-btn as written */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.25);  /* --hs-shadow-sm as written */
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.35);  /* --hs-shadow-md as written */
+  --shadow-lg: 0 12px 34px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.40);  /* --hs-shadow-lg as written */
+  --ease-ui: cubic-bezier(.2, .6, .2, 1);  /* --hs-ease as written */
+  --ease-out: cubic-bezier(.22, .61, .36, 1);  /* --hs-ease-reveal as written */
+  --dur-ui: 120ms;  /* --hs-motion-fast as written */
+  --dur-base: 260ms;  /* --hs-motion-slow as written */
+  --tracking-widest: 0.14em;  /* --hs-tracking-caps as written */
+  --tracking-tighter: -0.035em;  /* --hs-tracking-title as written */
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --background: 40 13% 95.5%;  /* --hs-bg #F5F4F2 */
+    --foreground: 240 3.3% 11.8%;  /* --hs-ink #1D1D1F */
+    --card: 0 0% 100%;  /* --hs-panel #FFFFFF */
+    --card-foreground: 240 3.3% 11.8%;  /* --hs-ink #1D1D1F */
+    --popover: 0 0% 100%;  /* --hs-panel #FFFFFF */
+    --popover-foreground: 240 3.3% 11.8%;  /* --hs-ink #1D1D1F */
+    --secondary: 60 5% 92.2%;  /* --hs-panel-2 #ECECEA */
+    --secondary-foreground: 240 3.3% 11.8%;  /* --hs-ink #1D1D1F */
+    --muted: 60 5% 92.2%;  /* --hs-panel-2 #ECECEA */
+    --muted-foreground: 240 2% 38.8%;  /* --hs-ink-3 #616165 */
+    --accent: 60 5% 92.2%;  /* --hs-panel-2 #ECECEA */
+    --accent-foreground: 240 3.3% 11.8%;  /* --hs-ink #1D1D1F */
+    --border: 240 3.3% 11.8%;  /* --hs-ink #1D1D1F */
+    --input: 40 4.7% 50.2%;  /* --hs-border-interactive #86827A */
+    --border-interactive: 40 4.7% 50.2%;  /* --hs-border-interactive #86827A */
+    --field: 0 0% 100%;  /* --hs-field-bg #FFFFFF */
+    --ring: 10.3 71.4% 38.4%;  /* --hs-accent-text #A8341C */
+    --primary-text: 10.3 71.4% 38.4%;  /* --hs-accent-text #A8341C */
+    --primary-text-hover: 10.5 71.2% 30%;  /* --hs-accent-text-hover #832916 */
+    --primary-soft: 12.5 82.8% 88.6%;  /* --hs-accent-soft #FAD4CA */
+    --accent-green-bright: 11.1 100% 70.4%;  /* --hs-accent-hover #FF8468 */
+    --destructive: 4.2 76.5% 40%;  /* --hs-bad #B42318 */
+    --destructive-soft: 4.3 93.3% 94.1%;  /* --hs-bad-soft #FEE4E2 */
+    --success: 154.8 90.3% 24.3%;  /* --hs-good #067647 */
+    --success-foreground: 0 0% 100%;  /* --hs-good-on #FFFFFF */
+    --success-mark: 154.8 90.3% 24.3%;  /* --hs-good-mark #067647 */
+    --success-soft: 140 75% 92.2%;  /* --hs-good-soft #DCFAE6 */
+    --success-edge: 153.2 91% 30.4%;  /* --hs-good-edge #079455 */
+    --toast-green: 154.8 90.3% 24.3%;  /* --hs-good #067647 */
+    --warning: 18.8 83.7% 31.4%;  /* --hs-warn #93370D */
+    --warning-foreground: 240 3.3% 11.8%;  /* --hs-warn-on #1D1D1F */
+    --warning-mark: 27.1 100% 42.5%;  /* --hs-warn-mark #D96200 */
+    --warning-soft: 44.7 96.5% 88.8%;  /* --hs-warn-soft #FEF0C7 */
+    --warning-edge: 27.1 100% 42.5%;  /* --hs-warn-edge #D96200 */
+    --accent-gold: 18.8 83.7% 31.4%;  /* --hs-warn #93370D */
+    --accent-bronze: 18.8 83.7% 31.4%;  /* --hs-warn #93370D */
+    --accent-bronze-foreground: 240 3.3% 11.8%;  /* --hs-warn-on #1D1D1F */
+    --info: 218 80.3% 45.9%;  /* --hs-info #175CD3 */
+    --info-foreground: 0 0% 100%;  /* --hs-info-on #FFFFFF */
+    --info-mark: 215 87.2% 51%;  /* --hs-info-mark #1570EF */
+    --info-soft: 208.7 100% 91%;  /* --hs-info-soft #D1E9FF */
+    --accent-blue: 218 80.3% 45.9%;  /* --hs-info #175CD3 */
+    --accent-purple: 218 80.3% 45.9%;  /* --hs-info #175CD3 */
+    --ink-sheen: 240 3.3% 11.8%;  /* --hs-ink #1D1D1F */
+    --ink-press: 240 1.7% 23.1%;  /* --hs-ink-2 #3A3A3C */
+    --shadow-sm: 0 1px 2px rgba(17, 17, 17, 0.06), 0 1px 2px rgba(17, 17, 17, 0.04);  /* --hs-shadow-sm as written */
+    --shadow-md: 0 4px 12px rgba(17, 17, 17, 0.08), 0 2px 4px rgba(17, 17, 17, 0.06);  /* --hs-shadow-md as written */
+    --shadow-lg: 0 10px 30px rgba(17, 17, 17, 0.12), 0 4px 10px rgba(17, 17, 17, 0.08);  /* --hs-shadow-lg as written */
+  }
+}
+
+:root[data-theme="light"] {
+  --background: 40 13% 95.5%;  /* --hs-bg #F5F4F2 */
+  --foreground: 240 3.3% 11.8%;  /* --hs-ink #1D1D1F */
+  --card: 0 0% 100%;  /* --hs-panel #FFFFFF */
+  --card-foreground: 240 3.3% 11.8%;  /* --hs-ink #1D1D1F */
+  --popover: 0 0% 100%;  /* --hs-panel #FFFFFF */
+  --popover-foreground: 240 3.3% 11.8%;  /* --hs-ink #1D1D1F */
+  --secondary: 60 5% 92.2%;  /* --hs-panel-2 #ECECEA */
+  --secondary-foreground: 240 3.3% 11.8%;  /* --hs-ink #1D1D1F */
+  --muted: 60 5% 92.2%;  /* --hs-panel-2 #ECECEA */
+  --muted-foreground: 240 2% 38.8%;  /* --hs-ink-3 #616165 */
+  --accent: 60 5% 92.2%;  /* --hs-panel-2 #ECECEA */
+  --accent-foreground: 240 3.3% 11.8%;  /* --hs-ink #1D1D1F */
+  --border: 240 3.3% 11.8%;  /* --hs-ink #1D1D1F */
+  --input: 40 4.7% 50.2%;  /* --hs-border-interactive #86827A */
+  --border-interactive: 40 4.7% 50.2%;  /* --hs-border-interactive #86827A */
+  --field: 0 0% 100%;  /* --hs-field-bg #FFFFFF */
+  --ring: 10.3 71.4% 38.4%;  /* --hs-accent-text #A8341C */
+  --primary-text: 10.3 71.4% 38.4%;  /* --hs-accent-text #A8341C */
+  --primary-text-hover: 10.5 71.2% 30%;  /* --hs-accent-text-hover #832916 */
+  --primary-soft: 12.5 82.8% 88.6%;  /* --hs-accent-soft #FAD4CA */
+  --accent-green-bright: 11.1 100% 70.4%;  /* --hs-accent-hover #FF8468 */
+  --destructive: 4.2 76.5% 40%;  /* --hs-bad #B42318 */
+  --destructive-soft: 4.3 93.3% 94.1%;  /* --hs-bad-soft #FEE4E2 */
+  --success: 154.8 90.3% 24.3%;  /* --hs-good #067647 */
+  --success-foreground: 0 0% 100%;  /* --hs-good-on #FFFFFF */
+  --success-mark: 154.8 90.3% 24.3%;  /* --hs-good-mark #067647 */
+  --success-soft: 140 75% 92.2%;  /* --hs-good-soft #DCFAE6 */
+  --success-edge: 153.2 91% 30.4%;  /* --hs-good-edge #079455 */
+  --toast-green: 154.8 90.3% 24.3%;  /* --hs-good #067647 */
+  --warning: 18.8 83.7% 31.4%;  /* --hs-warn #93370D */
+  --warning-foreground: 240 3.3% 11.8%;  /* --hs-warn-on #1D1D1F */
+  --warning-mark: 27.1 100% 42.5%;  /* --hs-warn-mark #D96200 */
+  --warning-soft: 44.7 96.5% 88.8%;  /* --hs-warn-soft #FEF0C7 */
+  --warning-edge: 27.1 100% 42.5%;  /* --hs-warn-edge #D96200 */
+  --accent-gold: 18.8 83.7% 31.4%;  /* --hs-warn #93370D */
+  --accent-bronze: 18.8 83.7% 31.4%;  /* --hs-warn #93370D */
+  --accent-bronze-foreground: 240 3.3% 11.8%;  /* --hs-warn-on #1D1D1F */
+  --info: 218 80.3% 45.9%;  /* --hs-info #175CD3 */
+  --info-foreground: 0 0% 100%;  /* --hs-info-on #FFFFFF */
+  --info-mark: 215 87.2% 51%;  /* --hs-info-mark #1570EF */
+  --info-soft: 208.7 100% 91%;  /* --hs-info-soft #D1E9FF */
+  --accent-blue: 218 80.3% 45.9%;  /* --hs-info #175CD3 */
+  --accent-purple: 218 80.3% 45.9%;  /* --hs-info #175CD3 */
+  --ink-sheen: 240 3.3% 11.8%;  /* --hs-ink #1D1D1F */
+  --ink-press: 240 1.7% 23.1%;  /* --hs-ink-2 #3A3A3C */
+  --shadow-sm: 0 1px 2px rgba(17, 17, 17, 0.06), 0 1px 2px rgba(17, 17, 17, 0.04);  /* --hs-shadow-sm as written */
+  --shadow-md: 0 4px 12px rgba(17, 17, 17, 0.08), 0 2px 4px rgba(17, 17, 17, 0.06);  /* --hs-shadow-md as written */
+  --shadow-lg: 0 10px 30px rgba(17, 17, 17, 0.12), 0 4px 10px rgba(17, 17, 17, 0.08);  /* --hs-shadow-lg as written */
+}

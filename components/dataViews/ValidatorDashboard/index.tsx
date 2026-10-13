@@ -883,10 +883,10 @@ export default function ValidatorDashboard() {
           <CardHeader>
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-accent/20">
-                <Users className="h-5 w-5 text-green-accent" />
+                <Users className="h-5 w-5 text-primary-text" />
               </div>
               <div>
-                <CardLabel className="text-green-accent">Also Manage Via CLIQ</CardLabel>
+                <CardLabel className="text-primary-text">Also Manage Via CLIQ</CardLabel>
                 <CardTitle className="text-base">Your CLIQ Validators</CardTitle>
               </div>
             </div>
@@ -907,7 +907,7 @@ export default function ValidatorDashboard() {
                 <div className="group flex items-center justify-between gap-4 rounded-xl border border-border/50 bg-muted/30 p-3 transition-all hover:border-green-accent/50 hover:bg-green-accent/5">
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-accent/20">
-                      <Shield className="h-4 w-4 text-green-accent" />
+                      <Shield className="h-4 w-4 text-primary-text" />
                     </div>
                     <div className="min-w-0">
                       <h4 className="truncate font-heading text-sm font-semibold text-foreground">
@@ -925,7 +925,7 @@ export default function ValidatorDashboard() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="shrink-0 gap-2 group-hover:bg-green-accent/10 group-hover:text-green-accent"
+                    className="shrink-0 gap-2 group-hover:bg-green-accent/10 group-hover:text-primary-text"
                   >
                     Manage
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />

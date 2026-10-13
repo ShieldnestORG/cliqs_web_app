@@ -605,7 +605,7 @@ export default function CreateContractCliqForm() {
                     isActive
                       ? "text-foreground"
                       : isCompleted
-                        ? "cursor-pointer text-primary"
+                        ? "cursor-pointer text-primary-text"
                         : "text-muted-foreground"
                   } ${isClickable && !isActive ? "cursor-pointer hover:text-foreground" : ""}`}
                 >
@@ -766,7 +766,7 @@ export default function CreateContractCliqForm() {
                                     onClick={() => form.setValue("codeId", s.codeId)}
                                     className={`inline-flex cursor-pointer items-center gap-1 rounded-full border px-2 py-0.5 text-xs transition-colors ${
                                       Number(field.value) === s.codeId
-                                        ? "border-primary bg-primary/10 text-primary"
+                                        ? "border-primary bg-primary/10 text-primary-text"
                                         : "border-border/[0.06] bg-muted text-muted-foreground hover:bg-muted/80"
                                     }`}
                                   >
@@ -1368,7 +1368,7 @@ export default function CreateContractCliqForm() {
                     >
                       <div className="flex items-center gap-3">
                         {deployPhase === "uploading" ? (
-                          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                          <Loader2 className="h-5 w-5 animate-spin text-primary-text" />
                         ) : uploadedCodeId ? (
                           <CheckCircle2 className="h-5 w-5 text-success" />
                         ) : (
@@ -1447,7 +1447,7 @@ export default function CreateContractCliqForm() {
                   >
                     <div className="flex items-center gap-3">
                       {deployPhase === "instantiating" ? (
-                        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                        <Loader2 className="h-5 w-5 animate-spin text-primary-text" />
                       ) : deployPhase === "done" ? (
                         <CheckCircle2 className="h-5 w-5 text-success" />
                       ) : (

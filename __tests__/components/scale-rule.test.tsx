@@ -36,7 +36,7 @@ describe("ScaleRule: P2", () => {
 
     rerender(<ScaleRule label="Rewards" tone="primary" />);
     const heading = screen.getByRole("heading", { name: "Rewards" });
-    expect(heading).toHaveClass("text-primary");
+    expect(heading).toHaveClass("text-primary-text");
     expect(heading).not.toHaveClass("text-muted-foreground");
   });
 
