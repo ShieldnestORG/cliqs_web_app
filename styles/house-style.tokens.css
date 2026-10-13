@@ -1,16 +1,16 @@
-/* VENDORED-FROM: ShieldnestORG/house-style 048c681 tokens.css, unchanged; do not edit, re-vendor */
+/* VENDORED-FROM: ShieldnestORG/house-style 459c6b5 tokens.css, unchanged; do not edit, re-vendor */
 /* ==========================================================================
    house style: TOKENS (canonical). Prefix --hs-. Generated once from the sources named on each line, then
    maintained here by hand; tokens.json is generated from THIS file (scripts/build-tokens-json.mjs).
 
    PROVENANCE. Every line ends with a comment naming where its value came from:
-     app.css:N          the forensic app's static stylesheet, token blocks (light :root at line 3792, dark twin at 4029-4099);
+     app.css:N          product M's static stylesheet, token blocks (light :root at line 3792, dark twin at 4029-4099);
                         read at commit caa449f9a on 2026-10-12. Line numbers moved by -7 since the draft's c726a6af0.
      labs/tokens.css:N  the Labs layer of the tokns app, app/labs/_design/tokens.css at 39879d73 (2026-10-12)
      other paths        named in full from their checkout (tokns_landing_page, coherencedaddy-landing)
    A value that differs between app.css and labs/tokens.css says so on its line and says which won.
 
-   OWNER DECISIONS applied (2026-10-12): 2 status palette = the forensic app's; 3 dark card ramp #1C1C1E / #26262A;
+   OWNER DECISIONS applied (2026-10-12): 2 status palette = product M's; 3 dark card ramp #1C1C1E / #26262A;
    4 pill buttons behind --hs-radius-btn; 7 one coral #FF6B4A; 8 both themes on every product; 11 Geist everywhere;
    12 bordered fields, wells for read-only values.
 
@@ -123,7 +123,7 @@
   --hs-lh-tight: 1.25;  /* app.css:3896 */
   --hs-lh-body: 1.5;  /* app.css:3896 */
   --hs-lh-loose: 1.6;  /* app.css:3896 */
-  --hs-tracking-caps: 0.14em;  /* labs/tokens.css:119; label-caps 11px Geist Mono 500; the forensic app had .06em (app.css:3898), .14em won (draft conflict C8) */
+  --hs-tracking-caps: 0.14em;  /* labs/tokens.css:119; label-caps 11px Geist Mono 500; product M had .06em (app.css:3898), .14em won (draft conflict C8) */
   --hs-tracking-title: -0.035em;  /* labs/tokens.css:154; large Geist titles */
 
   /* ---- SPACE (4px grid), RADIUS, MOTION, Z, LAYOUT ---- */
@@ -138,7 +138,7 @@
   --hs-radius-sm: 8px;  /* app.css:3905 */
   --hs-radius-base: 10px;  /* app.css:3906; inputs and small controls (named --radius in app.css) */
   --hs-radius-md: 12px;  /* labs/tokens.css:98; tabs track, notices, appearance control (named --labs-radius-control there) */
-  --hs-radius-lg: 16px;  /* labs/tokens.css:132; card default; the forensic app had 14 here and 22 for cards (app.css:3907, 3910), both retired (draft conflict C4) */
+  --hs-radius-lg: 16px;  /* labs/tokens.css:132; card default; product M had 14 here and 22 for cards (app.css:3907, 3910), both retired (draft conflict C4) */
   --hs-radius-xl: 24px;  /* coherencedaddy-landing/DESIGN.md:62 (xl 24px); feature cards */
   --hs-radius-pill: 999px;  /* app.css:3908 */
   --hs-radius-none: 0;  /* app.css:3909 */

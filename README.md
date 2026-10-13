@@ -32,7 +32,7 @@ npm run dev                   # Runs on http://localhost:3003
 
 | File | What |
 |---|---|
-| `styles/house-style.tokens.css` | The canonical `tokens.css`, vendored at the commit in its first line (`VENDORED-FROM: ShieldnestORG/house-style 048c681`), unchanged but for that line: `:root` is dark, `:root[data-theme="light"]` and an OS-light media block hold light. 123 `--hs-*` tokens. **Never edit it.** |
+| `styles/house-style.tokens.css` | The canonical `tokens.css`, vendored at the commit in its first line (`VENDORED-FROM: ShieldnestORG/house-style 459c6b5`), unchanged but for that line: `:root` is dark, `:root[data-theme="light"]` and an OS-light media block hold light. 123 `--hs-*` tokens. **Never edit it.** |
 | `styles/house-style.bridge.css` | The shadcn variables (`--background`, `--primary`, `--destructive`, `--border` ... 71 of them) as HSL triplets, **generated** from the house style's `tokens.json` and the `bridge` map of its `check/adapters/cliqs.json` at the same commit. **Never edit it.** |
 | `styles/globals.css` | The app's own rules. No colour literal may appear in it: a colour is `hsl(var(--x))` or a `var(--hs-*)`. |
 | `scripts/vendor-house-style.mjs` | `node scripts/vendor-house-style.mjs <sha>` re-vendors; `--check` exits 1 if the file is not what it produces. |

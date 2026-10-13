@@ -1,4 +1,4 @@
-/* GENERATED-FROM: ShieldnestORG/house-style 048c681 tokens.json + check/adapters/cliqs.json by scripts/build-bridge.mjs; do not edit, regenerate */
+/* GENERATED-FROM: ShieldnestORG/house-style 459c6b5 tokens.json + check/adapters/cliqs.json by scripts/build-bridge.mjs; do not edit, regenerate */
 /* The house style's tokens as the shadcn variables this app reads: HSL channel triplets for hsl(var(--x)), other values as written.
    71 variables; 48 differ in the light theme. Dark is :root; light is the OS-light media block and :root[data-theme="light"] (same selectors as house-style.tokens.css).
    Which variable takes which token is the "bridge" map of the adapter named above. Allowed to hold raw colours, with house-style.tokens.css (the gate in scripts/check-house-style.mjs). */
