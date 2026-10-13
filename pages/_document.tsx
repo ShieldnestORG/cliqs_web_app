@@ -87,8 +87,9 @@ export default function Document() {
         <link rel="manifest" href="/site.webmanifest" />
 
         {/* Theme Color */}
-        {/* Matches --background (#0E0E10) so mobile browser chrome blends with the app */}
-        <meta name="theme-color" content="#0E0E10" />
+        {/* Matches --background of each theme (the house style's bg: #0E0E10 dark, #F5F4F2 light) so mobile browser chrome blends with the app */}
+        <meta name="theme-color" content="#0E0E10" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#F5F4F2" media="(prefers-color-scheme: light)" />
       </Head>
       <body className="antialiased">
         <Main />

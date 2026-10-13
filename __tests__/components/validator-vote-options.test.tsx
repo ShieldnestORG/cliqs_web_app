@@ -232,7 +232,7 @@ describe("ProposalViewer: No with Veto is orange, not the gold testnet colour: P
     );
 
     const tag = screen.getByText("NO WITH VETO");
-    expect(tag).toHaveClass("text-primary");
+    expect(tag).toHaveClass("text-primary-text");
     expect(tag).not.toHaveClass("text-warning");
   });
 });

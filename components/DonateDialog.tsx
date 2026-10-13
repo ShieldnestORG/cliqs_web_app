@@ -477,7 +477,7 @@ export default function DonateDialog({ open, onClose }: DonateDialogProps) {
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={handleClose} />
 
-      <div className="relative w-full max-w-3xl rounded-3xl border border-border/[0.06] bg-card shadow-[0_0_50px_rgba(0,0,0,0.5)] duration-300 animate-in fade-in zoom-in-95">
+      <div className="relative w-full max-w-3xl rounded-3xl border border-border/[0.06] bg-card shadow-[var(--hs-shadow-lg)] duration-300 animate-in fade-in zoom-in-95">
         {/* Header */}
         <div
           className="flex items-center justify-between overflow-hidden rounded-t-3xl p-8 md:p-12"

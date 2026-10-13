@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
  * cliqs copies. Spec and catalog: docs/ui/PATTERNS-PRD.md ("Kit icons").
  *
  * The idiom: a 48 grid, round caps and joins, no tile behind the icon, an ink line
- * that is `currentColor`, and exactly ONE coral part per icon (`text-primary`): a
+ * that is `currentColor`, and exactly ONE coral part per icon (`text-primary-text`): a
  * stroke, a solid, or an 18% wash with an outline. A part may be two shapes that
  * read as one (an arrow's shaft and head); those shapes sit together in ONE
  * `<g data-coral="">`, so a part is always one element and a test can count them

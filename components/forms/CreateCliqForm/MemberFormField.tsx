@@ -66,7 +66,7 @@ export default function MemberFormField({
         <FormItem className="group relative">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-accent/20 text-xs font-bold text-green-accent">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-accent/20 text-xs font-bold text-primary-text">
                 {index + 1}
               </div>
               <FormLabel className="text-sm font-medium">

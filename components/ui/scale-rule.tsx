@@ -39,7 +39,7 @@ const ScaleRule = React.forwardRef<HTMLDivElement, ScaleRuleProps>(
         id={headingId}
         className={cn(
           "shrink-0 font-mono text-[11px] font-medium uppercase leading-4 tracking-[0.14em]",
-          tone === "primary" ? "text-primary" : "text-muted-foreground"
+          tone === "primary" ? "text-primary-text" : "text-muted-foreground"
         )}
       >
         {label}

@@ -890,7 +890,7 @@ export default function DevToolsAuthz({
 
         {lastTxHash && (
           <div className="rounded-lg border border-green-accent/30 bg-green-accent/10 p-3">
-            <p className="text-xs font-semibold text-green-accent">Last Transaction</p>
+            <p className="text-xs font-semibold text-primary-text">Last Transaction</p>
             <p className="break-all font-mono text-xs text-muted-foreground">{lastTxHash}</p>
           </div>
         )}

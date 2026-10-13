@@ -34,11 +34,11 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { Button } from "@/components/ui/button";
 
 describe("Button geometry: P2", () => {
-  it("default size is 44px tall (h-11) and keeps rounded-full", () => {
+  it("default size is 44px tall (h-11) and keeps the pill (rounded-[var(--radius-btn)])", () => {
     render(<Button>Save</Button>);
 
     const button = screen.getByRole("button", { name: "Save" });
-    expect(button).toHaveClass("h-11", "px-5", "rounded-full");
+    expect(button).toHaveClass("h-11", "px-5", "rounded-[var(--radius-btn)]");
   });
 
   it("action and action-lg share the default and lg geometry", () => {
@@ -66,8 +66,14 @@ describe("Button geometry: P2", () => {
       </>,
     );
 
-    expect(screen.getByRole("button", { name: "Small" })).toHaveClass("h-9", "rounded-full");
-    expect(screen.getByRole("button", { name: "Large" })).toHaveClass("h-12", "rounded-full");
+    expect(screen.getByRole("button", { name: "Small" })).toHaveClass(
+      "h-9",
+      "rounded-[var(--radius-btn)]",
+    );
+    expect(screen.getByRole("button", { name: "Large" })).toHaveClass(
+      "h-12",
+      "rounded-[var(--radius-btn)]",
+    );
     expect(screen.getByRole("button", { name: "Add" })).toHaveClass("h-11", "w-11");
   });
 
@@ -76,7 +82,7 @@ describe("Button geometry: P2", () => {
 
     const chip = screen.getByRole("button", { name: "Copy" });
     expect(chip).toHaveClass("h-6", "rounded-md");
-    expect(chip).not.toHaveClass("rounded-full");
+    expect(chip).not.toHaveClass("rounded-[var(--radius-btn)]");
   });
 
   it("presses with a half-pixel nudge, not a scale", () => {
@@ -227,7 +233,7 @@ describe("Button depth: solid, quiet and flat variants: P2", () => {
         expect(button).not.toHaveClass(gone);
       }
       // the pill and the focus ring are unchanged
-      expect(button).toHaveClass("rounded-full", "focus-visible:ring-2");
+      expect(button).toHaveClass("rounded-[var(--radius-btn)]", "focus-visible:ring-2");
     },
   );
 
@@ -251,7 +257,7 @@ describe("Button depth: solid, quiet and flat variants: P2", () => {
       ]) {
         expect(button).not.toHaveClass(gone);
       }
-      expect(button).toHaveClass("rounded-full", "focus-visible:ring-2");
+      expect(button).toHaveClass("rounded-[var(--radius-btn)]", "focus-visible:ring-2");
     },
   );
 
@@ -329,7 +335,10 @@ describe("Button states: P2", () => {
       </Button>,
     );
 
-    expect(screen.getByRole("link", { name: "Open" })).toHaveClass("h-11", "rounded-full");
+    expect(screen.getByRole("link", { name: "Open" })).toHaveClass(
+      "h-11",
+      "rounded-[var(--radius-btn)]",
+    );
   });
 });
 
@@ -489,6 +498,29 @@ describe("Button focus keeps the pill shape: P2", () => {
     render(<Button>Ring</Button>);
 
     const button = screen.getByRole("button", { name: "Ring" });
-    expect(button).toHaveClass("focus-visible:ring-2", "rounded-full");
+    expect(button).toHaveClass("focus-visible:ring-2", "rounded-[var(--radius-btn)]");
+  });
+});
+
+describe("Button pill comes from the house style token: unit 2", () => {
+  const bridge = fs.readFileSync(
+    path.join(__dirname, "..", "..", "styles", "house-style.bridge.css"),
+    "utf8",
+  );
+  const vendored = fs.readFileSync(
+    path.join(__dirname, "..", "..", "styles", "house-style.tokens.css"),
+    "utf8",
+  );
+
+  it("--radius-btn is the bridge's reference to the vendored pill, and the pill is 999px", () => {
+    expect(bridge).toMatch(/--radius-btn:\s*var\(--hs-radius-pill\);/);
+    expect(vendored).toMatch(/--hs-radius-pill:\s*999px;/);
+  });
+
+  it("the base string uses the token, not a fixed rounded-full, so one house-style line flips every button", () => {
+    render(<Button>Token</Button>);
+    const button = screen.getByRole("button", { name: "Token" });
+    expect(button).toHaveClass("rounded-[var(--radius-btn)]");
+    expect(button).not.toHaveClass("rounded-full");
   });
 });

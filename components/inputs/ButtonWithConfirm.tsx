@@ -37,7 +37,7 @@ export default function ButtonWithConfirm({
       className={cn(
         toConfirm
           ? ""
-          : "border-transparent bg-warning text-black hover:bg-warning active:bg-warning",
+          : "border-transparent bg-warning-mark text-warning-foreground hover:bg-warning-mark active:bg-warning-mark",
       )}
       onClick={
         toConfirm

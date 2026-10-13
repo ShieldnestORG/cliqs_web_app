@@ -104,7 +104,7 @@ function JourneyCard({
           <ul className="space-y-1.5">
             {journey.highlights.map((point, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                <span className="mt-0.5 text-primary">•</span>
+                <span className="mt-0.5 text-primary-text">•</span>
                 {point}
               </li>
             ))}
@@ -183,13 +183,13 @@ function JourneyWalkthrough({
         <Card className="border-border/[0.06] bg-muted/30">
           <CardContent className="p-4">
             <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
-              <CheckCircle2 className="h-4 w-4 text-primary" />
+              <CheckCircle2 className="h-4 w-4 text-primary-text" />
               Before You Start
             </h3>
             <ul className="space-y-1.5">
               {journey.prerequisites.map((prereq, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                  <span className="mt-0.5 text-primary">•</span>
+                  <span className="mt-0.5 text-primary-text">•</span>
                   {prereq}
                 </li>
               ))}
@@ -213,7 +213,7 @@ function JourneyWalkthrough({
                   value={String(i)}
                   className={cn(
                     "flex items-center gap-2 px-3 py-2 text-xs transition-all data-[state=active]:shadow-sm",
-                    isCompleted && !isCurrent && "text-primary",
+                    isCompleted && !isCurrent && "text-primary-text",
                   )}
                 >
                   <span
@@ -222,7 +222,7 @@ function JourneyWalkthrough({
                       isCurrent
                         ? "bg-primary text-primary-foreground"
                         : isCompleted
-                          ? "bg-primary/20 text-primary"
+                          ? "bg-primary/20 text-primary-text"
                           : "bg-muted-foreground/20 text-muted-foreground",
                     )}
                   >
@@ -255,7 +255,7 @@ function JourneyWalkthrough({
                 <ul className="space-y-3">
                   {s.details.map((detail, j) => (
                     <li key={j} className="flex items-start gap-3 text-sm">
-                      <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-primary-text" />
                       <span className="text-foreground/90">{detail}</span>
                     </li>
                   ))}
@@ -289,7 +289,7 @@ function JourneyWalkthrough({
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           Step {currentStep + 1} of {journey.steps.length}
           {completedSteps.size > 0 && (
-            <span className="text-primary">({completedSteps.size} completed)</span>
+            <span className="text-primary-text">({completedSteps.size} completed)</span>
           )}
         </div>
 

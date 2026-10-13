@@ -19,9 +19,9 @@ const editorStyle: { [key: string]: string } & CSSProperties = {
   "--jse-value-color-url": "hsl(var(--foreground))",
   "--jse-background-color": "transparent",
   "--jse-panel-background": "transparent",
-  "--jse-selection-background-color": "rgba(255, 255, 255, 0.5)",
-  "--jse-main-border": "2px solid rgba(255, 255, 255, 0.5)",
-  "--jse-panel-border": "2px solid rgba(255, 255, 255, 0.5)",
+  "--jse-selection-background-color": "hsl(var(--foreground) / 0.5)",
+  "--jse-main-border": "2px solid hsl(var(--foreground) / 0.5)",
+  "--jse-panel-border": "2px solid hsl(var(--foreground) / 0.5)",
 };
 
 interface JsonEditorProps extends JSONEditorPropsOptional {

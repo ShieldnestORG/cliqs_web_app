@@ -46,6 +46,9 @@ module.exports = {
           sheen: "hsl(var(--primary-sheen))",
           press: "hsl(var(--primary-press))",
           soft: "hsl(var(--primary-soft))",
+          // Coral as TEXT: the coral itself on dark, the darker twin on light (coral on white is 2.6:1)
+          text: "hsl(var(--primary-text))",
+          "text-hover": "hsl(var(--primary-text-hover))",
         },
         // Control fill and the visible control edge (select, secondary button)
         field: "hsl(var(--field))",
@@ -59,6 +62,11 @@ module.exports = {
           foreground: "hsl(var(--destructive-foreground))",
           // Pressed fill and edge of the red button
           press: "hsl(var(--destructive-press))",
+          // Status kit (the house style's five tokens per kind): DEFAULT = the colour as text on the page,
+          // foreground = the label on a fill, mark = a solid fill or icon, soft = a wash, edge = a 1px border
+          mark: "hsl(var(--destructive-mark))",
+          soft: "hsl(var(--destructive-soft))",
+          edge: "hsl(var(--destructive-edge))",
         },
         // Pressed fill of the ink (`action`) button
         ink: {
@@ -80,19 +88,28 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Semantic status colours (see styles/globals.css).
+        // Semantic status colours: the house style's status set, through styles/house-style.bridge.css.
         // success is the real green; green-accent is coral despite its name.
         success: {
           DEFAULT: "hsl(var(--success))",
           foreground: "hsl(var(--success-foreground))",
+          mark: "hsl(var(--success-mark))",
+          soft: "hsl(var(--success-soft))",
+          edge: "hsl(var(--success-edge))",
         },
         warning: {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
+          mark: "hsl(var(--warning-mark))",
+          soft: "hsl(var(--warning-soft))",
+          edge: "hsl(var(--warning-edge))",
         },
         info: {
           DEFAULT: "hsl(var(--info))",
           foreground: "hsl(var(--info-foreground))",
+          mark: "hsl(var(--info-mark))",
+          soft: "hsl(var(--info-soft))",
+          edge: "hsl(var(--info-edge))",
         },
         // UI4 Accent Colors
         green: {
@@ -113,16 +130,6 @@ module.exports = {
         gold: {
           accent: "hsl(var(--accent-gold))",
         },
-        // Personal Theme Palette (Coherence Daddy)
-        personal: {
-          purple: "#7b68ae",
-          teal: "#346aa9",
-          orange: "#ff876d",
-          peach: "#ffb8a8",
-          white: "#e2e2e2",
-          charcoal: "#262626",
-          gray: "#6b6b6b",
-        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -137,7 +144,7 @@ module.exports = {
         "ink-gradient":
           "linear-gradient(135deg, hsl(var(--ink-sheen)) 0%, hsl(var(--foreground)) 45%, hsl(var(--ink-press)) 100%)",
         "destructive-gradient":
-          "linear-gradient(135deg, hsl(var(--destructive-sheen)) 0%, hsl(var(--destructive-fill)) 45%, hsl(var(--destructive-press)) 100%)",
+          "linear-gradient(135deg, hsl(var(--destructive-sheen)) 0%, hsl(var(--destructive-mark)) 45%, hsl(var(--destructive-press)) 100%)",
       },
       // House-style control motion: duration-ui / ease-ui (120ms, cubic-bezier(.2,.6,.2,1))
       transitionDuration: {
@@ -155,9 +162,9 @@ module.exports = {
         "btn-pressed": "var(--shadow-btn-pressed)",
         "btn-quiet": "var(--shadow-btn-quiet)",
         // UI4 Shadow System
-        card: "0 1px 3px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
-        "card-hover": "0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08)",
-        "focus-ring": "0 0 0 3px hsl(260 28% 55% / 0.3)",
+        card: "var(--hs-shadow-1), var(--hs-edge-light)",
+        "card-hover": "var(--hs-shadow-md)",
+        "focus-ring": "var(--hs-ring)",
       },
       keyframes: {
         "accordion-down": {

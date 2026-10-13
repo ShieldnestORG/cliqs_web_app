@@ -276,7 +276,7 @@ export default function ListUserCliqs() {
         {/* Chain initializing - waiting for RPC */}
         {walletInfo && walletInfo.type === "Keplr" && chain.chainId && !chain.nodeAddress && (
           <div className="flex items-center gap-2">
-            <Loader2 className="animate-spin text-green-accent" />
+            <Loader2 className="animate-spin text-primary-text" />
             <p>Connecting to chain...</p>
           </div>
         )}
@@ -345,9 +345,9 @@ export default function ListUserCliqs() {
                     className="group flex items-center gap-3 rounded-lg border border-border/[0.06] p-3 transition-all hover:border-green-accent/50 hover:bg-muted/50"
                   >
                     <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-green-accent/30 bg-gradient-to-br from-green-accent/20 to-green-accent/10">
-                      <Users className="h-5 w-5 text-green-accent" />
+                      <Users className="h-5 w-5 text-primary-text" />
                       {needsMeCount > 0 && (
-                        <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-card bg-warning text-[10px] font-bold text-warning-foreground">
+                        <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-card bg-warning-mark text-[10px] font-bold text-warning-foreground">
                           {needsMeCount}
                         </span>
                       )}
@@ -387,7 +387,7 @@ export default function ListUserCliqs() {
                         </Tooltip>
                       </div>
                     </div>
-                    <MoveRightIcon className="w-5 text-muted-foreground transition-colors group-hover:text-green-accent" />
+                    <MoveRightIcon className="w-5 text-muted-foreground transition-colors group-hover:text-primary-text" />
                   </Link>
                 );
               })}

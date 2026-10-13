@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils"
  * is not copied).
  */
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full border border-transparent font-semibold leading-[1.2] ring-offset-background transition-[background-color,border-color,color,box-shadow,transform,filter] duration-ui ease-ui focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:translate-y-[0.5px]",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-btn)] border border-transparent font-semibold leading-[1.2] ring-offset-background transition-[background-color,border-color,color,box-shadow,transform,filter] duration-ui ease-ui focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:translate-y-[0.5px]",
   {
     variants: {
       variant: {
@@ -34,7 +34,7 @@ const buttonVariants = cva(
         secondary:
           "border-border/10 bg-field bg-gradient-to-b from-foreground/[0.07] to-foreground/[0.015] text-secondary-foreground shadow-btn-quiet hover:bg-[color-mix(in_srgb,hsl(var(--field)),hsl(var(--foreground))_9%)] active:shadow-btn-pressed",
         ghost: "hover:bg-field hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+        link: "text-primary-text underline-offset-4 hover:underline",
 
         // UI4 Institutional variants (kept by name; sentence case since 2026-10-10)
         // action = the ink sheen (the solid recipe in ink)

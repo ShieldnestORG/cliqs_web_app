@@ -57,14 +57,12 @@ export default function ConfirmConnection({ closeDialog }: ConfirmConnectionProp
 
         {/* Arrow */}
         <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2 border-border/[0.06] bg-card sm:mt-12">
-          <ArrowRight className="h-5 w-5 text-[hsl(var(--accent-green))]" />
+          <ArrowRight className="h-5 w-5 text-primary-text" />
         </div>
 
         {/* New Chain */}
         <div className="w-full max-w-sm rounded-lg border-2 border-[hsl(var(--accent-green)/0.3)] bg-[hsl(var(--accent-green)/0.05)] p-4 sm:w-auto">
-          <span className="mb-3 block text-[10px] text-label text-[hsl(var(--accent-green-bright))]">
-            {`// TO`}
-          </span>
+          <span className="mb-3 block text-[10px] text-label text-primary-text">{`// TO`}</span>
           <ChainDigest chain={newConnection.chain} simplify />
         </div>
       </div>

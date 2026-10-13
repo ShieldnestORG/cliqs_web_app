@@ -168,7 +168,7 @@ describe("ValidatorCommandsCard tiles (CLIQ mode): P1", () => {
       // the leading icon, then the one corner arrow, and nothing else
       expect(icons.map((i) => i.getAttribute("data-testid"))).toEqual([icon, "icon-ArrowUpRight"]);
       // the arrow is muted and turns coral while the tile (a `group`) is hovered
-      expect(icons[1]).toHaveClass("text-muted-foreground", "group-hover:text-primary");
+      expect(icons[1]).toHaveClass("text-muted-foreground", "group-hover:text-primary-text");
       expect(tile.querySelector(".group")).not.toBeNull();
       leading.push(icons[0].getAttribute("data-testid"));
     }
