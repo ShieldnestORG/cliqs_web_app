@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useRouter } from "next/router";
 import ChainConnect from "./ChainConnect";
 import DonateDialog from "./DonateDialog";
+import InstallAppButton from "./InstallAppButton";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getNavItems, isNavItemActive, useNeedsMyCount } from "@/lib/navigation";
@@ -327,6 +328,9 @@ export default function Sidebar() {
             </div>
           );
         })}
+
+        {/* Install app: renders only when the browser offers it */}
+        <InstallAppButton collapsed={collapsed} />
 
         {/* Donate Button: outline, so it never outranks a page action */}
         <div className={cn("mb-2 shrink-0 px-4", collapsed && "px-2")}>
