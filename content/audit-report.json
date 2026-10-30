@@ -1,16 +1,53 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-12",
+  "updatedAt": "2026-10-30",
   "testSuite": {
     "suites": 87,
-    "tests": 916,
-    "passed": 916,
+    "tests": 918,
+    "passed": 918,
     "failed": 0,
     "command": "npm run test:ci",
-    "commit": "3e4ff73",
-    "ranAt": "2026-10-12"
+    "commit": "28b66df",
+    "ranAt": "2026-10-30"
   },
   "entries": [
+    {
+      "id": "desktop-app-install-2026-10-30",
+      "date": "2026-10-30",
+      "area": "ux",
+      "status": "verified",
+      "title": "CLIQS installs as a desktop app",
+      "summary": "The app now has a full install manifest and its own icons, so Chrome and Brave can install it as a desktop app with its own window.",
+      "details": [
+        "The install manifest had an empty name, so an installed copy showed a blank title. It now says CLIQS and uses the app's dark canvas colour.",
+        "New full-bleed app icons keep the logo inside the safe zone, so the Dock and launcher tile looks clean.",
+        "An Install app button appears in the sidebar only when the browser offers an install, and never inside the installed app."
+      ],
+      "evidence": [
+        {
+          "label": "PR #98",
+          "url": "https://github.com/ShieldnestORG/cliqs_web_app/pull/98"
+        }
+      ]
+    },
+    {
+      "id": "ci-tests-run-again-2026-10-30",
+      "date": "2026-10-30",
+      "area": "infrastructure",
+      "status": "verified",
+      "title": "The test suite runs in CI again",
+      "summary": "CI's test job stopped at a design check that needs a private checkout; it now runs the full test suite on every pull request.",
+      "details": [
+        "From 2026-10-12 the test job failed at its first step, before any test ran. The design check stays a local step before a pull request.",
+        "The first run after the fix passed all 918 tests in 87 files."
+      ],
+      "evidence": [
+        {
+          "label": "PR #99",
+          "url": "https://github.com/ShieldnestORG/cliqs_web_app/pull/99"
+        }
+      ]
+    },
     {
       "id": "validator-page-follow-ups-2026-10-11",
       "date": "2026-10-11",
