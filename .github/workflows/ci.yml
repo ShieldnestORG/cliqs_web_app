@@ -41,7 +41,11 @@ jobs:
           node-version: 24
           cache: "npm"
       - run: npm ci
-      - run: npm run test:ci
+      # jest only. `npm run test:ci` starts with the house-style gate, which reads the private house-style checkout
+      # (HOUSE_STYLE, default /Users/exe/Downloads/Claude/house-style) and so failed here on every run since #95
+      # (2026-10-12), before jest ever started. That gate runs on the Mac or the tower (owner 2026-10-12: never
+      # GitHub Actions); run `npm run test:ci` locally before a pull request (CLAUDE.md section 5).
+      - run: npx jest
 
   build:
     runs-on: ubuntu-24.04
